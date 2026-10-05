@@ -12,14 +12,23 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
     fetch(API, { method: 'POST', headers: { 'Content-Type': 'text\x2Fplain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }), redirect: 'follow' })
       .then(function (r) { return r.text(); })
       .then(function (t) {
-        var j = null; try { j = JSON.parse(t); } catch (e) { throw new Error('ACCESS'); }
+        var j = null; try { j = JSON.parse(t); } catch (e) {
+          var m = new RegExp('<title>([^<]*)<' + '\x2Ftitle>', 'i').exec(t || ''), title = m ? m[1].trim() : '';
+          var err = new Error('NOTJSON'); err.title = title; err.signIn = /sign.?in|google accounts|access|permission/i.test(title + ' ' + String(t || '').slice(0, 2000)); throw err;
+        }
         if (j && j.ok) { if (st.s) st.s(j.v, st.u); }
         else if (st.f) st.f(new Error((j && j.e) || 'Request failed'), st.u);
       })
       .catch(function (e) {
-        if (e && e.message === 'ACCESS') { if (st.f) st.f(new Error('The server did not answer as expected. In Apps Script, Deploy → Manage deployments must have "Who has access: Anyone".'), st.u); return; }
-        if (retries > 0) { setTimeout(function () { call(st, fn, args, retries - 1); }, 800); return; }
-        if (st.f) st.f(new Error('Could not reach the server — check your internet connection.'), st.u);
+        // reads try again (Google sometimes answers "busy"); saves never repeat, so nothing is added twice
+        if (retries > 0) { setTimeout(function () { call(st, fn, args, retries - 1); }, retries > 1 ? 1200 : 2500); return; }
+        if (!st.f) return;
+        if (e && e.message === 'NOTJSON') {
+          if (e.signIn) { st.f(new Error('Google asked for a sign-in instead of answering. In Apps Script, Deploy → Manage deployments must have "Who has access: Anyone".'), st.u); return; }
+          st.f(new Error('Google was busy and did not answer' + (e.title ? ' ("' + e.title + '")' : '') + '. Please try again in a moment' + (/^get|runBatch/.test(fn) ? '.' : ' — check first that it was not already saved.')), st.u);
+          return;
+        }
+        st.f(new Error('Could not reach the server — check your internet connection.'), st.u);
       });
   }
   function runner(st) {
@@ -28,7 +37,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
       if (k === 'withFailureHandler') return function (h) { return runner(Object.assign({}, st, { f: h })); };
       if (k === 'withUserObject') return function (u) { return runner(Object.assign({}, st, { u: u })); };
       if (typeof k !== 'string') return undefined;
-      return function () { call(st, k, Array.prototype.slice.call(arguments), /^(get|runBatch)/.test(k) ? 1 : 0); }; // reads retry once; saves never repeat
+      return function () { call(st, k, Array.prototype.slice.call(arguments), /^(get|runBatch)/.test(k) ? 2 : 0); }; // reads retry twice; saves never repeat
     } });
   }
   window.google = { script: { run: runner({}) } };
