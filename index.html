@@ -36,7 +36,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '5 Oct 2026 · v27';
+window.AKBAR_BUILD = '5 Oct 2026 · v28';
 
 (function () {
   try {
@@ -4540,6 +4540,7 @@ Akbar Study Abroad</textarea>
 <button class="bell" id="addLeadBtn" title="Add a walk-in or referral lead" style="width:auto;padding:0 12px;gap:6px;display:none;font-size:12px;font-weight:700;">+ Add Lead</button>
 <button class="bell" id="monthlyReportBtn" title="Monthly performance report" style="width:auto;padding:0 12px;gap:6px;display:none;font-size:12px;font-weight:700;">📅 Monthly</button>
 <button class="bell" id="bulkUploadBtn" title="Bulk upload leads from Excel or CSV" style="width:auto;padding:0 12px;gap:6px;display:none;font-size:12px;font-weight:700;">📤 Bulk Upload</button>
+<button class="bell" id="reloadSheetsBtn" title="Read every lead again straight from the Google Sheets (use after editing a sheet directly)" style="width:auto;padding:0 12px;gap:6px;display:none;font-size:12px;font-weight:700;">↻ Reload from sheets</button>
 <button class="bell" id="leadQualityBtn" title="Which ads bring qualified leads, and what is sent to Meta" style="width:auto;padding:0 12px;gap:6px;display:none;font-size:12px;font-weight:700;">📡 Lead quality</button>
 <button class="bell" id="ceoViewBtn" title="One-page summary for leadership" style="width:auto;padding:0 12px;gap:6px;display:none;font-size:12px;font-weight:700;">👑 CEO View</button>
 <button class="bell" id="appTeamBtn" title="Application team performance, applications and student documents" style="width:auto;padding:0 12px;gap:6px;font-size:12px;font-weight:700;">🎓 Applications</button>
@@ -6891,6 +6892,11 @@ const bulkUploadBtn = document.getElementById('bulkUploadBtn');
 if (bulkUploadBtn) bulkUploadBtn.style.display = (response.isSuperAdmin || !response.viewerCounselor) ? 'flex' : 'none';
 const ceoViewBtn = document.getElementById('ceoViewBtn');
 if (ceoViewBtn) ceoViewBtn.style.display = response.isSuperAdmin ? 'flex' : 'none';
+const reloadSheetsBtn = document.getElementById('reloadSheetsBtn');
+if (reloadSheetsBtn) { reloadSheetsBtn.style.display = (response.isSuperAdmin || (response.viewerBranch && !response.viewerCounselor && !response.isTelecallerStaff)) ? 'flex' : 'none';
+reloadSheetsBtn.onclick = function () { reloadSheetsBtn.disabled = true; reloadSheetsBtn.textContent = 'Reloading…'; if (window.akClearDashCache) window.akClearDashCache(); window._dashSig = '';
+google.script.run.withSuccessHandler(function () { reloadSheetsBtn.disabled = false; reloadSheetsBtn.textContent = '↻ Reload from sheets'; loadData(); showToast('Reloaded from the Google Sheets', 'success'); })
+.withFailureHandler(function (e) { reloadSheetsBtn.disabled = false; reloadSheetsBtn.textContent = '↻ Reload from sheets'; showToast((e && e.message) || 'Could not reload', 'error'); }).s10RefreshAll(window._authToken || ''); }; }
 const leadQualityBtn = document.getElementById('leadQualityBtn');
 if (leadQualityBtn) leadQualityBtn.style.display = (response.isSuperAdmin || (response.viewerBranch && !response.viewerCounselor && !response.isTelecallerStaff)) ? 'flex' : 'none';
 if (response.faqs) {
