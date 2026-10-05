@@ -45,7 +45,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '5 Oct 2026 · v30';
+window.AKBAR_BUILD = '5 Oct 2026 · v31';
 
 (function () {
   try {
@@ -3938,7 +3938,7 @@ Didn't get it?
 <div class="um-field"><label>Username</label><input id="umUsername" autocomplete="off" placeholder="e.g. counselor1"></div>
 <div class="um-field"><label>Name</label><input id="umName" autocomplete="name" placeholder="Full name"></div>
 <div class="um-field"><label>Email</label><input id="umEmail" type="email" autocomplete="email" placeholder="name@akbarstudy.com"></div>
-<div class="um-field"><label>Role</label><select id="umRole"><option>Super Admin</option><option>Manager</option><option>Counselor</option><option>Telecaller</option><option>Application Executive</option><option>B2B Team</option><option>Visa Executive</option></select></div>
+<div class="um-field"><label>Role</label><select id="umRole"><option>Super Admin</option><option>Manager</option><option>Counselor</option><option>Telecaller</option><option>Application Executive</option><option>B2B Team</option><option>Visa Officer</option><option value="Visa Executive" hidden>Visa Executive (old name)</option></select></div>
 <div class="um-field"><label>Branch</label><select id="umBranch"><option value="">Select branch</option></select></div>
 <div class="um-field"><label>Counselor Name</label><input id="umCounselor" placeholder="Required for Counselor"></div>
 <div class="um-field" id="umPasswordField"><label>Password</label><input id="umPassword" type="password" autocomplete="new-password" placeholder="Min 8 chars · A-z · 0-9"></div>
@@ -4350,10 +4350,10 @@ Akbar Study Abroad</textarea>
 
 <div class="nav-group" data-group="visa" style="display:none;">
 <div class="nav-label">Visa</div>
-<div class="nav-item" data-visa-view="desk" role="button" tabindex="0" title="Every visa case, who is handling it, fees and approvals">
-<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M8 17h8"/></svg>
-<span>Visa Desk</span>
-</div>
+<div class="nav-item" data-visa-view="cases" role="button" tabindex="0" title="Every visa case"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Visa Cases</span></div>
+<div class="nav-item" data-visa-view="appointments" role="button" tabindex="0" title="Biometrics, interviews, submissions"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Appointments</span></div>
+<div class="nav-item" data-visa-view="documents" role="button" tabindex="0" title="Document checklists"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Visa Documents</span></div>
+<div class="nav-item" data-visa-view="analytics" role="button" tabindex="0" title="Approval rates, processing time, deadlines"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Visa Analytics</span></div>
 </div>
 
 <div class="nav-group-divider"></div>
@@ -5081,6 +5081,7 @@ ${isCurrent ? 'disabled' : ''}>${s}</button>`;
           </div>
 
           ${renderConvertSection(r)}
+          <div class="lvisa" data-lvisa="${escapeHtml(r.leadId)}" data-branch="${escapeHtml(r.branch)}"></div><!-- SESSION 13A: visa status -->
 
                     <div class="counselor-row">
             <span class="label">Counselor:</span>
@@ -15128,7 +15129,7 @@ Object.assign(window, { openHRView, closeHRView, renderTeamHub, renderAttendance
 <script>
 (function () {
 const KEY = 'nav_open_group';
-const GROUPS = ['applications', 'student-experience', 'automation', 'financials', 'team'];
+const GROUPS = ['applications', 'visa', 'student-experience', 'automation', 'financials', 'team'];
 const ICONS = {
   applications: '<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/>',
   'student-experience': '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/>',
@@ -15163,7 +15164,7 @@ if (leads && src) {
 const firstMod = sidebar.querySelector('.nav-group[data-group="applications"]');
 if (firstMod) { const sec = document.createElement('div'); sec.className = 'ak-sec'; sec.textContent = 'Workspace'; firstMod.before(sec); }
 
-['b2b', 'visa'].forEach(k => {
+['b2b'].forEach(k => {
   const grp = sidebar.querySelector('.nav-group[data-group="' + k + '"]'); if (!grp) return;
   grp.classList.add('ak-solo');
   const it = grp.querySelector('.nav-item');
@@ -17199,7 +17200,10 @@ el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { 
 <style>
 #visaView { min-height: 100vh; background: var(--canvas); }
 .vd-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
+.vd-form.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .vd-form .full { grid-column: 1 / -1; }
+.vd-group { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border); }
+.vd-group > h4 { margin: 0 0 2px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .vd-money { position: relative; display: flex; align-items: center; }
 .vd-money > span { position: absolute; left: 10px; color: var(--muted); font-weight: 700; font-size: 13px; pointer-events: none; }
 .vd-money > input { padding-left: 24px !important; }
@@ -17210,15 +17214,15 @@ el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { 
 .vd-src.s0 { background: rgba(48,45,64,.08); color: var(--navy); } .vd-src.s1 { background: rgba(132,82,201,.12); color: #8452C9; } .vd-src.s2 { background: rgba(31,157,99,.12); color: var(--ok); }
 .vd-row { cursor: pointer; } .vd-row:hover td { background: rgba(48,45,64,.045); }
 .vd-stage { border: 1px solid var(--border); border-radius: 8px; padding: 4px 6px; font: inherit; font-size: 12px; background: var(--card); color: var(--ink); max-width: 170px; }
-.vd-due { color: var(--red); font-weight: 700; }
-.vd-sec { border-top: 1px solid var(--border); margin-top: 14px; padding-top: 12px; }
-.vd-sec h4 { margin: 0 0 8px; font-size: 13px; }
+.vd-due, .vd-gap { color: var(--red); font-weight: 700; }
 .vd-list { display: flex; flex-direction: column; gap: 6px; }
 .vd-li { display: flex; align-items: center; gap: 8px; background: var(--canvas); border-radius: 10px; padding: 8px 10px; font-size: 12.5px; flex-wrap: wrap; }
 .vd-li .grow { flex: 1; min-width: 140px; } .vd-li .um-btn { padding: 4px 9px; font-size: 11.5px; }
 .vd-tl { list-style: none; margin: 0; padding: 0; font-size: 12.5px; }
-.vd-tl li { position: relative; padding: 0 0 10px 20px; } .vd-tl li:before { content: ''; position: absolute; left: 3px; top: 5px; width: 9px; height: 9px; border-radius: 50%; background: var(--navy); }
-.vd-tl li small { color: var(--muted); margin-left: 6px; }
+.vd-tl li { position: relative; padding: 0 0 12px 22px; border-left: 2px solid var(--border); margin-left: 6px; }
+.vd-tl li:before { content: ''; position: absolute; left: -7px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: #3E6BD6; border: 2px solid var(--card); }
+.vd-tl li.good:before { background: var(--ok); } .vd-tl li.bad:before { background: var(--red); } .vd-tl li.admin:before { background: var(--muted); }
+.vd-tl li small { color: var(--muted); display: block; }
 .vd-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 6px; }
 .vd-seg button { border: 1.5px solid var(--border); background: var(--card); color: var(--ink); border-radius: 10px; padding: 10px 8px; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
 .vd-seg button.on { border-color: var(--navy); background: var(--navy); color: #fff; }
@@ -17227,20 +17231,44 @@ el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { 
 .vd-pick button.on { border-color: var(--navy); box-shadow: inset 0 0 0 1px var(--navy); }
 .vd-pick button small { display: block; color: var(--muted); font-size: 11.5px; }
 .vd-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
-.vd-bars { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; align-items: end; height: 150px; margin-top: 8px; }
-.vd-bar { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; font-size: 11px; color: var(--muted); }
-.vd-bar i { display: block; width: 70%; max-width: 46px; border-radius: 6px 6px 2px 2px; background: var(--navy); min-height: 2px; }
-.vd-bar b { color: var(--ink); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+.vd-kpis6 { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.vd-kpis6 .sx-kpi b { display: block; font-size: 22px; font-weight: 800; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.vd-banners { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.vd-banner { border: 0; border-radius: 10px; padding: 8px 12px; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; background: rgba(217,138,31,.14); color: var(--warm); }
+.vd-banner.bad { background: var(--red-dim); color: var(--red); }
+.vd-mtabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: -4px 0 12px; overflow-x: auto; }
+.vd-mtabs button { border: 0; background: none; padding: 8px 12px; font: inherit; font-size: 13px; font-weight: 700; color: var(--muted); border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; }
+.vd-mtabs button.on { color: var(--ink); border-bottom-color: var(--red); }
+.vd-bars { display: flex; flex-direction: column; gap: 6px; }
+.vd-bar { display: grid; grid-template-columns: minmax(90px, 160px) minmax(0, 1fr) 70px; gap: 10px; align-items: center; font-size: 12.5px; }
+.vd-bar i { display: block; height: 14px; border-radius: 4px; background: var(--navy); min-width: 2px; }
+.vd-bar i.ok { background: var(--ok); } .vd-bar i.bad { background: var(--red); }
+.vd-bar span:last-child { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+.vd-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.vd-cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.vd-cal .h { font-size: 11px; font-weight: 700; color: var(--muted); text-align: center; padding: 4px 0; }
+.vd-cal .d { min-height: 86px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 4px 5px; font-size: 11px; overflow: hidden; }
+.vd-cal .d.out { opacity: .45; } .vd-cal .d.today { box-shadow: inset 0 0 0 2px var(--red); }
+.vd-cal .d b { display: block; font-size: 11.5px; margin-bottom: 2px; }
+.vd-cal .ev { display: block; border-radius: 4px; padding: 1px 4px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; background: rgba(62,107,214,.12); color: #3E6BD6; border: 0; width: 100%; text-align: left; font: inherit; font-size: 10.5px; }
+.vd-cal .ev.Completed { background: rgba(31,157,99,.12); color: var(--ok); } .vd-cal .ev.Missed { background: var(--red-dim); color: var(--red); } .vd-cal .ev.Rescheduled { background: rgba(217,138,31,.14); color: var(--warm); }
+.vd-chk { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 10px; background: var(--canvas); font-size: 12.5px; }
+.vd-chk + .vd-chk { margin-top: 5px; }
 .vd-claim { background: var(--red-dim); color: var(--red); border: 0; border-radius: 8px; padding: 4px 9px; font: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; }
+.lvisa { margin-top: 12px; }
+.lvisa-box { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; background: var(--card); }
+.lvisa-box h5 { margin: 0 0 6px; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+body.tc-staff .lvisa { display: none !important; }
 #vdM2Bg { z-index: 20500; }
-@media (max-width: 900px) { .vd-form { grid-template-columns: minmax(0, 1fr); } .vd-seg { grid-template-columns: 1fr; } }
+@media (max-width: 1100px) { .vd-kpis6 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 900px) { .vd-form, .vd-form.three, .vd-cols { grid-template-columns: minmax(0, 1fr); } .vd-seg { grid-template-columns: 1fr; } .vd-kpis6 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>
 <script>
 
 (function () {
-const V = { data: null, tab: 'cases', q: '', source: '', stage: '', officer: '', month: '', teamMode: false, loading: false };
+const V = { data: null, tab: 'cases', q: '', source: '', stage: '', officer: '', branch: '', country: '', vtype: '', result: '', month: '', teamMode: false, loading: false, apptView: 'list', calMonth: null, flag: '' };
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const TABS = [['cases', 'Cases'], ['performance', 'Business']];
+const TABS = [['cases', 'Cases'], ['appointments', 'Appointments'], ['documents', 'Documents'], ['analytics', 'Analytics'], ['business', 'Business']];
 const SRC_CLS = { 'Our student': 's0', 'B2B agent': 's1', 'Direct client': 's2' };
 const $ = id => document.getElementById(id);
 const run = (fn, ...args) => promisifyRun(fn, window._authToken || '', ...args);
@@ -17251,17 +17279,26 @@ const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t ||
 const fmtDate = ymd => { if (!ymd) return '—'; const p = String(ymd).slice(0, 10).split('-'); return p.length < 3 ? String(ymd) : Number(p[2]) + ' ' + (MONTHS[Number(p[1]) - 1] || '') + ' ' + p[0]; };
 const fmtMonth = mk => { const p = String(mk || '').split('-'); return p.length < 2 ? mk : MONTHS[Number(p[1]) - 1] + ' ' + p[0]; };
 const fmtStamp = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }); };
+const ymdLocal = d => d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+const today = () => ymdLocal(new Date());
 const opts = (list, cur, blank) => (blank !== undefined ? `<option value="">${esc(blank)}</option>` : '') + list.map(o => { const v = Array.isArray(o) ? o[0] : o, l = Array.isArray(o) ? o[1] : o; return `<option value="${esc(v)}" ${String(v) === String(cur == null ? '' : cur) ? 'selected' : ''}>${esc(l)}</option>`; }).join('');
 const fld = (label, input, full) => `<div class="${full ? 'full' : ''}"><label class="f">${esc(label)}</label>${input}</div>`;
 const val = id => { const el = $(id); return el ? String(el.value || '').trim() : ''; };
 const num = id => Number(val(id)) || 0;
-const O = () => (V.data && V.data.options) || { stages: [], visaTypes: [], docTypes: [], sources: [], branches: [], executives: [] };
+const O = () => (V.data && V.data.options) || { stages: [], docTypes: [], sources: [], branches: [], executives: [] };
+const X = () => (V.data && V.data.extras) || { options: { visaTypes: [], apptTypes: [], apptStatuses: [], feeTypes: [], feeStatuses: [], englishTests: [], currencies: ['INR'], fxRates: { INR: 1 } }, alerts: {}, analytics: { kpis: {} }, appointments: [], feeSummary: {} };
+const XO = () => X().options;
 const caseById = id => ((V.data && V.data.cases) || []).find(c => c.id === id);
+const isOfficer = () => V.data && /^Visa (Officer|Executive)$/.test(V.data.me.role);
+const RESULT_CLS = { Approved: 'ok', Rejected: 'bad', Withdrawn: 'muted', Pending: 'warm' };
+const resultPill = r => `<span class="vd-pill ${RESULT_CLS[r] || 'warm'}">${esc(r || 'Pending')}</span>`;
 const stagePill = st => `<span class="vd-pill ${st === 'Approved' ? 'ok' : st === 'Refused' ? 'bad' : st === 'Withdrawn' ? 'muted' : /pending/i.test(st || '') ? 'warm' : ''}">${esc(st || '—')}</span>`;
 const srcTag = s => `<span class="vd-src ${SRC_CLS[s] || 's0'}">${esc(s)}</span>`;
 const errBox = id => `<div id="${id}" class="fin-alert" style="display:none;margin:10px 0 0;"></div>`;
 function formErr(id, e) { const el = $(id); if (el) { el.textContent = e ? errMsg(e) : ''; el.style.display = e ? 'block' : 'none'; } }
 function busy(btn, on, text) { if (!btn) return; if (on) { btn.dataset.t = btn.textContent; btn.textContent = text || 'Saving…'; btn.disabled = true; } else { btn.textContent = btn.dataset.t || btn.textContent; btn.disabled = false; } }
+const isUK = c => /UK Student|united kingdom|^uk$/i.test(String((c && c.visaType) || '') + ' ' + String((c && c.country) || ''));
+const isUSCA = c => /USA|United States|Canada/i.test(String((c && c.visaType) || '') + ' ' + String((c && c.country) || ''));
 
 function modal(title, html, width, layer) {
 const k = layer === 2 ? 'vdM2' : 'vdM1';
@@ -17294,7 +17331,8 @@ const intakeVal = id => { const m = val(id + 'M'), y = val(id + 'Y'); return m &
 
 function openVisaDesk(o) {
 o = o || {};
-if (o.teamMode && V.teamMode && $('visaView').style.display === 'block') { if (o.caseId) openWhenReady(o.caseId); return; }
+if (o.tab && TABS.some(t => t[0] === o.tab)) V.tab = o.tab;
+if (V.teamMode && $('visaView').style.display === 'block' && !o.forceRebuild) { if (o.caseId) openWhenReady(o.caseId); if (o.tab) render(); return; }
 V.teamMode = V.teamMode || !!o.teamMode;
 const app = document.querySelector('.app'); if (app) app.style.display = 'none';
 ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView'].forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
@@ -17303,21 +17341,12 @@ const root = $('visaView');
 root.style.display = 'block';
 root.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-title">🛂 Visa Desk</h1><div class="sx-sub" id="vdSub">Every visa case: our students, agent students and visa-only clients</div></div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="um-btn primary" id="vdAdd">+ New visa case</button><button class="um-btn" id="vdRefresh">↻ Refresh</button><button class="um-btn" id="vdBack">${V.teamMode ? 'Sign out' : '← Back to dashboard'}</button></div></div>
-<div id="vdKpis"></div>
 <div class="sx-tabs" role="tablist" style="flex-wrap:nowrap;">${TABS.map(t => `<button class="sx-tab ${t[0] === V.tab ? 'active' : ''}" data-vd-tab="${t[0]}" role="tab">${t[1]}</button>`).join('')}</div>
-<div class="sx-filters"><input type="text" id="vdQ" placeholder="Search client, case ID, passport, university…" value="${esc(V.q)}" style="min-width:240px;">
-<select id="vdMonth" aria-label="Period"></select><select id="vdSrcF" aria-label="Source"></select><select id="vdStageF" aria-label="Stage"></select><select id="vdOffF" aria-label="Handled by"></select></div>
 <div id="vdBody"><div class="sx-card"><div class="skeleton" style="height:220px;"></div></div></div></div>`;
 $('vdBack').onclick = () => { if (V.teamMode) { if (typeof logoutApp === 'function') logoutApp(); } else closeVisaDesk(); };
 $('vdRefresh').onclick = () => load();
 $('vdAdd').onclick = () => caseForm(null);
 root.querySelectorAll('[data-vd-tab]').forEach(b => b.onclick = () => { V.tab = b.dataset.vdTab; root.querySelectorAll('[data-vd-tab]').forEach(x => x.classList.toggle('active', x === b)); render(); });
-let qt = null;
-$('vdQ').oninput = () => { clearTimeout(qt); qt = setTimeout(() => { V.q = val('vdQ'); render(); }, 200); };
-$('vdSrcF').onchange = () => { V.source = val('vdSrcF'); render(); };
-$('vdStageF').onchange = () => { V.stage = val('vdStageF'); render(); };
-$('vdOffF').onchange = () => { V.officer = val('vdOffF'); render(); };
-$('vdMonth').onchange = () => { V.month = val('vdMonth'); load(); };
 window.scrollTo(0, 0);
 if (V.data) render();
 load(o.caseId);
@@ -17336,51 +17365,174 @@ function refreshThen(fn) { V.loading = false; run('getVisaDesk', { month: V.mont
 function monthOptions() { const out = [['', 'All time']]; const d = new Date(); for (let i = 0; i < 12; i++) { const x = new Date(d.getFullYear(), d.getMonth() - i, 1); const mk = x.getFullYear() + '-' + ('0' + (x.getMonth() + 1)).slice(-2); out.push([mk, fmtMonth(mk)]); } return out; }
 function render() {
 const d = V.data; if (!d || !$('vdBody')) return;
-const s = d.summary, per = d.month ? fmtMonth(d.month) : 'all time';
-$('vdKpis').innerHTML = `<div class="sx-kpis">
-<div class="sx-kpi"><div class="sx-sub">Open cases now</div><div style="font-size:24px;font-weight:800;">${s.openNow}</div><div class="sx-sub ${s.stuck || s.unassigned ? 'sx-bad' : ''}">${[s.unassigned ? s.unassigned + ' unassigned' : '', s.stuck ? s.stuck + ' stuck over ' + O().stuckDays + ' days' : ''].filter(Boolean).join(' · ') || 'none stuck'}</div></div>
-<div class="sx-kpi"><div class="sx-sub">Visas approved · ${esc(per)}</div><div style="font-size:24px;font-weight:800;" class="sx-good">${s.approved}</div><div class="sx-sub">${s.rate == null ? 'no decisions yet' : s.rate + '% approval rate · ' + s.refused + ' refused'}</div></div>
-<div class="sx-kpi"><div class="sx-sub">Visa fees charged · ${esc(per)}</div><div style="font-size:24px;font-weight:800;">${inr(s.fee)}</div><div class="sx-sub">${s.cases} new case${s.cases === 1 ? '' : 's'} · ${inr(s.received)} received</div></div>
-<div class="sx-kpi"><div class="sx-sub">Fees pending</div><div style="font-size:24px;font-weight:800;" class="${s.pendingAll ? 'sx-bad' : ''}">${inr(s.pendingAll)}</div><div class="sx-sub">all open dues</div></div></div>`;
-$('vdMonth').innerHTML = opts(monthOptions(), V.month);
-$('vdSrcF').innerHTML = opts(O().sources, V.source, 'All sources');
-$('vdStageF').innerHTML = opts(O().stages, V.stage, 'Any stage');
-const offs = Array.from(new Set(d.cases.map(c => c.officer).filter(Boolean))).sort();
-$('vdOffF').innerHTML = opts([['__none', 'Unassigned']].concat(offs), V.officer, 'Anyone');
-$('vdOffF').style.display = O().canAssign ? '' : 'none';
-['vdSrcF', 'vdStageF', 'vdOffF', 'vdQ'].forEach(id => { const el = $(id); if (el && id !== 'vdOffF') el.style.display = V.tab === 'performance' ? 'none' : ''; });
-$('vdSub').textContent = (d.me.role === 'Manager' ? d.me.branch + ' branch · ' : d.me.role === 'Visa Executive' ? 'Your cases + the unassigned queue · ' : 'All branches · ') + 'signed in as ' + d.me.name;
-if (V.tab === 'cases') renderCases(); else renderPerf();
+document.querySelectorAll('[data-vd-tab]').forEach(x => x.classList.toggle('active', x.dataset.vdTab === V.tab));
+$('vdSub').textContent = (d.me.role === 'Manager' ? d.me.branch + ' branch · ' : isOfficer() ? 'Your cases + the unassigned queue · ' : 'All branches · ') + 'signed in as ' + d.me.name;
+if (V.tab === 'cases') renderCases(); else if (V.tab === 'appointments') renderAppointments(); else if (V.tab === 'documents') renderDocuments(); else if (V.tab === 'analytics') renderAnalytics(); else renderBusiness();
+}
+function kpiStrip() {
+const k = X().analytics.kpis || {};
+const card = (label, v, cls, sub) => `<div class="sx-kpi"><div class="sx-sub">${esc(label)}</div><b class="${cls || ''}">${v}</b>${sub ? `<div class="sx-sub">${sub}</div>` : ''}</div>`;
+return `<div class="vd-kpis6">${card('Total cases', k.total || 0)}${card('Approved', k.approved || 0, 'sx-good')}${card('Rejected', k.rejected || 0, k.rejected ? 'sx-bad' : '')}${card('Pending', k.pending || 0)}
+${card('Approval rate', k.approvalRate == null ? '—' : k.approvalRate + '%', '', 'approved ÷ decided')}${card('Avg processing', k.avgProcessingDays == null ? '—' : k.avgProcessingDays + ' days', '', 'decided cases')}</div>`;
+}
+function banners() {
+const a = X().alerts || {};
+const b = (key, n, text, bad) => n ? `<button class="vd-banner ${bad ? 'bad' : ''}" data-vd-flag="${key}">${n} ${text}</button>` : '';
+const html = b('passports', (a.passports || []).length, 'passport' + ((a.passports || []).length === 1 ? '' : 's') + ' expiring within 6 months') + b('cas', (a.cas || []).length, 'CAS expiring within 30 days', true) +
+b('tomorrow', (a.tomorrow || []).length, 'appointment' + ((a.tomorrow || []).length === 1 ? '' : 's') + ' tomorrow') + b('stale', (a.stale || []).length, 'case' + ((a.stale || []).length === 1 ? '' : 's') + ' not updated in 7+ days') +
+b('funds', (a.funds || []).length, 'student' + ((a.funds || []).length === 1 ? ' has a' : 's have a') + ' funds gap', true);
+return html ? `<div class="vd-banners">${html}${V.flag ? '<button class="vd-banner" data-vd-flag="" style="background:var(--canvas);color:var(--ink);">✕ Show all</button>' : ''}</div>` : '';
+}
+function filteredCases() {
+const d = V.data, q = V.q.toLowerCase(), a = X().alerts || {};
+const flagIds = V.flag ? new Set((a[V.flag] || []).map(x => x.id)) : null;
+return d.cases.filter(c => (!flagIds || flagIds.has(c.id)) && (!V.source || c.source === V.source) && (!V.stage || c.stage === V.stage) && (!V.result || c.result === V.result)
+&& (!V.officer || (V.officer === '__none' ? !c.officer : c.officer === V.officer)) && (!V.branch || c.branch === V.branch) && (!V.country || c.country === V.country) && (!V.vtype || c.visaType === V.vtype)
+&& (!V.month || String(c.opened || '').slice(0, 7) === V.month)
+&& (!q || [c.id, c.student, c.phone, c.passportNo, c.university, c.country, c.agentName, c.appId, c.officer, c.casNumber].join(' ').toLowerCase().indexOf(q) !== -1))
+.sort((x, y) => (y.open - x.open) || ((!y.officer) - (!x.officer)) || (y.stale - x.stale) || String(y.updatedAt).localeCompare(String(x.updatedAt)));
 }
 function renderCases() {
-const me = V.data.me;
-const q = V.q.toLowerCase();
-const rows = V.data.cases.filter(c => (!V.source || c.source === V.source) && (!V.stage || c.stage === V.stage)
-&& (!V.officer || (V.officer === '__none' ? !c.officer : c.officer === V.officer))
-&& (!q || [c.id, c.student, c.phone, c.passportNo, c.university, c.country, c.agentName, c.appId, c.officer].join(' ').toLowerCase().indexOf(q) !== -1))
-.sort((a, b) => (b.open - a.open) || ((!a.officer) - (!b.officer)) * -1 || (b.stuck - a.stuck) || String(b.updatedAt).localeCompare(String(a.updatedAt)));
-$('vdBody').innerHTML = !rows.length ? `<div class="sx-card sx-empty">${V.data.cases.length ? 'No cases match.' : 'No visa cases yet. Click “+ New visa case”, or open an application and use “🛂 Send to visa”.'}</div>` :
-`<div class="sx-card"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Case</th><th>Client</th><th>Branch</th><th>Country · university</th><th>Stage</th><th>Handled by</th><th class="num">In stage</th><th class="num">Fee</th><th class="num">Pending</th><th></th></tr></thead><tbody>
+const d = V.data, me = d.me, uniq = k => Array.from(new Set(d.cases.map(c => c[k]).filter(Boolean))).sort();
+const offs = uniq('officer');
+$('vdBody').innerHTML = kpiStrip() + banners() + `<div class="sx-filters">
+<input type="text" id="vdQ" placeholder="Search student, case, passport, CAS, university…" value="${esc(V.q)}" style="min-width:230px;">
+${O().branches.length > 1 ? `<select id="vdBrF" aria-label="Branch">${opts(O().branches, V.branch, 'All branches')}</select>` : ''}
+${O().canAssign ? `<select id="vdOffF" aria-label="Officer">${opts([['__none', 'Unassigned']].concat(offs), V.officer, 'Any officer')}</select>` : ''}
+<select id="vdCoF" aria-label="Country">${opts(uniq('country'), V.country, 'All countries')}</select>
+<select id="vdTyF" aria-label="Visa type">${opts(uniq('visaType'), V.vtype, 'All visa types')}</select>
+<select id="vdStageF" aria-label="Stage">${opts(O().stages, V.stage, 'Any stage')}</select>
+<select id="vdResF" aria-label="Result">${opts(['Pending', 'Approved', 'Rejected', 'Withdrawn'], V.result, 'Any result')}</select>
+<select id="vdSrcF" aria-label="Source">${opts(O().sources, V.source, 'All sources')}</select>
+<select id="vdMonth" aria-label="Opened in">${opts(monthOptions(), V.month)}</select>
+<button class="um-btn" id="vdCsv">⬇ Export CSV</button></div><div id="vdTable"></div>`;
+const bind = (id, key, reload) => { const el = $(id); if (!el) return; el.onchange = () => { V[key] = el.value; reload ? load() : drawTable(); }; };
+let qt = null; $('vdQ').oninput = () => { clearTimeout(qt); qt = setTimeout(() => { V.q = val('vdQ'); drawTable(); }, 200); };
+bind('vdBrF', 'branch'); bind('vdOffF', 'officer'); bind('vdCoF', 'country'); bind('vdTyF', 'vtype'); bind('vdStageF', 'stage'); bind('vdResF', 'result'); bind('vdSrcF', 'source'); bind('vdMonth', 'month', true);
+document.querySelectorAll('[data-vd-flag]').forEach(b => b.onclick = () => { V.flag = b.dataset.vdFlag; renderCases(); });
+$('vdCsv').onclick = exportCsv;
+drawTable();
+}
+function drawTable() {
+const rows = filteredCases(), me = V.data.me;
+$('vdTable').innerHTML = !rows.length ? `<div class="sx-card sx-empty">${V.data.cases.length ? 'No cases match.' : 'No visa cases yet. Click “+ New visa case”, use “🛂 Send to visa” on an application, or “Create visa case” in a lead.'}</div>` :
+`<div class="sx-card"><div class="sx-table-wrap"><table class="sx-table" style="min-width:1180px;"><thead><tr><th>Case</th><th>Student</th><th>Branch</th><th>Officer</th><th>Country · type</th><th>Applied</th><th>Next appointment</th><th>Stage</th><th>Result</th><th class="num">Days open</th><th class="num">Pending fee</th><th></th></tr></thead><tbody>
 ${rows.map(c => `<tr class="vd-row" data-vd-case="${esc(c.id)}">
-<td style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;">${esc(c.id)}</td>
-<td><b>${esc(c.student)}</b><div>${srcTag(c.source)}${c.agentName ? ` <span class="sx-sub">${esc(c.agentName)}</span>` : ''}</div></td>
+<td style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;">${esc(c.id)}${c.priority ? ' <span class="vd-pill bad" title="Priority processing">⚡</span>' : ''}</td>
+<td><b>${esc(c.student)}</b><div>${srcTag(c.source)}${c.fundsGap > 0 ? ' <span class="vd-pill bad" title="Funds gap">gap ' + inr(c.fundsGap) + '</span>' : ''}${c.passportSoon ? ' <span class="vd-pill warm" title="Passport expires within 6 months">passport</span>' : ''}${c.casSoon ? ' <span class="vd-pill bad">CAS</span>' : ''}</div></td>
 <td>${esc(c.branch || '—')}</td>
-<td>${esc(c.country || '—')}<div class="sx-sub">${esc(c.visaType)} · ${esc(c.university || '')}</div></td>
+<td>${c.officer ? esc(c.officer) : (isOfficer() ? `<button class="vd-claim" data-vd-claim="${esc(c.id)}">Take it</button>` : '<span class="vd-pill warm">Unassigned</span>')}</td>
+<td>${esc(c.country || '—')}<div class="sx-sub">${esc(c.visaType || '')}</div></td>
+<td>${c.submittedDate ? fmtDate(c.submittedDate) : '—'}</td>
+<td>${c.nextAppt ? fmtDate(c.nextAppt.date) + (c.nextAppt.time ? ' ' + esc(c.nextAppt.time) : '') + `<div class="sx-sub">${esc(c.nextAppt.type)}</div>` : '—'}</td>
 <td><select class="vd-stage" data-vd-stage="${esc(c.id)}" aria-label="Stage for ${esc(c.student)}">${opts(O().stages, c.stage)}</select></td>
-<td>${c.officer ? esc(c.officer) : (me.role === 'Visa Executive' ? `<button class="vd-claim" data-vd-claim="${esc(c.id)}">Take it</button>` : '<span class="vd-pill warm">Unassigned</span>')}</td>
-<td class="num ${c.stuck ? 'sx-bad' : ''}">${c.open && c.daysInStage != null ? c.daysInStage + 'd' : '—'}</td>
-<td class="num">${inr(c.fee)}</td><td class="num ${c.pending ? 'vd-due' : ''}">${inr(c.pending)}</td>
+<td>${resultPill(c.result)}</td>
+<td class="num ${c.daysOpen > 90 ? 'sx-bad' : ''}">${c.daysOpen == null ? '—' : c.daysOpen}</td>
+<td class="num ${c.pending ? 'vd-due' : ''}">${inr(c.pending)}</td>
 <td><div class="sx-actions"><button class="um-btn" data-vd-case="${esc(c.id)}">Open</button><button class="um-btn sx-wa" data-vd-wa="${esc(c.id)}">WhatsApp</button></div></td></tr>`).join('')}
 </tbody></table></div></div>`;
 }
-function renderPerf() {
-const d = V.data, per = d.month ? fmtMonth(d.month) : 'all time';
+function exportCsv() {
+const rows = filteredCases();
+const cols = [['id', 'Case ID'], ['student', 'Student'], ['source', 'Source'], ['branch', 'Branch'], ['officer', 'Visa Officer'], ['counsellor', 'Counsellor'], ['country', 'Country'], ['visaType', 'Visa Type'], ['university', 'University'], ['course', 'Course'], ['intake', 'Intake'],
+['passportNo', 'Passport'], ['passportExpiry', 'Passport Expiry'], ['casNumber', 'CAS'], ['casExpiry', 'CAS Expiry'], ['englishTestType', 'English Test'], ['englishScore', 'Score'], ['submittedDate', 'Application Date'], ['biometricsDate', 'Biometrics'], ['decisionDate', 'Decision'],
+['stage', 'Stage'], ['result', 'Result'], ['rejectReason', 'Refusal Reason'], ['processingDays', 'Processing Days'], ['fundsRequired', 'Funds Required'], ['fundsAvailable', 'Funds Available'], ['fundsGap', 'Funds Gap'], ['fee', 'Service Fee'], ['received', 'Received'], ['pending', 'Pending']];
+const line = r => cols.map(c => '"' + String(r[c[0]] == null ? '' : r[c[0]]).replace(/"/g, '""') + '"').join(',');
+const csv = '\ufeff' + cols.map(c => '"' + c[1] + '"').join(',') + '\r\n' + rows.map(line).join('\r\n');
+const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'visa-cases-' + today() + '.csv'; document.body.appendChild(a); a.click(); a.remove();
+}
+
+function renderAppointments() {
+const list = (X().appointments || []).slice().sort((a, b) => String(a.date + a.time).localeCompare(String(b.date + b.time)));
+const t = today();
+const up = list.filter(a => String(a.date).slice(0, 10) >= t && (a.status === 'Scheduled' || a.status === 'Rescheduled'));
+const past = list.filter(a => up.indexOf(a) === -1).reverse();
+const row = a => `<tr class="vd-row" data-vd-appt-case="${esc(a.caseId)}"><td>${fmtDate(a.date)} ${esc(a.time || '')}</td><td><b>${esc(a.student)}</b><div class="sx-sub">${esc(a.caseId)}</div></td><td>${esc(a.type)}</td><td>${esc(a.venue || '—')}</td><td>${esc(a.officer || '—')}</td><td><span class="vd-pill ${a.status === 'Completed' ? 'ok' : a.status === 'Missed' ? 'bad' : a.status === 'Rescheduled' ? 'warm' : ''}">${esc(a.status)}</span>${a.outcome ? `<div class="sx-sub">${esc(a.outcome)}</div>` : ''}</td></tr>`;
+const table = (title, l) => `<div class="sx-card"><div style="font-weight:800;margin-bottom:8px;">${title} (${l.length})</div>${l.length ? `<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>When</th><th>Student</th><th>Type</th><th>Venue</th><th>Officer</th><th>Status</th></tr></thead><tbody>${l.map(row).join('')}</tbody></table></div>` : '<div class="sx-empty">Nothing here.</div>'}</div>`;
+$('vdBody').innerHTML = `<div class="sx-filters"><div class="lq-tabs" style="margin:0;"><button class="${V.apptView === 'list' ? 'on' : ''}" data-vd-av="list">List</button><button class="${V.apptView === 'cal' ? 'on' : ''}" data-vd-av="cal">Calendar</button></div><button class="um-btn primary" id="vdBook">+ Book appointment</button></div>` +
+(V.apptView === 'cal' ? calendar(list) : table('Upcoming', up) + table('Recent (last 90 days)', past));
+document.querySelectorAll('[data-vd-av]').forEach(b => b.onclick = () => { V.apptView = b.dataset.vdAv; renderAppointments(); });
+document.querySelectorAll('[data-vd-appt-case]').forEach(r => r.onclick = () => { const c = caseById(r.dataset.vdApptCase); if (c) caseForm(c, 'appointments'); });
+document.querySelectorAll('[data-vd-cal-nav]').forEach(b => b.onclick = () => { const m = V.calMonth || new Date(); V.calMonth = new Date(m.getFullYear(), m.getMonth() + Number(b.dataset.vdCalNav), 1); renderAppointments(); });
+$('vdBook').onclick = () => bookPicker();
+}
+function calendar(list) {
+const m = V.calMonth || new Date(); const y = m.getFullYear(), mo = m.getMonth();
+const first = new Date(y, mo, 1), start = new Date(y, mo, 1 - ((first.getDay() + 6) % 7)), t = today();
+let cells = '';
+for (let i = 0; i < 42; i++) {
+const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i), k = ymdLocal(d);
+const evs = list.filter(a => String(a.date).slice(0, 10) === k);
+cells += `<div class="d ${d.getMonth() !== mo ? 'out' : ''} ${k === t ? 'today' : ''}"><b>${d.getDate()}</b>${evs.map(a => `<button class="ev ${esc(a.status)}" data-vd-appt-case="${esc(a.caseId)}" title="${esc(a.student + ' · ' + a.type + (a.time ? ' ' + a.time : '') + (a.venue ? ' · ' + a.venue : ''))}">${esc((a.time ? a.time + ' ' : '') + a.student)}</button>`).join('')}</div>`;
+}
+return `<div class="sx-card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><button class="um-btn" data-vd-cal-nav="-1">‹</button><b style="flex:1;text-align:center;">${MONTHS[mo]} ${y}</b><button class="um-btn" data-vd-cal-nav="1">›</button></div>
+<div class="vd-cal">${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(w => `<div class="h">${w}</div>`).join('')}${cells}</div>
+<div class="vd-note">Blue = scheduled · green = completed · red = missed · amber = rescheduled. Click an appointment to open its case.</div></div>`;
+}
+function bookPicker() {
+const open = V.data.cases.filter(c => c.open);
+const body = modal('Book an appointment', `<label class="f">Visa case</label><select id="vdBkCase">${opts(open.map(c => [c.id, c.id + ' · ' + c.student + ' · ' + (c.country || '')]), '', 'Choose case…')}</select>
+<div class="sx-modal-actions"><button class="um-btn primary" id="vdBkGo">Continue</button></div>`, 520, 2);
+$('vdBkGo').onclick = () => { const c = caseById(val('vdBkCase')); if (!c) return; closeModal(2); caseForm(c, 'appointments'); };
+return body;
+}
+
+function renderDocuments() {
+const rows = V.data.cases.filter(c => c.open && c.docStats).sort((a, b) => (b.docStats.rejected - a.docStats.rejected) || (b.docStats.missing - a.docStats.missing));
+$('vdBody').innerHTML = `<div class="sx-card"><div style="font-weight:800;margin-bottom:4px;">Document checklists — open cases</div><div class="sx-sub" style="margin-bottom:10px;">Required documents depend on the visa type. Click a case to upload, verify or reject.</div>
+${rows.length ? `<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Case</th><th>Student</th><th>Visa type</th><th>Officer</th><th class="num">Required</th><th class="num">Verified</th><th class="num">To verify</th><th class="num">Rejected</th><th class="num">Missing</th></tr></thead><tbody>
+${rows.map(c => `<tr class="vd-row" data-vd-doc-case="${esc(c.id)}"><td style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;">${esc(c.id)}</td><td><b>${esc(c.student)}</b></td><td>${esc(c.visaType || '—')}</td><td>${esc(c.officer || '—')}</td>
+<td class="num">${c.docStats.required}</td><td class="num sx-good">${c.docStats.verified}</td><td class="num">${c.docStats.uploaded}</td><td class="num ${c.docStats.rejected ? 'sx-bad' : ''}">${c.docStats.rejected}</td><td class="num ${c.docStats.missing ? 'vd-due' : ''}">${c.docStats.missing}</td></tr>`).join('')}</tbody></table></div>` : '<div class="sx-empty">No open cases.</div>'}</div>`;
+document.querySelectorAll('[data-vd-doc-case]').forEach(r => r.onclick = () => { const c = caseById(r.dataset.vdDocCase); if (c) caseForm(c, 'documents'); });
+}
+
+function bars(list, label, value, max, cls, right) { const mx = Math.max(1, max || Math.max.apply(null, list.map(value))); return `<div class="vd-bars">${list.map(x => `<div class="vd-bar"><span>${esc(label(x))}</span><i class="${cls ? cls(x) : ''}" style="width:${Math.round(value(x) / mx * 100)}%"></i><span>${right ? right(x) : value(x)}</span></div>`).join('') || '<div class="sx-empty">No data yet.</div>'}</div>`; }
+function donut(list) {
+const total = list.reduce((t, x) => t + x.cases, 0); if (!total) return '<div class="sx-empty">No data yet.</div>';
+const PAL = ['#302D40', '#F22F3D', '#3E6BD6', '#1F9D63', '#D98A1F', '#8452C9', '#5B7BA8', '#9AA1B2'];
+let a0 = -Math.PI / 2; const R = 54, C = 70;
+const segs = list.map((x, i) => { const a1 = a0 + 2 * Math.PI * x.cases / total; const large = a1 - a0 > Math.PI ? 1 : 0;
+const p = list.length === 1 ? `<circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="${PAL[0]}" stroke-width="22"></circle>` : `<path d="M ${C + R * Math.cos(a0)} ${C + R * Math.sin(a0)} A ${R} ${R} 0 ${large} 1 ${C + R * Math.cos(a1)} ${C + R * Math.sin(a1)}" fill="none" stroke="${PAL[i % PAL.length]}" stroke-width="22"></path>`; a0 = a1; return p; }).join('');
+return `<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;"><svg viewBox="0 0 140 140" width="140" height="140" role="img" aria-label="Cases by visa type">${segs}<text x="${C}" y="${C + 5}" text-anchor="middle" font-size="16" font-weight="800" fill="currentColor">${total}</text></svg>
+<div style="font-size:12.5px;display:grid;gap:4px;">${list.map((x, i) => `<div><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${PAL[i % PAL.length]};margin-right:6px;"></span>${esc(x.name)} · <b>${x.cases}</b></div>`).join('')}</div></div>`;
+}
+function renderAnalytics() {
+const an = X().analytics, k = an.kpis || {}, xo = XO();
+const card = (t, v, sub) => `<div class="sx-kpi"><div class="sx-sub">${esc(t)}</div><div style="font-size:24px;font-weight:800;">${v}</div>${sub ? `<div class="sx-sub">${sub}</div>` : ''}</div>`;
+const tbl = (head, rows) => rows.length ? `<div class="sx-table-wrap"><table class="sx-table"><thead><tr>${head.map(h => `<th class="${/^#|Approved|Rejected|Cases|days|Rate/.test(h) ? 'num' : ''}">${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>` : '<div class="sx-empty">No data yet.</div>';
 const rate = r => r == null ? '—' : r + '%';
-const table = (title, list, first) => `<div class="sx-card"><div style="font-weight:800;margin-bottom:8px;">${esc(title)} <span class="sx-sub">· cases opened ${esc(per)}; approvals by decision date</span></div>${list.length ? `<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>${esc(first)}</th><th class="num">Cases</th><th class="num">Open</th><th class="num">Approved</th><th class="num">Refused</th><th class="num">Approval rate</th><th class="num">Fees charged</th><th class="num">Received</th><th class="num">Pending</th></tr></thead><tbody>
+const dl = (title, l, fmt) => `<div class="sx-card"><div style="font-weight:800;margin-bottom:6px;">${title} (${l.length})</div>${l.length ? `<div class="vd-list">${l.slice(0, 12).map(x => `<div class="vd-li" data-vd-dl="${esc(x.id)}" style="cursor:pointer;"><span class="grow"><b>${esc(x.student)}</b> · ${esc(x.id)}</span><span>${fmt(x)}</span></div>`).join('')}</div>` : '<div class="sx-empty">None.</div>'}</div>`;
+$('vdBody').innerHTML = `<div class="sx-kpis">${card('Total applications', k.total || 0)}${card('Approval rate', rate(k.approvalRate), (k.approved || 0) + ' approved')}${card('Avg processing', k.avgProcessingDays == null ? '—' : k.avgProcessingDays + ' days', 'application → decision')}${card('Rejection rate', rate(k.rejectionRate), (k.rejected || 0) + ' rejected')}</div>
+${xo.canAlerts ? `<div class="sx-card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><b>Daily 9 AM alert email</b><span class="vd-pill ${xo.alertsOn ? 'ok' : 'muted'}">${xo.alertsOn ? 'On' : 'Off'}</span><span class="sx-sub" style="flex:1;">Passports &lt; 6 months, CAS &lt; 30 days, appointments tomorrow, cases quiet 7+ days and funds gaps — emailed to each visa officer and branch manager.</span><button class="um-btn" id="vdAlerts">${xo.alertsOn ? 'Turn off' : 'Turn on'}</button></div>` : ''}
+<div class="vd-cols">
+<div class="sx-card"><div style="font-weight:800;margin-bottom:8px;">Approval rate by country</div>${bars(an.byCountry.filter(x => x.rate != null), x => x.name, x => x.rate, 100, x => x.rate >= 70 ? 'ok' : x.rate < 40 ? 'bad' : '', x => x.rate + '% · ' + (x.approved + x.rejected))}</div>
+<div class="sx-card"><div style="font-weight:800;margin-bottom:8px;">Cases by visa type</div>${donut(an.byType)}</div>
+<div class="sx-card"><div style="font-weight:800;margin-bottom:8px;">Monthly applications (last 12 months)</div>${bars(an.monthly, x => fmtMonth(x.month), x => x.cases, 0, null, x => x.cases + (x.approved ? ' · ' + x.approved + '✓' : ''))}</div>
+<div class="sx-card"><div style="font-weight:800;margin-bottom:8px;">Processing time (decided cases)</div>${bars(an.processing, x => x.label, x => x.cases)}</div>
+</div>
+<div class="vd-cols">
+<div class="sx-card"><div style="font-weight:800;margin-bottom:8px;">Refusal reasons</div>${tbl(['Reason', 'Cases'], an.rejectReasons.map(r => `<tr><td>${esc(r.reason)}</td><td class="num">${r.cases}</td></tr>`))}</div>
+<div class="sx-card"><div style="font-weight:800;margin-bottom:8px;">Country success</div>${tbl(['Country', 'Cases', 'Approved', 'Rejected', 'Rate', 'Avg days'], an.byCountry.map(r => `<tr><td>${esc(r.name)}</td><td class="num">${r.cases}</td><td class="num">${r.approved}</td><td class="num">${r.rejected}</td><td class="num">${rate(r.rate)}</td><td class="num">${r.avgDays == null ? '—' : r.avgDays}</td></tr>`))}</div>
+</div>
+<div class="sx-card"><div style="font-weight:800;margin-bottom:8px;">Officer performance</div>${tbl(['Officer', 'Cases', 'Approved', 'Rejected', 'Rate', 'Avg days'], an.byOfficer.map(r => `<tr><td><b>${esc(r.name)}</b></td><td class="num">${r.cases}</td><td class="num">${r.approved}</td><td class="num">${r.rejected}</td><td class="num">${rate(r.rate)}</td><td class="num">${r.avgDays == null ? '—' : r.avgDays}</td></tr>`))}</div>
+<div class="vd-cols">${dl('CAS expiring (60 days)', an.deadlines.cas, x => fmtDate(x.date))}${dl('Passports expiring (6 months)', an.deadlines.passports, x => fmtDate(x.date))}</div>
+${dl('Appointments (next 14 days)', an.deadlines.appointments, x => fmtDate(x.date) + ' ' + esc(x.time || '') + ' · ' + esc(x.type))}`;
+document.querySelectorAll('[data-vd-dl]').forEach(r => r.onclick = () => { const c = caseById(r.dataset.vdDl); if (c) caseForm(c); });
+const al = $('vdAlerts'); if (al) al.onclick = () => { al.disabled = true; run('setVisaAlerts', !xo.alertsOn).then(r => { toast(r.on ? 'Daily visa alerts on (9 AM)' : 'Daily visa alerts off'); refreshThen(); }).catch(e => { al.disabled = false; toast(errMsg(e), 'error'); }); };
+}
+
+function renderBusiness() {
+const d = V.data, per = d.month ? fmtMonth(d.month) : 'all time', fs = X().feeSummary || {};
+const rate = r => r == null ? '—' : r + '%';
+const table = (title, list, first) => `<div class="sx-card"><div style="font-weight:800;margin-bottom:8px;">${esc(title)} <span class="sx-sub">· cases opened ${esc(per)}; approvals by decision date</span></div>${list.length ? `<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>${esc(first)}</th><th class="num">Cases</th><th class="num">Open</th><th class="num">Approved</th><th class="num">Refused</th><th class="num">Approval rate</th><th class="num">Service fees</th><th class="num">Received</th><th class="num">Pending</th></tr></thead><tbody>
 ${list.map(x => `<tr><td><b>${esc(x.name)}</b></td><td class="num">${x.cases}</td><td class="num">${x.open}</td><td class="num">${x.approved}</td><td class="num">${x.refused}</td><td class="num">${rate(x.rate)}</td><td class="num">${inr(x.fee)}</td><td class="num">${inr(x.received)}</td><td class="num ${x.pending ? 'vd-due' : ''}">${inr(x.pending)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="sx-empty">Nothing in this period.</div>'}</div>`;
-const tmax = Math.max(1, ...d.trend.map(t => t.fee));
-const trend = d.trend.length ? `<div class="sx-card"><div style="font-weight:800;">Last 6 months · visa fees charged</div><div class="vd-bars">${d.trend.map(t => `<div class="vd-bar" title="${esc(fmtMonth(t.month))}: ${t.cases} cases, ${inr(t.fee)} charged, ${t.approved} approved"><b>${t.fee ? inr(t.fee) : ''}</b><i style="height:${Math.round(t.fee / tmax * 100)}%"></i><span>${esc(fmtMonth(t.month).slice(0, 3))}</span><span>${t.approved} ✓</span></div>`).join('')}</div></div>` : '';
-$('vdBody').innerHTML = (O().canAssign ? table('By visa executive', d.byExecutive, 'Handled by') : '') + table('By source', d.bySource, 'Source') + trend;
+$('vdBody').innerHTML = `<div class="sx-filters"><select id="vdMonthB" aria-label="Period">${opts(monthOptions(), V.month)}</select></div>
+<div class="sx-kpis"><div class="sx-kpi"><div class="sx-sub">Service fees charged · ${esc(per)}</div><div style="font-size:22px;font-weight:800;">${inr(d.summary.fee)}</div><div class="sx-sub">${inr(d.summary.received)} received</div></div>
+<div class="sx-kpi"><div class="sx-sub">Service fees pending</div><div style="font-size:22px;font-weight:800;" class="${d.summary.pendingAll ? 'sx-bad' : ''}">${inr(d.summary.pendingAll)}</div><div class="sx-sub">all open dues</div></div>
+<div class="sx-kpi"><div class="sx-sub">Visa costs tracked (₹)</div><div style="font-size:22px;font-weight:800;">${inr(fs.totalInr)}</div><div class="sx-sub">${inr(fs.paidInr)} paid · ${inr(fs.pendingInr)} pending</div></div>
+<div class="sx-kpi"><div class="sx-sub">Costs by type</div><div style="font-size:12.5px;margin-top:4px;">${(fs.byType || []).map(t => esc(t.type) + ' ' + inr(t.inr)).join('<br>') || '—'}</div></div></div>` +
+(O().canAssign ? table('By visa officer', d.byExecutive, 'Officer') : '') + table('By source', d.bySource, 'Source');
+$('vdMonthB').onchange = () => { V.month = val('vdMonthB'); load(); };
 }
 
 document.addEventListener('click', e => {
@@ -17389,52 +17541,95 @@ const claim = e.target.closest('[data-vd-claim]');
 if (claim) { e.stopPropagation(); claim.disabled = true; run('saveVisaCase', { id: claim.dataset.vdClaim }).then(() => { toast('Case is yours'); refreshThen(); }).catch(err => { claim.disabled = false; toast(errMsg(err), 'error'); }); return; }
 const wa = e.target.closest('[data-vd-wa]'); if (wa) { e.stopPropagation(); waCase(wa.dataset.vdWa); return; }
 if (e.target.closest('select')) return;
-const r = e.target.closest('[data-vd-case]'); if (r) caseForm(caseById(r.dataset.vdCase));
+const r = e.target.closest('tr[data-vd-case], button[data-vd-case]'); if (r) caseForm(caseById(r.dataset.vdCase));
 });
 document.addEventListener('change', e => {
 const sel = e.target.closest && e.target.closest('select[data-vd-stage]'); if (!sel) return;
 const c = caseById(sel.dataset.vdStage), prev = c ? c.stage : '';
+if (sel.value === 'Refused') { sel.value = prev; caseForm(c, 'details', { stage: 'Refused' }); return; }
 sel.disabled = true;
 run('setVisaStage', sel.dataset.vdStage, sel.value).then(() => { toast('Stage updated — ' + sel.value); refreshThen(); })
 .catch(err => { sel.value = prev; sel.disabled = false; toast(errMsg(err), 'error'); });
 });
 
-function caseForm(c) {
+let CF = null;
+function caseForm(c, tab, preset) {
 c = c || {};
-const isNew = !c.id, me = V.data.me;
+CF = { c: c, tab: c.id ? (tab || 'details') : 'details', detail: null, preset: preset || {} };
+const title = c.id ? c.id + ' · ' + c.student : 'New visa case';
+modal(title, `${c.id ? `<div class="vd-mtabs" role="tablist">${[['details', 'Details'], ['documents', 'Documents'], ['appointments', 'Appointments'], ['timeline', 'Timeline'], ['fees', 'Fees']].map(t => `<button data-vd-mt="${t[0]}" class="${CF.tab === t[0] ? 'on' : ''}">${t[1]}</button>`).join('')}</div>` : ''}<div id="vdCF"></div>`, 860);
+document.querySelectorAll('[data-vd-mt]').forEach(b => b.onclick = () => { CF.tab = b.dataset.vdMt; document.querySelectorAll('[data-vd-mt]').forEach(x => x.classList.toggle('on', x === b)); drawCF(); });
+if (c.id) run('getVisaCaseDetail', c.id).then(d => { if (CF && CF.c.id === c.id) { CF.detail = d; if (CF.tab !== 'details' && CF.tab !== 'documents') drawCF(); } }).catch(() => {});
+drawCF();
+}
+function reopenCase(tab) { const id = CF && CF.c.id; refreshThen(() => { const c = caseById(id); if (c) caseForm(c, tab); }); }
+function drawCF() {
+if (!CF) return;
+const t = CF.tab;
+if (t === 'details') return drawDetails();
+if (t === 'documents') return drawDocs();
+if (!CF.detail) { $('vdCF').innerHTML = '<div class="skeleton" style="height:160px;"></div>'; return; }
+if (t === 'appointments') return drawAppts();
+if (t === 'timeline') return drawTimeline();
+if (t === 'fees') return drawFees();
+}
+function drawDetails() {
+const c = CF.c, isNew = !c.id, me = V.data.me, xo = XO();
 let source = c.source || 'Our student', picked = null;
-const def = (k, fb) => c[k] != null && c[k] !== '' ? c[k] : (fb || '');
+const def = (k, fb) => c[k] != null && c[k] !== '' ? c[k] : (fb === undefined ? '' : fb);
 const execs = O().executives.slice(); if (c.officer && execs.indexOf(c.officer) === -1) execs.push(c.officer);
-const docs = c.id ? V.data.docs.filter(x => x.caseId === c.id) : [];
-const srcPart = () => source === 'Our student' ? `${isNew ? `<label class="f">Application *</label><input type="text" id="vdAppQ" placeholder="Search student name, application ID or university"><div class="vd-pick" id="vdPick"><div class="sx-sub">Type to search applications…</div></div>` : `<div class="vd-note">Application ${esc(c.appId)} · counsellor ${esc(c.counsellor || '—')}</div>`}`
+const vtypes = xo.visaTypes.slice(); if (c.visaType && vtypes.indexOf(c.visaType) === -1) vtypes.push(c.visaType);
+const stageNow = CF.preset.stage || def('stage', 'Documents pending');
+const srcPart = () => source === 'Our student' ? (isNew ? `<label class="f">Application *</label><input type="text" id="vdAppQ" placeholder="Search student name, application ID or university"><div class="vd-pick" id="vdPick"><div class="sx-sub">Type to search applications…</div></div><div class="vd-note">Or open a lead and use “Create visa case” there.</div>` : `<div class="vd-note">${c.appId ? 'Application ' + esc(c.appId) + ' · ' : ''}${c.leadId ? 'Lead linked · ' : ''}counsellor ${esc(c.counsellor || '—')}</div>`)
 : source === 'B2B agent' ? (isNew ? '<div class="fin-alert warm" style="margin:6px 0 0;">Agent students are added on the B2B Desk (student → ＋ Visa case). They then show here too.</div>' : `<div class="vd-note">Agent: ${esc(c.agentName || '—')} · student ${esc(c.studentId)}</div>`)
 : `<div class="vd-form">${fld('Client name *', `<input type="text" id="vdName" value="${esc(c.student)}">`)}${fld('Branch *', `<select id="vdBranch">${opts(O().branches, c.branch || (me.role === 'Manager' ? me.branch : ''), 'Choose branch…')}</select>`)}</div>`;
-modal(isNew ? 'New visa case' : c.id + ' · ' + c.student, `${isNew ? `<div class="vd-seg" role="tablist">${O().sources.map(s => `<button type="button" data-vd-src="${esc(s)}" class="${s === source ? 'on' : ''}">${esc(s)}</button>`).join('')}</div>` : `<div>${srcTag(source)}</div>`}
+const money = (id, v) => `<div class="vd-money"><span>₹</span><input type="number" min="0" step="any" id="${id}" value="${esc(v)}"></div>`;
+$('vdCF').innerHTML = `${isNew ? `<div class="vd-seg" role="tablist">${O().sources.map(s => `<button type="button" data-vd-src="${esc(s)}" class="${s === source ? 'on' : ''}">${esc(s)}</button>`).join('')}</div>` : `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">${srcTag(source)} ${resultPill(c.result)} ${c.processingDays != null ? `<span class="sx-sub">${c.processingDays} days processing</span>` : ''}</div>`}
 <div id="vdSrcPart">${srcPart()}</div>
-<div class="vd-form" id="vdMain">
-${fld('Phone (WhatsApp)', `<input type="text" id="vdPhone" value="${esc(def('phone'))}">`)}${fld('Email', `<input type="text" id="vdEmail" value="${esc(def('email'))}">`)}
-${fld('Passport no.', `<input type="text" id="vdPass" value="${esc(def('passportNo'))}">`)}${fld('Visa type', `<select id="vdType">${opts(O().visaTypes, def('visaType', 'Student'))}</select>`)}
-${fld('Country', `<input type="text" id="vdCountry" value="${esc(def('country'))}">`)}${fld('University', `<input type="text" id="vdUni" value="${esc(def('university'))}">`)}
-${fld('Course', `<input type="text" id="vdCourse" value="${esc(def('course'))}">`)}${fld('Intake', intakeField('vdIntake', def('intake')))}
-${fld('Stage', `<select id="vdStage">${opts(O().stages, def('stage', 'Documents pending'))}</select>`)}${fld('Handled by', O().canAssign ? `<select id="vdOfficer">${opts(execs, def('officer'), 'Unassigned')}</select>` : `<input type="text" value="${esc(me.name)}" disabled>`)}
-${fld('Case opened', `<input type="date" id="vdRecv" value="${esc(def('receivedDate'))}">`)}${fld('Biometrics date', `<input type="date" id="vdBio" value="${esc(def('biometricsDate'))}">`)}
-${fld('Submitted date', `<input type="date" id="vdSub" value="${esc(def('submittedDate'))}">`)}${fld('Decision date', `<input type="date" id="vdDec" value="${esc(def('decisionDate'))}">`)}
-${fld(source === 'B2B agent' ? 'Visa fee charged to agent (₹)' : 'Visa service fee (₹)', `<div class="vd-money"><span>₹</span><input type="number" min="0" step="any" id="vdFee" value="${esc(def('fee'))}"></div>`)}${fld('Amount received (₹)', `<div class="vd-money"><span>₹</span><input type="number" min="0" step="any" id="vdRec" value="${esc(def('received'))}"></div>`)}
-<div class="full"><div class="vd-note" id="vdPend"></div></div>
-${fld('Remarks', `<textarea id="vdRem" style="min-height:60px;">${esc(c.remarks)}</textarea>`, true)}</div>
-${c.id ? `<div class="vd-sec"><h4>Documents (${docs.length})</h4>${docs.length ? `<div class="vd-list">${docs.map(x => `<div class="vd-li"><span class="grow"><b>${esc(x.docType)}</b> · ${esc(x.fileName)}<div class="sx-sub">${esc(x.uploadedBy)} · ${esc(fmtStamp(x.uploadedAt))}</div></span><span class="vd-pill ${x.status === 'Verified' ? 'ok' : x.status === 'Rejected' ? 'bad' : 'warm'}">${esc(x.status)}</span>
-<button class="um-btn" data-vd-doc-view="${esc(x.id)}">View</button><button class="um-btn" data-vd-doc-st="Verified" data-id="${esc(x.id)}">✓ Verify</button><button class="um-btn" data-vd-doc-st="Rejected" data-id="${esc(x.id)}">✗ Reject</button><button class="um-btn" data-vd-doc-st="Removed" data-id="${esc(x.id)}">Remove</button></div>`).join('')}</div>` : '<div class="sx-sub">No documents yet.</div>'}
-<div class="vd-li" style="margin-top:8px;"><select id="vdDocType" class="vd-stage" aria-label="Document type">${opts(O().docTypes, 'Passport')}</select><input type="file" id="vdDocFile" accept=".pdf,.png,.jpg,.jpeg,.webp,.xls,.xlsx,.doc,.docx" class="grow"><button class="um-btn primary" id="vdDocUp">Upload</button></div>
-<div class="vd-note">PDF, image, Excel or Word · up to 10 MB · private, opened only from the dashboard.</div></div>
-<div class="vd-sec"><h4>Stage history</h4><ul class="vd-tl">${(c.history || []).slice().reverse().map(h => `<li><b>${esc(h.stage)}</b><small>${esc(fmtStamp(h.at))} · ${esc(h.by)}</small></li>`).join('') || '<li>—</li>'}</ul></div>` : ''}
-${errBox('vdErr')}<div class="sx-modal-actions">${c.id && O().canDelete ? '<button class="um-btn" id="vdDel" style="margin-right:auto;color:var(--red);">Remove case</button>' : ''}${c.id ? '<button class="um-btn sx-wa" id="vdWa">WhatsApp</button>' : ''}<button class="um-btn primary" id="vdSave">${isNew ? 'Open visa case' : 'Save case'}</button></div>`, 780);
-const pend = () => { const p = Math.max(0, num('vdFee') - num('vdRec')); $('vdPend').innerHTML = 'Pending: <b class="' + (p ? 'vd-due' : '') + '">' + inr(p) + '</b>'; };
-['vdFee', 'vdRec'].forEach(i => $(i).addEventListener('input', pend)); pend();
+<div id="vdMain">
+<div class="vd-group"><h4>Student &amp; passport</h4><div class="vd-form three">
+${fld('Phone (WhatsApp)', `<input type="text" id="vdPhone" value="${esc(def('phone'))}">`)}${fld('Email', `<input type="text" id="vdEmail" value="${esc(def('email'))}">`)}${fld('Date of birth', `<input type="date" id="vdDob" value="${esc(String(def('dob')).slice(0, 10))}">`)}
+${fld('Passport number', `<input type="text" id="vdPass" value="${esc(def('passportNo'))}">`)}${fld('Passport expiry', `<input type="date" id="vdPassExp" value="${esc(String(def('passportExpiry')).slice(0, 10))}">`)}<div class="sx-sub" id="vdPassWarn" style="align-self:end;padding-bottom:10px;"></div>
+</div></div>
+<div class="vd-group"><h4>Visa &amp; course</h4><div class="vd-form three">
+${fld('Visa type', `<select id="vdType">${opts(vtypes, def('visaType'), 'Choose…')}</select>`)}${fld('Country', `<input type="text" id="vdCountry" value="${esc(def('country'))}">`)}${fld('University', `<input type="text" id="vdUni" value="${esc(def('university'))}">`)}
+${fld('Course', `<input type="text" id="vdCourse" value="${esc(def('course'))}">`)}${fld('Intake', intakeField('vdIntake', def('intake')))}${fld('Priority processing', `<label style="display:flex;gap:8px;align-items:center;padding-top:8px;"><input type="checkbox" id="vdPrio" ${c.priority ? 'checked' : ''}> Yes, priority</label>`)}
+</div></div>
+<div class="vd-group"><h4>Application</h4><div class="vd-form three">
+${fld('Stage', `<select id="vdStage">${opts(O().stages, stageNow)}</select>`)}${fld('Visa officer', O().canAssign ? `<select id="vdOfficer">${opts(execs, def('officer'), 'Unassigned')}</select>` : `<input type="text" value="${esc(me.name)}" disabled>`)}${fld('VFS / Embassy', `<input type="text" id="vdVfs" value="${esc(def('vfsCenter'))}" placeholder="e.g. VFS Global">`)}
+${fld('Case opened', `<input type="date" id="vdRecv" value="${esc(String(def('receivedDate')).slice(0, 10))}">`)}${fld('Application date (submitted)', `<input type="date" id="vdSub" value="${esc(String(def('submittedDate')).slice(0, 10))}">`)}${fld('Appointment centre', `<input type="text" id="vdCentre" value="${esc(def('appointmentCenter'))}" placeholder="e.g. Kochi">`)}
+${fld('Biometrics date', `<input type="date" id="vdBio" value="${esc(String(def('biometricsDate')).slice(0, 10))}">`)}${fld('Decision date', `<input type="date" id="vdDec" value="${esc(String(def('decisionDate')).slice(0, 10))}">`)}${fld('Visa expiry', `<input type="date" id="vdVisaExp" value="${esc(String(def('visaExpiry')).slice(0, 10))}">`)}
+<div class="full" id="vdRejWrap" style="display:none;">${fld('Refusal reason *', `<input type="text" id="vdRej" value="${esc(def('rejectReason'))}" placeholder="e.g. Insufficient funds, credibility interview, documents">`, true)}</div>
+</div></div>
+<div class="vd-group"><h4>CAS / CoE / I-20 &amp; English test</h4><div class="vd-form three">
+${fld('CAS / CoE / I-20 number', `<input type="text" id="vdCas" value="${esc(def('casNumber'))}">`)}${fld('CAS expiry', `<input type="date" id="vdCasExp" value="${esc(String(def('casExpiry')).slice(0, 10))}">`)}<div class="sx-sub" id="vdCasWarn" style="align-self:end;padding-bottom:10px;"></div>
+${fld('English test', `<select id="vdEng">${opts(xo.englishTests, def('englishTestType'), 'Choose…')}</select>`)}${fld('Score', `<input type="text" id="vdEngScore" value="${esc(def('englishScore'))}" placeholder="e.g. 6.5 (no band below 6.0)">`)}${fld('Test expiry', `<input type="date" id="vdEngExp" value="${esc(String(def('englishExpiry')).slice(0, 10))}">`)}
+</div></div>
+<div class="vd-group"><h4>Funds</h4><div class="vd-form three">
+${fld('Funds required (₹)', money('vdFundReq', def('fundsRequired')))}${fld('Funds available (₹)', money('vdFundAv', def('fundsAvailable')))}<div style="align-self:end;padding-bottom:10px;font-size:13px;" id="vdGap"></div>
+</div></div>
+<div class="vd-group"><h4>Our service fee</h4><div class="vd-form three">
+${fld(source === 'B2B agent' ? 'Visa fee charged to agent (₹)' : 'Visa service fee (₹)', money('vdFee', def('fee')))}${fld('Amount received (₹)', money('vdRec', def('received')))}<div style="align-self:end;padding-bottom:10px;font-size:13px;" id="vdPend"></div>
+</div><div class="vd-note">Government, IHS, VFS and other visa costs go in the <b>Fees</b> tab (any currency, converted to ₹).</div></div>
+<div class="vd-group">${fld('Notes', `<textarea id="vdRem" style="min-height:60px;">${esc(c.remarks)}</textarea>`, true)}</div>
+</div>
+${errBox('vdErr')}<div class="sx-modal-actions">${c.id && O().canDelete ? '<button class="um-btn" id="vdDel" style="margin-right:auto;color:var(--red);">Remove case</button>' : ''}${c.id ? '<button class="um-btn sx-wa" id="vdWa">WhatsApp</button>' : ''}<button class="um-btn primary" id="vdSave">${isNew ? 'Open visa case' : 'Save case'}</button></div>`;
+const live = () => {
+const gap = Math.max(0, num('vdFundReq') - num('vdFundAv'));
+$('vdGap').innerHTML = val('vdFundReq') ? (gap ? '<span class="vd-gap">Gap: ' + inr(gap) + '</span>' : '<span class="sx-good">No funds gap ✓</span>') : '';
+const p = Math.max(0, num('vdFee') - num('vdRec')); $('vdPend').innerHTML = 'Pending: <b class="' + (p ? 'vd-due' : '') + '">' + inr(p) + '</b>';
+const t = today(), pe = val('vdPassExp'), ce = val('vdCasExp');
+const six = ymdLocal(new Date(Date.now() + 183 * 86400000)), thirty = ymdLocal(new Date(Date.now() + 30 * 86400000));
+$('vdPassWarn').innerHTML = pe && pe <= six ? '<span class="vd-gap">⚠ Expires within 6 months</span>' : '';
+$('vdCasWarn').innerHTML = ce && ce <= thirty ? '<span class="vd-gap">⚠ CAS expires within 30 days</span>' : '';
+$('vdRejWrap').style.display = val('vdStage') === 'Refused' ? '' : 'none';
+};
+['vdFundReq', 'vdFundAv', 'vdFee', 'vdRec', 'vdPassExp', 'vdCasExp'].forEach(i => $(i).addEventListener('input', live)); $('vdStage').addEventListener('change', live); live();
 const blockB2B = () => { const b = $('vdSave'); if (b) b.disabled = isNew && source === 'B2B agent'; $('vdMain').style.display = isNew && source === 'B2B agent' ? 'none' : ''; };
 function wirePicker() {
 const q = $('vdAppQ'); if (!q) return;
-let t = null;
-q.oninput = () => { clearTimeout(t); t = setTimeout(() => {
+let tm = null;
+q.oninput = () => { clearTimeout(tm); tm = setTimeout(() => {
 const box = $('vdPick'); box.innerHTML = '<div class="sx-sub">Searching…</div>';
 run('getVisaAppPicker', q.value).then(list => {
 box.innerHTML = list.length ? list.map(a => `<button type="button" data-vd-app="${esc(a.id)}"><b>${esc(a.student)}</b> · ${esc(a.university || '—')}<small>${esc(a.id)} · ${esc(a.branch)} · ${esc(a.country)} ${esc(a.intake)} · counsellor ${esc(a.counsellor || '—')}${a.openCase ? ' · already has open case ' + esc(a.openCase) : ''}</small></button>`).join('') : '<div class="sx-sub">No applications found.</div>';
@@ -17448,23 +17643,22 @@ if (!val('vdCountry')) $('vdCountry').value = picked.country; if (!val('vdUni'))
 }, 250); };
 q.oninput();
 }
-document.querySelectorAll('[data-vd-src]').forEach(b => b.onclick = () => {
-source = b.dataset.vdSrc; picked = null;
-document.querySelectorAll('[data-vd-src]').forEach(x => x.classList.toggle('on', x === b));
-$('vdSrcPart').innerHTML = srcPart(); wirePicker(); blockB2B(); formErr('vdErr');
-});
+document.querySelectorAll('[data-vd-src]').forEach(b => b.onclick = () => { source = b.dataset.vdSrc; picked = null; document.querySelectorAll('[data-vd-src]').forEach(x => x.classList.toggle('on', x === b)); $('vdSrcPart').innerHTML = srcPart(); wirePicker(); blockB2B(); formErr('vdErr'); });
 wirePicker(); blockB2B();
 $('vdSave').onclick = () => {
 const btn = $('vdSave'); formErr('vdErr');
 if (isNew && source === 'Our student' && !picked) { formErr('vdErr', 'Search and choose the application this visa is for.'); return; }
 if (isNew && source === 'Our student' && picked.openCase) { formErr('vdErr', picked.student + ' already has an open visa case (' + picked.openCase + ').'); return; }
+if (val('vdStage') === 'Refused' && !val('vdRej')) { formErr('vdErr', 'Enter the refusal reason — it feeds the refusal analysis.'); return; }
 busy(btn, true);
 const p = { id: c.id || '', source: source, appId: picked ? picked.id : '', student: val('vdName'), branch: val('vdBranch'), phone: val('vdPhone'), email: val('vdEmail'), passportNo: val('vdPass'),
-visaType: val('vdType'), country: val('vdCountry'), university: val('vdUni'), course: val('vdCourse'), intake: intakeVal('vdIntake'), stage: val('vdStage'),
-receivedDate: val('vdRecv'), biometricsDate: val('vdBio'), submittedDate: val('vdSub'), decisionDate: val('vdDec'), fee: num('vdFee'), received: num('vdRec'), remarks: val('vdRem') };
+passportExpiry: val('vdPassExp'), dob: val('vdDob'), visaType: val('vdType'), country: val('vdCountry'), university: val('vdUni'), course: val('vdCourse'), intake: intakeVal('vdIntake'), priority: $('vdPrio').checked,
+stage: val('vdStage'), vfsCenter: val('vdVfs'), appointmentCenter: val('vdCentre'), receivedDate: val('vdRecv'), submittedDate: val('vdSub'), biometricsDate: val('vdBio'), decisionDate: val('vdDec'), visaExpiry: val('vdVisaExp'),
+rejectReason: val('vdRej'), casNumber: val('vdCas'), casExpiry: val('vdCasExp'), englishTestType: val('vdEng'), englishScore: val('vdEngScore'), englishExpiry: val('vdEngExp'),
+fundsRequired: val('vdFundReq'), fundsAvailable: val('vdFundAv'), fee: num('vdFee'), received: num('vdRec'), remarks: val('vdRem') };
 if (O().canAssign) p.officer = val('vdOfficer');
 if (!c.id && source !== 'Direct client') { delete p.student; delete p.branch; }
-run('saveVisaCase', p).then(r => { toast(c.id ? 'Visa case saved' : 'Visa case ' + r.id + ' opened'); refreshThen(() => caseForm(caseById(r.id))); })
+run('saveVisaCase', p).then(r => { toast(c.id ? 'Visa case saved' : 'Visa case ' + r.id + ' opened'); refreshThen(() => { const nc = caseById(r.id); if (nc) caseForm(nc); }); })
 .catch(err => { busy(btn, false); formErr('vdErr', err); });
 };
 if (!c.id) return;
@@ -17473,25 +17667,84 @@ if ($('vdDel')) $('vdDel').onclick = () => {
 if (!confirm('Remove visa case ' + c.id + '? (It is hidden, not deleted.)')) return;
 run('deleteVisaCase', c.id).then(() => { closeModal(1); toast('Visa case removed'); refreshThen(); }).catch(err => formErr('vdErr', err));
 };
-const again = msg => { if (msg) toast(msg); refreshThen(() => caseForm(caseById(c.id))); };
+}
+function drawDocs() {
+const c = CF.c, docs = V.data.docs.filter(x => x.caseId === c.id);
+const latest = n => docs.filter(x => x.docType === n).sort((a, b) => String(b.uploadedAt).localeCompare(String(a.uploadedAt)))[0];
+const pill = st => `<span class="vd-pill ${st === 'Verified' ? 'ok' : st === 'Rejected' ? 'bad' : st === 'Missing' ? 'muted' : 'warm'}">${esc(st === 'Uploaded' ? 'To verify' : st)}</span>`;
+const actions = d => d ? `<span class="sx-actions"><button class="um-btn" data-vd-doc-view="${esc(d.id)}">View</button><button class="um-btn" data-vd-doc-st="Verified" data-id="${esc(d.id)}">✓</button><button class="um-btn" data-vd-doc-st="Rejected" data-id="${esc(d.id)}">✗</button></span>` : '';
+const req = c.requiredDocs || [];
+const others = docs.filter(x => req.indexOf(x.docType) === -1);
+$('vdCF').innerHTML = `<div class="sx-sub" style="margin-bottom:8px;">Checklist for <b>${esc(c.visaType || 'this visa')}</b> — ${c.docStats ? c.docStats.verified + ' of ' + c.docStats.required + ' verified' : ''}</div>
+${req.map(n => { const d = latest(n); return `<div class="vd-chk"><span><b>${esc(n)}</b>${d ? `<div class="sx-sub">${esc(d.fileName)} · ${esc(d.uploadedBy)} · ${esc(fmtStamp(d.uploadedAt))}${d.expiry ? ' · expires ' + fmtDate(d.expiry) : ''}</div>` : ''}</span>${pill(d ? d.status : 'Missing')}${d ? actions(d) : `<button class="um-btn" data-vd-up="${esc(n)}">Upload</button>`}</div>`; }).join('')}
+${others.length ? `<div class="vd-group"><h4>Other documents</h4>${others.map(d => `<div class="vd-chk"><span><b>${esc(d.docType)}</b><div class="sx-sub">${esc(d.fileName)} · ${esc(fmtStamp(d.uploadedAt))}</div></span>${pill(d.status)}${actions(d)}</div>`).join('')}</div>` : ''}
+<div class="vd-group"><h4>Upload</h4><div class="vd-li"><select id="vdDocType" class="vd-stage" aria-label="Document type">${opts(req.concat(['Other']), req[0] || 'Other')}</select>
+<input type="date" id="vdDocExp" aria-label="Document expiry (optional)" title="Expiry date (optional)" style="max-width:150px;"><input type="file" id="vdDocFile" accept=".pdf,.png,.jpg,.jpeg,.webp,.xls,.xlsx,.doc,.docx" class="grow"><button class="um-btn primary" id="vdDocUp">Upload</button></div>
+<div class="vd-note">PDF, image, Excel or Word · up to 10 MB · stored privately in Drive under Visa Documents / ${esc(c.id)}.</div></div>${errBox('vdErr')}`;
+document.querySelectorAll('[data-vd-up]').forEach(b => b.onclick = () => { $('vdDocType').value = b.dataset.vdUp; $('vdDocFile').click(); });
+$('vdDocFile').onchange = () => { if ($('vdDocFile').files[0]) $('vdDocUp').click(); };
 document.querySelectorAll('[data-vd-doc-view]').forEach(b => b.onclick = () => viewDoc(b.dataset.vdDocView));
-document.querySelectorAll('[data-vd-doc-st]').forEach(b => b.onclick = () => {
-const st = b.dataset.vdDocSt;
-if (st === 'Removed' && !confirm('Remove this document from the case? (The file is kept in Drive.)')) return;
-b.disabled = true;
-run('setVisaDocStatus', b.dataset.id, st).then(() => again('Document ' + st.toLowerCase())).catch(err => { b.disabled = false; formErr('vdErr', err); });
-});
+document.querySelectorAll('[data-vd-doc-st]').forEach(b => b.onclick = () => { b.disabled = true; run('setVisaDocStatus', b.dataset.id, b.dataset.vdDocSt).then(() => { toast('Document ' + b.dataset.vdDocSt.toLowerCase()); reopenCase('documents'); }).catch(err => { b.disabled = false; formErr('vdErr', err); }); });
 $('vdDocUp').onclick = () => {
 const f = $('vdDocFile').files[0], btn = $('vdDocUp');
 if (!f) { formErr('vdErr', 'Choose a file to upload.'); return; }
 if (f.size > 10 * 1024 * 1024) { formErr('vdErr', 'The file is larger than 10 MB.'); return; }
 busy(btn, true, 'Uploading…'); formErr('vdErr');
 const rd = new FileReader();
-rd.onload = () => run('uploadVisaDoc', c.id, val('vdDocType'), { name: f.name, mimeType: f.type || 'application/octet-stream', base64: String(rd.result).split(',')[1] || '' })
-.then(() => again('Document uploaded')).catch(err => { busy(btn, false); formErr('vdErr', err); });
+rd.onload = () => run('uploadVisaDoc', c.id, val('vdDocType'), { name: f.name, mimeType: f.type || 'application/octet-stream', base64: String(rd.result).split(',')[1] || '', expiry: val('vdDocExp') })
+.then(() => { toast('Document uploaded'); reopenCase('documents'); }).catch(err => { busy(btn, false); formErr('vdErr', err); });
 rd.onerror = () => { busy(btn, false); formErr('vdErr', 'Could not read that file.'); };
 rd.readAsDataURL(f);
 };
+}
+function drawAppts() {
+const c = CF.c, list = CF.detail.appointments || [], xo = XO();
+const pillA = s => `<span class="vd-pill ${s === 'Completed' ? 'ok' : s === 'Missed' ? 'bad' : s === 'Rescheduled' ? 'warm' : ''}">${esc(s)}</span>`;
+$('vdCF').innerHTML = `${list.length ? `<div class="vd-list">${list.map(a => `<div class="vd-li"><span class="grow"><b>${esc(a.type)}</b> · ${fmtDate(a.date)} ${esc(a.time || '')}${a.venue ? ' · ' + esc(a.venue) : ''}${a.outcome ? `<div class="sx-sub">${esc(a.outcome)}</div>` : ''}${a.notes ? `<div class="sx-sub">${esc(a.notes)}</div>` : ''}</span>${pillA(a.status)}
+${a.status === 'Scheduled' || a.status === 'Rescheduled' ? `<button class="um-btn" data-vd-ap="${esc(a.id)}" data-st="Completed">✓ Done</button><button class="um-btn" data-vd-ap="${esc(a.id)}" data-st="Missed">Missed</button><button class="um-btn" data-vd-ap-edit="${esc(a.id)}">Reschedule</button><button class="um-btn" data-vd-ap="${esc(a.id)}" data-st="Cancelled">Cancel</button>` : ''}</div>`).join('')}</div>` : '<div class="sx-empty">No appointments yet.</div>'}
+<div class="vd-group"><h4 id="vdApTitle">+ Add appointment</h4><div class="vd-form three">
+${fld('Type', `<select id="vdApType">${opts(xo.apptTypes, 'Biometrics')}</select>`)}${fld('Date', `<input type="date" id="vdApDate">`)}${fld('Time', `<input type="time" id="vdApTime">`)}
+${fld('Venue', `<input type="text" id="vdApVenue" placeholder="e.g. VFS Global, Kochi" value="${esc(c.appointmentCenter || '')}">`)}<div class="full">${fld('Notes', `<input type="text" id="vdApNotes">`, true)}</div></div>
+<input type="hidden" id="vdApId"><div class="sx-modal-actions"><button class="um-btn primary" id="vdApSave">Save appointment</button></div></div>${errBox('vdErr')}`;
+document.querySelectorAll('[data-vd-ap]').forEach(b => b.onclick = () => {
+const st = b.dataset.st; const outcome = st === 'Completed' ? '' : st === 'Missed' ? 'Student did not attend' : '';
+b.disabled = true; run('setVisaAppointmentStatus', b.dataset.vdAp, st, outcome).then(() => { toast('Appointment ' + st.toLowerCase()); reopenCase('appointments'); }).catch(err => { b.disabled = false; formErr('vdErr', err); });
+});
+document.querySelectorAll('[data-vd-ap-edit]').forEach(b => b.onclick = () => { const a = list.find(x => x.id === b.dataset.vdApEdit); $('vdApId').value = a.id; $('vdApType').value = a.type; $('vdApDate').value = String(a.date).slice(0, 10); $('vdApTime').value = a.time || ''; $('vdApVenue').value = a.venue || ''; $('vdApNotes').value = a.notes || ''; $('vdApTitle').textContent = 'Reschedule ' + a.type; $('vdApDate').focus(); });
+$('vdApSave').onclick = () => { const btn = $('vdApSave'); busy(btn, true); formErr('vdErr');
+run('saveVisaAppointment', { id: val('vdApId'), caseId: c.id, type: val('vdApType'), date: val('vdApDate'), time: val('vdApTime'), venue: val('vdApVenue'), notes: val('vdApNotes') })
+.then(() => { toast('Appointment saved'); reopenCase('appointments'); }).catch(err => { busy(btn, false); formErr('vdErr', err); }); };
+}
+function drawTimeline() {
+const ev = CF.detail.events || [];
+const cls = t => /Approved|Created|Payment|Email/.test(t) ? 'good' : /Rejected|Missed/.test(t) ? 'bad' : /Assigned|Admin/.test(t) ? 'admin' : '';
+$('vdCF').innerHTML = ev.length ? `<ul class="vd-tl">${ev.map(e => `<li class="${cls(e.type)}"><b>${esc(e.description || e.type)}</b><small>${esc(fmtStamp(e.at))}${e.by ? ' · ' + esc(e.by) : ''}</small></li>`).join('')}</ul><div class="vd-note">Recorded automatically — every save, document, appointment and payment.</div>` : '<div class="sx-empty">No events yet.</div>';
+}
+function drawFees() {
+const c = CF.c, fees = CF.detail.fees || [], xo = XO();
+const types = xo.feeTypes.filter(t => (t !== 'IHS' || isUK(c)) && (t !== 'SEVIS' || isUSCA(c)));
+const sum = (l, k) => l.reduce((t, f) => t + (Number(f[k]) || 0), 0);
+const counted = fees.filter(f => f.status !== 'Refunded');
+$('vdCF').innerHTML = `<div class="sx-kpis" style="grid-template-columns:repeat(3,minmax(0,1fr));"><div class="sx-kpi"><div class="sx-sub">Total visa costs</div><div style="font-size:20px;font-weight:800;">${inr(sum(counted, 'amountInr'))}</div></div>
+<div class="sx-kpi"><div class="sx-sub">Paid</div><div style="font-size:20px;font-weight:800;" class="sx-good">${inr(sum(fees.filter(f => f.status === 'Paid'), 'amountInr'))}</div></div>
+<div class="sx-kpi"><div class="sx-sub">Pending</div><div style="font-size:20px;font-weight:800;" class="${sum(fees.filter(f => f.status === 'Pending'), 'amountInr') ? 'sx-bad' : ''}">${inr(sum(fees.filter(f => f.status === 'Pending'), 'amountInr'))}</div></div></div>
+${fees.length ? `<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Type</th><th class="num">Amount</th><th class="num">₹</th><th>Paid by</th><th>Status</th><th>Reference</th><th></th></tr></thead><tbody>
+${fees.map(f => `<tr><td><b>${esc(f.feeType)}</b>${f.invoice ? `<div class="sx-sub">Inv ${esc(f.invoice)}</div>` : ''}</td><td class="num">${esc(f.currency)} ${Number(f.amount).toLocaleString('en-IN')}</td><td class="num">${inr(f.amountInr)}${f.currency !== 'INR' ? `<div class="sx-sub">@ ${esc(f.rate)}</div>` : ''}</td><td>${esc(f.paidBy)}</td>
+<td><select class="vd-stage" data-vd-fee="${esc(f.id)}" aria-label="Status">${opts(xo.feeStatuses, f.status)}</select></td><td>${esc(f.reference || '—')}${f.payDate ? `<div class="sx-sub">${fmtDate(f.payDate)}</div>` : ''}</td><td><button class="um-btn" data-vd-fee-rm="${esc(f.id)}" title="Remove">✕</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="sx-empty">No visa costs recorded yet.</div>'}
+<div class="vd-group"><h4>+ Add fee</h4><div class="vd-form three">
+${fld('Fee type', `<select id="vdFeType">${opts(types, 'Visa Fee')}</select>`)}${fld('Amount', `<input type="number" min="0" step="any" id="vdFeAmt">`)}${fld('Currency', `<select id="vdFeCur">${opts(xo.currencies, isUK(c) ? 'GBP' : 'INR')}</select>`)}
+${fld('Paid by', `<select id="vdFePaid">${opts(['Student', 'Akbar'], 'Student')}</select>`)}${fld('Status', `<select id="vdFeSt">${opts(xo.feeStatuses, 'Pending')}</select>`)}${fld('Payment date', `<input type="date" id="vdFeDate">`)}
+${fld('Payment reference', `<input type="text" id="vdFeRef">`)}${fld('Invoice number', `<input type="text" id="vdFeInv">`)}<div style="align-self:end;padding-bottom:10px;font-size:13px;" id="vdFeInr"></div>
+<div class="full">${fld('Notes', `<input type="text" id="vdFeNotes">`, true)}</div></div>
+<div class="vd-note">${isUK(c) ? 'IHS (Immigration Health Surcharge) is shown because this is a UK visa. ' : ''}${isUSCA(c) ? 'SEVIS is shown for USA / Canada. ' : ''}Converted at the dashboard's exchange rates (Financials → Exchange Rates).</div>
+<div class="sx-modal-actions"><button class="um-btn primary" id="vdFeSave">Add fee</button></div></div>${errBox('vdErr')}`;
+const conv = () => { const cur = val('vdFeCur'), rate = Number((xo.fxRates || {})[cur]) || (cur === 'INR' ? 1 : 0); $('vdFeInr').innerHTML = num('vdFeAmt') ? (rate ? '= <b>' + inr(num('vdFeAmt') * rate) + '</b>' : '<span class="vd-gap">No rate for ' + esc(cur) + '</span>') : ''; };
+['vdFeAmt', 'vdFeCur'].forEach(i => { $(i).addEventListener('input', conv); $(i).addEventListener('change', conv); }); conv();
+document.querySelectorAll('[data-vd-fee]').forEach(s => s.onchange = () => { s.disabled = true; run('setVisaFeeStatus', s.dataset.vdFee, s.value).then(() => { toast('Fee ' + s.value.toLowerCase()); reopenCase('fees'); }).catch(err => { s.disabled = false; formErr('vdErr', err); }); });
+document.querySelectorAll('[data-vd-fee-rm]').forEach(b => b.onclick = () => { if (!confirm('Remove this fee? (It is hidden, not deleted.)')) return; run('setVisaFeeStatus', b.dataset.vdFeeRm, 'Removed').then(() => { toast('Fee removed'); reopenCase('fees'); }).catch(err => formErr('vdErr', err)); });
+$('vdFeSave').onclick = () => { const btn = $('vdFeSave'); busy(btn, true); formErr('vdErr');
+run('addVisaFee', { caseId: c.id, feeType: val('vdFeType'), amount: num('vdFeAmt'), currency: val('vdFeCur'), paidBy: val('vdFePaid'), status: val('vdFeSt'), payDate: val('vdFeDate'), reference: val('vdFeRef'), invoice: val('vdFeInv'), notes: val('vdFeNotes') })
+.then(() => { toast('Fee added'); reopenCase('fees'); }).catch(err => { busy(btn, false); formErr('vdErr', err); }); };
 }
 function viewDoc(docId) {
 const b = modal('Document', '<div class="skeleton" style="height:300px;"></div>', 900, 2);
@@ -17512,15 +17765,17 @@ const c = caseById(id); if (!c) return;
 const toAgent = c.source === 'B2B agent';
 const name = toAgent ? (c.agentName || 'there') : (c.student || 'there');
 const docsBad = V.data.docs.filter(x => x.caseId === c.id && x.status === 'Rejected').map(x => x.docType);
-const dates = [c.biometricsDate ? 'Biometrics: ' + fmtDate(c.biometricsDate) : '', c.submittedDate ? 'Submitted: ' + fmtDate(c.submittedDate) : '', c.decisionDate && !c.open ? 'Decision: ' + fmtDate(c.decisionDate) : ''].filter(Boolean).join(' · ');
-let msg = 'Hi ' + name + ',\n' + (toAgent ? 'Visa update for your student ' + c.student + ' (' + c.id + '):' : 'Here is the update on your visa (' + c.id + '):') + '\n\n' + [c.country, c.visaType + ' visa'].filter(Boolean).join(' ') + ': *' + c.stage + '*' + (dates ? '\n' + dates : '');
+const missing = (c.requiredDocs || []).filter(n => !V.data.docs.some(x => x.caseId === c.id && x.docType === n));
+const dates = [c.nextAppt ? 'Next appointment: ' + c.nextAppt.type + ' on ' + fmtDate(c.nextAppt.date) + (c.nextAppt.time ? ' ' + c.nextAppt.time : '') : '', c.submittedDate ? 'Applied: ' + fmtDate(c.submittedDate) : '', c.decisionDate && !c.open ? 'Decision: ' + fmtDate(c.decisionDate) : ''].filter(Boolean).join('\n');
+let msg = 'Hi ' + name + ',\n' + (toAgent ? 'Visa update for your student ' + c.student + ' (' + c.id + '):' : 'Here is the update on your visa (' + c.id + '):') + '\n\n' + [c.country, c.visaType].filter(Boolean).join(' · ') + ': *' + c.stage + '*' + (dates ? '\n' + dates : '');
 if (docsBad.length) msg += '\n\nPlease send again: ' + docsBad.join(', ') + '.';
-if (c.stage === 'Documents pending') msg += '\n\nWe are waiting for the documents to start the visa file.';
-if (c.fee) msg += '\n\nVisa fee: ' + inr(c.fee) + ' · received ' + inr(c.received) + (c.pending ? ' · *pending ' + inr(c.pending) + '*' : ' · fully paid ✅');
+if (c.open && missing.length && missing.length <= 6) msg += '\n\nStill needed: ' + missing.join(', ') + '.';
+if (c.fundsGap > 0) msg += '\n\nFunds: please show ' + inr(c.fundsGap) + ' more in the bank statement.';
+if (c.fee) msg += '\n\nVisa service fee: ' + inr(c.fee) + ' · received ' + inr(c.received) + (c.pending ? ' · *pending ' + inr(c.pending) + '*' : ' · fully paid ✅');
 msg += '\n\n— ' + ((V.data.me && V.data.me.name) || 'Visa team') + ', Akbar Study Abroad';
 const n = waNumber(toAgent ? c.agentPhone : c.phone);
 modal('WhatsApp to ' + name, `${n ? '' : `<div class="fin-alert warm">No WhatsApp number saved for ${toAgent ? 'this agent' : 'this client'} — add it on the case. You can still copy the message.</div>`}
-<label class="f">Message (edit before sending)</label><textarea id="vdWaText" style="min-height:220px;">${esc(msg)}</textarea>
+<label class="f">Message (edit before sending)</label><textarea id="vdWaText" style="min-height:240px;">${esc(msg)}</textarea>
 <div class="sx-modal-actions"><button class="um-btn" id="vdWaCopy">Copy</button>${n ? '<button class="um-btn sx-wa" id="vdWaOpen">Open WhatsApp</button>' : ''}</div>
 <div class="vd-note">WhatsApp opens with this text — you press Send there. Nothing is sent automatically.</div>`, 560, 2);
 $('vdWaCopy').onclick = () => { const t = $('vdWaText'); t.select(); try { navigator.clipboard.writeText(t.value).then(() => toast('Copied')); } catch (e) { document.execCommand('copy'); toast('Copied'); } };
@@ -17529,10 +17784,32 @@ if (n) $('vdWaOpen').onclick = () => { window.open('https:\x2F\x2Fwa.me\x2F' + n
 
 window.openVisaDesk = openVisaDesk;
 document.querySelectorAll('[data-visa-view]').forEach(el => {
-const go = () => openVisaDesk({});
+const go = () => openVisaDesk({ tab: el.dataset.visaView === 'desk' ? 'cases' : el.dataset.visaView });
 el.addEventListener('click', go);
 el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
 });
+
+const lvCache = {};
+function fillLeadVisa(box) {
+const id = box.dataset.lvisa, br = box.dataset.branch; box.dataset.done = '1';
+const draw = r => {
+const cases = r.cases || [];
+box.innerHTML = `<div class="lvisa-box"><h5>🛂 Visa status</h5>${cases.length ? cases.map(c => `<div class="vd-li" style="margin-bottom:5px;"><span class="grow"><b>${esc(c.id)}</b> · ${esc([c.country, c.visaType].filter(Boolean).join(' · '))}<div class="sx-sub">${esc(c.stage)}${c.officer ? ' · officer ' + esc(c.officer) : ' · not yet assigned'}${c.nextAppt ? ' · next: ' + esc(c.nextAppt.type) + ' ' + fmtDate(c.nextAppt.date) : ''}${c.decisionDate && c.result !== 'Pending' ? ' · decided ' + fmtDate(c.decisionDate) : ''}</div></span>${resultPill(c.result)}${r.canOpenDesk ? `<button class="um-btn" data-lv-open="${esc(c.id)}">View visa case</button>` : ''}</div>`).join('') : '<div class="sx-sub" style="margin-bottom:6px;">No visa case yet.</div>'}
+${r.open ? '' : `<button class="um-btn" data-lv-create="${esc(id)}" data-branch="${esc(br)}">🛂 Create visa case</button>`}</div>`;
+};
+const hit = lvCache[id]; if (hit && Date.now() - hit.at < 60000) { draw(hit.r); return; }
+box.innerHTML = '<div class="lvisa-box"><h5>🛂 Visa status</h5><div class="skeleton" style="height:28px;"></div></div>';
+run('getLeadVisaStatus', id, br).then(r => { lvCache[id] = { at: Date.now(), r: r }; if (box.isConnected) draw(r); }).catch(() => { box.innerHTML = ''; });
+}
+setInterval(() => { document.querySelectorAll('.lvisa[data-lvisa]:not([data-done])').forEach(fillLeadVisa); }, 700);
+document.addEventListener('click', e => {
+const cr = e.target.closest('[data-lv-create]');
+if (cr) { e.stopPropagation(); if (!confirm('Create a visa case for this student? The visa team will be notified.')) return; cr.disabled = true; cr.textContent = 'Creating…';
+run('sendLeadToVisa', cr.dataset.lvCreate, cr.dataset.branch, '').then(r => { delete lvCache[cr.dataset.lvCreate]; toast(r.existing ? 'This student already has an open visa case (' + r.id + ')' : 'Visa case ' + r.id + ' created — the visa team is notified'); const box = cr.closest('.lvisa'); if (box) { box.removeAttribute('data-done'); } })
+.catch(err => { cr.disabled = false; cr.textContent = '🛂 Create visa case'; toast(errMsg(err), 'error'); }); return; }
+const op = e.target.closest('[data-lv-open]');
+if (op) { e.stopPropagation(); if (typeof closeLeadPop === 'function') try { closeLeadPop(); } catch (x) {   } openVisaDesk({ caseId: op.dataset.lvOpen }); }
+}, true);
 })();
 </script>
 
