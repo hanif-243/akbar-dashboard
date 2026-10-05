@@ -45,7 +45,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '5 Oct 2026 · v28';
+window.AKBAR_BUILD = '5 Oct 2026 · v29';
 
 (function () {
   try {
@@ -6842,6 +6842,9 @@ const due = !window._sidePanelsAt || Date.now() - window._sidePanelsAt > 180000;
 if (due) { window._sidePanelsAt = Date.now(); loadSLABreaches(); loadMentions(); loadCounselorActivity(); loadBranchTargets(); }
 return;
 }
+if (response && response.rowsPacked && !response.rows) {
+const pk = response.rowsPacked; response.rows = (pk.data || []).map(function (a) { const o = {}; for (let i = 0; i < pk.cols.length; i++) { if (a[i] !== null && a[i] !== undefined) o[pk.cols[i]] = a[i]; } return o; });
+}
 if (!window._akPrefetched && typeof window.akPrefetch === 'function') { window._akPrefetched = true; window.akPrefetch(['getNotifications', 'getFAQs', 'getSLABreaches', 'getMyMentions', 'getCounselorActivity', 'getBranchTargets', 'getInsightCardsData', 'getMissedFollowUps', 'getFinanceAccess', 'getMyHRProfile', 'getAutomationBell']); }
 window._dashSig = response.dataSig || '';
 if (response && response.isTelecallerStaff && typeof window.applyTelecallerStaffMode === 'function') window.applyTelecallerStaffMode();
@@ -6921,7 +6924,7 @@ loader.classList.remove('active');
 console.error(err);
 document.getElementById('emptyStateText').textContent = 'Error loading data — check the Run Log tab.';
 document.getElementById('emptyState').style.display = 'flex';
-showToast('Could not load leads — check your connection.', 'error');
+showToast('Could not load leads — ' + (err && err.message ? String(err.message).replace(/^Error:\s*/, '') : 'check your connection.'), 'error');
 }).getDashboardData(window._authToken || "", { leadSet: window._leadSet || 'main', since: window._dashSig || '' });
 }
 
