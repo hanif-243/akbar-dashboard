@@ -36,7 +36,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '4 Oct 2026 · v24';
+window.AKBAR_BUILD = '5 Oct 2026 · v27';
 
 (function () {
   try {
@@ -4540,6 +4540,7 @@ Akbar Study Abroad</textarea>
 <button class="bell" id="addLeadBtn" title="Add a walk-in or referral lead" style="width:auto;padding:0 12px;gap:6px;display:none;font-size:12px;font-weight:700;">+ Add Lead</button>
 <button class="bell" id="monthlyReportBtn" title="Monthly performance report" style="width:auto;padding:0 12px;gap:6px;display:none;font-size:12px;font-weight:700;">📅 Monthly</button>
 <button class="bell" id="bulkUploadBtn" title="Bulk upload leads from Excel or CSV" style="width:auto;padding:0 12px;gap:6px;display:none;font-size:12px;font-weight:700;">📤 Bulk Upload</button>
+<button class="bell" id="leadQualityBtn" title="Which ads bring qualified leads, and what is sent to Meta" style="width:auto;padding:0 12px;gap:6px;display:none;font-size:12px;font-weight:700;">📡 Lead quality</button>
 <button class="bell" id="ceoViewBtn" title="One-page summary for leadership" style="width:auto;padding:0 12px;gap:6px;display:none;font-size:12px;font-weight:700;">👑 CEO View</button>
 <button class="bell" id="appTeamBtn" title="Application team performance, applications and student documents" style="width:auto;padding:0 12px;gap:6px;font-size:12px;font-weight:700;">🎓 Applications</button>
 </div>
@@ -6890,6 +6891,8 @@ const bulkUploadBtn = document.getElementById('bulkUploadBtn');
 if (bulkUploadBtn) bulkUploadBtn.style.display = (response.isSuperAdmin || !response.viewerCounselor) ? 'flex' : 'none';
 const ceoViewBtn = document.getElementById('ceoViewBtn');
 if (ceoViewBtn) ceoViewBtn.style.display = response.isSuperAdmin ? 'flex' : 'none';
+const leadQualityBtn = document.getElementById('leadQualityBtn');
+if (leadQualityBtn) leadQualityBtn.style.display = (response.isSuperAdmin || (response.viewerBranch && !response.viewerCounselor && !response.isTelecallerStaff)) ? 'flex' : 'none';
 if (response.faqs) {
 faqList = response.faqs;
 }
@@ -17492,6 +17495,107 @@ const go = () => openVisaDesk({});
 el.addEventListener('click', go);
 el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
 });
+})();
+</script>
+
+<style>
+.lq-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.lq-tabs button { border: 1px solid var(--border); background: var(--card); color: var(--ink); border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.lq-tabs button.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+.lq-bar { display: inline-block; height: 8px; border-radius: 4px; background: var(--canvas); width: 70px; vertical-align: middle; overflow: hidden; margin-left: 6px; }
+.lq-bar i { display: block; height: 100%; }
+.lq-good i { background: var(--ok); } .lq-bad i { background: var(--red); }
+.lq-pill { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 9px; }
+.lq-pill.ok { background: rgba(31,157,99,.12); color: var(--ok); } .lq-pill.no { background: var(--red-dim); color: var(--red); }
+.lq-note { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+#lqBody input[type=password], #lqBody input[type=text] { width: 100%; box-sizing: border-box; border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px; font: inherit; font-size: 13px; background: var(--card); color: var(--ink); }
+</style>
+<script>
+
+(function () {
+const $ = id => document.getElementById(id);
+const esc = v => escapeHtml(v == null ? '' : String(v));
+const run = (fn, ...a) => promisifyRun(fn, window._authToken || '', ...a);
+const errMsg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
+let tab = 'ads', days = 90;
+function modal(html) {
+let bg = $('lqBg');
+if (!bg) {
+bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'lqBg';
+bg.innerHTML = '<div class="cmdk-box" style="max-width:980px;" role="dialog" aria-modal="true" aria-labelledby="lqTitle"><div class="preview-modal-header"><span id="lqTitle" style="font-size:14px;font-weight:800;flex:1;">📡 Lead quality</span><button class="counselor-save-btn" id="lqClose">Close</button></div><div class="s10-body" id="lqBody"></div></div>';
+document.body.appendChild(bg);
+bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
+$('lqClose').onclick = () => bg.classList.remove('open');
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && bg.classList.contains('open')) { bg.classList.remove('open'); e.stopPropagation(); } }, true);
+}
+$('lqBody').innerHTML = html; bg.classList.add('open');
+}
+const bar = (pct, good) => pct == null ? '—' : `${pct}%<span class="lq-bar ${good ? 'lq-good' : 'lq-bad'}"><i style="width:${Math.max(2, pct)}%"></i></span>`;
+function shell(inner) {
+const sa = !!window._isSuperAdmin;
+return `<div class="lq-tabs"><button data-lq="ads" class="${tab === 'ads' ? 'on' : ''}">Quality by ad</button>${sa ? `<button data-lq="meta" class="${tab === 'meta' ? 'on' : ''}">Sent to Meta</button><button data-lq="forms" class="${tab === 'forms' ? 'on' : ''}">Leads from Meta</button>` : ''}
+${tab === 'ads' ? `<select id="lqDays" style="margin-left:auto;">${[30, 60, 90, 180].map(d => `<option value="${d}" ${d === days ? 'selected' : ''}>Last ${d} days</option>`).join('')}</select>` : ''}</div><div id="lqInner">${inner}</div>`;
+}
+function wire() {
+document.querySelectorAll('[data-lq]').forEach(b => b.onclick = () => { tab = b.dataset.lq; open(); });
+const d = $('lqDays'); if (d) d.onchange = () => { days = Number(d.value); open(); };
+}
+function open() {
+modal(shell('<div class="skeleton" style="height:240px;"></div>')); wire();
+if (tab === 'ads') {
+run('getLeadQualityBySource', days).then(r => {
+const rows = r.sources;
+$('lqInner').innerHTML = rows.length ? `<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Ad / campaign</th><th class="num">Leads</th><th class="num">Hot</th><th class="num">Warm</th><th class="num">Cold</th><th class="num">Junk</th><th>Qualified (Hot+Warm)</th><th>Junk rate</th><th class="num">Applied</th><th class="num">Enrolled</th></tr></thead><tbody>
+${rows.map(x => `<tr><td><b>${esc(x.source)}</b></td><td class="num">${x.leads}</td><td class="num">${x.hot}</td><td class="num">${x.warm}</td><td class="num">${x.cold}</td><td class="num">${x.junk}</td><td>${bar(x.qualifiedPct, true)}</td><td>${bar(x.junkPct, false)}</td><td class="num">${x.applied}</td><td class="num">${x.enrolled}</td></tr>`).join('')}</tbody></table></div>
+<p class="lq-note">Percentages count only leads a counsellor has already marked (not “New”). Turn off or rework ads with a high junk rate; put budget into the ones with the best qualified % and enrolments.</p>` : '<div class="sx-empty">No ad leads in this period.</div>';
+}).catch(e => { $('lqInner').innerHTML = `<div class="sx-empty">${esc(errMsg(e))}</div>`; });
+} else if (tab === 'forms') {
+run('getMetaLeadSetup').then(drawForms).catch(e => { $('lqInner').innerHTML = `<div class="sx-empty">${esc(errMsg(e))}</div>`; });
+} else {
+run('getMetaSignals').then(r => {
+$('lqInner').innerHTML = `<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Branch</th><th>Connected to Meta</th><th class="num">Qualified</th><th class="num">of which Hot</th><th class="num">Applications</th><th class="num">Deposits</th><th class="num">Visas</th><th class="num">Enrolled</th><th class="num">Failed</th></tr></thead><tbody>
+${r.branches.map(b => `<tr><td><b>${esc(b.name)}</b></td><td>${b.ready ? '<span class="lq-pill ok">Connected</span>' : `<span class="lq-pill no">Not set up</span><div class="sx-sub">Missing: ${[!b.pixel && 'Pixel ID', !b.token && 'Access Token', !b.enabled && 'CAPI Enabled'].filter(Boolean).join(', ')}</div>`}</td>
+<td class="num">${b.qualified}</td><td class="num">${b.hot}</td><td class="num">${b.applications}</td><td class="num">${b.deposits}</td><td class="num">${b.visas}</td><td class="num">${b.enrolled}</td><td class="num ${b.failed ? 'sx-bad' : ''}">${b.failed}</td></tr>`).join('')}</tbody></table></div>
+<p class="lq-note">Last 30 days. Set up a branch in the control sheet's Branches tab: Meta Pixel ID, Meta Access Token, CAPI Enabled = TRUE.</p>
+${r.recent.length ? `<div style="font-weight:800;margin:14px 0 6px;">Latest signals</div><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>When</th><th>Lead</th><th>Branch</th><th>Signal</th><th>From a Meta form</th><th>Result</th></tr></thead><tbody>
+${r.recent.map(e => `<tr><td>${esc(new Date(e.sentAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }))}</td><td>${esc(e.student)}</td><td>${esc(e.branch)}</td><td>${esc(e.event)}</td><td>${e.metaLead ? 'Yes' : 'No'}</td><td class="${e.result === 'Sent' ? '' : 'sx-bad'}">${esc(e.result)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="sx-empty">Nothing sent yet in the last 30 days.</div>'}`;
+}).catch(e => { $('lqInner').innerHTML = `<div class="sx-empty">${esc(errMsg(e))}</div>`; });
+}
+}
+
+function drawForms(d) {
+const st = d.status || {}, when = st.at ? new Date(st.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : 'never';
+const brOpts = cur => '<option value="">Choose branch…</option>' + d.branches.map(b => `<option ${b === cur ? 'selected' : ''}>${esc(b)}</option>`).join('');
+$('lqInner').innerHTML = `<div class="sx-card" style="margin-bottom:12px;"><div style="font-weight:800;margin-bottom:6px;">1 · Connect your Facebook Page</div>
+<div class="b2b-form" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px;">
+<div><label class="f">Meta access token (leads_retrieval)</label><input type="password" id="mlTok" autocomplete="off" placeholder="${d.tokenSet ? 'Saved ✓ (ends …' + esc(d.tokenTail) + ') — paste only to replace' : 'Paste the token'}"></div>
+<div><label class="f">Facebook Page ID(s)</label><input type="text" id="mlPages" value="${esc(d.pages)}" placeholder="e.g. 102345678901234"></div></div>
+<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;"><button class="um-btn primary" id="mlSave">Save &amp; check</button><button class="um-btn" id="mlLoad" ${d.tokenSet ? '' : 'disabled'}>Load my lead forms</button></div>
+<div id="mlMsg" class="lq-note"></div></div>
+<div class="sx-card" style="margin-bottom:12px;"><div style="font-weight:800;margin-bottom:6px;">2 · Choose which forms feed which branch</div>
+${d.forms.length ? `<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Lead form</th><th>Page</th><th>Branch</th><th>Import</th><th class="num">Imported</th><th>Last lead</th></tr></thead><tbody>
+${d.forms.map(f => `<tr><td><b>${esc(f.formName)}</b><div class="sx-sub">${esc(f.formId)} · ${esc(f.metaStatus || '')}</div></td><td>${esc(f.pageName)}</td>
+<td><select data-ml-br="${esc(f.formId)}">${brOpts(f.branch)}</select></td><td><input type="checkbox" data-ml-on="${esc(f.formId)}" ${f.enabled ? 'checked' : ''} aria-label="Import leads from ${esc(f.formName)}"></td>
+<td class="num">${Number(f.imported) || 0}</td><td>${f.lastLeadAt ? esc(new Date(f.lastLeadAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })) : '—'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="sx-empty">Save the token and Page ID, then click “Load my lead forms”.</div>'}</div>
+<div class="sx-card"><div style="font-weight:800;margin-bottom:6px;">3 · Automatic import</div>
+<div>${d.running ? '<span class="lq-pill ok">On — checking Meta every minute</span>' : '<span class="lq-pill no">Off</span>'}
+<span class="sx-sub" style="margin-left:8px;">Last check: ${esc(when)} · ${esc(st.message || '—')}</span></div>
+<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;"><button class="um-btn ${d.running ? '' : 'primary'}" id="mlToggle">${d.running ? 'Turn off' : 'Turn on'}</button><button class="um-btn" id="mlNow">Check now</button></div>
+<p class="lq-note"><b>Important:</b> once leads arrive here, switch off your old connection that copies Meta leads into the branch sheets (Zapier / LeadsBridge / similar) for these forms — otherwise the same lead can be added twice. A lead already in the sheet is never imported twice from here.</p></div>`;
+const msg = (t, bad) => { const m = $('mlMsg'); if (m) { m.textContent = t; m.style.color = bad ? 'var(--red)' : ''; } };
+$('mlSave').onclick = () => { const b = $('mlSave'); b.disabled = true; msg('Checking with Meta…');
+run('saveMetaLeadSetup', { token: $('mlTok').value, pages: $('mlPages').value }).then(r => { msg('Connected: ' + r.pages.join(', ')); return run('getMetaLeadSetup'); }).then(drawForms).catch(e => { b.disabled = false; msg(errMsg(e), true); }); };
+$('mlLoad').onclick = () => { const b = $('mlLoad'); b.disabled = true; b.textContent = 'Loading…'; run('loadMetaForms').then(drawForms).catch(e => { b.disabled = false; b.textContent = 'Load my lead forms'; msg(errMsg(e), true); }); };
+document.querySelectorAll('[data-ml-on], [data-ml-br]').forEach(el => el.onchange = () => {
+const id = el.dataset.mlOn || el.dataset.mlBr;
+const on = document.querySelector('[data-ml-on="' + id + '"]'), br = document.querySelector('[data-ml-br="' + id + '"]');
+run('saveMetaForm', id, br.value, on.checked).then(() => { if (typeof showToast === 'function') showToast('Saved', 'success'); }).catch(e => { if (el === on) on.checked = !on.checked; if (typeof showToast === 'function') showToast(errMsg(e), 'error'); });
+});
+$('mlToggle').onclick = () => { $('mlToggle').disabled = true; run('setMetaLeadImport', !d.running).then(() => run('getMetaLeadSetup')).then(drawForms).catch(e => { if (typeof showToast === 'function') showToast(errMsg(e), 'error'); }); };
+$('mlNow').onclick = () => { const b = $('mlNow'); b.disabled = true; b.textContent = 'Checking…'; run('runMetaLeadsNow').then(r => { if (typeof showToast === 'function') showToast(r.message || 'Done', r.ok ? 'success' : 'error'); return run('getMetaLeadSetup'); }).then(drawForms).catch(e => { b.disabled = false; b.textContent = 'Check now'; if (typeof showToast === 'function') showToast(errMsg(e), 'error'); }); };
+}
+window.openLeadQuality = () => { tab = 'ads'; open(); };
+const btn = $('leadQualityBtn'); if (btn) btn.onclick = () => window.openLeadQuality();
 })();
 </script>
 </body>
