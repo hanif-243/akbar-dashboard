@@ -45,7 +45,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '5 Oct 2026 · v29';
+window.AKBAR_BUILD = '5 Oct 2026 · v30';
 
 (function () {
   try {
@@ -68,10 +68,19 @@ window.AKBAR_BUILD = '5 Oct 2026 · v29';
       });
     });
     function dashSave(token, resp) { idb(function (db) { if (!db) return; try { db.transaction(ST, 'readwrite').objectStore(ST).put({ token: token, at: Date.now(), resp: resp }, 'last'); } catch (e) {   } }); }
-    window.akClearDashCache = function () { try { indexedDB.deleteDatabase(DB); } catch (e) {   } };
+    var memDash = {};
+    window.akClearDashCache = function () { memDash = {}; try { indexedDB.deleteDatabase(DB); } catch (e) {   } };
     function dashCall(st, args) {
       dashCacheReady.then(function (c) {
         var a = args.slice(), o = Object.assign({}, a[1] || {});
+        var mem = memDash[(o.leadSet || 'main') + '|' + a[0]];
+        if (window._akServeMem && mem) {
+          window._akServeMem = false; dashServed = true;
+          o.since = mem.dataSig || '';
+          var mcopy = JSON.parse(JSON.stringify(mem)); mcopy.__cached = true;
+          if (st.s) setTimeout(function () { st.s(mcopy, st.u); }, 0);
+        }
+        window._akServeMem = false;
         if (!dashServed && c && c.resp && c.token === a[0] && (c.resp.leadSet || 'main') === (o.leadSet || 'main')) {
           dashServed = true;
           if (!o.since && c.resp.dataSig) o.since = c.resp.dataSig;
@@ -80,7 +89,10 @@ window.AKBAR_BUILD = '5 Oct 2026 · v29';
         }
         dashServed = true;
         a[1] = o;
-        callReal(Object.assign({}, st, { s: function (resp, u) { if (resp && resp.rows && !resp.unchanged) dashSave(a[0], resp); if (st.s) st.s(resp, u); } }), 'getDashboardData', a);
+        callReal(Object.assign({}, st, { s: function (resp, u) {
+          if (resp && !resp.unchanged && (resp.rows || resp.rowsPacked)) { memDash[(resp.leadSet || o.leadSet || 'main') + '|' + a[0]] = JSON.parse(JSON.stringify(resp)); if (resp.rows) dashSave(a[0], resp); }
+          if (st.s) st.s(resp, u);
+        } }), 'getDashboardData', a);
       });
     }
     var keyOf = function (fn, args) { return fn + '|' + JSON.stringify(args || []); };
@@ -6312,8 +6324,8 @@ updateStatsRow({ total, notified, awaiting, overdue });
 const dupCount = filtered.filter(r => getDupInfo(r)).length;
 const dupNote = document.getElementById('statDupNote');
 if (dupNote) dupNote.textContent = dupCount > 0 ? `(${dupCount} duplicate${dupCount === 1 ? '' : 's'})` : '';
-updateInsightsRow(allRows);
-updateOverdueAlert(overdueAll);
+try { updateInsightsRow(allRows); } catch (e) { console.error('insight cards skipped', e); }
+try { updateOverdueAlert(overdueAll); } catch (e) { console.error('overdue alert skipped', e); }
 renderLastSynced(lastKnownAutomationRun);
 
 const bell = document.getElementById('bell');
@@ -6517,7 +6529,7 @@ function leadPopUp(prevFor, prevScroll) {
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('lead-pop-open') && !document.querySelector('.cmdk-backdrop.open')) closeLeadPop(); });
 
 window._missedFU = null;
-function missedFor(name) { const m = window._missedFU; if (!m) return null; const k = String(name || '').trim().toLowerCase(); return m.byPerson[k] ? m.byPerson[k].count : 0; }
+function missedFor(name) { const m = window._missedFU; if (!m || !m.byPerson) return null;   const k = String(name || '').trim().toLowerCase(); return m.byPerson[k] ? m.byPerson[k].count : 0; }
 function missedBadge(name) {
   const n = missedFor(name); if (n === null) return '';
   return n ? '<button class="cpr-flag missed" data-missed-open="' + escapeHtml(name) + '" title="Follow-ups past their date and not marked done">⏰ ' + n + ' missed follow-up' + (n === 1 ? '' : 's') + '</button>'
@@ -6829,9 +6841,14 @@ function loadData() {
 if (!window._authToken) return;
 if (typeof window.s10BeforeLoad === 'function' && window.s10BeforeLoad(loadData)) return;
 const loader = document.getElementById('topLoader');
+const setAsked = window._leadSet || 'main';
+if (window._dashInFlight === setAsked && Date.now() - (window._dashInFlightAt || 0) < 120000) return;
+window._dashInFlight = setAsked; window._dashInFlightAt = Date.now();
 loader.classList.add('active');
 
 google.script.run.withSuccessHandler(function(response) {
+if (!(response && response.__cached) && window._dashInFlight === setAsked) window._dashInFlight = null;
+if (setAsked !== (window._leadSet || 'main')) return;
 loader.classList.remove('active');
 if (response && response.isTelecaller) { initTelecallerDashboard(response); return; }
 if (response && response.isAppExecutive) { if (typeof window.openAppTeam === 'function') window.openAppTeam({ executiveMode: true }); return; }
@@ -6920,6 +6937,8 @@ if (sideDue) loadCounselorActivity();
 if (sideDue) loadBranchTargets();
 loadBusinessCards();
 }).withFailureHandler(function(err) {
+if (window._dashInFlight === setAsked) window._dashInFlight = null;
+if (setAsked !== (window._leadSet || 'main')) return;
 loader.classList.remove('active');
 console.error(err);
 document.getElementById('emptyStateText').textContent = 'Error loading data — check the Run Log tab.';
@@ -12506,6 +12525,7 @@ const tb = document.getElementById('tableBody');
 if (tb) tb.innerHTML = '<tr class="skeleton-row"><td colspan="8"><div class="skeleton skeleton-line"></div></td></tr>';
 paint();
 window.scrollTo(0, 0);
+window._akServeMem = true;
 loadData();
 }
 window.switchLeadSet = switchLeadSet;
