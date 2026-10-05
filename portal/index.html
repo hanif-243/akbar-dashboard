@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Akbar Student</title>
+<meta name="description" content="Your study abroad journey with Akbar Study Abroad">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#302D40">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Akbar">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://script.google.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --navy: #302D40; --red: #F22F3D; --canvas: #F3F4FA; --ink: #12172B; --muted: #6B7280; --border: #E7E9F0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { font-family: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: var(--navy); color: #fff; -webkit-font-smoothing: antialiased; }
+.shell { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom)); }
+.logo { width: 180px; max-width: 60vw; margin-bottom: 28px; border-radius: 16px; }
+.logo-fb { font-weight: 700; font-size: 28px; letter-spacing: .06em; margin-bottom: 28px; }
+.logo-fb b { color: var(--red); }
+.card { background: #fff; color: var(--ink); width: 100%; max-width: 380px; border-radius: 20px; padding: 24px 20px; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+.card h1 { font-size: 21px; margin: 0 0 6px; }
+.card p { margin: 0 0 16px; color: var(--muted); font-size: 14px; line-height: 1.45; }
+label { display: block; font-weight: 600; font-size: 13px; margin: 0 0 6px; }
+.in { display: flex; align-items: center; border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
+.in span { padding: 0 10px 0 14px; color: var(--muted); font-weight: 600; }
+.in input { flex: 1; border: 0; outline: none; font: inherit; font-size: 18px; padding: 13px 14px 13px 0; letter-spacing: .04em; min-width: 0; }
+.in:focus-within { border-color: var(--navy); }
+.code { text-align: center; font-size: 26px !important; letter-spacing: .5em !important; padding: 12px 0 12px .5em !important; }
+.btn { width: 100%; border: 0; border-radius: 12px; background: var(--red); color: #fff; font: inherit; font-weight: 700; font-size: 16px; padding: 14px; margin-top: 14px; cursor: pointer; min-height: 50px; }
+.btn:disabled { opacity: .6; }
+.link { background: none; border: 0; color: var(--navy); font: inherit; font-weight: 600; font-size: 14px; margin-top: 12px; cursor: pointer; text-decoration: underline; padding: 6px; }
+.msg { font-size: 13.5px; margin-top: 12px; min-height: 18px; color: var(--muted); }
+.msg.bad { color: #b3141f; }
+.spin { width: 38px; height: 38px; border: 3px solid rgba(255,255,255,.2); border-top-color: var(--red); border-radius: 50%; animation: s 0.9s linear infinite; }
+@keyframes s { to { transform: rotate(360deg); } }
+.sub { color: rgba(255,255,255,.7); font-size: 14px; margin-top: 16px; text-align: center; }
+.foot { color: rgba(255,255,255,.5); font-size: 12px; margin-top: 22px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="shell" id="shell">
+<img class="logo" id="logo" src="https://lh3.googleusercontent.com/d/1YvFCQ2nNiUfMnjZ7jKe5NKLPcLI1WrxF=w320" alt="Akbar Study Abroad" onerror="this.outerHTML='<div class=&quot;logo-fb&quot;>AKB<b>A</b>R</div>'">
+<div id="view"><div class="spin" aria-label="Loading"></div></div>
+</div>
+<script>
+(function () {
+'use strict';
+var API = 'https://script.google.com/macros/s/AKfycbx6CcjiRhhaqd5hn--2GQDRs1a3ZcnrCQl8srQr7plBffWzrCXmpg07FF77b_PKz0d8yw/exec';
+var KEY = 'akbar_student_session';
+var PAGE_FNS = ['getStudentPortalData', 'submitStudentDocument', 'submitStudentFeedback', 'getStudentPortalExtras', 'setStudentChecklistItem', 'askStudentQuestion'];
+var view = document.getElementById('view');
+var state = { phone: '', sent: '' };
+
+function call(fn, args, tries) {
+  return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args || [] }) })
+    .then(function (r) { return r.text(); })
+    .then(function (t) { var j; try { j = JSON.parse(t); } catch (e) { throw new Error('BUSY'); } if (!j.ok) throw new Error(j.e || 'SERVER_ERROR'); return j.v; })
+    .catch(function (e) { if ((tries || 0) < 1 && (e.message === 'BUSY' || e.name === 'TypeError')) return new Promise(function (ok) { setTimeout(ok, 1500); }).then(function () { return call(fn, args, 1); }); throw e; });
+}
+function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function set(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { /* private mode */ } }
+function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function nice(e) {
+  var m = String((e && e.message) || e || '');
+  if (m === 'BUSY' || m === 'Failed to fetch' || (e && e.name === 'TypeError')) return 'No connection right now — check your internet and try again.';
+  if (m === 'TOKEN_EXPIRED' || m === 'INVALID_TOKEN') return 'That link has expired — sign in with your mobile number instead.';
+  if (m === 'TOKEN_REVOKED' || m === 'ACCESS_OFF') return 'Your portal access is switched off. Please contact your counsellor.';
+  if (m === 'SERVER_ERROR') return 'Something went wrong — please try again in a minute.';
+  return m.replace(/^Error:\s*/, '');
+}
+function loading(t) { view.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;"><div class="spin"></div><div class="sub">' + esc(t || 'Loading your journey…') + '</div></div>'; }
+
+function phoneView(msg, bad) {
+  view.innerHTML = '<div class="card"><h1>Welcome 👋</h1><p>Sign in with the mobile number you gave Akbar Study Abroad.</p>' +
+    '<label for="ph">Mobile number</label><div class="in"><span>+91</span><input id="ph" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="14" placeholder="98470 12345" value="' + esc(state.phone) + '"></div>' +
+    '<button class="btn" id="go">Send my code</button><button class="link" id="have">I already have a code</button><div class="msg ' + (bad ? 'bad' : '') + '" id="msg">' + esc(msg || '') + '</div></div>' +
+    '<div class="foot">Your study abroad journey · Akbar Study Abroad</div>';
+  var ph = document.getElementById('ph');
+  ph.focus();
+  ph.onkeydown = function (e) { if (e.key === 'Enter') send(); };
+  document.getElementById('go').onclick = send;
+  document.getElementById('have').onclick = function () { state.phone = ph.value; if (digits(state.phone).length < 10) { show('Enter your mobile number first.', true); return; } state.sent = 'counsellor'; codeView(); };
+}
+function digits(s) { return String(s || '').replace(/\D/g, ''); }
+function show(t, bad) { var m = document.getElementById('msg'); if (m) { m.textContent = t; m.className = 'msg' + (bad ? ' bad' : ''); } }
+function send() {
+  var ph = document.getElementById('ph'); state.phone = ph.value;
+  if (digits(state.phone).length < 10) { show('Enter your 10-digit mobile number.', true); return; }
+  var b = document.getElementById('go'); b.disabled = true; b.textContent = 'Sending…'; show('');
+  call('studentLoginStart', [state.phone]).then(function (r) {
+    if (r.sent === 'email') { state.sent = r.to; codeView(); }
+    else { b.disabled = false; b.textContent = 'Send my code'; show(r.message, true); }
+  }).catch(function (e) { b.disabled = false; b.textContent = 'Send my code'; show(nice(e), true); });
+}
+function codeView(msg, bad) {
+  var where = state.sent === 'counsellor' ? 'Enter the code your counsellor sent you on WhatsApp.' : 'We emailed a 6-digit code to <b>' + esc(state.sent) + '</b>. It works for 10 minutes.';
+  view.innerHTML = '<div class="card"><h1>Enter your code</h1><p>' + where + '</p>' +
+    '<label for="cd">6-digit code</label><div class="in"><input id="cd" class="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••"></div>' +
+    '<button class="btn" id="ok">Sign in</button><button class="link" id="back">Use a different number</button><div class="msg ' + (bad ? 'bad' : '') + '" id="msg">' + esc(msg || '') + '</div></div>';
+  var cd = document.getElementById('cd');
+  cd.focus();
+  cd.oninput = function () { cd.value = digits(cd.value).slice(0, 6); if (cd.value.length === 6) verify(); };
+  document.getElementById('ok').onclick = verify;
+  document.getElementById('back').onclick = function () { phoneView(); };
+}
+function verify() {
+  var cd = document.getElementById('cd'), b = document.getElementById('ok');
+  if (digits(cd.value).length !== 6) { show('Enter all 6 digits.', true); return; }
+  b.disabled = true; b.textContent = 'Checking…'; show('');
+  call('studentLoginVerify', [state.phone, cd.value, navigator.userAgent.slice(0, 120)]).then(function (r) {
+    set(KEY, r.session); openPortal(r.token, true);
+  }).catch(function (e) { b.disabled = false; b.textContent = 'Sign in'; cd.value = ''; show(nice(e), true); });
+}
+
+function shim(signedIn) {
+  return '<script>(function(){var API=' + JSON.stringify(API) + ',KEY=' + JSON.stringify(KEY) + ',OK=' + JSON.stringify(PAGE_FNS) + ';' +
+    'function run(){var ok=null,fail=null,r={withSuccessHandler:function(f){ok=f;return r},withFailureHandler:function(f){fail=f;return r},withUserObject:function(){return r}};' +
+    'OK.forEach(function(fn){r[fn]=function(){var a=[].slice.call(arguments);fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({fn:fn,args:a})})' +
+    '.then(function(x){return x.text()}).then(function(t){var j;try{j=JSON.parse(t)}catch(e){throw new Error("Google was busy — please try again.")}if(j.ok){ok&&ok(j.v)}else{throw new Error(j.e||"SERVER_ERROR")}})' +
+    '.catch(function(e){if(String(e&&e.message).indexOf("fetch")!==-1)e=new Error("No connection — check your internet and try again.");fail&&fail(e)})}});return r}' +
+    'window.google={script:{get run(){return run()}}};document.title="Akbar Student";' +
+    'if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(function(){})}' +
+    'window.addEventListener("beforeinstallprompt",function(ev){ev.preventDefault();window.__akInstall=ev;var b=document.getElementById("akInstall");if(b)b.style.display="inline-block"});' +
+    'document.addEventListener("DOMContentLoaded",function(){var f=document.createElement("div");f.style.cssText="text-align:center;padding:4px 16px 24px;font-size:13px;color:#6B7280";' +
+    'var ios=/iphone|ipad|ipod/i.test(navigator.userAgent),sa=window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches||navigator.standalone;' +
+    'f.innerHTML=(sa?"":"<button id=\\"akInstall\\" style=\\"display:none;border:0;background:#302D40;color:#fff;border-radius:10px;padding:10px 16px;font:inherit;font-weight:700;margin:0 6px 10px\\">📲 Install the Akbar app</button>"+(ios?"<div style=\\"margin-bottom:10px\\">📲 To get the app: tap Share → <b>Add to Home Screen</b></div>":""))' +
+    '+' + (signedIn ? '"<button id=\\"akOut\\" style=\\"border:0;background:none;color:#6B7280;text-decoration:underline;font:inherit;cursor:pointer\\">Sign out</button>"' : '""') + ';' +
+    'var app=document.getElementById("app");(app&&app.parentNode?app.parentNode:document.body).insertBefore(f,document.getElementById("sxNav")||null);' +
+    'var ib=document.getElementById("akInstall");if(ib){if(window.__akInstall)ib.style.display="inline-block";ib.onclick=function(){if(window.__akInstall){window.__akInstall.prompt();window.__akInstall=null;ib.style.display="none"}}}' +
+    'var ob=document.getElementById("akOut");if(ob)ob.onclick=function(){var s=null;try{s=localStorage.getItem(KEY);localStorage.removeItem(KEY)}catch(e){}' +
+    'fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({fn:"studentLogout",args:[s]})}).catch(function(){}).then(function(){location.replace(location.pathname)})}});' +
+    '})();<\/script>';
+}
+function openPortal(token, signedIn) {
+  loading();
+  call('getStudentAppPage', [token]).then(function (r) {
+    var html = String(r.html || '');
+    html = html.replace(/<link rel="manifest"[^>]*>/i, '<link rel="manifest" href="manifest.json">').replace(/<base target="_top">/i, '');
+    html = html.replace(/<link rel="apple-touch-icon"[^>]*>/i, '<link rel="apple-touch-icon" href="apple-touch-icon.png">');
+    html = html.replace('<head>', '<head>' + shim(signedIn));
+    document.open(); document.write(html); document.close();
+  }).catch(function (e) {
+    var m = String(e && e.message);
+    if (m === 'TOKEN_EXPIRED' || m === 'INVALID_TOKEN' || m === 'TOKEN_REVOKED') { phoneView(nice(e), true); return; }
+    view.innerHTML = '<div class="card"><h1>Couldn’t open your portal</h1><p>' + esc(nice(e)) + '</p><button class="btn" id="re">Try again</button></div>';
+    document.getElementById('re').onclick = function () { openPortal(token, signedIn); };
+  });
+}
+
+function start() {
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () { /* optional */ });
+  var h = String(location.hash || ''), m = /[#&]t=([a-f0-9]{32})/.exec(h);
+  if (m) { try { history.replaceState(null, '', location.pathname); } catch (e) { /* ignore */ } try { sessionStorage.setItem('akbar_link_token', m[1]); } catch (e) { /* ignore */ } }
+  var s = get(KEY);
+  if (s) {
+    loading();
+    call('studentAppSession', [s]).then(function (r) { openPortal(r.token, true); }).catch(function (e) {
+      var msg = String(e && e.message);
+      if (msg === 'SIGNED_OUT') { set(KEY, null); phoneView('Please sign in again.'); }
+      else if (msg === 'ACCESS_OFF') { set(KEY, null); phoneView(nice(e), true); }
+      else { view.innerHTML = '<div class="card"><h1>No connection</h1><p>' + esc(nice(e)) + '</p><button class="btn" id="re">Try again</button></div>'; document.getElementById('re').onclick = start; }
+    });
+    return;
+  }
+  var lt = null; try { lt = sessionStorage.getItem('akbar_link_token'); } catch (e) { lt = null; }
+  if (lt) { openPortal(lt, false); return; }
+  phoneView();
+}
+start();
+})();
+</script>
+</body>
+</html>

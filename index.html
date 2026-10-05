@@ -45,7 +45,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '5 Oct 2026 · v32';
+window.AKBAR_BUILD = '5 Oct 2026 · v36';
 
 (function () {
   try {
@@ -4289,7 +4289,7 @@ Akbar Study Abroad</textarea>
 <div id="studentExpView" style="display:none;"></div>
 <div id="s10View" style="display:none;"></div>
 <div id="finView" style="display:none;"></div>
-<div id="hrView" style="display:none;"></div><div id="b2bView" style="display:none;"></div><div id="visaView" style="display:none;"></div>
+<div id="hrView" style="display:none;"></div><div id="b2bView" style="display:none;"></div><div id="visaView" style="display:none;"></div><div id="maView" style="display:none;"></div><div id="sqView" style="display:none;"></div>
 
 <div class="app">
 <div class="sidebar" id="sidebar">
@@ -4366,6 +4366,10 @@ Akbar Study Abroad</textarea>
 <div class="nav-item" data-view="student-portals" role="button" tabindex="0" title="Student self-service portal links">
 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
 <span>Student Portals</span>
+</div>
+<div class="nav-item" data-sq-view="questions" role="button" tabindex="0" title="Questions from students' portal links + their pre-departure checklist">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+<span>Student Questions</span><span class="sq-badge" id="sqBadge"></span>
 </div>
 </div>
 
@@ -4445,6 +4449,14 @@ Akbar Study Abroad</textarea>
 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 15c1.5-2 2.5-2 3.5 0s2 2 4.5-1"/></svg>
 <span>MOUs</span>
 </div>
+</div>
+
+<div class="nav-group" data-group="marketing">
+<div class="nav-label">Marketing</div>
+<div class="nav-item" data-ma-view="meta-ads" data-role-guard="financial" role="button" tabindex="0" title="Spend, leads and cost per lead from Meta"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Meta Ads</span></div>
+<div class="nav-item" data-ma-view="meta-campaigns" data-role-guard="financial" role="button" tabindex="0" title="Every campaign as a card"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Campaign Manager</span></div>
+<div class="nav-item" data-ma-view="meta-ad-performance" data-role-guard="financial" role="button" tabindex="0" title="Campaigns, ad sets, ads and daily trends"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Ad Performance</span></div>
+<div class="nav-item" data-ma-view="meta-settings" data-role-guard="financial" role="button" tabindex="0" title="Token, ad account, auto-sync, branch tags"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Meta Settings</span></div>
 </div>
 
 <div class="nav-group" data-group="team">
@@ -4651,6 +4663,7 @@ Log out
 <button class="dash-tab" role="tab" data-dash-tab="markets"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span>Markets</span></button>
 </div>
 </nav>
+<div id="maTodayRow" data-dash-section="overview"></div>
 <div class="insights-row" id="trendCardWrap" data-dash-section="overview" style="grid-template-columns: 1fr;">
 <div class="insight-card"><div class="skeleton" style="height:170px;"></div></div>
 </div>
@@ -15131,7 +15144,7 @@ Object.assign(window, { openHRView, closeHRView, renderTeamHub, renderAttendance
 <script>
 (function () {
 const KEY = 'nav_open_group';
-const GROUPS = ['applications', 'visa', 'student-experience', 'automation', 'financials', 'team'];
+const GROUPS = ['applications', 'visa', 'student-experience', 'automation', 'financials', 'marketing', 'team'];
 const ICONS = {
   applications: '<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/>',
   'student-experience': '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/>',
@@ -15139,7 +15152,8 @@ const ICONS = {
   financials: '<path d="M6 4h12M6 9h12"/><path d="M8 4c6 0 6 10 0 10H6l8 7"/>',
   team: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
   b2b: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M2 13h20"/>',
-  visa: '<rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M8 17h8"/>'
+  visa: '<rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M8 17h8"/>',
+  marketing: '<path d="M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1z"/><path d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/>'
 };
 const ico = k => '<span class="ak-ico" aria-hidden="true"><svg viewBox="0 0 24 24">' + ICONS[k] + '</svg></span>';
 const sidebar = document.getElementById('sidebar');
@@ -17916,5 +17930,885 @@ window.openLeadQuality = () => { tab = 'ads'; open(); };
 const btn = $('leadQualityBtn'); if (btn) btn.onclick = () => window.openLeadQuality();
 })();
 </script>
+
+<style>
+#maView { min-height: 100vh; background: var(--canvas); }
+[data-group="marketing"], #maTodayRow { display: none !important; }
+body.fin-ok [data-group="marketing"] { display: block !important; }
+body.fin-ok.ma-today-on #maTodayRow { display: block !important; }
+body.fin-ok .nav-item[data-role-guard="financial"] { display: flex !important; }
+.ma-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px; margin-bottom: 12px; box-shadow: var(--shadow); font-size: 12.5px; }
+.ma-top .grow { flex: 1; min-width: 160px; color: var(--muted); }
+.ma-top select, .ma-top input, .ma-filters select, .ma-filters input { border: 1px solid var(--border); border-radius: 8px; padding: 6px 9px; font: inherit; font-size: 12.5px; background: var(--card); color: var(--ink); }
+.ma-filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.ma-chip { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 9px; white-space: nowrap; background: var(--canvas); color: var(--muted); }
+.ma-chip.ok { background: rgba(31,157,99,.12); color: var(--ok); } .ma-chip.warm { background: rgba(217,138,31,.14); color: var(--warm); }
+.ma-chip.bad { background: var(--red-dim); color: var(--red); } .ma-chip.blue { background: rgba(62,107,214,.12); color: #3E6BD6; } .ma-chip.purple { background: rgba(132,82,201,.12); color: #8452C9; }
+.ma-banner { border-radius: 12px; padding: 11px 14px; font-size: 13px; font-weight: 600; margin-bottom: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: var(--red-dim); color: var(--red); }
+.ma-banner.warm { background: rgba(217,138,31,.12); color: var(--warm); } .ma-banner.info { background: rgba(62,107,214,.10); color: #3E6BD6; }
+.ma-banner .um-btn { padding: 5px 10px; font-size: 11.5px; }
+.ma-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.ma-kpi { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 13px 15px; box-shadow: var(--shadow); min-width: 0; }
+.ma-kpi .l { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.ma-kpi .n { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin-top: 4px; font-variant-numeric: tabular-nums; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ma-kpi .d { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+.ma-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.ma-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.ma-seg { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
+.ma-seg button { border: 0; background: var(--card); color: var(--muted); padding: 6px 11px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.ma-seg button.on { background: var(--navy); color: #fff; }
+.ma-bars { display: flex; flex-direction: column; gap: 7px; }
+.ma-bar { display: grid; grid-template-columns: minmax(70px, 110px) minmax(0, 1fr) 84px; gap: 8px; align-items: center; font-size: 12.5px; }
+.ma-bar i { display: block; height: 14px; border-radius: 4px; min-width: 2px; }
+.ma-bar span:last-child { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+.ma-pw { border: 1px solid var(--border); border-radius: 14px; padding: 14px; background: var(--card); box-shadow: var(--shadow); min-width: 0; }
+.ma-pw h4 { margin: 0 0 8px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+.ma-pw.best h4 { color: var(--ok); } .ma-pw.worst h4 { color: var(--red); }
+.ma-pw .nm { font-weight: 800; font-size: 14px; margin-bottom: 8px; overflow-wrap: anywhere; }
+.ma-pw .row { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.ma-pw .row b { color: var(--ink); font-size: 14px; display: block; }
+.ma-pw .sub { font-size: 12px; color: var(--muted); margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 7px; }
+.ma-table td, .ma-table th { white-space: nowrap; }
+.ma-table td.nm { white-space: normal; min-width: 200px; max-width: 340px; }
+.ma-table th.sort { cursor: pointer; user-select: none; } .ma-table th.sort:hover { color: var(--ink); }
+.ma-table tr.exp > td { background: var(--canvas); padding: 10px 12px; }
+.ma-table select { border: 1px solid var(--border); border-radius: 7px; padding: 4px 6px; font: inherit; font-size: 12px; background: var(--card); color: var(--ink); }
+.ma-x { border: 0; background: none; cursor: pointer; font-size: 13px; color: var(--muted); padding: 2px 6px; }
+.ma-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 12px; }
+.ma-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 8px; cursor: pointer; text-align: left; font: inherit; color: var(--ink); min-width: 0; transition: border-color .15s, transform .15s; }
+.ma-card:hover { border-color: var(--navy); transform: translateY(-1px); }
+.ma-card .t { font-weight: 800; font-size: 13.5px; overflow-wrap: anywhere; }
+.ma-card .big { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.ma-card .m { display: flex; gap: 12px; font-size: 12px; color: var(--muted); flex-wrap: wrap; } .ma-card .m b { color: var(--ink); }
+.ma-prog { height: 6px; border-radius: 99px; background: var(--canvas); overflow: hidden; } .ma-prog i { display: block; height: 100%; background: var(--navy); }
+.ma-thumb { width: 100%; aspect-ratio: 1.91 / 1; object-fit: cover; border-radius: 10px; background: var(--canvas); display: block; }
+.ma-thumb.sm { width: 52px; height: 52px; aspect-ratio: auto; border-radius: 8px; flex: none; }
+.ma-noimg { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 11px; }
+.ma-ad { display: flex; gap: 10px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12.5px; } .ma-ad:last-child { border-bottom: 0; }
+.ma-ad .grow { flex: 1; min-width: 0; } .ma-ad .grow b { display: block; overflow-wrap: anywhere; }
+.ma-colpick { position: relative; display: inline-block; }
+.ma-colpick > div { position: absolute; right: 0; top: 110%; z-index: 30; background: var(--card); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); padding: 8px 10px; display: none; min-width: 180px; }
+.ma-colpick.open > div { display: block; }
+.ma-colpick label { display: flex; gap: 6px; align-items: center; font-size: 12.5px; padding: 3px 0; cursor: pointer; }
+.ma-guide { font-size: 13px; line-height: 1.6; } .ma-guide ol { margin: 6px 0 10px 18px; padding: 0; } .ma-guide code { background: var(--canvas); border-radius: 5px; padding: 1px 5px; font-size: 12px; }
+.ma-guide summary { cursor: pointer; font-weight: 800; }
+.ma-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 12px; }
+.ma-form label.f { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin: 6px 0 4px; }
+.ma-form input { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; background: var(--card); color: var(--ink); box-sizing: border-box; }
+.ma-tw { position: relative; background: var(--canvas); border-radius: 10px; overflow: hidden; aspect-ratio: 1.91 / 1; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 11px; }
+.ma-tw.sm { width: 52px; height: 52px; aspect-ratio: auto; border-radius: 8px; flex: none; }
+.ma-tw img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ma-today { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 14px; }
+.ma-today .ttl { font-weight: 800; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+.ma-today .st { display: flex; gap: 22px; flex-wrap: wrap; } .ma-today .st div { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.ma-today .st b { display: block; font-size: 20px; color: var(--ink); letter-spacing: -0.02em; text-transform: none; font-variant-numeric: tabular-nums; }
+.ma-today .grow { flex: 1; }
+.ma-tip { font-size: 12px; color: var(--muted); margin-top: 6px; }
+@media (max-width: 1100px) { .ma-3 { grid-template-columns: minmax(0, 1fr); } .ma-form { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 800px) { .ma-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ma-2, .ma-form { grid-template-columns: minmax(0, 1fr); } }
+</style>
+<script>
+
+(function () {
+const M = { tab: 'overview', data: null, perf: null, settings: null, loading: false, f: { days: 30, from: '', to: '', branch: '', status: '', search: '' },
+  ptab: 'campaigns', sort: { campaigns: ['spend', -1], adsets: ['spend', -1], ads: ['cpl', 1] }, setsCampaign: '', trendMetric: 'spend', compare: false, open: {}, detail: {},
+  cols: { status: 1, branch: 1, spend: 1, leads: 1, cpl: 1, impressions: 1, clicks: 1, ctr: 1, cpm: 1, cpc: 1, reach: 1, frequency: 1, quality: 0, objective: 0 } };
+const TABS = [['overview', 'Meta Ads'], ['campaigns', 'Campaign Manager'], ['performance', 'Ad Performance'], ['settings', 'Meta Settings']];
+const VIEW_OF = { 'meta-ads': 'overview', 'meta-campaigns': 'campaigns', 'meta-ad-performance': 'performance', 'meta-settings': 'settings' };
+const BCOL = { Mumbai: '#3E6BD6', Calicut: '#1F9D63', Kochi: '#D98A1F', Delhi: '#8452C9', Untagged: '#9AA0AE' };
+const $ = id => document.getElementById(id);
+const esc = v => escapeHtml(v == null ? '' : String(v));
+const run = (fn, ...args) => promisifyRun(fn, window._authToken || '', ...args);
+const errMsg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
+const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t || 'success'); };
+const inr = n => (n === null || n === undefined || isNaN(n)) ? '—' : '₹' + Math.round(Number(n)).toLocaleString('en-IN');
+const inr2 = n => (n === null || n === undefined || isNaN(n)) ? '—' : '₹' + (Number(n) < 100 ? Number(n).toFixed(2) : Math.round(Number(n)).toLocaleString('en-IN'));
+const num = n => (n === null || n === undefined || isNaN(n)) ? '—' : Math.round(Number(n)).toLocaleString('en-IN');
+const tickN = v => v < 10 ? String(Math.round(v * 10) / 10) : big(v);
+const big = n => { n = Number(n) || 0; return n >= 1e7 ? (n / 1e7).toFixed(2) + ' Cr' : n >= 1e5 ? (n / 1e5).toFixed(1) + ' L' : n >= 1e3 ? (n / 1e3).toFixed(1) + 'K' : String(Math.round(n)); };
+const pct = n => (n === null || n === undefined || isNaN(n)) ? '—' : Number(n).toFixed(2) + '%';
+const dec = n => (n === null || n === undefined || isNaN(n)) ? '—' : Number(n).toFixed(2);
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const dShort = ymd => { const p = String(ymd || '').split('-'); return p.length < 3 ? ymd : Number(p[2]) + ' ' + MON[Number(p[1]) - 1]; };
+const stamp = s => { const d = new Date(s); return !s || isNaN(d) ? 'never' : d.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }); };
+const ago = s => { const d = new Date(s); if (!s || isNaN(d)) return 'never'; const m = Math.round((Date.now() - d) / 60000); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : stamp(s); };
+const opts = (list, cur, blank) => (blank !== undefined ? `<option value="">${esc(blank)}</option>` : '') + list.map(o => { const v = Array.isArray(o) ? o[0] : o, l = Array.isArray(o) ? o[1] : o; return `<option value="${esc(v)}" ${String(v) === String(cur == null ? '' : cur) ? 'selected' : ''}>${esc(l)}</option>`; }).join('');
+const statusChip = s => { s = String(s || ''); const l = s ? s.replace(/_/g, ' ').toLowerCase().replace(/^./, c => c.toUpperCase()) : '—'; const c = /^ACTIVE$/.test(s) ? 'ok' : /PAUSED/.test(s) ? 'warm' : /ISSUES|DISAPPROVED/.test(s) ? 'bad' : /PROCESS|REVIEW|PREAPPROVED/.test(s) ? 'blue' : ''; return `<span class="ma-chip ${c}">${esc(l)}</span>`; };
+const quality = q => { q = String(q || ''); if (!q) return '—'; const m = /^BELOW_AVERAGE_(\d+)$/.exec(q); if (m) return `<span class="ma-chip bad">Below avg · bottom ${m[1]}%</span>`; return q === 'ABOVE_AVERAGE' ? '<span class="ma-chip ok">Above average</span>' : q === 'AVERAGE' ? '<span class="ma-chip blue">Average</span>' : esc(q.toLowerCase().replace(/_/g, ' ')); };
+const brChip = b => `<span class="ma-chip" style="background:${(BCOL[b] || '#3E6BD6')}1f;color:${BCOL[b] || '#3E6BD6'};">${esc(b || 'Untagged')}</span>`;
+const empty = t => `<div class="sx-empty">${t}</div>`;
+const branches = () => (M.data && M.data.branches) || (M.settings && M.settings.branches) || ['Mumbai', 'Calicut', 'Kochi', 'Delhi'];
+const toCsv = rows => rows.map(r => r.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+const download = (name, rows) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + toCsv(rows)], { type: 'text/csv' })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); };
+function busy(btn, on, text) { if (!btn) return; if (on) { btn.dataset.t = btn.textContent; btn.textContent = text || 'Working…'; btn.disabled = true; } else { btn.textContent = btn.dataset.t || btn.textContent; btn.disabled = false; } }
+
+function modal(title, html, width) {
+let bg = $('maMBg');
+if (!bg) {
+bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'maMBg';
+bg.innerHTML = `<div class="cmdk-box" id="maMBox" role="dialog" aria-modal="true" aria-labelledby="maMTitle"><div class="preview-modal-header"><span id="maMTitle" style="font-size:14px;font-weight:800;flex:1;"></span><button class="counselor-save-btn" id="maMClose">Close</button></div><div class="s10-body" id="maMBody"></div></div>`;
+document.body.appendChild(bg);
+bg.addEventListener('click', e => { if (e.target === bg) closeModal(); });
+$('maMClose').onclick = closeModal;
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && bg.classList.contains('open')) { closeModal(); e.stopPropagation(); } }, true);
+}
+$('maMBox').style.maxWidth = (width || 760) + 'px';
+$('maMTitle').textContent = title;
+$('maMBody').innerHTML = html;
+bg.classList.add('open');
+return $('maMBody');
+}
+function closeModal() { const bg = $('maMBg'); if (bg) bg.classList.remove('open'); }
+
+function dualChart(points, a, b, prev) {
+if (!points.length) return empty('No daily numbers yet — press <b>Sync now</b>.');
+const W = 760, H = 240, L = 62, R = b ? 52 : 14, T = 14, B = 28, iw = W - L - R, ih = H - T - B, n = points.length;
+const maxA = Math.max(1, ...points.map(p => p[a.k] || 0), ...(prev || []).map(p => p[a.k] || 0)) * 1.08;
+const maxB = b ? Math.max(1, ...points.map(p => p[b.k] || 0)) * 1.08 : 1;
+const x = i => L + (n === 1 ? iw / 2 : i * iw / (n - 1)), ya = v => T + ih - (v / maxA) * ih, yb = v => T + ih - (v / maxB) * ih;
+const path = (arr, k, y) => arr.map((p, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p[k] || 0).toFixed(1)).join(' ');
+let g = '';
+for (let i = 0; i <= 4; i++) { const yy = T + ih * i / 4; g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--border)" stroke-width="1"/><text x="${L - 6}" y="${yy + 4}" text-anchor="end" font-size="10" fill="var(--muted)">${esc(a.tick(maxA * (4 - i) / 4))}</text>`; if (b) g += `<text x="${W - R + 6}" y="${yy + 4}" font-size="10" fill="var(--muted)">${esc(b.tick(maxB * (4 - i) / 4))}</text>`; }
+const step = Math.max(1, Math.ceil(n / 7));
+points.forEach((p, i) => { if (i % step === 0 || i === n - 1) g += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle" font-size="10" fill="var(--muted)">${esc(dShort(p.date))}</text>`; });
+if (prev && prev.length === n) g += `<path d="${path(prev, a.k, ya)}" fill="none" stroke="${a.c}" stroke-width="1.6" stroke-dasharray="4 4" opacity=".45"/>`;
+g += `<path d="${path(points, a.k, ya)} L${x(n - 1)} ${T + ih} L${x(0)} ${T + ih} Z" fill="${a.c}" opacity=".08"/><path d="${path(points, a.k, ya)}" fill="none" stroke="${a.c}" stroke-width="2.2"/>`;
+if (b) g += `<path d="${path(points, b.k, yb)}" fill="none" stroke="${b.c}" stroke-width="2.2"/>`;
+const cw = iw / Math.max(1, n);
+points.forEach((p, i) => { g += `<rect x="${x(i) - cw / 2}" y="${T}" width="${cw}" height="${ih}" fill="transparent"><title>${esc(dShort(p.date) + ' · ' + a.label + ': ' + a.fmt(p[a.k]) + (b ? ' · ' + b.label + ': ' + b.fmt(p[b.k]) : '') + (prev && prev[i] ? ' · previous: ' + a.fmt(prev[i][a.k]) : ''))}</title></rect>`; });
+const leg = `<div class="sx-legend"><span><i style="background:${a.c}"></i>${esc(a.label)} (left)</span>${b ? `<span><i style="background:${b.c}"></i>${esc(b.label)} (right)</span>` : ''}${prev ? `<span><i style="background:${a.c};opacity:.45"></i>Previous period</span>` : ''}</div>`;
+return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(a.label)} trend" style="display:block;">${g}</svg>${leg}`;
+}
+function barsH(list, k, fmt, colorOf) {
+if (!list.length) return empty('Tag your campaigns with a branch to see this.');
+const max = Math.max(1, ...list.map(x => x[k] || 0));
+return `<div class="ma-bars">${list.map(x => `<div class="ma-bar" title="${esc(x.branch + ': ' + fmt(x[k]))}"><span>${esc(x.branch)}</span><span><i style="width:${Math.max(0.5, (x[k] || 0) / max * 100)}%;background:${colorOf(x)};"></i></span><span>${fmt(x[k])}</span></div>`).join('')}</div>`;
+}
+function donut(list) {
+const tot = list.reduce((t, x) => t + (x.v || 0), 0);
+if (!tot) return empty('No leads in these dates.');
+const r = 54, C = 2 * Math.PI * r; let off = 0, segs = '';
+list.forEach(x => { if (!x.v) return; const len = x.v / tot * C; segs += `<circle r="${r}" cx="70" cy="70" fill="none" stroke="${x.c}" stroke-width="22" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"><title>${esc(x.l + ': ' + x.v)}</title></circle>`; off += len; });
+return `<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;"><svg viewBox="0 0 140 140" width="140" height="140" role="img" aria-label="Leads by branch">${segs}<text x="70" y="68" text-anchor="middle" font-size="20" font-weight="700" fill="var(--ink)">${esc(num(tot))}</text><text x="70" y="86" text-anchor="middle" font-size="10" fill="var(--muted)">leads</text></svg>
+<div class="ma-bars" style="flex:1;min-width:120px;">${list.filter(x => x.v).map(x => `<div style="font-size:12.5px;"><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${x.c};margin-right:6px;"></i>${esc(x.l)} <b>${esc(num(x.v))}</b> <span class="sx-sub">(${Math.round(x.v / tot * 100)}%)</span></div>`).join('')}</div></div>`;
+}
+function spark(vals, color) {
+const W = 140, H = 36, n = vals.length; if (!n) return '';
+const max = Math.max(1, ...vals);
+const pts = vals.map((v, i) => (n === 1 ? W / 2 : i * W / (n - 1)).toFixed(1) + ',' + (H - 3 - (v / max) * (H - 6)).toFixed(1)).join(' ');
+return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${color || 'var(--red)'}" stroke-width="2" stroke-linejoin="round"/></svg>`;
+}
+
+const OTHER_VIEWS = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView'];
+function openMetaAds(tab) {
+if (!document.body.classList.contains('fin-ok')) return;
+M.tab = TABS.some(t => t[0] === tab) ? tab : M.tab;
+const app = document.querySelector('.app'); if (app) app.style.display = 'none';
+OTHER_VIEWS.forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
+if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
+const root = $('maView'); root.style.display = 'block';
+root.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-title">📣 Meta Ads</h1><div class="sx-sub" id="maSub">Live numbers from your Meta ad account — directors only</div></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="um-btn" id="maBack">← Back to dashboard</button></div></div>
+<div class="sx-tabs" role="tablist" style="flex-wrap:nowrap;">${TABS.map(t => `<button class="sx-tab ${t[0] === M.tab ? 'active' : ''}" data-ma-tab="${t[0]}" role="tab">${t[1]}</button>`).join('')}</div>
+<div id="maBody"><div class="sx-card"><div class="skeleton" style="height:240px;"></div></div></div></div>`;
+$('maBack').onclick = closeMetaAds;
+root.querySelectorAll('[data-ma-tab]').forEach(b => b.onclick = () => switchTab(b.dataset.maTab));
+window.scrollTo(0, 0);
+load();
+}
+function switchTab(t) { M.tab = t; document.querySelectorAll('[data-ma-tab]').forEach(x => x.classList.toggle('active', x.dataset.maTab === t)); load(); }
+function closeMetaAds() { closeModal(); const root = $('maView'); if (!root || root.style.display !== 'block') return; root.style.display = 'none'; root.innerHTML = ''; const app = document.querySelector('.app'); if (app && !OTHER_VIEWS.some(id => { const el = $(id); return el && el.style.display === 'block'; })) app.style.display = ''; }
+const filt = () => M.f.days === 'custom' ? { from: M.f.from, to: M.f.to, branch: M.f.branch, status: M.f.status, search: M.f.search } : { days: M.f.days, branch: M.f.branch, status: M.f.status, search: M.f.search };
+let loadSeq = 0;
+function load() {
+const body = $('maBody'); if (!body) return;
+const seq = ++loadSeq;
+const fail = e => { if (seq !== loadSeq || !$('maBody')) return; $('maBody').innerHTML = `<div class="sx-card sx-empty">Couldn't load Meta Ads: ${esc(errMsg(e))} <button class="um-btn" id="maRetry">Retry</button></div>`; const r = $('maRetry'); if (r) r.onclick = load; };
+const cached = M.tab === 'settings' ? M.settings : M.tab === 'performance' ? M.perf : M.data;
+if (cached) render(); else body.innerHTML = '<div class="sx-card"><div class="skeleton" style="height:240px;"></div></div>';
+if (M.tab === 'settings') run('getMetaAdsSettings').then(d => { if (seq !== loadSeq) return; M.settings = d; render(); }).catch(fail);
+else if (M.tab === 'performance') run('getMetaAdPerformance', filt()).then(d => { if (seq !== loadSeq) return; M.perf = d; M.data = M.data || d; render(); }).catch(fail);
+else run('getMetaAdsDashboard', filt()).then(d => { if (seq !== loadSeq) return; M.data = d; render(); }).catch(fail);
+}
+function reloadData() { M.data = null; M.perf = null; load(); }
+function render() {
+const body = $('maBody'); if (!body) return;
+try {
+if (M.tab === 'settings') return renderMetaSettings(M.settings);
+const d = M.tab === 'performance' ? M.perf : M.data; if (!d) return;
+if (!d.configured) { body.innerHTML = topBar(d) + setupCard(); wireTop(); return; }
+if (M.tab === 'overview') renderMetaAdsDashboard(d); else if (M.tab === 'campaigns') renderMetaCampaigns(d); else renderMetaAdPerformance(d);
+} catch (e) { body.innerHTML = `<div class="sx-card sx-empty">Something went wrong drawing this screen: ${esc(errMsg(e))}</div>`; }
+}
+
+function tokenChip(s, days) { return s === 'expired' ? '<span class="ma-chip bad">Token expired</span>' : s === 'expiring' ? `<span class="ma-chip warm">Token expires in ${esc(days)} day${days === 1 ? '' : 's'}</span>` : s === 'missing' ? '<span class="ma-chip bad">No token</span>' : '<span class="ma-chip ok">Token valid</span>'; }
+function topBar(d) {
+const ls = d.lastSync || {};
+const range = M.f.days === 'custom' ? 'custom' : String(M.f.days);
+return `<div class="ma-top"><span class="grow">Last synced <b style="color:var(--ink)">${esc(ago(d.lastSynced))}</b>${ls.accountName ? ' · ' + esc(ls.accountName) : ''}${d.autoSync ? ' · auto-sync hourly' : ' · auto-sync off'}</span>
+${tokenChip(d.tokenStatus, d.tokenDaysLeft)}
+<select id="maRange" aria-label="Date range">${opts([['7', 'Last 7 days'], ['30', 'Last 30 days'], ['60', 'Last 60 days'], ['90', 'Last 90 days'], ['custom', 'Custom dates…']], range)}</select>
+<span id="maCustom" style="display:${range === 'custom' ? 'inline-flex' : 'none'};gap:6px;align-items:center;"><input type="date" id="maFrom" value="${esc(M.f.from)}" aria-label="From"> – <input type="date" id="maTo" value="${esc(M.f.to)}" aria-label="To"><button class="um-btn" id="maApply">Apply</button></span>
+<button class="um-btn primary" id="maSync" ${d.configured ? '' : 'disabled'}>⟳ Sync now</button></div>${banners(d)}`;
+}
+function banners(d) {
+const ls = d.lastSync || {}, out = [];
+if (d.tokenStatus === 'expired') out.push(`<div class="ma-banner">⛔ Meta token expired — go to Meta Settings to update it. Numbers below are from the last good sync.<button class="um-btn" data-ma-go="settings">Open Meta Settings</button></div>`);
+else if (d.tokenStatus === 'expiring') out.push(`<div class="ma-banner warm">⚠ Token expires in ${esc(d.tokenDaysLeft)} day${d.tokenDaysLeft === 1 ? '' : 's'} — renew soon (a System User token never expires).<button class="um-btn" data-ma-go="settings">Renew in Meta Settings</button></div>`);
+if (ls.ok === false && ls.errorKind !== 'expired') out.push(`<div class="ma-banner ${ls.errorKind === 'network' || ls.errorKind === 'rate' || ls.errorKind === 'busy' ? 'warm' : ''}">The last sync did not finish: ${esc(ls.error)}${ls.errorKind === 'account' ? ' <button class="um-btn" data-ma-go="settings">Check setup</button>' : ''} <span style="font-weight:500;">Showing the numbers from the last good sync.</span></div>`);
+else if (ls.partial && ls.partial.length) out.push(`<div class="ma-banner warm">Partly synced: ${esc(ls.partial.join(' · '))}</div>`);
+if (ls.accountStatus && ls.accountActive === false) out.push(`<div class="ma-banner">⚠ Your ad account is <b>${esc(ls.accountStatus)}</b> in Meta — ads are not delivering. Check Meta Business Settings → Billing / Account quality.</div>`);
+return out.join('');
+}
+function wireTop() {
+const sel = $('maRange');
+if (sel) sel.onchange = () => { if (sel.value === 'custom') { $('maCustom').style.display = 'inline-flex'; return; } M.f.days = Number(sel.value); reloadData(); };
+const ap = $('maApply'); if (ap) ap.onclick = () => { const a = $('maFrom').value, b = $('maTo').value; if (!a || !b || a > b) { toast('Choose a start and end date', 'error'); return; } M.f.days = 'custom'; M.f.from = a; M.f.to = b; reloadData(); };
+const sy = $('maSync'); if (sy) sy.onclick = () => syncNow(sy);
+document.querySelectorAll('#maBody [data-ma-go]').forEach(b => b.onclick = () => switchTab(b.dataset.maGo));
+}
+function syncNow(btn) {
+busy(btn, true, 'Syncing… (up to a minute)');
+const range = M.f.days === 'custom' ? { since: M.f.from, until: M.f.to } : { days: M.f.days };
+run('syncMetaAds', range).then(r => {
+busy(btn, false);
+if (r && r.error) { toast('Sync failed: ' + r.error, 'error'); } else toast(`Synced ${r.campaigns} campaigns · ${inr(r.spend)} · ${r.leads} leads`);
+M.settings = null; reloadData(); refreshToday(true);
+}).catch(e => { busy(btn, false); toast(errMsg(e), 'error'); });
+}
+function setupCard() {
+return `<div class="sx-card"><h3>Connect your Meta ad account</h3><p class="sx-sub" style="font-size:13px;">Meta Ads isn't connected yet. Add your access token and Ad Account ID once — after that the numbers update every hour.</p>
+<button class="um-btn primary" data-ma-go="settings">Open Meta Settings</button></div>`;
+}
+
+function kpi(l, n, d, cls) { return `<div class="ma-kpi"><div class="l">${esc(l)}</div><div class="n ${cls || ''}" title="${esc(String(n).replace(/<[^>]+>/g, ''))}">${n}</div>${d ? `<div class="d">${d}</div>` : ''}</div>`; }
+function delta(cur, prev, lowerIsBetter) {
+if (!prev) return '';
+const ch = (cur - prev) / prev * 100; if (!isFinite(ch)) return '';
+const good = lowerIsBetter ? ch < 0 : ch > 0;
+return `<span class="${Math.abs(ch) < 1 ? '' : good ? 'sx-good' : 'sx-bad'}">${ch > 0 ? '▲' : '▼'} ${Math.abs(ch).toFixed(0)}%</span> vs previous`;
+}
+function summaryStrip(d) {
+const s = d.summary, p = d.prev || {};
+return `<div class="ma-kpis">${kpi('Total spend', inr(s.totalSpend), delta(s.totalSpend, p.spend))}${kpi('Total leads', num(s.totalLeads), delta(s.totalLeads, p.leads))}
+${kpi('Avg CPL', inr(s.avgCPL), delta(s.avgCPL, p.cpl, true))}${kpi('Impressions', big(s.totalImpressions), num(s.totalClicks) + ' clicks')}
+${kpi('Avg CTR', pct(s.avgCTR), delta(s.avgCTR, p.ctr))}${kpi('Reach', s.totalReach == null ? '—' : big(s.totalReach), s.totalReach == null ? 'press Sync now for these dates' : 'frequency ' + dec(s.avgFrequency))}
+${kpi('Active campaigns', num(s.activeCampaigns), num(s.pausedCampaigns) + ' paused')}${kpi('Spend this month', inr(s.spendThisMonth), num(s.leadsThisMonth) + ' leads · today ' + inr(s.spendToday))}</div>`;
+}
+function trendCard(d, title) {
+const sp = { k: 'spend', label: 'Spend', c: 'var(--red)', fmt: inr, tick: v => '₹' + big(v) }, ld = { k: 'leads', label: 'Leads', c: '#3E6BD6', fmt: num, tick: tickN };
+return `<div class="sx-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;"><h3 style="margin:0;">${esc(title || 'Spend vs leads')}</h3>
+<div class="ma-seg" role="group" aria-label="Days">${[7, 30, 90].map(n => `<button data-ma-days="${n}" class="${M.f.days === n ? 'on' : ''}">${n} days</button>`).join('')}<button data-ma-days="custom" class="${M.f.days === 'custom' ? 'on' : ''}">Custom</button></div></div>
+${dualChart(d.trend || [], sp, ld)}</div>`;
+}
+function wireDays() { document.querySelectorAll('[data-ma-days]').forEach(b => b.onclick = () => { if (b.dataset.maDays === 'custom') { const s = $('maRange'); if (s) { s.value = 'custom'; $('maCustom').style.display = 'inline-flex'; } return; } M.f.days = Number(b.dataset.maDays); reloadData(); }); }
+function pwCard(kind, x, extra) {
+const title = kind === 'best' ? '🏆 Best campaign' : '⚠ Worst campaign';
+if (!x) return `<div class="ma-pw ${kind}"><h4>${title}</h4><div class="sx-sub">${kind === 'best' ? 'No campaign with leads yet.' : 'Nothing to flag — no campaign over ₹1,000 with a high cost per lead.'}</div></div>`;
+return `<div class="ma-pw ${kind}"><h4>${title}</h4><div class="nm">${esc(x.name)}</div><div class="row"><span>Spend<b>${inr(x.spend)}</b></span><span>Leads<b>${num(x.leads)}</b></span><span>CPL<b>${x.leads ? inr(x.cpl) : 'no leads'}</b></span><span>CTR<b>${pct(x.ctr)}</b></span><span>Branch<b>${esc(x.branch || 'Untagged')}</b></span></div>${extra || ''}</div>`;
+}
+function renderMetaAdsDashboard(d) {
+const by = d.byBranch || [];
+const tp = d.topPerforming || {}, wp = d.worstPerforming || {};
+const sub = (lbl, x) => x ? `<div>${esc(lbl)}: <b style="color:var(--ink)">${esc(x.name)}</b> · ${x.leads ? inr(x.cpl) + ' CPL' : 'no leads'} · ${inr(x.spend)}</div>` : '';
+$('maBody').innerHTML = topBar(d) + summaryStrip(d) + trendCard(d) +
+`<div class="ma-3"><div class="sx-card"><h3>Spend by branch</h3>${barsH(by, 'spend', inr, x => BCOL[x.branch] || '#3E6BD6')}</div>
+<div class="sx-card"><h3>Cost per lead by branch</h3>${barsH(by.filter(x => x.leads), 'cpl', inr, x => BCOL[x.branch] || '#3E6BD6')}<div class="ma-tip">Lower is better.</div></div>
+<div class="sx-card"><h3>Leads by branch</h3>${donut(by.map(x => ({ l: x.branch, v: x.leads, c: BCOL[x.branch] || '#3E6BD6' })))}</div></div>
+<div class="ma-2" style="margin-bottom:14px;">${pwCard('best', tp.campaign, (tp.adSet || tp.ad) ? `<div class="sub">${sub('Best ad set', tp.adSet)}${sub('Best ad', tp.ad)}</div>` : '')}${pwCard('worst', wp.campaign, (wp.adSet || wp.ad) ? `<div class="sub">${sub('Worst ad set', wp.adSet)}${sub('Worst ad', wp.ad)}</div>` : '')}</div>
+<div class="sx-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;"><h3 style="margin:0;">Campaigns <span class="sx-sub" style="font-weight:500;">· ${esc(rangeLabel(d))} · click a row for its ad sets</span></h3>${filterBar(d, true)}</div>
+${campaignTable(d.campaigns || [], true)}</div>
+${untaggedCard(d)}`;
+wireTop(); wireDays(); wireFilters(); wireCampaignTable(d);
+wireUntagged();
+}
+function rangeLabel(d) { const f = d.filters || {}; return f.from ? dShort(f.from) + ' – ' + dShort(f.to) + ' ' + String(f.to).slice(0, 4) : ''; }
+function filterBar(d, compact) {
+return `<div class="ma-filters" style="margin:0;">${compact ? '' : ''}<select id="maFStatus" aria-label="Status">${opts([['', 'All statuses'], ['active', 'Active'], ['paused', 'Paused'], ['archived', 'Archived']], M.f.status)}</select>
+<select id="maFBranch" aria-label="Branch">${opts([['', 'All branches']].concat(branches().map(b => [b, b])).concat([['Untagged', 'Untagged']]), M.f.branch)}</select>
+<input type="search" id="maFSearch" placeholder="Search campaigns…" value="${esc(M.f.search)}" aria-label="Search campaigns"></div>`;
+}
+function wireFilters() {
+const s = $('maFStatus'), b = $('maFBranch'), q = $('maFSearch');
+if (s) s.onchange = () => { M.f.status = s.value; reloadData(); };
+if (b) b.onchange = () => { M.f.branch = b.value; reloadData(); };
+let t = null; if (q) q.oninput = () => { clearTimeout(t); t = setTimeout(() => { M.f.search = q.value.trim(); reloadData(); }, 450); };
+}
+function tagSelect(c) { return `<select data-ma-tag="${esc(c.id)}" data-name="${esc(c.name)}" aria-label="Branch for ${esc(c.name)}">${opts([['', 'Untagged']].concat(branches().map(b => [b, b])), c.branch === 'Untagged' ? '' : c.branch)}</select>`; }
+function campaignTable(list, withTag) {
+if (!list.length) return empty('No campaigns for these filters.');
+return `<div class="sx-table-wrap"><table class="sx-table ma-table"><thead><tr><th>Campaign</th><th>Branch</th><th>Status</th><th class="num">Spend</th><th class="num">Leads</th><th class="num">CPL</th><th class="num">Impressions</th><th class="num">CTR</th><th class="num">Reach</th><th class="num">Freq.</th><th></th></tr></thead><tbody>
+${list.map(c => `<tr class="vd-row" data-ma-row="${esc(c.id)}"><td class="nm"><b>${esc(c.name)}</b><div class="sx-sub">${esc(c.objective || '')}${c.dailyBudget ? ' · ' + inr(c.dailyBudget) + '/day' : c.lifetimeBudget ? ' · ' + inr(c.lifetimeBudget) + ' lifetime' : ''}</div></td>
+<td>${withTag ? tagSelect(c) : brChip(c.branch)}</td><td>${statusChip(c.status)}</td><td class="num">${inr(c.spend)}</td><td class="num">${num(c.leads)}</td><td class="num">${c.leads ? inr(c.cpl) : '—'}</td>
+<td class="num">${num(c.impressions)}</td><td class="num">${pct(c.ctr)}</td><td class="num">${c.reach == null ? '—' : num(c.reach)}</td><td class="num">${dec(c.frequency)}</td><td><button class="ma-x" data-ma-exp="${esc(c.id)}" aria-label="Show ad sets">${M.open[c.id] ? '▾' : '▸'}</button></td></tr>
+${M.open[c.id] ? `<tr class="exp"><td colspan="11" id="maExp_${esc(c.id)}">${expandHtml(c.id)}</td></tr>` : ''}`).join('')}</tbody></table></div>`;
+}
+function expandHtml(id) {
+const det = M.detail[id];
+if (!det) return '<div class="skeleton" style="height:40px;"></div>';
+if (!det.adSets.length) return '<div class="sx-sub">No ad sets in the last sync.</div>';
+return `<table class="sx-table ma-table"><thead><tr><th>Ad set</th><th>Status</th><th class="num">Spend</th><th class="num">Leads</th><th class="num">CPL</th><th class="num">CTR</th><th>Targeting</th></tr></thead><tbody>${det.adSets.map(s => `<tr><td class="nm"><b>${esc(s.name)}</b></td><td>${statusChip(s.status)}</td><td class="num">${inr(s.spend)}</td><td class="num">${num(s.leads)}</td><td class="num">${s.leads ? inr(s.cpl) : '—'}</td><td class="num">${pct(s.ctr)}</td><td class="nm sx-sub">${esc(s.targeting || '—')}</td></tr>`).join('')}</tbody></table><div class="ma-tip">Ad sets are for the last synced range (${esc(det.campaign ? det.campaign.range : '')}).</div>`;
+}
+function loadDetail(id) { return M.detail[id] ? Promise.resolve(M.detail[id]) : run('getMetaCampaignDetail', id).then(d => { M.detail[id] = d; return d; }); }
+function wireCampaignTable(d) {
+document.querySelectorAll('#maBody [data-ma-tag]').forEach(sel => { sel.onclick = e => e.stopPropagation(); sel.onchange = () => saveTag(sel.dataset.maTag, sel.dataset.name, sel.value); });
+document.querySelectorAll('#maBody [data-ma-row]').forEach(tr => tr.onclick = e => {
+if (e.target.closest('select, a, input')) return;
+const id = tr.dataset.maRow; M.open[id] = !M.open[id];
+render();
+if (M.open[id] && !M.detail[id]) loadDetail(id).then(() => { const cell = $('maExp_' + id); if (cell) cell.innerHTML = expandHtml(id); }).catch(e2 => { const cell = $('maExp_' + id); if (cell) cell.textContent = errMsg(e2); });
+});
+}
+function saveTag(id, name, branch) {
+const p = branch ? run('saveBranchTag', id, name, branch) : run('removeBranchTag', id);
+p.then(() => { toast(branch ? 'Tagged ' + branch : 'Tag removed'); M.settings = null; reloadData(); }).catch(e => toast(errMsg(e), 'error'));
+}
+function untaggedCard(d) {
+const u = d.untagged || [];
+if (!u.length) return `<div class="sx-card"><h3>Branch tags</h3><div class="sx-sub">✓ Every active campaign has a branch. <a href="#" data-ma-go="settings">Manage tags</a></div></div>`;
+return `<div class="sx-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><h3 style="margin:0;">Untagged campaigns (${u.length})</h3><button class="um-btn" id="maAutoTag">✨ Auto-tag from names</button></div>
+<div class="sx-sub" style="margin:4px 0 10px;">Branch tags decide which branch each campaign's spend and leads count for. Nothing in Meta changes.</div>
+${u.map(c => `<div class="ma-ad"><span class="grow"><b>${esc(c.name)}</b><span class="sx-sub">${statusChip(c.status)} · ${inr(c.spend)} spent</span></span><select data-ma-qt="${esc(c.id)}" data-name="${esc(c.name)}" aria-label="Branch">${opts(branches(), '', 'Choose branch…')}</select><button class="um-btn" data-ma-qtb="${esc(c.id)}">Tag</button></div>`).join('')}</div>`;
+}
+function wireUntagged() {
+document.querySelectorAll('#maBody [data-ma-qtb]').forEach(b => b.onclick = () => { const sel = document.querySelector('[data-ma-qt="' + b.dataset.maQtb + '"]'); if (!sel.value) { toast('Choose a branch first', 'error'); return; } busy(b, true, '…'); saveTag(b.dataset.maQtb, sel.dataset.name, sel.value); });
+const at = $('maAutoTag'); if (at) at.onclick = () => autoTag(at);
+document.querySelectorAll('#maBody a[data-ma-go]').forEach(a => a.onclick = e => { e.preventDefault(); switchTab(a.dataset.maGo); });
+}
+function autoTag(btn) {
+busy(btn, true, 'Tagging…');
+run('autoTagMetaCampaigns').then(r => { busy(btn, false); toast(r.tagged.length ? 'Tagged ' + r.tagged.length + ' campaign' + (r.tagged.length === 1 ? '' : 's') : 'No branch names found in the untagged campaign names'); M.settings = null; reloadData(); }).catch(e => { busy(btn, false); toast(errMsg(e), 'error'); });
+}
+
+function renderMetaCampaigns(d) {
+const list = d.campaigns || [];
+$('maBody').innerHTML = topBar(d) + `<div class="ma-filters">${filterBar(d)}<span class="sx-sub">${list.length} campaign${list.length === 1 ? '' : 's'} · ${esc(rangeLabel(d))}</span></div>` +
+(list.length ? `<div class="ma-cards">${list.map(c => {
+const budget = c.lifetimeBudget || (c.dailyBudget ? c.dailyBudget * (d.filters ? d.filters.days : 30) : 0);
+const pctUsed = budget ? Math.min(100, c.spend / budget * 100) : 0;
+return `<button class="ma-card" data-ma-card="${esc(c.id)}"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">${statusChip(c.status)}${c.objective ? `<span class="ma-chip purple">${esc(c.objective.replace(/_/g, ' ').toLowerCase())}</span>` : ''}${brChip(c.branch)}</div>
+<div class="t">${esc(c.name)}</div><div class="big">${inr(c.spend)}</div>
+<div class="m"><span>Leads <b>${num(c.leads)}</b></span><span>CPL <b>${c.leads ? inr(c.cpl) : '—'}</b></span><span>CTR <b>${pct(c.ctr)}</b></span></div>
+${budget ? `<div><div class="ma-prog" title="${Math.round(pctUsed)}% of budget"><i style="width:${pctUsed}%;${pctUsed >= 95 ? 'background:var(--red);' : ''}"></i></div><div class="sx-sub" style="margin-top:3px;">${inr(c.spend)} of ${inr(budget)} ${c.lifetimeBudget ? 'lifetime budget' : '(daily budget × days)'}</div></div>` : '<div class="sx-sub">Budget set at ad-set level</div>'}
+<span class="um-btn" style="align-self:flex-start;">View ad sets →</span></button>`; }).join('')}</div>` : `<div class="sx-card">${empty('No campaigns for these filters.')}</div>`);
+wireTop(); wireFilters();
+document.querySelectorAll('[data-ma-card]').forEach(b => b.onclick = () => openCampaignDetail(b.dataset.maCard));
+}
+function openCampaignDetail(id) {
+const c0 = ((M.data && M.data.campaigns) || []).find(x => x.id === id) || {};
+const body = modal(c0.name || 'Campaign', '<div class="skeleton" style="height:240px;"></div>', 980);
+loadDetail(id).then(det => {
+const c = det.campaign || c0, t = det.total90 || {};
+body.innerHTML = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">${statusChip(c.status)}${c.objective ? `<span class="ma-chip purple">${esc(String(c.objective).replace(/_/g, ' ').toLowerCase())}</span>` : ''}${brChip(c.branch || c0.branch)}<span class="ma-chip">ID ${esc(id)}</span></div>
+<div class="ma-kpis">${kpi('Spend', inr(c.spend), esc(c.range || ''))}${kpi('Leads', num(c.leads), 'CPL ' + (c.leads ? inr(c.cpl) : '—'))}${kpi('CTR', pct(c.ctr), num(c.clicks) + ' clicks · CPC ' + inr2(c.cpc))}${kpi('Reach', big(c.reach), 'freq. ' + dec(c.frequency) + ' · CPM ' + inr(c.cpm))}</div>
+<div class="sx-card"><h3>Last 90 days <span class="sx-sub" style="font-weight:500;">· ${inr(t.spend)} · ${num(t.leads)} leads · CPL ${t.leads ? inr(t.cpl) : '—'}</span></h3>${dualChart(det.insights || [], { k: 'spend', label: 'Spend', c: 'var(--red)', fmt: inr, tick: v => '₹' + big(v) }, { k: 'leads', label: 'Leads', c: '#3E6BD6', fmt: num, tick: tickN })}</div>
+<div class="sx-card"><h3>Ad sets (${det.adSets.length}) <span class="sx-sub" style="font-weight:500;">· click one to see its ads</span></h3>${det.adSets.length ? `<div class="sx-table-wrap"><table class="sx-table ma-table"><thead><tr><th>Ad set</th><th>Status</th><th class="num">Spend</th><th class="num">Leads</th><th class="num">CPL</th><th class="num">CTR</th><th class="num">Freq.</th></tr></thead><tbody>
+${det.adSets.map(s => { const ads = det.ads.filter(a => a.adSetId === s.id); return `<tr class="vd-row" data-ma-set="${esc(s.id)}"><td class="nm"><b>${esc(s.name)}</b><div class="sx-sub">${esc(s.targeting || '')}</div></td><td>${statusChip(s.status)}</td><td class="num">${inr(s.spend)}</td><td class="num">${num(s.leads)}</td><td class="num">${s.leads ? inr(s.cpl) : '—'}</td><td class="num">${pct(s.ctr)}</td><td class="num">${dec(s.frequency)}</td></tr>
+<tr class="exp" data-ma-setads="${esc(s.id)}" style="display:none;"><td colspan="7">${ads.length ? ads.map(adRow).join('') : '<div class="sx-sub">No ads with delivery in the synced range.</div>'}</td></tr>`; }).join('')}</tbody></table></div>` : empty('No ad sets in the last sync.')}</div>`;
+body.querySelectorAll('[data-ma-set]').forEach(tr => tr.onclick = () => { const r = body.querySelector('[data-ma-setads="' + tr.dataset.maSet + '"]'); if (r) r.style.display = r.style.display === 'none' ? '' : 'none'; });
+}).catch(e => { body.innerHTML = `<div class="sx-empty">${esc(errMsg(e))}</div>`; });
+}
+const thumb = (a, sm) => `<div class="ma-tw ${sm ? 'sm' : ''}">no preview${a.thumb ? `<img src="${esc(a.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</div>`;
+function adRow(a) { return `<div class="ma-ad">${thumb(a, true)}<span class="grow"><b>${esc(a.name)}</b><span class="sx-sub">${statusChip(a.status)} ${esc(a.creativeType || '')} ${a.quality ? '· ' + quality(a.quality) : ''}</span></span><span class="num">${inr(a.spend)}<div class="sx-sub">${num(a.leads)} leads · ${a.leads ? inr(a.cpl) + ' CPL' : 'no leads'}</div></span></div>`; }
+
+const PCOLS = [['status', 'Status'], ['branch', 'Branch'], ['objective', 'Objective'], ['spend', 'Spend'], ['leads', 'Leads'], ['cpl', 'CPL'], ['impressions', 'Impressions'], ['clicks', 'Clicks'], ['ctr', 'CTR'], ['cpm', 'CPM'], ['cpc', 'CPC'], ['reach', 'Reach'], ['frequency', 'Freq.'], ['quality', 'Quality']];
+const FMT = { spend: inr, cpl: v => v ? inr(v) : '—', impressions: num, clicks: num, ctr: pct, cpm: inr, cpc: inr2, reach: v => v == null ? '—' : num(v), frequency: dec, leads: num };
+function renderMetaAdPerformance(d) {
+const PT = [['campaigns', 'Campaigns'], ['adsets', 'Ad Sets'], ['ads', 'Ads'], ['trends', 'Trends']];
+$('maBody').innerHTML = topBar(d) + `<div class="vd-mtabs" role="tablist">${PT.map(t => `<button class="${M.ptab === t[0] ? 'on' : ''}" data-ma-pt="${t[0]}" role="tab">${t[1]}</button>`).join('')}</div><div id="maPBody"></div>`;
+wireTop();
+document.querySelectorAll('[data-ma-pt]').forEach(b => b.onclick = () => { M.ptab = b.dataset.maPt; renderMetaAdPerformance(d); });
+const pb = $('maPBody');
+if (M.ptab === 'campaigns') {
+pb.innerHTML = `<div class="ma-filters">${filterBar(d)}${colPicker()}<button class="um-btn" id="maCsv">⬇ Export CSV</button></div><div class="sx-card">${sortTable('campaigns', d.campaigns || [])}</div>`;
+} else if (M.ptab === 'adsets') {
+const camps = (d.campaigns || []).map(c => [c.id, c.name]);
+const list = (d.adSets || []).filter(s => !M.setsCampaign || s.campaignId === M.setsCampaign);
+pb.innerHTML = `<div class="ma-filters">${filterBar(d)}<select id="maSetsCamp" aria-label="Campaign">${opts(camps, M.setsCampaign, 'All campaigns')}</select>${colPicker()}<button class="um-btn" id="maCsv">⬇ Export CSV</button><span class="sx-sub">${list.length} ad sets · last synced range ${esc(d.adsRange || '')}</span></div><div class="sx-card">${sortTable('adsets', list)}</div>`;
+const sc = $('maSetsCamp'); if (sc) sc.onchange = () => { M.setsCampaign = sc.value; renderMetaAdPerformance(d); };
+} else if (M.ptab === 'ads') {
+const k = M.sort.ads[0];
+const list = (d.ads || []).slice().sort((a, b) => k === 'cpl' ? ((a.leads ? a.cpl : 1e12) - (b.leads ? b.cpl : 1e12)) : (b[k] || 0) - (a[k] || 0));
+pb.innerHTML = `<div class="ma-filters">${filterBar(d)}<select id="maAdSort" aria-label="Sort ads">${opts([['cpl', 'Lowest CPL first'], ['leads', 'Most leads first'], ['spend', 'Most spend first'], ['ctr', 'Highest CTR first']], k)}</select><button class="um-btn" id="maCsv">⬇ Export CSV</button><span class="sx-sub">${list.length} ads · last synced range ${esc(d.adsRange || '')}</span></div>
+${list.length ? `<div class="ma-cards">${list.map(a => `<div class="ma-card" style="cursor:default;">${thumb(a)}<div style="display:flex;gap:6px;flex-wrap:wrap;">${statusChip(a.status)}${brChip(a.branch)}${a.quality ? quality(a.quality) : ''}</div><div class="t">${esc(a.name)}</div><div class="sx-sub">${esc(a.campaignName)}${a.adSetName ? ' › ' + esc(a.adSetName) : ''}</div>
+<div class="m"><span>Spend <b>${inr(a.spend)}</b></span><span>Leads <b>${num(a.leads)}</b></span><span>CPL <b>${a.leads ? inr(a.cpl) : '—'}</b></span><span>CTR <b>${pct(a.ctr)}</b></span></div></div>`).join('')}</div>` : `<div class="sx-card">${empty('No ads with delivery in the synced range.')}</div>`}`;
+const as = $('maAdSort'); if (as) as.onchange = () => { M.sort.ads = [as.value, 1]; renderMetaAdPerformance(d); };
+} else {
+const MET = { spend: { k: 'spend', label: 'Spend', c: 'var(--red)', fmt: inr, tick: v => '₹' + big(v) }, leads: { k: 'leads', label: 'Leads', c: '#3E6BD6', fmt: num, tick: tickN }, cpl: { k: 'cpl', label: 'CPL', c: '#D98A1F', fmt: inr, tick: v => '₹' + big(v) }, ctr: { k: 'ctr', label: 'CTR %', c: '#1F9D63', fmt: pct, tick: v => v.toFixed(1) + '%' }, reach: { k: 'reach', label: 'Daily reach', c: '#8452C9', fmt: num, tick: tickN } };
+const m = MET[M.trendMetric] || MET.spend, tr = d.trend || [], pv = d.prevTrend || [];
+const sum = (arr, k) => arr.reduce((t, x) => t + (x[k] || 0), 0);
+const tot = arr => { const s = sum(arr, 'spend'), l = sum(arr, 'leads'), c = sum(arr, 'clicks'), im = sum(arr, 'impressions'); return { spend: s, leads: l, cpl: l ? s / l : 0, ctr: im ? c / im * 100 : 0, reach: sum(arr, 'reach') }; };
+const a = tot(tr), b = tot(pv);
+pb.innerHTML = `<div class="ma-filters"><div class="ma-seg" role="group" aria-label="Metric">${Object.keys(MET).map(k => `<button data-ma-met="${k}" class="${M.trendMetric === k ? 'on' : ''}">${MET[k].label}</button>`).join('')}</div>
+<div class="ma-seg" role="group" aria-label="Days">${[30, 60, 90].map(n => `<button data-ma-days="${n}" class="${M.f.days === n ? 'on' : ''}">${n} days</button>`).join('')}</div>
+<select id="maFBranch" aria-label="Branch">${opts([['', 'All branches']].concat(branches().map(x => [x, x])).concat([['Untagged', 'Untagged']]), M.f.branch)}</select>
+<label style="display:flex;gap:6px;align-items:center;font-size:12.5px;"><input type="checkbox" id="maCmp" ${M.compare ? 'checked' : ''}> Compare with the previous ${d.filters ? d.filters.days : ''} days</label>
+<button class="um-btn" data-ma-thismonth="1">This month vs last month</button></div>
+<div class="sx-card"><h3>${esc(m.label)} per day · ${esc(rangeLabel(d))}</h3>${dualChart(tr, m, null, M.compare ? pv : null)}</div>
+<div class="ma-kpis">${['spend', 'leads', 'cpl', 'ctr'].map(k => kpi(MET[k].label + ' — this period', MET[k].fmt(a[k]), 'previous: ' + MET[k].fmt(b[k]) + ' · ' + (delta(a[k], b[k], k === 'cpl') || '—'))).join('')}</div>
+<div class="ma-tip">Daily numbers come from the "Meta Insights History" sheet (kept for two years). Reach per day can't be added up into unique reach.</div>`;
+document.querySelectorAll('[data-ma-met]').forEach(x => x.onclick = () => { M.trendMetric = x.dataset.maMet; renderMetaAdPerformance(d); });
+wireDays();
+const cm = $('maCmp'); if (cm) cm.onchange = () => { M.compare = cm.checked; renderMetaAdPerformance(d); };
+const tm = document.querySelector('[data-ma-thismonth]'); if (tm) tm.onclick = () => { const t = new Date(), y = t.getFullYear(), mo = t.getMonth(); const p = n => ('0' + n).slice(-2); M.f.days = 'custom'; M.f.from = y + '-' + p(mo + 1) + '-01'; M.f.to = y + '-' + p(mo + 1) + '-' + p(t.getDate()); M.compare = true; reloadData(); };
+const fb = $('maFBranch'); if (fb) fb.onchange = () => { M.f.branch = fb.value; reloadData(); };
+return;
+}
+wireFilters(); wireSort(d);
+const csv = $('maCsv'); if (csv) csv.onclick = () => exportCsv(d);
+const cp = document.querySelector('.ma-colpick');
+if (cp) { cp.querySelector('button').onclick = e => { e.stopPropagation(); cp.classList.toggle('open'); }; cp.querySelectorAll('input[data-col]').forEach(i => i.onchange = () => { M.cols[i.dataset.col] = i.checked ? 1 : 0; renderMetaAdPerformance(d); }); document.addEventListener('click', e => { if (!cp.contains(e.target)) cp.classList.remove('open'); }, { once: true }); }
+}
+function colPicker() { return `<div class="ma-colpick"><button class="um-btn" type="button">Columns ▾</button><div>${PCOLS.map(c => `<label><input type="checkbox" data-col="${c[0]}" ${M.cols[c[0]] ? 'checked' : ''}> ${c[1]}</label>`).join('')}</div></div>`; }
+function cellOf(k, x) { if (k === 'status') return statusChip(x.status); if (k === 'branch') return brChip(x.branch); if (k === 'objective') return esc(String(x.objective || '').replace(/_/g, ' ').toLowerCase() || '—'); if (k === 'quality') return quality(x.quality); return (FMT[k] || esc)(x[k]); }
+function sortTable(kind, list) {
+if (!list.length) return empty('Nothing to show for these filters.');
+const s = M.sort[kind], k = s[0], dir = s[1];
+const val = x => k === 'cpl' ? (x.leads ? x.cpl : 1e12 * -dir) : x[k] == null ? -1 : x[k];
+list = list.slice().sort((a, b) => { const va = val(a), vb = val(b); return typeof va === 'string' ? dir * String(va).localeCompare(String(vb)) : dir * (va - vb); });
+const cols = PCOLS.filter(c => M.cols[c[0]] && !(kind === 'adsets' && (c[0] === 'objective')));
+const numCol = c => !['status', 'branch', 'objective', 'quality'].includes(c);
+return `<div class="sx-table-wrap"><table class="sx-table ma-table"><thead><tr><th class="sort" data-ma-sort="name">${kind === 'adsets' ? 'Ad set' : 'Campaign'}${k === 'name' ? (dir > 0 ? ' ▲' : ' ▼') : ''}</th>${cols.map(c => `<th class="sort ${numCol(c[0]) ? 'num' : ''}" data-ma-sort="${c[0]}">${c[1]}${k === c[0] ? (dir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}</tr></thead><tbody>
+${list.map(x => `<tr><td class="nm"><b>${esc(x.name)}</b>${kind === 'adsets' ? `<div class="sx-sub">${esc(x.campaignName || '')}</div>` : ''}</td>${cols.map(c => `<td class="${numCol(c[0]) ? 'num' : ''}">${cellOf(c[0], x)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+function wireSort(d) { const kind = M.ptab; document.querySelectorAll('[data-ma-sort]').forEach(th => th.onclick = () => { const k = th.dataset.maSort, s = M.sort[kind]; M.sort[kind] = [k, s[0] === k ? -s[1] : (k === 'cpl' || k === 'name' || k === 'cpc' || k === 'cpm' ? 1 : -1)]; renderMetaAdPerformance(d); }); }
+function exportCsv(d) {
+const head = ['Name', 'Campaign', 'Branch', 'Status', 'Spend (₹)', 'Leads', 'CPL (₹)', 'Impressions', 'Clicks', 'CTR %', 'CPM (₹)', 'CPC (₹)', 'Reach', 'Frequency'];
+const pick = x => [x.name, x.campaignName || '', x.branch || '', x.status, Math.round(x.spend), x.leads, x.leads ? Math.round(x.cpl) : '', x.impressions, x.clicks, x.ctr, x.cpm, x.cpc, x.reach == null ? '' : x.reach, x.frequency == null ? '' : x.frequency];
+const list = M.ptab === 'adsets' ? (d.adSets || []).filter(s => !M.setsCampaign || s.campaignId === M.setsCampaign) : M.ptab === 'ads' ? (d.ads || []) : (d.campaigns || []);
+download('meta-' + M.ptab + '-' + ((d.filters && d.filters.from) || '') + '.csv', [head].concat(list.map(pick)));
+}
+
+function renderMetaSettings(s) {
+if (!s) return;
+const ls = s.lastSync || {};
+const hist = s.history || [];
+$('maBody').innerHTML = `${s.tokenStatus === 'expired' ? '<div class="ma-banner">⛔ The Meta token has expired — paste a new one below.</div>' : s.tokenStatus === 'expiring' ? `<div class="ma-banner warm">⚠ The Meta token expires in ${esc(s.daysLeft)} days — paste a new one below (or use a System User token, which never expires).</div>` : ''}
+<div class="ma-2"><div class="sx-card"><h3>Connection status</h3>
+<div class="ma-bars" style="font-size:13px;gap:8px;">
+<div>Account: <b>${esc(s.accountName || '—')}</b> ${s.accountStatus ? `<span class="ma-chip ${/^Active$/.test(s.accountStatus) ? 'ok' : 'bad'}">${esc(s.accountStatus)}</span>` : ''} ${s.currency ? `<span class="ma-chip">${esc(s.currency)}</span>` : ''}</div>
+<div>Ad account: <b>${esc(s.adAccountId || '—')}</b>${s.businessId ? ' · Business ' + esc(s.businessId) : ''}</div>
+<div>Token: ${tokenChip(s.tokenStatus, s.daysLeft)} ${s.tokenTail ? '<span class="sx-sub">ends …' + esc(s.tokenTail) + '</span>' : ''} ${s.expiryText ? '<div class="sx-sub">' + esc(s.expiryText) + '</div>' : ''}</div>
+<div>Last synced: <b>${esc(ago(ls.at))}</b> ${ls.at ? (ls.ok ? '<span class="ma-chip ok">OK</span>' : '<span class="ma-chip bad">Failed</span>') : ''}${ls.ok === false ? '<div class="sx-sub" style="color:var(--red)">' + esc(ls.error) + '</div>' : ''}</div></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><button class="um-btn" id="maTest" ${s.configured ? '' : 'disabled'}>Test connection</button></div><div id="maTestOut" class="ma-tip"></div></div>
+<div class="sx-card"><h3>Auto-sync</h3>
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;"><label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" id="maAuto" ${s.autoSync ? 'checked' : ''} ${s.configured ? '' : 'disabled'}> Sync every hour automatically</label>${s.autoSync ? '<span class="ma-chip ok">On</span>' : '<span class="ma-chip">Off</span>'}</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"><button class="um-btn" id="maInstall" ${s.configured && !s.autoSync ? '' : 'disabled'}>Install trigger</button><button class="um-btn primary" id="maSyncS" ${s.configured ? '' : 'disabled'}>⟳ Sync now</button><button class="um-btn" id="maSetup">Create the Meta sheets</button></div>
+<details style="margin-top:12px;"><summary style="cursor:pointer;font-weight:700;font-size:13px;">View sync history (last ${hist.length})</summary>
+${hist.length ? `<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>When</th><th>By</th><th>Result</th><th class="num">Campaigns</th><th class="num">Spend</th><th class="num">Leads</th></tr></thead><tbody>${hist.map(h => `<tr><td>${esc(stamp(h.at))}</td><td>${esc(h.by || '')}</td><td>${h.ok ? (h.partial ? '<span class="ma-chip warm">Partly</span>' : '<span class="ma-chip ok">OK</span>') : '<span class="ma-chip bad">Failed</span>'}${h.error ? '<div class="sx-sub" style="white-space:normal;max-width:280px;">' + esc(h.error) + '</div>' : ''}</td><td class="num">${num(h.campaigns)}</td><td class="num">${inr(h.spend)}</td><td class="num">${num(h.leads)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="sx-sub" style="margin-top:6px;">No syncs yet.</div>'}</details></div></div>
+<div class="sx-card"><h3>Configuration</h3><div class="ma-form">
+<div><label class="f" for="maTok">Access token *</label><input type="password" id="maTok" autocomplete="off" placeholder="${s.tokenSet ? 'Saved ✓ (ends …' + esc(s.tokenTail) + ') — paste only to replace' : 'Paste the token from Meta'}"></div>
+<div><label class="f" for="maAct">Ad Account ID *</label><input type="text" id="maAct" value="${esc(s.adAccountId)}" placeholder="act_XXXXXXXXXX"></div>
+<div><label class="f" for="maBiz">Business Manager ID</label><input type="text" id="maBiz" value="${esc(s.businessId)}" placeholder="optional, e.g. 1234567890"></div></div>
+<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center;"><button class="um-btn primary" id="maSave">Save &amp; test</button><span class="ma-tip" id="maSaveMsg" style="margin:0;">The token is stored privately in the script settings — never in a sheet, never shown again.</span></div></div>
+${tagSection(s)}
+<div class="sx-card ma-guide"><details><summary>How to get your access token and Ad Account ID</summary>${guideHtml()}</details></div>`;
+$('maSave').onclick = () => {
+const b = $('maSave'), m = $('maSaveMsg'); busy(b, true, 'Checking with Meta…'); m.style.color = '';
+run('saveMetaAdsConfig', { token: $('maTok').value, adAccountId: $('maAct').value, businessId: $('maBiz').value }).then(r => {
+busy(b, false); m.textContent = '✓ Connected to ' + (r.accountName || 'your ad account') + (r.currency && r.currency !== 'INR' ? ' (' + r.currency + ', converted at ₹' + r.fx + ')' : '') + (r.missingScopes && r.missingScopes.length ? ' — but the token is missing: ' + r.missingScopes.join(', ') : '') + '. Press Sync now for the first pull.';
+M.settings = null; M.data = null; run('getMetaAdsSettings').then(d => { M.settings = d; renderMetaSettings(d); const mm = $('maSaveMsg'); if (mm) mm.textContent = m.textContent; });
+}).catch(e => { busy(b, false); m.textContent = errMsg(e); m.style.color = 'var(--red)'; });
+};
+const tb = $('maTest'); if (tb) tb.onclick = () => { busy(tb, true, 'Testing…'); run('testMetaConnection').then(r => { busy(tb, false); $('maTestOut').innerHTML = r.ok ? `<span class="sx-good">✓ Working.</span> Token of <b>${esc(r.tokenOwner)}</b> · ${esc(r.accountName)} (${esc(r.accountStatus)}, ${esc(r.currency)}) · ${esc(r.expiryText || '')}${r.missingScopes && r.missingScopes.length ? ' · <span class="sx-bad">missing permission: ' + esc(r.missingScopes.join(', ')) + '</span>' : ''}` : `<span class="sx-bad">✗ ${esc(r.error || 'Not working')}</span>`; }).catch(e => { busy(tb, false); $('maTestOut').textContent = errMsg(e); }); };
+const au = $('maAuto'); if (au) au.onchange = () => { au.disabled = true; run(au.checked ? 'installMetaAdsTrigger' : 'removeMetaAdsTrigger').then(() => { toast(au.checked ? 'Auto-sync on — every hour' : 'Auto-sync off'); return run('getMetaAdsSettings'); }).then(d => { M.settings = d; renderMetaSettings(d); }).catch(e => { au.disabled = false; au.checked = !au.checked; toast(errMsg(e), 'error'); }); };
+const ins = $('maInstall'); if (ins) ins.onclick = () => { busy(ins, true); run('installMetaAdsTrigger').then(() => run('getMetaAdsSettings')).then(d => { toast('Auto-sync on — every hour'); M.settings = d; renderMetaSettings(d); }).catch(e => { busy(ins, false); toast(errMsg(e), 'error'); }); };
+const sy = $('maSyncS'); if (sy) sy.onclick = () => { busy(sy, true, 'Syncing…'); run('syncMetaAds', { days: 30 }).then(r => { if (r && r.error) toast('Sync failed: ' + r.error, 'error'); else toast(`Synced ${r.campaigns} campaigns · ${inr(r.spend)} · ${r.leads} leads`); M.data = null; M.perf = null; refreshToday(true); return run('getMetaAdsSettings'); }).then(d => { M.settings = d; renderMetaSettings(d); }).catch(e => { busy(sy, false); toast(errMsg(e), 'error'); }); };
+const su = $('maSetup'); if (su) su.onclick = () => { busy(su, true); run('setupMetaAdsModule').then(r => { busy(su, false); toast(r.created.length ? 'Created: ' + r.created.join(', ') : 'All Meta sheets are already there'); }).catch(e => { busy(su, false); toast(errMsg(e), 'error'); }); };
+wireTagSection(s);
+}
+function tagSection(s) {
+const list = s.campaigns || [];
+return `<div class="sx-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;"><h3 style="margin:0;">Branch tagging</h3>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><select id="maBulkBr" aria-label="Branch for selected">${opts(branches(), '', 'Tag selected as…')}</select><button class="um-btn" id="maBulk">Apply to selected</button><button class="um-btn" id="maAutoTag">✨ Auto-tag from names</button></div></div>
+<div class="sx-sub" style="margin-bottom:8px;">Auto-tag looks for Mumbai / Calicut / Kochi / Delhi (or MUM / CAL / KOC / DEL) in the campaign name. Tags only live in the "Meta Branch Tags" sheet — campaign names in Meta are never changed.</div>
+${list.length ? `<div class="sx-table-wrap"><table class="sx-table ma-table"><thead><tr><th><input type="checkbox" id="maAll" aria-label="Select all"></th><th>Campaign</th><th>Status</th><th class="num">Spend (last sync)</th><th>Branch tag</th></tr></thead><tbody>
+${list.map(c => `<tr><td><input type="checkbox" data-ma-pick="${esc(c.id)}" data-name="${esc(c.name)}" aria-label="Select ${esc(c.name)}"></td><td class="nm"><b>${esc(c.name)}</b></td><td>${statusChip(c.status)}</td><td class="num">${inr(c.spend)}</td><td>${tagSelect({ id: c.id, name: c.name, branch: c.branch || 'Untagged' })}</td></tr>`).join('')}</tbody></table></div>` : empty('No campaigns yet — save your details above and press Sync now.')}</div>`;
+}
+function wireTagSection(s) {
+const all = $('maAll'); if (all) all.onchange = () => document.querySelectorAll('[data-ma-pick]').forEach(x => { x.checked = all.checked; });
+document.querySelectorAll('#maBody [data-ma-tag]').forEach(sel => sel.onchange = () => saveTag(sel.dataset.maTag, sel.dataset.name, sel.value));
+const bk = $('maBulk'); if (bk) bk.onclick = () => {
+const br = $('maBulkBr').value, items = Array.from(document.querySelectorAll('[data-ma-pick]:checked')).map(x => ({ id: x.dataset.maPick, name: x.dataset.name }));
+if (!items.length) { toast('Tick the campaigns first', 'error'); return; } if (!br) { toast('Choose a branch', 'error'); return; }
+busy(bk, true, 'Saving…'); run('saveBranchTagsBulk', items, br).then(() => { toast('Tagged ' + items.length + ' as ' + br); M.data = null; M.perf = null; return run('getMetaAdsSettings'); }).then(d => { M.settings = d; renderMetaSettings(d); }).catch(e => { busy(bk, false); toast(errMsg(e), 'error'); });
+};
+const at = $('maAutoTag'); if (at) at.onclick = () => autoTag(at);
+}
+function guideHtml() {
+return `<ol><li><b>Create an app<\x2Fb> — go to <a href="https:\x2F\x2Fdevelopers.facebook.com\x2Fapps" target="_blank" rel="noopener">developers.facebook.com → My Apps<\x2Fa>, log in with the Facebook account that manages the Akbar Study Abroad Business Manager, then <b>Create App<\x2Fb> → type <b>Business<\x2Fb> → name it "Akbar Lead Ops". Add the <b>Marketing API<\x2Fb> product.<\x2Fli>
+<li><b>Best: a token that never expires (System User)<\x2Fb> — <a href="https:\x2F\x2Fbusiness.facebook.com\x2Fsettings\x2Fsystem-users" target="_blank" rel="noopener">Business Settings → Users → System users<\x2Fa> → Add (role: Admin) → <b>Assign assets<\x2Fb> → your ad account with <b>View performance<\x2Fb> → <b>Generate new token<\x2Fb> for the "Akbar Lead Ops" app with the permission <code>ads_read<\x2Fcode> → copy it.<\x2Fli>
+<li><b>Quick test instead<\x2Fb> — <a href="https:\x2F\x2Fdevelopers.facebook.com\x2Ftools\x2Fexplorer\x2F" target="_blank" rel="noopener">Graph API Explorer<\x2Fa> → choose your app → add <code>ads_read<\x2Fcode> → Generate Access Token. This one lasts 1–2 hours; make it last 60 days in the <a href="https:\x2F\x2Fdevelopers.facebook.com\x2Ftools\x2Fdebug\x2Faccesstoken\x2F" target="_blank" rel="noopener">Access Token Debugger<\x2Fa> → "Extend Access Token". The dashboard warns you 7 days before it expires.<\x2Fli>
+<li><b>Ad Account ID<\x2Fb> — <a href="https:\x2F\x2Fbusiness.facebook.com\x2Fsettings\x2Fad-accounts" target="_blank" rel="noopener">Business Settings → Accounts → Ad accounts<\x2Fa> → copy the ID (type it as <code>act_<\x2Fcode> + the number, or just the number). The Business Manager ID is the number after <code>business_id=<\x2Fcode> in the address bar (optional).<\x2Fli>
+<li>Paste them above → <b>Save &amp; test<\x2Fb> → <b>Sync now<\x2Fb> → tick <b>Sync every hour<\x2Fb>.<\x2Fli><\x2Fol>
+<div class="sx-sub">Read-only is enough: the dashboard never changes your ads. Don't share the token in WhatsApp or email — paste it only into this screen.<\x2Fdiv>`;
+}
+
+let todayAt = 0, todayBusy = false;
+function drawToday(r) {
+const box = $('maTodayRow'); if (!box) return;
+if (!r || !r.allowed) { document.body.classList.remove('ma-today-on'); box.innerHTML = ''; return; }
+document.body.classList.add('ma-today-on');
+if (!r.configured) { box.innerHTML = `<div class="ma-today"><div class="ttl">📣 Meta Ads</div><div class="grow sx-sub">Connect your Meta ad account to see today's spend and leads here.</div><button class="um-btn" data-ma-open="settings">Connect</button></div>`; }
+else {
+const sp = (r.spark || []).map(x => x.spend);
+box.innerHTML = `<div class="ma-today"><div><div class="ttl">📣 Meta Ads Today ${r.tokenStatus === 'expired' ? '<span class="ma-chip bad">token expired</span>' : r.tokenStatus === 'expiring' ? '<span class="ma-chip warm">token expiring</span>' : ''}</div><div class="sx-sub">synced ${esc(ago(r.lastSynced))}${r.syncOk === false ? ' · last sync failed' : ''}</div></div>
+<div class="st"><div>Spend today<b>${inr(r.spendToday)}</b></div><div>Leads today<b>${num(r.leadsToday)}</b></div><div>CPL today<b>${r.leadsToday ? inr(r.cplToday) : '—'}</b></div></div>
+<div class="grow" style="display:flex;align-items:center;gap:8px;justify-content:flex-end;"><span class="sx-sub" title="Spend, last 7 days">7 days</span>${spark(sp)}</div><button class="um-btn" data-ma-open="overview">View full report →</button></div>`;
+}
+box.querySelectorAll('[data-ma-open]').forEach(b => b.onclick = () => openMetaAds(b.dataset.maOpen));
+}
+function refreshToday(force) {
+if (todayBusy || !document.body.classList.contains('fin-ok') || !$('maTodayRow')) return;
+if (!force && Date.now() - todayAt < 5 * 60000) return;
+todayBusy = true; todayAt = Date.now();
+run('getMetaAdsToday').then(r => { todayBusy = false; drawToday(r); }).catch(() => { todayBusy = false; });
+}
+setInterval(() => refreshToday(false), 4000);
+
+document.querySelectorAll('[data-ma-view]').forEach(el => {
+const go = () => openMetaAds(VIEW_OF[el.dataset.maView] || 'overview');
+el.addEventListener('click', go);
+el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+});
+const sb = document.getElementById('sidebar');
+if (sb) sb.addEventListener('click', e => { const it = e.target.closest('.nav-item, .lead-set-item, [data-branch]'); if (it && !it.hasAttribute('data-ma-view')) closeMetaAds(); }, true);
+Object.assign(window, { openMetaAds, closeMetaAds, renderMetaAdsDashboard, renderMetaCampaigns, renderMetaAdPerformance, renderMetaSettings, openCampaignDetail });
+})();
+</script>
+
+<div id="loaderScreen" style="display:none;" aria-hidden="true">
+<canvas id="globeCanvas"></canvas>
+<div id="loaderContent" role="status" aria-live="polite">
+<img id="loaderLogo" src="https://lh3.googleusercontent.com/d/1YvFCQ2nNiUfMnjZ7jKe5NKLPcLI1WrxF=w320" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='https://drive.google.com/thumbnail?id=1YvFCQ2nNiUfMnjZ7jKe5NKLPcLI1WrxF&sz=w320';}" alt="Akbar Study Abroad">
+<div id="loaderTagline">Connecting students to their dream universities...</div>
+<div id="loaderProgress"><div id="loaderProgressBar"></div></div>
+<div id="loaderStatus">Initialising...</div>
+</div>
+</div>
+<style>
+
+#loaderScreen { position: fixed; inset: 0; background: radial-gradient(ellipse at 50% 45%, #2a2440 0%, #1a1628 60%, #120f1d 100%); z-index: 99990; display: flex; align-items: center; justify-content: center; flex-direction: column; transition: opacity .8s ease; }
+#loaderScreen.fade-out { opacity: 0; pointer-events: none; }
+#globeCanvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .85; z-index: 1; }
+#loaderContent { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center; padding: 20px; }
+#loaderLogo { width: 220px; max-width: 60vw; height: auto; opacity: 0; transform: translateY(10px); animation: loaderLogoIn 1s ease .5s forwards; filter: drop-shadow(0 0 30px rgba(242,47,61,.4)); }
+@keyframes loaderLogoIn { to { opacity: 1; transform: translateY(0); } }
+#loaderTagline { color: rgba(255,255,255,.78); font-size: 15px; font-weight: 600; font-family: 'IBM Plex Sans', sans-serif; letter-spacing: .3px; min-height: 22px; opacity: 0; animation: loaderFadeIn .8s ease 1.2s forwards; max-width: 320px; transition: opacity .3s; }
+#loaderTagline.swap { opacity: 0 !important; }
+@keyframes loaderFadeIn { to { opacity: 1; } }
+#loaderProgress { width: 240px; max-width: 70vw; height: 3px; background: rgba(255,255,255,.12); border-radius: 99px; overflow: hidden; opacity: 0; animation: loaderFadeIn .8s ease 1.4s forwards; }
+#loaderProgressBar { height: 100%; width: 0%; background: linear-gradient(90deg, #F22F3D, #ff6b6b); border-radius: 99px; box-shadow: 0 0 10px rgba(242,47,61,.6); }
+#loaderStatus { color: rgba(255,255,255,.45); font-size: 12px; font-weight: 500; font-family: 'IBM Plex Mono', monospace; letter-spacing: .5px; opacity: 0; animation: loaderFadeIn .8s ease 1.6s forwards; }
+#loaderScreen::before { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,.4) 0%, transparent 100%), radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,.3) 0%, transparent 100%),
+  radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,.5) 0%, transparent 100%), radial-gradient(1px 1px at 70% 80%, rgba(255,255,255,.3) 0%, transparent 100%),
+  radial-gradient(1px 1px at 85% 35%, rgba(255,255,255,.4) 0%, transparent 100%), radial-gradient(1px 1px at 20% 85%, rgba(255,255,255,.2) 0%, transparent 100%),
+  radial-gradient(1px 1px at 60% 45%, rgba(255,255,255,.3) 0%, transparent 100%), radial-gradient(1px 1px at 90% 70%, rgba(255,255,255,.4) 0%, transparent 100%),
+  radial-gradient(1px 1px at 40% 30%, rgba(255,255,255,.2) 0%, transparent 100%), radial-gradient(1px 1px at 75% 15%, rgba(255,255,255,.5) 0%, transparent 100%); }
+@media (prefers-reduced-motion: reduce) { #loaderLogo, #loaderTagline, #loaderProgress, #loaderStatus { animation: none; opacity: 1; transform: none; } }
+</style>
+<script>
+
+(function () {
+
+var DESTINATIONS = [
+  ['India', 78.9, 20.6, '#F22F3D', true], ['UK', -1.5, 52.4, '#4fc3f7', false], ['Canada', -96.8, 56.1, '#81c784', false],
+  ['Australia', 133.7, -25.3, '#ffb74d', false], ['Ireland', -8.2, 53.4, '#4db6ac', false], ['Germany', 10.4, 51.2, '#ce93d8', false],
+  ['New Zealand', 172.5, -40.9, '#f48fb1', false], ['UAE', 53.8, 23.4, '#fff176', false]
+];
+var TAGLINES = ['Connecting students to their dream universities...', 'Loading your leads and pipeline...', 'Preparing your analytics...', 'Fetching branch performance...', 'Almost ready...'];
+var STATUSES = [[20, 'Authenticating session...'], [45, 'Loading branch data...'], [70, 'Fetching leads...'], [90, 'Building dashboard...'], [100, 'Ready!']];
+var reduce = false; try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {   }
+var G = { canvas: null, ctx: null, w: 0, h: 0, cx: 0, cy: 0, r: 0, rot: -60, frame: null, active: false, hiding: false, timers: [], prog: 0, progTimer: null, dest: 0, tag: 0, shownAt: 0, msgLocked: false };
+var $ = function (id) { return document.getElementById(id); };
+function later(fn, ms) { G.timers.push(setTimeout(fn, ms)); }
+function every(fn, ms) { var t = setInterval(fn, ms); G.timers.push(t); return t; }
+function clearAll() { G.timers.forEach(function (t) { clearTimeout(t); clearInterval(t); }); G.timers = []; clearInterval(G.progTimer); if (G.frame) cancelAnimationFrame(G.frame); G.frame = null; }
+
+function project(lon, lat) {
+  var lo = (lon + G.rot) * Math.PI / 180, la = lat * Math.PI / 180;
+  var z = Math.cos(la) * Math.cos(lo);
+  return { x: G.cx + G.r * Math.cos(la) * Math.sin(lo), y: G.cy - G.r * Math.sin(la), z: z, visible: z > -0.1 };
+}
+function dot(x, y, s, fill) { var c = G.ctx; c.beginPath(); c.arc(x, y, s, 0, Math.PI * 2); c.fillStyle = fill; c.fill(); }
+function drawGlobe() {
+  var c = G.ctx, lat, lon, p;
+  c.clearRect(0, 0, G.w, G.h);
+  for (lat = -80; lat <= 80; lat += 20) for (lon = -180; lon < 180; lon += 8) { p = project(lon, lat); if (p.visible) dot(p.x, p.y, Math.max(0.3, 0.8 + p.z * 0.8), 'rgba(150,180,255,' + (0.1 + p.z * 0.25) + ')'); }
+  for (lon = -180; lon < 180; lon += 30) for (lat = -85; lat <= 85; lat += 5) { p = project(lon, lat); if (p.visible) dot(p.x, p.y, 0.6, 'rgba(130,160,255,' + (0.06 + p.z * 0.15) + ')'); }
+  var g = c.createRadialGradient(G.cx, G.cy, G.r * 0.85, G.cx, G.cy, G.r * 1.05);
+  g.addColorStop(0, 'rgba(80,120,255,0)'); g.addColorStop(0.7, 'rgba(80,120,255,0.06)'); g.addColorStop(1, 'rgba(80,120,255,0.18)');
+  c.beginPath(); c.arc(G.cx, G.cy, G.r, 0, Math.PI * 2); c.fillStyle = g; c.fill();
+}
+function drawArcs(now) {
+  var c = G.ctx, o = DESTINATIONS[0], op = project(o[1], o[2]);
+  if (!op.visible) return;
+  for (var i = 1; i <= G.dest && i < DESTINATIONS.length; i++) {
+    var d = DESTINATIONS[i], dp = project(d[1], d[2]);
+    if (!dp.visible) continue;
+    var mx = (op.x + dp.x) / 2, my = (op.y + dp.y) / 2 - G.r * 0.22;
+    c.beginPath(); c.moveTo(op.x, op.y); c.quadraticCurveTo(mx, my, dp.x, dp.y);
+    c.strokeStyle = d[3] + '70'; c.lineWidth = 1.2; c.setLineDash([6, 10]); c.lineDashOffset = -((now * 0.03 + i * 40) % 80); c.stroke(); c.setLineDash([]);
+    var t = (now * 0.0004 + i * 0.3) % 1, px = (1 - t) * (1 - t) * op.x + 2 * (1 - t) * t * mx + t * t * dp.x, py = (1 - t) * (1 - t) * op.y + 2 * (1 - t) * t * my + t * t * dp.y;
+    c.shadowColor = d[3]; c.shadowBlur = 8; dot(px, py, 2.5, d[3]); c.shadowBlur = 0;
+  }
+}
+function drawDestinations(now) {
+  var c = G.ctx;
+  for (var i = 0; i <= G.dest && i < DESTINATIONS.length; i++) {
+    var d = DESTINATIONS[i], p = project(d[1], d[2]);
+    if (!p.visible) continue;
+    var pulse = 0.7 + 0.3 * Math.sin(now / 600 + i * 1.2), s = d[4] ? 8 : 6;
+    var g = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, s * 3 * pulse);
+    g.addColorStop(0, d[3] + 'cc'); g.addColorStop(1, d[3] + '00');
+    dot(p.x, p.y, s * 3 * pulse, g);
+    c.shadowColor = d[3]; c.shadowBlur = 10; dot(p.x, p.y, s * 0.55, '#ffffff'); c.shadowBlur = 0;
+    if (p.z > 0.15) { c.font = '600 11px "IBM Plex Sans", sans-serif'; c.fillStyle = 'rgba(255,255,255,' + (0.5 + p.z * 0.5) + ')'; c.textAlign = 'center'; c.fillText(d[0], p.x, p.y - s - 5); }
+  }
+}
+function tick() {
+  if (!G.active || !G.ctx) return;
+  var now = Date.now();
+  if (!reduce) G.rot += 0.12;
+  drawGlobe(); drawArcs(now); drawDestinations(now);
+  G.frame = reduce ? null : requestAnimationFrame(tick);
+}
+function resize() {
+  if (!G.canvas || !G.ctx) return;
+  var dpr = Math.min(2, window.devicePixelRatio || 1);
+  G.w = window.innerWidth; G.h = window.innerHeight;
+  G.canvas.width = G.w * dpr; G.canvas.height = G.h * dpr;
+  G.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  G.cx = G.w / 2; G.cy = G.h / 2; G.r = Math.min(G.w, G.h) * (G.w < 600 ? 0.42 : 0.34);
+  if (reduce) tick();
+}
+function setProgress(target, ms) {
+  var start = G.prog, t0 = Date.now(), bar = $('loaderProgressBar'), st = $('loaderStatus');
+  clearInterval(G.progTimer);
+  G.progTimer = setInterval(function () {
+    var k = Math.min(1, (Date.now() - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+    G.prog = start + (target - start) * e;
+    if (bar) bar.style.width = G.prog.toFixed(1) + '%';
+    if (st && !G.msgLocked) STATUSES.forEach(function (s) { if (G.prog >= s[0] - 0.5) st.textContent = s[1]; });
+    if (k >= 1) clearInterval(G.progTimer);
+  }, 16);
+}
+
+window.showLoader = function () {
+  var scr = $('loaderScreen'); if (!scr) return;
+  clearAll();
+  G.active = true; G.hiding = false; G.dest = 0; G.tag = 0; G.prog = 0; G.rot = -60; G.shownAt = Date.now(); G.msgLocked = false;
+  scr.classList.remove('fade-out'); scr.style.display = 'flex'; scr.style.opacity = '1'; scr.setAttribute('aria-hidden', 'false');
+  var tg = $('loaderTagline'); if (tg) { tg.textContent = TAGLINES[0]; tg.classList.remove('swap'); }
+  var bar = $('loaderProgressBar'); if (bar) bar.style.width = '0%';
+  var st = $('loaderStatus'); if (st) st.textContent = 'Initialising...';
+  G.canvas = $('globeCanvas');
+  try { G.ctx = G.canvas && G.canvas.getContext ? G.canvas.getContext('2d') : null; } catch (e) { G.ctx = null; }
+  window.removeEventListener('resize', resize); window.addEventListener('resize', resize);
+  resize(); tick();
+  later(function () { every(function () { if (G.dest < DESTINATIONS.length - 1) G.dest++; }, 400); }, 800);
+  later(function () {
+    every(function () {
+      var el = $('loaderTagline'); if (!el) return;
+      G.tag = (G.tag + 1) % TAGLINES.length; el.classList.add('swap');
+      setTimeout(function () { el.textContent = TAGLINES[G.tag]; el.classList.remove('swap'); }, 300);
+    }, 1800);
+  }, 1500);
+  later(function () { setProgress(25, 600); }, 200);
+  later(function () { setProgress(55, 800); }, 1200);
+  later(function () { setProgress(80, 600); }, 2500);
+  later(function () { setProgress(92, 6000); }, 3200);
+  later(function () { window.hideLoader(); }, 30000);
+};
+window.updateLoaderProgress = function (pct, msg) {
+  if (!G.active) return;
+  setProgress(Math.max(G.prog, Math.min(100, Number(pct) || 0)), 500);
+  if (msg) { var s = $('loaderStatus'); if (s) { s.textContent = msg; G.msgLocked = true; } }
+};
+
+window.hideLoader = function () {
+  if (!G.active || G.hiding) return;
+  G.hiding = true; G.msgLocked = false;
+  var wait = Math.max(0, 1800 - (Date.now() - G.shownAt));
+  setTimeout(function () {
+    setProgress(100, 400);
+    setTimeout(function () {
+      var scr = $('loaderScreen'); if (!scr) return;
+      scr.classList.add('fade-out');
+      setTimeout(function () { G.active = false; clearAll(); window.removeEventListener('resize', resize); scr.style.display = 'none'; scr.classList.remove('fade-out'); scr.setAttribute('aria-hidden', 'true'); }, 850);
+    }, 450);
+  }, wait);
+};
+
+var login = $('loginScreen');
+function signedInNow() { var d3 = $('dot3'); return d3 && d3.classList.contains('active'); }
+function dataReady() {
+  if (typeof allRows !== 'undefined' && allRows && allRows.length) return true;
+  var views = ['appTeamView', 'b2bView', 'visaView', 'telecallerView', 'tcView'];
+  for (var i = 0; i < views.length; i++) { var v = $(views[i]); if (v && v.style.display === 'block' && v.innerHTML.length > 200) return true; }
+  if (document.body.classList.contains('tc-staff')) return true;
+  var tl = $('topLoader'); return G.sawLoad && tl && !tl.classList.contains('active') && Date.now() - G.shownAt > 2500;
+}
+if (login && window.MutationObserver) {
+  var wasOpen = login.style.display !== 'none';
+  new MutationObserver(function () {
+    var open = login.style.display !== 'none';
+    if (wasOpen && !open && signedInNow()) {
+      G.sawLoad = false; window.showLoader();
+      var tl = $('topLoader');
+      var poll = setInterval(function () {
+        if (!G.active) { clearInterval(poll); return; }
+        if (tl && tl.classList.contains('active')) G.sawLoad = true;
+        if (dataReady()) { clearInterval(poll); window.updateLoaderProgress(96, 'Building dashboard...'); window.hideLoader(); }
+      }, 150);
+    }
+    if (open && G.active) window.hideLoader();
+    wasOpen = open;
+  }).observe(login, { attributes: true, attributeFilter: ['style'] });
+}
+})();
+</script>
+
+<style>
+#sqView { min-height: 100vh; background: var(--canvas); }
+.sq-q { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; box-shadow: var(--shadow); margin-bottom: 10px; }
+.sq-q.Open { border-left: 4px solid #2F57B8; }
+.sq-q .top { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.sq-q .top b { color: var(--ink); font-size: 14px; }
+.sq-q .qq { margin: 8px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13.5px; }
+.sq-q .rep { background: rgba(31,157,99,.08); border-radius: 10px; padding: 9px 11px; margin-top: 10px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; }
+.sq-q .rep small { display: block; color: var(--ok); font-weight: 700; margin-bottom: 3px; }
+.sq-q .act { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.sq-pill { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 9px; background: var(--canvas); color: var(--muted); }
+.sq-pill.Open { background: rgba(47,87,184,.12); color: #2F57B8; } .sq-pill.Answered { background: rgba(31,157,99,.12); color: var(--ok); }
+.sq-badge { margin-left: auto; background: var(--red); color: #fff; font-size: 10.5px; font-weight: 700; border-radius: 99px; padding: 1px 7px; display: none; }
+.sq-badge.on { display: inline-block; }
+.sq-bar { height: 8px; border-radius: 8px; background: var(--canvas); overflow: hidden; min-width: 120px; } .sq-bar i { display: block; height: 100%; background: var(--ok); }
+</style>
+<script>
+
+(function () {
+const S = { tab: 'questions', status: 'Open', branch: '', data: null, loading: false };
+const $ = id => document.getElementById(id);
+const esc = v => escapeHtml(v == null ? '' : String(v));
+const run = (fn, ...args) => promisifyRun(fn, window._authToken || '', ...args);
+const errMsg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
+const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t || 'success'); };
+const when = s => { const d = new Date(s); return !s || isNaN(d) ? '' : d.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }); };
+const OTHER = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView'];
+
+function open() {
+const app = document.querySelector('.app'); if (app) app.style.display = 'none';
+OTHER.forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
+if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
+const root = $('sqView'); root.style.display = 'block';
+root.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-title">💬 Student Questions</h1><div class="sx-sub">Questions students ask from their portal link · their pre-departure checklist</div></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="um-btn" id="sqRefresh">↻ Refresh</button><button class="um-btn" id="sqBack">← Back to dashboard</button></div></div>
+<div class="sx-tabs" role="tablist"><button class="sx-tab ${S.tab === 'questions' ? 'active' : ''}" data-sq-tab="questions" role="tab">Questions</button><button class="sx-tab ${S.tab === 'predep' ? 'active' : ''}" data-sq-tab="predep" role="tab">Pre-departure checklist</button></div>
+<div id="sqBody"><div class="sx-card"><div class="skeleton" style="height:200px;"></div></div></div></div>`;
+$('sqBack').onclick = close; $('sqRefresh').onclick = load;
+root.querySelectorAll('[data-sq-tab]').forEach(b => b.onclick = () => { S.tab = b.dataset.sqTab; root.querySelectorAll('[data-sq-tab]').forEach(x => x.classList.toggle('active', x === b)); render(); });
+window.scrollTo(0, 0);
+load();
+}
+function close() { const root = $('sqView'); if (!root || root.style.display !== 'block') return; root.style.display = 'none'; root.innerHTML = ''; const app = document.querySelector('.app'); if (app) app.style.display = ''; }
+function load() {
+if (S.loading) return; S.loading = true;
+run('getStudentQuestions', {}).then(d => { S.loading = false; S.data = d; badge(d.open); render(); })
+.catch(e => { S.loading = false; const b = $('sqBody'); if (b) b.innerHTML = `<div class="sx-card sx-empty">Couldn't load: ${esc(errMsg(e))}</div>`; });
+}
+function render() {
+const b = $('sqBody'), d = S.data; if (!b || !d) return;
+const brSel = d.branches.length > 1 ? `<select id="sqBr" aria-label="Branch"><option value="">All branches</option>${d.branches.map(x => `<option ${x === S.branch ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>` : '';
+if (S.tab === 'predep') {
+const list = d.predeparture.filter(p => !S.branch || p.branch === S.branch);
+b.innerHTML = `<div class="sx-filters">${brSel}<span class="sx-sub">${list.length} student${list.length === 1 ? '' : 's'} have started their checklist · items that tick themselves (offer, visa, accommodation booked through us) are not counted here</span></div>
+<div class="sx-card">${list.length ? `<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Student</th><th>Branch</th><th>Counsellor</th><th>Progress</th><th>Done</th><th>Last update</th></tr></thead><tbody>
+${list.map(p => `<tr><td><b>${esc(p.student)}</b></td><td>${esc(p.branch)}</td><td>${esc(p.counsellor)}</td><td><div class="sq-bar" title="${p.done} of ${d.totalItems}"><i style="width:${Math.round(p.done / d.totalItems * 100)}%"></i></div><span class="sx-sub">${p.done} of ${d.totalItems}</span></td><td style="white-space:normal;max-width:360px;" class="sx-sub">${esc(p.items.join(' · ') || '—')}</td><td class="sx-sub">${esc(when(p.updatedAt))}</td></tr>`).join('')}</tbody></table></div>` : '<div class="sx-empty">No student has ticked anything yet. Students find the checklist in the “Checklist” tab of their portal link.</div>'}</div>`;
+} else {
+const list = d.questions.filter(q => (!S.status || q.status === S.status) && (!S.branch || q.branch === S.branch));
+b.innerHTML = `<div class="sx-filters"><select id="sqSt" aria-label="Status">${[['Open', 'Waiting for a reply'], ['Answered', 'Answered'], ['Closed', 'Closed'], ['', 'All']].map(o => `<option value="${o[0]}" ${o[0] === S.status ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>${brSel}<span class="sx-sub">${d.open} waiting for a reply</span></div>
+${list.length ? list.map(q => `<div class="sq-q ${esc(q.status)}"><div class="top"><b>${esc(q.student)}</b><span>${esc(q.branch)} · ${esc(q.counsellor || 'no counsellor')}</span><span>· ${esc(q.topic)} · ${esc(when(q.askedAt))}</span><span class="sq-pill ${esc(q.status)}" style="margin-left:auto;">${esc(q.status)}</span></div>
+<div class="qq">${esc(q.question)}</div>${q.reply ? `<div class="rep"><small>${esc(q.repliedBy)} · ${esc(when(q.repliedAt))}</small>${esc(q.reply)}</div>` : ''}
+<div class="act"><button class="um-btn primary" data-sq-reply="${esc(q.id)}">${q.reply ? 'Edit reply' : 'Reply'}</button>${q.status !== 'Closed' ? `<button class="um-btn" data-sq-close="${esc(q.id)}">Close</button>` : `<button class="um-btn" data-sq-reopen="${esc(q.id)}">Reopen</button>`}</div></div>`).join('') : `<div class="sx-card sx-empty">${S.status === 'Open' ? '🎉 No questions waiting.' : 'Nothing here.'}</div>`}`;
+const st = $('sqSt'); if (st) st.onchange = () => { S.status = st.value; render(); };
+b.querySelectorAll('[data-sq-reply]').forEach(x => x.onclick = () => reply(d.questions.find(q => q.id === x.dataset.sqReply)));
+b.querySelectorAll('[data-sq-close]').forEach(x => x.onclick = () => setStatus(x.dataset.sqClose, 'Closed'));
+b.querySelectorAll('[data-sq-reopen]').forEach(x => x.onclick = () => setStatus(x.dataset.sqReopen, 'Open'));
+}
+const br = $('sqBr'); if (br) br.onchange = () => { S.branch = br.value; render(); };
+}
+function setStatus(id, status) { run('setStudentQuestionStatus', id, status).then(() => { toast(status === 'Closed' ? 'Closed' : 'Reopened'); load(); }).catch(e => toast(errMsg(e), 'error')); }
+function reply(q) {
+if (!q) return;
+let bg = $('sqMBg');
+if (!bg) { bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'sqMBg'; document.body.appendChild(bg); bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); }); }
+bg.innerHTML = `<div class="cmdk-box" style="max-width:560px;" role="dialog" aria-modal="true"><div class="preview-modal-header"><span style="font-size:14px;font-weight:800;flex:1;">Reply to ${esc(q.student)}</span><button class="counselor-save-btn" id="sqX">Close</button></div><div class="s10-body">
+<div class="sx-sub" style="margin-bottom:6px;">${esc(q.topic)} · asked ${esc(when(q.askedAt))}</div><div style="background:var(--canvas);border-radius:10px;padding:10px 12px;white-space:pre-wrap;font-size:13.5px;">${esc(q.question)}</div>
+<label class="f" for="sqTxt">Your reply — the student sees it in their portal</label><textarea id="sqTxt" style="min-height:140px;">${esc(q.reply || '')}</textarea>
+<div id="sqAfter"></div><div class="s10-actions"><button class="um-btn primary" id="sqSave">Save reply</button></div></div></div>`;
+bg.classList.add('open');
+$('sqX').onclick = () => bg.classList.remove('open');
+$('sqSave').onclick = () => {
+const btn = $('sqSave'); btn.disabled = true; btn.textContent = 'Saving…';
+run('answerStudentQuestion', q.id, $('sqTxt').value).then(r => {
+btn.textContent = 'Saved ✓';
+$('sqAfter').innerHTML = `<div class="fin-alert warm" style="margin-top:10px;">Saved — it's in the student's portal now. Want to let them know?${r.waLink ? ` <button class="um-btn sx-wa" id="sqWa" style="margin-left:6px;">Open WhatsApp</button>` : ' (no WhatsApp number on file)'}</div>`;
+const wa = $('sqWa'); if (wa) wa.onclick = () => window.open(r.waLink, '_blank');
+load();
+}).catch(e => { btn.disabled = false; btn.textContent = 'Save reply'; toast(errMsg(e), 'error'); });
+};
+}
+function badge(n) { const b = $('sqBadge'); if (b) { b.textContent = n || ''; b.classList.toggle('on', !!n); } }
+let lastCount = 0;
+function refreshBadge() {
+if (!window._authToken || Date.now() - lastCount < 5 * 60000 || document.body.classList.contains('tc-staff')) return;
+if (typeof allRows === 'undefined' || !allRows.length) return;
+lastCount = Date.now();
+run('getStudentQuestionCount').then(r => badge(r.open)).catch(() => {});
+}
+setInterval(refreshBadge, 5000);
+document.querySelectorAll('[data-sq-view]').forEach(el => {
+el.addEventListener('click', open);
+el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+});
+const sb = document.getElementById('sidebar');
+if (sb) sb.addEventListener('click', e => { const it = e.target.closest('.nav-item, .lead-set-item'); if (it && !it.hasAttribute('data-sq-view')) close(); }, true);
+window.openStudentQuestions = open;
+})();
+</script>
+
+<script>
+
+(function () {
+const $ = id => document.getElementById(id);
+const esc = v => escapeHtml(v == null ? '' : String(v));
+const errMsg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
+function tokenFromUrl(u) { const m = /(?:token=|#t=)([a-f0-9]{32})/.exec(String(u || '')); return m ? m[1] : ''; }
+function addButton() {
+const fb = $('sxFeedbackBtn'), url = $('sxPortalUrl');
+if (!fb || !url || $('akAppCode')) return;
+const b = document.createElement('button');
+b.className = 'um-btn'; b.id = 'akAppCode'; b.type = 'button';
+b.title = 'For students with no email: a 6-digit code to sign in to the student app (works 24 hours). You send it on WhatsApp.';
+b.textContent = '🔑 App sign-in code';
+fb.parentNode.insertBefore(b, fb);
+b.onclick = () => {
+const tok = tokenFromUrl(url.value); if (!tok) return;
+b.disabled = true; b.textContent = 'Making code…';
+promisifyRun('createStudentLoginCode', window._authToken || '', tok).then(r => {
+b.disabled = false; b.textContent = '🔑 App sign-in code';
+const msg = $('sxPortalMsg'); if (msg) msg.value = r.message;
+let box = $('akAppCodeBox');
+if (!box) { box = document.createElement('div'); box.id = 'akAppCodeBox'; box.className = 'fin-alert warm'; box.style.margin = '10px 0 0'; b.closest('.sx-modal-actions').before(box); }
+box.innerHTML = `Sign-in code <b style="font-size:18px;letter-spacing:3px;">${esc(r.code)}</b> for mobile ${esc(r.phone)} · works 24 hours. The message above now has the code — press <b>Send via WhatsApp</b>.${r.appUrl ? '' : ' (The student app is not live on GitHub yet — upload site/portal first.)'}`;
+}).catch(e => { b.disabled = false; b.textContent = '🔑 App sign-in code'; if (typeof showToast === 'function') showToast(errMsg(e), 'error'); });
+};
+}
+new MutationObserver(addButton).observe(document.body, { childList: true, subtree: true });
+})();
+</script>
+
 </body>
 </html>
