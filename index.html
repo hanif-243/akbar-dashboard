@@ -45,7 +45,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '5 Oct 2026 · v31.1';
+window.AKBAR_BUILD = '5 Oct 2026 · v32';
 
 (function () {
   try {
@@ -14081,10 +14081,12 @@ ${card('refunds', '↩️', 'Refunds', `${inr(r.atRisk)} at risk`)}
 ${card('pnl', '📊', 'P&L', `${inr(pl.revenue)} revenue · margin ${pct(pl.margin)}`)}
 ${card('budget', '🎯', 'Budget', `${inr(b.actual)} of ${inr(b.budgeted)} spent · ${b.overBudget || 0} over budget`)}
 ${d.enrollments ? card('enrollments', '🎓', 'University Enrollments', `${d.enrollments.total} · fees ${inr(d.enrollments.totalFeesINR)} · commission ${inr(d.enrollments.totalCommission)}`) : ''}
+${d.visa ? `<button class="fin-card" data-fin-visa="1"><div class="ic">🛂</div><div class="t">Visa Services</div><div class="s">${inr(d.visa.incomeThisMonth)} received this month · ${inr(d.visa.incomeThisYear)} ${esc(d.visa.fyLabel)} · ${inr(d.visa.pending)} pending${d.visa.costsThisYear ? ' · costs ' + inr(d.visa.costsThisYear) : ''}</div></button>` : ''}
 ${d.accommodation ? card('accommodation', '🏠', 'Accommodation', `${d.accommodation.total} · rent ${inr(d.accommodation.totalRentINR)} · commission ${inr(d.accommodation.totalCommission)}`) : ''}
 </div>
 <div class="sx-sub" style="margin-top:12px;">Updated ${fmtDate(d.loadedAt)}${d.fromCache ? ' (cached up to 2 min — ↻ Refresh for live)' : ''}. First time? The sheets are created automatically as you add data.</div>`;
 body().querySelectorAll('[data-fin-go]').forEach(x => x.onclick = () => go(x.dataset.finGo));
+body().querySelectorAll('[data-fin-visa]').forEach(x => x.onclick = () => { if (typeof window.openVisaDesk === 'function') window.openVisaDesk({ tab: 'business' }); });
 }
 
 function renderRevenuePipeline(d) {
@@ -14273,9 +14275,9 @@ const arrow = v => v === null ? '—' : `<b style="color:${v >= 0 ? 'var(--ok)' 
 body().innerHTML = `
 ${filterBar(`<input type="month" id="fnMonth" value="${esc(d.month)}"><select id="fnBranch"><option value="">All branches</option>${opts(BR(), f.branch)}</select><span style="flex:1"></span><button class="um-btn" id="fnCsv">⬇ Export CSV</button><button class="um-btn primary" id="fnAdd">+ Enter P&amp;L Data</button>`, 'fnBar')}
 <div class="sx-kpis five">${kpi(inr(s.revenue), 'Gross revenue')}${kpi(inr(s.totalExpenses), 'Total expenses')}${kpi(inr(s.netProfit), 'Net profit', s.netProfit < 0 ? 'sx-bad' : 'sx-good')}${kpi(pct(s.profitMargin), 'Profit margin')}${kpi(inr(s.costPerLead), 'Cost per lead')}</div>
-<div class="sx-chips" style="margin-bottom:14px;"><span class="sx-chip">Revenue ${arrow(mm.revenuePct)} vs last month</span><span class="sx-chip">Profit ${arrow(mm.profitPct)} vs last month</span><span class="sx-chip">Revenue / enrollment <b>${inr(s.revenuePerEnrollment)}</b></span>${s.refundLiability ? `<span class="sx-chip" style="color:var(--warm);">Refund liability <b>${inr(s.refundLiability)}</b></span>` : ''}</div>
+<div class="sx-chips" style="margin-bottom:14px;"><span class="sx-chip">Revenue ${arrow(mm.revenuePct)} vs last month</span><span class="sx-chip">Profit ${arrow(mm.profitPct)} vs last month</span><span class="sx-chip">Revenue / enrollment <b>${inr(s.revenuePerEnrollment)}</b></span>${s.refundLiability ? `<span class="sx-chip" style="color:var(--warm);">Refund liability <b>${inr(s.refundLiability)}</b></span>` : ''}${s.visaIncome || s.visaCosts ? `<span class="sx-chip" title="Visa service fees received this month, and visa costs paid by Akbar — from the Visa Desk">🛂 Visa income <b>${inr(s.visaIncome)}</b> · visa costs <b>${inr(s.visaCosts)}</b> · education revenue <b>${inr(s.educationRevenue)}</b></span>` : ''}</div>
 <div class="sx-cols"><div class="sx-card"><h3>Revenue vs expenses vs profit — 12 months</h3>${lineChart(d.byMonth, [{ k: 'revenue', l: 'Revenue', c: 'var(--navy)' }, { k: 'totalExpenses', l: 'Expenses', c: 'var(--red)' }, { k: 'netProfit', l: 'Net profit', c: 'var(--ok)' }], 'P&L trend')}</div>
-<div class="sx-card"><h3>Expense breakdown — ${esc(d.monthLabel)}</h3>${donut([{ l: 'Ad spend', v: s.adSpend, c: 'var(--red)' }, { l: 'Salaries', v: s.salaries, c: 'var(--navy)' }, { l: 'Rent', v: s.rent, c: 'var(--warm)' }, { l: 'Other', v: s.otherExpenses, c: '#9AA1B2' }])}</div></div>
+<div class="sx-card"><h3>Expense breakdown — ${esc(d.monthLabel)}</h3>${donut([{ l: 'Visa costs (paid by Akbar)', v: s.visaCosts || 0, c: '#3E6BD6' }, { l: 'Ad spend', v: s.adSpend, c: 'var(--red)' }, { l: 'Salaries', v: s.salaries, c: 'var(--navy)' }, { l: 'Rent', v: s.rent, c: 'var(--warm)' }, { l: 'Other', v: s.otherExpenses, c: '#9AA1B2' }])}</div></div>
 <div class="sx-card" style="padding:6px;"><h3 style="padding:8px 10px 0;">By month${f.branch ? ' — ' + esc(f.branch) : ' — all branches'}</h3><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Month</th><th class="num">Revenue</th><th class="num">Ad spend</th><th class="num">Salaries</th><th class="num">Rent</th><th class="num">Other</th><th class="num">Expenses</th><th class="num">Net profit</th><th class="num">Margin</th><th></th></tr></thead><tbody>
 ${d.byMonth.slice().reverse().map(m => `<tr><td style="font-weight:700;">${esc(m.label)}${m.hasEntry ? '' : ' <span class="sx-sub" style="display:inline;" title="No P&L entry — automatic figures only">auto</span>'}</td><td class="num">${inr(m.revenue)}</td><td class="num">${inr(m.adSpend)}</td><td class="num">${inr(m.salaries)}</td><td class="num">${inr(m.rent)}</td><td class="num">${inr(m.otherExpenses)}</td><td class="num">${inr(m.totalExpenses)}</td><td class="num ${m.netProfit < 0 ? 'sx-bad' : 'sx-good'}" style="font-weight:700;">${inr(m.netProfit)}</td><td class="num">${pct(m.profitMargin)}</td><td>${f.branch ? `<button class="um-btn s10-mini" data-pn-month="${esc(m.month)}">Edit</button>` : ''}</td></tr>`).join('')}
 </tbody></table></div>${f.branch ? '' : '<div class="sx-sub" style="padding:6px 10px;">Pick a branch above to edit a month, or use + Enter P&amp;L Data.</div>'}</div>
