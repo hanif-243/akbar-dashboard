@@ -45,7 +45,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '5 Oct 2026 · v31';
+window.AKBAR_BUILD = '5 Oct 2026 · v31.1';
 
 (function () {
   try {
@@ -17286,7 +17286,7 @@ const fld = (label, input, full) => `<div class="${full ? 'full' : ''}"><label c
 const val = id => { const el = $(id); return el ? String(el.value || '').trim() : ''; };
 const num = id => Number(val(id)) || 0;
 const O = () => (V.data && V.data.options) || { stages: [], docTypes: [], sources: [], branches: [], executives: [] };
-const X = () => (V.data && V.data.extras) || { options: { visaTypes: [], apptTypes: [], apptStatuses: [], feeTypes: [], feeStatuses: [], englishTests: [], currencies: ['INR'], fxRates: { INR: 1 } }, alerts: {}, analytics: { kpis: {} }, appointments: [], feeSummary: {} };
+const X = () => (V.data && V.data.extras) || { missing: true, options: { visaTypes: [], apptTypes: [], apptStatuses: [], feeTypes: [], feeStatuses: [], englishTests: [], currencies: ['INR'], fxRates: { INR: 1 } }, alerts: {}, analytics: { kpis: {}, byCountry: [], byType: [], byOfficer: [], monthly: [], processing: [], rejectReasons: [], deadlines: { cas: [], passports: [], appointments: [] } }, appointments: [], feeSummary: {} };
 const XO = () => X().options;
 const caseById = id => ((V.data && V.data.cases) || []).find(c => c.id === id);
 const isOfficer = () => V.data && /^Visa (Officer|Executive)$/.test(V.data.me.role);
@@ -17367,6 +17367,7 @@ function render() {
 const d = V.data; if (!d || !$('vdBody')) return;
 document.querySelectorAll('[data-vd-tab]').forEach(x => x.classList.toggle('active', x.dataset.vdTab === V.tab));
 $('vdSub').textContent = (d.me.role === 'Manager' ? d.me.branch + ' branch · ' : isOfficer() ? 'Your cases + the unassigned queue · ' : 'All branches · ') + 'signed in as ' + d.me.name;
+if (X().missing && V.tab !== 'business') { $('vdBody').innerHTML = '<div class="fin-alert warm">The Apps Script part of the dashboard is older than this page, so the new visa features cannot load yet. In Apps Script: paste the latest Code.gs, then Deploy → Manage deployments → Edit → New version.</div>'; return; }
 if (V.tab === 'cases') renderCases(); else if (V.tab === 'appointments') renderAppointments(); else if (V.tab === 'documents') renderDocuments(); else if (V.tab === 'analytics') renderAnalytics(); else renderBusiness();
 }
 function kpiStrip() {
