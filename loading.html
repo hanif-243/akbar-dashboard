@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Akbar Study Abroad · CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#F22F3D; --navy:#302D40; --bg:#09080f; --surface:#181526;
+  --ok:#1F9D63; --warm:#D98A1F;
+  --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --spring:cubic-bezier(.34,1.56,.64,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);overflow:hidden}
+body{font-family:var(--sans);color:#fff;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;transition:background .6s ease}
+body.light{background:#F3F4FA}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:1.5px solid var(--red);outline-offset:3px}
+
+/* ───────── LOADER SHELL ───────── */
+#loader{position:fixed;inset:0;z-index:10;transition:opacity .6s ease}
+#loader.gone{opacity:0;pointer-events:none}
+.glow{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(520px circle at 50% 47%,rgba(242,47,61,.11),rgba(242,47,61,.03) 45%,transparent 70%);
+  animation:breathe 5s ease-in-out infinite}
+.dots{position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1px);background-size:28px 28px;
+  -webkit-mask-image:radial-gradient(ellipse 60% 55% at 50% 50%,#000 10%,transparent 75%);
+          mask-image:radial-gradient(ellipse 60% 55% at 50% 50%,#000 10%,transparent 75%)}
+.vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55))}
+@keyframes breathe{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.04)}}
+
+.br{position:absolute;width:18px;height:18px;border:0 solid rgba(242,47,61,.42);pointer-events:none}
+.br.k1{top:20px;left:20px;border-top-width:1px;border-left-width:1px}
+.br.k2{top:20px;right:20px;border-top-width:1px;border-right-width:1px}
+.br.k3{bottom:20px;left:20px;border-bottom-width:1px;border-left-width:1px}
+.br.k4{bottom:20px;right:20px;border-bottom-width:1px;border-right-width:1px}
+.corner{position:absolute;top:26px;font:400 10px/1 var(--mono);letter-spacing:2px;color:rgba(255,255,255,.34);white-space:nowrap}
+.corner.l{left:48px}
+.corner.r{right:48px;font-variant-numeric:tabular-nums}
+.corner.l i{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--red);margin-right:9px;vertical-align:1px;box-shadow:0 0 8px rgba(242,47,61,.9);animation:blink 2s ease-in-out infinite}
+@keyframes blink{50%{opacity:.35}}
+
+.stage{position:absolute;inset:0;display:grid;place-items:center;opacity:0;visibility:hidden;
+  transition:opacity .6s ease,visibility 0s linear .6s,transform .8s var(--ease)}
+.stage.on{opacity:1;visibility:visible;transition:opacity .6s ease,visibility 0s}
+.stage.on.leave{opacity:0;visibility:hidden;transform:scale(.985);transition:opacity .5s ease,visibility 0s linear .5s,transform .6s var(--ease)}
+
+/* ───────── STAGE 1 · LOGO ───────── */
+.s1-wrap{display:flex;flex-direction:column;align-items:center;margin-top:-20px}
+.logo-slot{opacity:0;transform:translateY(14px);transition:opacity 1.1s var(--ease) .15s,transform 1.1s var(--ease) .15s}
+.s1.on .logo-slot{opacity:1;transform:none}
+.logo{display:block;width:min(230px,58vw);height:auto;mix-blend-mode:screen;user-select:none;-webkit-user-drag:none}
+/* White-background PNG: invert flips white→black (which screen removes) and navy→light;
+   hue-rotate restores the red hue. Set CONFIG.logoMode='transparent' for a transparent PNG/SVG. */
+.logo.invert{filter:invert(1) hue-rotate(180deg) saturate(1.25) contrast(1.05)}
+.wordmark{display:block;width:min(230px,58vw);height:auto}
+.divider{width:0;height:1px;margin:26px 0 18px;background:linear-gradient(90deg,transparent,var(--red) 50%,transparent);
+  transition:width 1s var(--ease) .75s;box-shadow:0 0 10px rgba(242,47,61,.5)}
+.s1.on .divider{width:min(150px,40vw)}
+.tagline{font:400 11px/1.4 var(--sans);letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.32);
+  text-align:center;padding:0 24px;opacity:0;transform:translateY(4px);transition:opacity .9s ease 1.15s,transform .9s var(--ease) 1.15s}
+.s1.on .tagline{opacity:1;transform:none}
+
+/* ───────── STAGE 2 · LEADS → HUB ───────── */
+.s2{--cx:min(300px,30vw);--cy:min(150px,21vh);--fx:56vw;--fy:58vh}
+.hub{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;
+  background:var(--surface);border:1px solid rgba(242,47,61,.55);display:grid;place-items:center;z-index:2;
+  box-shadow:0 0 22px rgba(242,47,61,.32),inset 0 0 14px rgba(242,47,61,.14);
+  opacity:0;transform:scale(.6);transition:opacity .6s ease,transform .8s var(--spring),box-shadow .5s ease}
+.s2.on .hub{opacity:1;transform:scale(1)}
+.hub.flare{box-shadow:0 0 46px rgba(242,47,61,.6),0 0 90px rgba(242,47,61,.25),inset 0 0 18px rgba(242,47,61,.3);transform:scale(1.1)}
+.hub::before,.hub::after{content:"";position:absolute;inset:-12px;border-radius:50%;border:1px solid rgba(242,47,61,.32);animation:ring 2.6s ease-out infinite}
+.hub::after{inset:-26px;border-color:rgba(242,47,61,.18);animation-delay:1.3s}
+@keyframes ring{0%{transform:scale(.8);opacity:0}25%{opacity:1}100%{transform:scale(1.3);opacity:0}}
+.hub svg{width:20px;height:20px;stroke:var(--red);fill:none;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+
+.card{position:absolute;left:50%;top:50%;width:232px;z-index:3;
+  --x0:calc(var(--sx) * var(--fx));--y0:calc(var(--sy) * var(--fy));
+  --x1:calc(var(--sx) * var(--cx));--y1:calc(var(--sy) * var(--cy));
+  transform:translate(-50%,-50%) translate(var(--x0),var(--y0)) scale(.94);opacity:0;
+  transition:transform 1.25s var(--ease),opacity .8s ease}
+.card.q1{--sx:-1;--sy:-1}.card.q2{--sx:1;--sy:-1}.card.q3{--sx:-1;--sy:1}.card.q4{--sx:1;--sy:1}
+.card.in{transform:translate(-50%,-50%) translate(var(--x1),var(--y1));opacity:1}
+.card.absorb{transform:translate(-50%,-50%) scale(.5);opacity:0;
+  transition:transform .85s cubic-bezier(.7,0,.25,1),opacity .55s ease .25s}
+.card-in{background:rgba(24,21,38,.92);border:1px solid rgba(255,255,255,.08);border-radius:10px;
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:0 8px 28px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04);
+  padding:11px 14px;animation:float 5s ease-in-out infinite}
+.card.q2 .card-in{animation-delay:-1.2s}.card.q3 .card-in{animation-delay:-2.4s}.card.q4 .card-in{animation-delay:-3.6s}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.c-top{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.c-dot{width:6px;height:6px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c),0 0 2px var(--c)}
+.c-st{font:500 9.5px/1 var(--mono);letter-spacing:1.2px;text-transform:uppercase;color:var(--c)}
+.c-time{margin-left:auto;font:400 9.5px/1 var(--mono);color:rgba(255,255,255,.26)}
+.c-main{display:flex;align-items:center;gap:10px}
+.c-av{flex:0 0 30px;height:30px;border-radius:50%;display:grid;place-items:center;font:500 10.5px/1 var(--sans);letter-spacing:.5px;
+  color:#fff;background:linear-gradient(140deg,color-mix(in srgb,var(--c) 55%,#302D40),#1d1a2c);border:1px solid rgba(255,255,255,.1)}
+.c-nm{font:500 13px/1.25 var(--sans);color:rgba(255,255,255,.92)}
+.c-mt{font:400 11px/1.35 var(--sans);color:rgba(255,255,255,.45);margin-top:2px}
+.c-ft{margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,.06);font:400 10.5px/1 var(--sans);color:rgba(255,255,255,.35)}
+.c-ft b{font-weight:500;color:rgba(255,255,255,.7)}
+
+/* ───────── STAGE 3 · JOURNEY ───────── */
+.s3-wrap{width:min(780px,92vw);display:flex;flex-direction:column;align-items:center;gap:34px}
+.eyebrow{font:400 11px/1 var(--mono);letter-spacing:3px;color:rgba(255,255,255,.25);text-transform:uppercase;text-align:center}
+.pipe{display:flex;align-items:flex-start;width:100%}
+.node{flex:0 0 46px;display:flex;flex-direction:column;align-items:center;gap:13px}
+.ico{position:relative;width:46px;height:46px;border-radius:12px;display:grid;place-items:center;
+  background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.08);
+  transition:background .35s ease,border-color .35s ease,box-shadow .35s ease,transform .45s var(--spring)}
+.ico>svg{width:20px;height:20px;fill:none;stroke:rgba(255,255,255,.32);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:stroke .3s ease}
+.node.active .ico{background:rgba(242,47,61,.10);border-color:rgba(242,47,61,.38);box-shadow:0 0 22px rgba(242,47,61,.14);transform:scale(1.08)}
+.node.active .ico>svg{stroke:#fff}
+.node.done .ico{background:rgba(31,157,99,.10);border-color:rgba(31,157,99,.35);box-shadow:0 0 18px rgba(31,157,99,.08);transform:scale(1)}
+.node.done .ico>svg{stroke:rgba(31,157,99,.9)}
+.chk{position:absolute;top:-6px;right:-6px;width:15px;height:15px;border-radius:50%;background:var(--ok);display:grid;place-items:center;
+  box-shadow:0 0 0 2px var(--bg),0 0 10px rgba(31,157,99,.5);transform:scale(0);transition:transform .5s var(--spring)}
+.chk svg{width:9px;height:9px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.node.done .chk{transform:scale(1)}
+.lbl{font:400 9.5px/1 var(--mono);letter-spacing:1.6px;text-transform:uppercase;color:rgba(255,255,255,.28);white-space:nowrap;transition:color .3s ease}
+.node.active .lbl{color:#fff}.node.done .lbl{color:rgba(255,255,255,.66)}
+.conn{flex:1 1 auto;height:1px;margin:23px 10px 0;background:rgba(255,255,255,.08);position:relative;overflow:hidden}
+.conn i{position:absolute;inset:0;background:linear-gradient(90deg,var(--ok),var(--red));transform:scaleX(0);transform-origin:left;transition:transform .42s cubic-bezier(.4,0,.2,1)}
+.conn.lit i{transform:scaleX(1)}
+.caption{font:italic 300 15px/1.4 var(--sans);color:rgba(255,255,255,.5);letter-spacing:.2px;opacity:0;transform:translateY(6px);transition:opacity .8s ease,transform .8s var(--ease)}
+.caption.on{opacity:1;transform:none}
+
+/* ───────── STAGE 4 · MAP ───────── */
+.s4-wrap{width:96vw;max-width:960px;display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:-26px}
+.map{width:100%;height:auto;display:block;opacity:0;transform:scale(1.025);transition:opacity 1s ease,transform 1.4s var(--ease)}
+.s4.on .map{opacity:1;transform:none}
+.land{fill:rgba(255,255,255,.055);stroke:rgba(255,255,255,.09);stroke-width:.6;stroke-linejoin:round}
+.grat{fill:none;stroke:rgba(255,255,255,.04);stroke-width:.6}
+.trail{fill:none;stroke-width:1;stroke-opacity:.16;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1)}
+.flow{fill:none;stroke-width:1.1;stroke-opacity:.45;stroke-dasharray:5 8;opacity:0;transition:opacity .6s ease .45s;animation:flow 1.1s linear infinite}
+.route.on .trail{stroke-dashoffset:0}.route.on .flow{opacity:1}
+@keyframes flow{to{stroke-dashoffset:-26}}
+.nd{opacity:0;transition:opacity .5s ease}
+.nd.on{opacity:1}
+.nd .core{transform-box:fill-box;transform-origin:center;transform:scale(0);transition:transform .55s var(--spring)}
+.nd.on .core{transform:scale(1)}
+.nd .ring{fill:none;stroke-width:1;transform-box:fill-box;transform-origin:center;animation:pulse 2.4s ease-out infinite}
+@keyframes pulse{0%{transform:scale(.7);opacity:.9}100%{transform:scale(1.6);opacity:0}}
+.nd text{font:600 9px var(--sans);fill:rgba(255,255,255,.8);letter-spacing:.8px;text-transform:uppercase}
+.nd.origin text{fill:#fff;font-size:9.5px}
+.pt{pointer-events:none}
+.map-meta{display:flex;gap:22px;font:400 10px/1 var(--mono);letter-spacing:2px;color:rgba(255,255,255,.3);text-transform:uppercase;font-variant-numeric:tabular-nums}
+.map-meta b{font-weight:500;color:rgba(255,255,255,.75)}
+
+/* ───────── FOOTER · STATUS + PROGRESS ───────── */
+.foot{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:18px 40px 26px;padding-bottom:calc(26px + env(safe-area-inset-bottom,0px));pointer-events:none;transition:background .6s ease}
+.foot-row{display:flex;align-items:baseline;gap:14px;margin-bottom:11px;font:400 10.5px/1 var(--mono);color:rgba(255,255,255,.28);transition:color .6s ease}
+.stg{color:rgba(255,255,255,.5);font-variant-numeric:tabular-nums;transition:color .6s ease}
+.msg{transition:opacity .25s ease}
+.pct{margin-left:auto;font-variant-numeric:tabular-nums}
+.track{position:relative;height:1.5px;background:rgba(255,255,255,.05);border-radius:2px;transition:background .6s ease}
+.fill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:2px;
+  background:linear-gradient(90deg,rgba(242,47,61,.7),#F22F3D);transition:width .55s cubic-bezier(.4,0,.2,1)}
+.fill::after{content:"";position:absolute;right:-2px;top:50%;width:4px;height:4px;margin-top:-2px;border-radius:50%;background:#fff;
+  box-shadow:0 0 6px #fff,0 0 12px rgba(242,47,61,.8)}
+.fill.instant{transition:none}
+body.light .foot{background:linear-gradient(180deg,rgba(243,244,250,0),rgba(243,244,250,.92) 40%)}
+body.light .foot-row{color:rgba(48,45,64,.5)}
+body.light .stg{color:rgba(48,45,64,.75)}
+body.light .track{background:rgba(48,45,64,.09)}
+body.light .fill::after{box-shadow:0 0 6px rgba(242,47,61,.7),0 0 12px rgba(242,47,61,.5);background:#fff;border:1px solid rgba(242,47,61,.6)}
+
+/* ───────── BUTTONS ───────── */
+.ctl{position:fixed;right:40px;bottom:72px;z-index:40;padding:8px 14px;border-radius:999px;font:500 11.5px/1 var(--sans);letter-spacing:.3px;
+  color:rgba(255,255,255,.88);background:rgba(48,45,64,.78);border:1px solid rgba(255,255,255,.12);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 6px 20px rgba(9,8,15,.25);
+  opacity:0;transform:translateY(8px);pointer-events:none;transition:opacity .45s ease,transform .45s var(--ease),background .2s ease}
+.ctl.show{opacity:1;transform:none;pointer-events:auto}
+.ctl:hover{background:rgba(48,45,64,.95)}
+.ctl kbd{font:400 9.5px/1 var(--mono);margin-left:8px;padding:2px 5px;border-radius:4px;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.55)}
+#skip{background:rgba(24,21,38,.6);color:rgba(255,255,255,.6)}
+
+/* ───────── STAGE 5 · DASHBOARD SKELETON ───────── */
+#dash{position:fixed;inset:0;z-index:5;background:#F3F4FA;display:grid;grid-template-columns:220px 1fr;grid-template-rows:54px 1fr;
+  opacity:0;visibility:hidden;transition:opacity .6s ease,visibility 0s linear .6s}
+#dash.on{opacity:1;visibility:visible;transition:opacity .6s ease,visibility 0s}
+.sk{border-radius:6px;background:linear-gradient(90deg,#E7E9F0 0%,#dde0ee 50%,#E7E9F0 100%);background-size:300% 100%;animation:shimmer 1.4s infinite linear}
+.sk.d{background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.09) 50%,rgba(255,255,255,.04) 100%);background-size:300% 100%}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:-50% 0}}
+.side{grid-row:1/3;background:var(--navy);padding:16px 12px;display:flex;flex-direction:column;gap:8px;transform:translateX(-100%);transition:transform .75s var(--ease);z-index:2}
+.side.in{transform:none}
+.brand{height:38px;margin-bottom:14px;border-radius:8px}
+.nav{height:34px;border-radius:8px;opacity:0;transform:translateX(-12px);transition:opacity .45s ease,transform .5s var(--ease)}
+.nav.in{opacity:1;transform:none}
+.nav.act{background:linear-gradient(90deg,rgba(242,47,61,.22),rgba(242,47,61,.1) 50%,rgba(242,47,61,.22));background-size:300% 100%}
+.top{background:#fff;border-bottom:1px solid #E7E9F0;display:flex;align-items:center;gap:10px;padding:0 22px;transform:translateY(-100%);transition:transform .6s var(--ease)}
+.top.in{transform:none}
+.top .search{width:min(320px,40vw);height:30px;border-radius:8px}
+.top .sp{flex:1}
+.top .btn{width:78px;height:30px;border-radius:8px}
+.top .av{width:30px;height:30px;border-radius:50%}
+.main{padding:22px;display:flex;flex-direction:column;gap:16px;overflow:hidden;min-width:0}
+.ttl{display:flex;align-items:center;gap:12px;opacity:0;transition:opacity .5s ease}
+.ttl.in{opacity:1}
+.ttl .a{width:150px;height:18px}.ttl .b{width:90px;height:12px;margin-left:auto}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.panel{background:#fff;border:1px solid #E7E9F0;border-radius:12px;opacity:0;transform:translateY(6px);transition:opacity .5s ease,transform .6s var(--ease)}
+.panel.in{opacity:1;transform:none}
+.kpi{padding:16px;display:flex;flex-direction:column;gap:11px}
+.kpi .l{width:46%;height:10px}.kpi .v{width:38%;height:22px}.kpi .dl{width:26%;height:9px}
+.charts{display:grid;grid-template-columns:1.65fr 1fr;gap:14px}
+.chart{padding:16px;display:flex;flex-direction:column;gap:16px}
+.ph{display:flex;align-items:center;gap:10px}.ph .a{width:120px;height:11px}.ph .b{width:60px;height:20px;margin-left:auto;border-radius:6px}
+.bars{height:150px;display:flex;align-items:flex-end;gap:12px;padding:0 4px;border-bottom:1px solid #EEF0F5}
+.bar{flex:1;height:var(--h);border-radius:6px 6px 2px 2px;background:linear-gradient(180deg,rgba(242,47,61,.34),rgba(242,47,61,.07));transform:scaleY(0);transform-origin:bottom;transition:transform .8s var(--ease)}
+.bars.in .bar{transform:scaleY(1)}
+.donut-row{display:flex;align-items:center;gap:20px;height:150px}
+.donut{width:120px;height:120px;flex:0 0 120px;transform:rotate(-90deg)}
+.donut .bgc{fill:none;stroke:#EEF0F5;stroke-width:13}
+.donut .fgc{fill:none;stroke:url(#dg);stroke-width:13;stroke-linecap:round;stroke-dasharray:289;stroke-dashoffset:289;transition:stroke-dashoffset 1.2s var(--ease)}
+.donut.in .fgc{stroke-dashoffset:115.6}
+.legend{flex:1;display:flex;flex-direction:column;gap:10px}
+.legend div{height:9px}
+.table{padding:6px 0}
+.tr{display:grid;grid-template-columns:28px 1.4fr 1fr 1fr 1fr 74px;align-items:center;gap:16px;padding:12px 18px;border-bottom:1px solid #F1F2F7}
+.tr:last-child{border-bottom:0}
+.tr.h{padding-top:10px;padding-bottom:10px}
+.tr .c{height:9px}.tr.h .c{height:8px;opacity:.75}
+.tr .ava{width:28px;height:28px;border-radius:50%}
+.tr .badge{height:20px;border-radius:999px}
+.tr .badge.r{background:linear-gradient(90deg,rgba(242,47,61,.13),rgba(242,47,61,.22),rgba(242,47,61,.13));background-size:300% 100%}
+.tr .badge.g{background:linear-gradient(90deg,rgba(31,157,99,.12),rgba(31,157,99,.22),rgba(31,157,99,.12));background-size:300% 100%}
+.tr .badge.w{background:linear-gradient(90deg,rgba(217,138,31,.13),rgba(217,138,31,.24),rgba(217,138,31,.13));background-size:300% 100%}
+
+/* ───────── RESPONSIVE ───────── */
+@media (max-width:900px){
+  #dash{grid-template-columns:64px 1fr}
+  .side{padding:16px 10px}.brand{height:34px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .charts{grid-template-columns:1fr}
+  .charts .panel:last-child{display:none}
+  .tr{grid-template-columns:28px 1.4fr 1fr 74px}.tr .c.x{display:none}
+}
+@media (max-width:640px){
+  .s2{--cx:23vw;--cy:24vh}
+  .card{width:168px}.card-in{padding:10px 11px}.c-ft{display:none}.c-time{display:none}.c-av{flex-basis:26px;height:26px}
+  .c-nm{font-size:12px}.c-mt{font-size:10px}
+  .node{flex-basis:36px}.ico{width:36px;height:36px;border-radius:10px}.ico>svg{width:17px;height:17px}
+  .conn{margin:18px 4px 0}
+  .s3-wrap{width:86vw}
+  .lbl{font-size:7px;letter-spacing:.4px}
+  .corner.l{font-size:8.5px;letter-spacing:1.4px}.corner.r{font-size:8.5px;letter-spacing:1px}
+  .foot{padding:14px 22px 22px}
+  .ctl{right:22px;bottom:62px}
+  .map-meta{gap:14px;font-size:9px}
+  #dash{grid-template-columns:1fr}.side{display:none}
+  .top .btn{display:none}
+  .main{padding:16px;gap:12px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0ms!important}
+}
+</style>
+</head>
+<body>
+
+<div id="loader" aria-live="polite">
+  <div class="glow"></div><div class="dots"></div><div class="vignette"></div>
+  <span class="br k1"></span><span class="br k2"></span><span class="br k3"></span><span class="br k4"></span>
+  <div class="corner l"><i></i>AKBAR STUDY ABROAD · CRM</div>
+  <div class="corner r" id="clock">--:--:-- --</div>
+
+  <section class="stage s1" id="s1"></section>
+  <section class="stage s2" id="s2"></section>
+  <section class="stage s3" id="s3"></section>
+  <section class="stage s4" id="s4"></section>
+</div>
+
+<div id="dash" aria-hidden="true"></div>
+
+<div class="foot">
+  <div class="foot-row"><span class="stg" id="stg">01/05</span><span class="msg" id="msg"></span><span class="pct" id="pct">0%</span></div>
+  <div class="track"><div class="fill" id="fill"></div></div>
+</div>
+
+<button class="ctl" id="skip" type="button">Skip intro<kbd>Esc</kbd></button>
+<button class="ctl" id="replay" type="button">↺ Replay</button>
+
+<script>
+(() => {
+'use strict';
+
+/* ═══════ CONFIG ═══════ */
+const CONFIG = {
+  logoUrl: 'https://drive.google.com/thumbnail?id=1YvFCQ2nNiUfMnjZ7jKe5NKLPcLI1WrxF&sz=w320',
+  logoMode: 'invert',   // 'invert' = white-background PNG (current) · 'transparent' = transparent PNG/SVG
+  speed: 1              // 1 = full 13.5s cinematic · 0.5 = twice as fast
+};
+
+const MESSAGES = [
+  'Initializing your workspace...', 'Loading student data...', 'Syncing lead pipeline...',
+  'Mapping student journey...', 'Mapping global admissions network...', 'Preparing your dashboard...',
+  'Almost ready...', 'Dashboard ready.'
+];
+
+const LEADS = [
+  {q:'q1', st:'Hot lead',       c:'#F22F3D', nm:'Rahul Sharma', ini:'RS', mt:'UK · MBA Finance',            co:'Zara',   t:'2m'},
+  {q:'q2', st:'New lead',       c:'#60b4ff', nm:'Sara Khan',    ini:'SK', mt:'Canada · MS Computer Science', co:'Amir',   t:'5m'},
+  {q:'q3', st:'Offer received', c:'#1F9D63', nm:'Priya Menon',  ini:'PM', mt:'Australia · BBA',             co:'Fatima', t:'12m'},
+  {q:'q4', st:'Warm lead',      c:'#D98A1F', nm:'Arjun Nair',   ini:'AN', mt:'Germany · MS Engineering',    co:'Riya',   t:'18m'}
+];
+
+const ICONS = {
+  lead:  '<circle cx="12" cy="8" r="3.6"/><path d="M5 20c1.3-3.7 4-5.6 7-5.6s5.7 1.9 7 5.6"/>',
+  chat:  '<path d="M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-8.5L6 20v-3.5H5A1.5 1.5 0 0 1 3.5 15V6A1.5 1.5 0 0 1 5 4.5z"/><path d="M8 9h8M8 12.5h5"/>',
+  doc:   '<path d="M7 3h7l4.5 4.5V21H7a1.5 1.5 0 0 1-1.5-1.5v-15A1.5 1.5 0 0 1 7 3z"/><path d="M14 3v4.5h4.5M9 12.5h6M9 16h6"/>',
+  offer: '<circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.2l2.4 2.4 4.6-4.8"/>',
+  visa:  '<rect x="5.5" y="3" width="13" height="18" rx="1.8"/><circle cx="12" cy="10.5" r="3"/><path d="M9.5 16.5h5"/>',
+  cap:   '<path d="M2.5 9.5L12 5l9.5 4.5L12 14z"/><path d="M6.5 11.6v4.1c1.6 1.3 3.5 2 5.5 2s3.9-.7 5.5-2v-4.1M21.5 9.5v5"/>'
+};
+const JOURNEY = [['lead','Lead'],['chat','Counselling'],['doc','Application'],['offer','Offer'],['visa','Visa'],['cap','Enrolled']];
+
+/* Map — Natural Earth 110m land, Natural Earth projection fitted to 960×500 */
+const LAND = 'M326.2,450.3L329.7,452L333.1,452.7L332.6,454.2L330.5,454.3L329,453.3L328.7,454.5L327.1,455.4L324.6,455.1L322.6,454.2L320.1,453.8L316.6,452.1L313.7,450.6L309.4,447.3L311.5,447.9L315.4,449.9L318.8,450.9L319.5,449.6L319.5,447.6L321.2,446.4L323,446.7L324.3,448.1ZM344.7,442.2L347,443.5L346.6,444.6L343.7,445.4L342.4,444.4L340.8,445.7L339.3,444.4L341.5,442.6L343.7,443.4ZM643.7,438.1L640.1,438.3L640.5,436.7L641.3,435.5L641.6,434.8L642.8,435.8L644.9,436.2L644.8,436.7ZM834.7,411.1L836.5,412.2L838.1,411.7L840.3,411.2L841.6,411.4L839.8,415L838.4,416L836.8,418.5L836.4,417.7L833.6,419.8L833.2,419.6L831.7,419.5L831.7,416.9L832.5,414.9L832.5,412.2L833.3,410.8ZM901.9,411.5L901.6,412.8L904.2,411.5L904,412.8L903.2,414.1L901.4,415.5L898.3,417.8L896.3,419L896.2,420.4L894.3,420.5L891.5,421.6L889.5,423.6L886,426.7L883.2,428L881.4,428.9L879.2,428.8L878.4,427.8L876,427.6L876.3,426.5L879.1,424.3L884.2,421.3L886.1,420.7L888.6,419.5L891.7,417.9L894.2,416.4L896.7,414.1L898.1,413.3L899.6,411.6L902.1,410.2ZM914.3,396.9L914.3,400.1L915.5,398L916.2,398.8L915.3,401.2L916.7,402.2L918.2,402.4L920.3,401.2L921.3,401.6L919.1,404.3L917.3,406.1L915.5,406.1L914.2,407L913.7,408.3L912.9,408.9L911,410.5L908.5,412.6L905.8,413.8L905.9,413L905.2,412.6L908.1,410.1L908.4,408.4L906.5,407.2L907.2,406.1L909.6,405L911.4,402.6L912.4,400.6L912.6,398.6L913,398L912.5,396.7L912,394L912,391.8L913.1,391.6L913.6,393.3L915.1,394.1ZM913.3,353.6L912.1,354.3L911,353.5L909.5,352.1L908.3,350.5L907.2,348.3L907.1,347.3L908.2,347.3L909.4,348.4L910.3,349.4L910.8,350.3L912.4,352.2ZM946.8,338.7L947.5,339.6L946.6,341.2L944.9,341.7L943.5,341.3L943.6,339.9L944.9,338.9L946,339.2ZM951.6,336.3L949.8,337.1L948,337.7L947.9,336.6L949.4,335.9L950.2,335.8L952,334.8L951.6,336.3ZM8,334.8L8,334.8L8.5,334.7L8.5,336.1L8.4,336.3L8.4,336.3L8.4,336.3L8,334.8ZM919.9,336L918.9,336.4L918.3,335.1L918.6,334.3ZM918.9,331.3L918.8,333.8L918.2,333.4L917.6,333.6L917.4,332.7L917.9,330.4ZM611.7,327.1L611.9,330.8L612.5,332.2L612.2,333.7L611.7,334.6L610.9,332.8L610.3,333.7L610.7,336L610.4,337.3L609.6,338L609.2,340.6L607.9,344.2L606.3,348.5L604.2,354.3L602.8,358.6L601.3,362.2L599.2,362.9L596.8,364.2L595.4,363.4L593.5,362.3L592.9,360.7L593,358L592.2,355.5L592.2,353.3L592.8,351.1L594.1,350.5L594.1,349.5L595.6,347.2L595.9,345.2L595.4,343.7L595.1,341.8L595,338.9L596.1,337.2L596.5,335.3L597.8,335.2L599.3,334.5L600.3,334L601.5,333.9L603.1,332.2L605.4,330.3L606.2,328.7L605.9,327.4L607,327.8L608.6,325.6L608.8,323.8L609.7,322.4L610.5,323.7L611.2,325ZM857.7,327.7L858.2,330.1L860.1,329L860.8,330.3L861.8,331.5L861.3,332.8L861.4,335.5L861.5,337L862.1,337.4L862.2,340L861.6,341.6L862,343.7L864.5,345.3L866,346.8L867.4,348.1L866.8,348.9L867.8,350.8L868,354.2L869.2,353.5L869.9,354.8L870.6,354.3L870.2,357.6L871.4,359.5L872.3,360.7L873.5,363.2L873.4,365.7L872.9,367.5L872.1,369.4L872.3,372L871.2,374.7L870.2,376.2L868.5,378.9L867.8,380.7L866.4,382.9L864.2,385.7L861.7,387.2L859.7,389.6L858.2,391.2L856.3,393.8L854.6,395.4L852.9,397.7L851.6,399.8L851.2,400.8L849.3,401.8L846.5,401.9L843.6,403.2L841.9,404.4L839.7,405.7L838.4,404.4L837.1,403.8L838.3,402.2L836.6,402.8L833.4,405L831.7,404.2L830.5,403.7L829.2,403.5L827.2,402.6L826.5,400.7L827.1,398.4L827.2,396.8L826.5,395.5L824.3,395.2L825.7,393.7L826,391.4L824,393.5L821.5,394.1L823.5,392.4L824.6,390.6L826.2,389.1L826.9,386.8L823.8,389.4L821.8,390.5L819.9,392.9L818.4,391.7L819.2,390L818.4,387.8L817.5,386.6L818.3,385.9L815.7,384.1L814,384L812.1,382.5L807.5,382.8L803.8,383.9L800.6,384.9L798.2,384.7L795,386.3L792.6,387L791.5,388.6L790.2,389.9L788,389.9L786.3,390.2L784.3,389.7L782.4,390L780.6,390.1L778.6,391.8L777.9,391.6L776.3,392.5L774.8,393.5L773,393.4L771.3,393.4L769.3,391.4L768.2,390.8L768.8,389L770.2,388.6L770.9,387.9L771.2,386.8L772.1,384.7L772.4,382.8L772,379.7L772.1,377.9L772.8,376.2L772.3,374.2L772.5,373.2L771.7,372L772,369.6L771.2,367.1L771.1,365.8L771.9,367.2L771.8,364.3L772.8,365.2L773.3,366.4L773.6,364.8L772.9,362.4L772.9,361.4L772.5,360.5L773.2,358.7L773.9,357.9L774.6,356.4L774.7,354.6L776.2,352.4L776,354.7L777.5,352.6L779.8,351.5L781.3,350.2L783.6,349.1L784.8,348.9L785.4,349.2L787.7,348.1L789.3,347.7L789.9,347.1L790.6,346.8L792,346.9L795,346L796.6,344.6L797.6,342.9L799.4,341.4L799.8,340.1L800.1,338.5L802.4,335.8L803.1,338.5L804.3,337.9L803.6,336.4L804.7,334.9L805.7,335.6L806.4,333.3L808.1,331.8L808.9,330.5L810.3,330L810.4,329.2L811.5,329.5L811.7,328.7L812.9,328.3L814.3,327.9L816,329.3L817.2,331.1L818.8,331.1L820.4,331.4L820.1,329.7L821.8,327.3L823.1,326.5L822.8,325.7L824.1,323.9L825.9,322.9L827.2,323.2L829.5,322.6L829.6,321.1L827.8,320.1L829.3,319.6L830.9,320.4L832.2,321.6L834.3,322.4L835.1,322.1L836.6,323.1L838.3,322.2L839.2,322.4L839.9,321.8L840.9,323.4L840,325L838.8,326.3L837.9,326.4L838,327.6L837,329.1L835.8,330.6L835.9,331.5L837.7,333.2L839.5,334.2L840.7,335.3L842.2,337.1L843,337.1L844.2,337.9L844.4,338.8L846.7,339.9L848.6,338.8L849.5,337.2L850.3,335.8L850.9,334.1L852.1,331.7L852,330.2L852.4,329.3L852.3,327.5L853,325.2L853.6,324.6L853.4,323.5L854.2,321.9L855,320.2L855.1,319.3L856.3,318.2L856.8,319.7L856.7,321.6L857.4,322L857.3,323.3L858,324.9L857.9,326.6ZM908.1,317.6L908.7,318.7L906.8,318.7L906.1,316.8L907.6,317.5ZM798.8,316.9L797.7,316.9L794.4,314.8L796.9,314.2L798.2,315.1L799.1,316ZM905,315.7L904,315.8L902.4,315.5L901.9,315L902.2,313.8L903.9,314.3L904.7,314.9ZM907.3,314.9L906.8,315.5L905.2,312.8L904.8,311L905.7,311L906.4,313.4ZM808.7,316.6L806.4,317.2L806.1,316.9L806.4,315.8L807.7,314L810.5,312.7L810.8,312L813.2,311.3L815,311.2L815.9,310.8L816.9,311.2L815.8,312L812.9,313.4L810.6,314.3ZM792,310.3L792.9,311.1L794.5,310.9L795.1,312.2L792,312.8L790.1,313.2L788.7,313.2L789.7,311.4L791.2,311.4ZM805.2,310.3L804.7,312L800.6,312.9L797.1,312.5L797.2,311.4L799.4,310.7L801,311.6L802.7,311.4ZM903,311L903,311.6L901.1,310.3L899.7,309.2L898.8,308.2L899.3,307.9L900.4,308.6L902.4,310.1ZM897.1,308L896.5,308.2L895.4,307.5L894.5,306.2L894.6,305.7L896.1,307ZM767.7,306.2L772.7,306.5L773.4,305.3L778.2,306.7L779.1,308.7L783,309.3L786.1,311.1L783,312.3L780.2,311.1L777.8,311.1L775.1,310.9L772.6,310.4L769.6,309.2L767.7,308.9L766.6,309.3L761.8,308L761.5,306.7L759,306.5L761,303.5L764.2,303.7L766.3,304.9L767.4,305.1ZM836.9,304.5L835.4,306.6L835.3,304.3L835.9,303.2L836.5,302.1L837,303ZM892.8,306.4L892.1,306.7L891,305.5L890,303.5L889.6,301.2L890,300.9L890.2,301.8L891,302.5L892.1,304.5L893.3,305.5ZM882.8,302.2L881.4,302.5L880.9,303.4L879.4,304.1L878,304.8L876.6,304.8L874.5,303.9L873.1,303.1L873.3,302.1L875.7,302.6L877.2,302.3L877.6,300.9L878,300.8L878.2,302.4L879.7,302.2L880.5,301.1L882.1,300L881.9,298.2L883.5,298.2L884,298.7L883.8,300.4ZM817.5,296L816.5,297.1L814.7,296.5L814.2,295.2L816.9,295ZM826.1,294.9L827,297.3L824.8,296L822.6,295.7L821.1,295.9L819.3,295.8L820,294.1L823.2,294ZM886.1,299.2L885.2,300.1L884.8,298.2L884.2,297.1L883.1,296.1L881.6,294.7L879.7,293.8L880.5,293.1L881.9,294L882.8,294.6L883.9,295.4L884.9,296.7L885.8,297.6ZM836,289L836.6,293.9L839.3,295.8L841.6,292.5L844.7,290.7L847.1,290.6L849.3,291.7L851.3,292.8L854.1,293.4L858.6,295.5L863.5,297.3L865.2,298.8L866.6,300.4L866.9,302.2L871.2,304.1L871.7,305.7L869.3,306.1L869.7,308.1L871.9,310.1L873.2,313.4L874.8,313.3L874.5,314.6L876.5,315.2L875.6,315.7L878.3,317L877.9,317.9L876.1,318.1L875.5,317.3L873.3,317L870.7,316.5L868.9,314.6L867.6,312.9L866.5,310.2L863.1,308.9L860.8,309.7L859.1,310.7L859.2,313L857,314.1L855.6,313.6L852.9,313.4L850.8,310.9L848.1,310.3L847.4,311.2L844,311.3L845.4,308.8L847.1,307.9L846.7,304.6L845.6,302L840.6,299.4L838.4,299.1L834.6,296.3L833.7,297.8L832.7,298L832.1,296.9L832.2,295.6L830.2,294.1L833.1,293L835,293L834.8,292.2L830.9,292.2L829.9,290.4L827.5,289.8L826.4,288.3L830,287.6L831.3,286.6L835.6,287.8ZM812.4,281.1L810.3,284.1L808.3,284.7L805.7,284.1L801.3,284.2L799,284.7L798.6,287L800.9,289.7L802.4,288.4L807.4,287.3L807.1,288.7L806,288.3L804.8,290.1L802.4,291.3L804.9,295.2L804.3,296.3L806.6,299.8L806.5,301.8L805,302.7L804,301.6L805.4,299.1L802.8,300.3L802.1,299.5L802.5,298.3L800.7,296.5L801,293.5L799.2,294.4L799.3,298L799.2,302.4L797.5,302.8L796.4,301.9L797.3,299.1L797,296.1L795.9,296.1L795.1,294L796.3,292L796.7,289.6L798,284.9L798.6,283.7L800.8,281.4L802.9,282.3L806.3,282.7L809.3,282.6L811.9,280.4ZM821.5,281.9L821.4,284.6L820,284.3L819.6,286.2L820.7,287.8L820,288.2L818.9,286.2L818.1,282.3L818.6,279.9L819.5,278.7L819.7,280.4L821.3,280.7ZM760.4,303.4L757.5,303.5L755.4,300.9L752,298.4L751,296.5L749,294L747.8,291.7L745.8,287.4L743.5,284.9L742.7,282.2L741.7,279.8L739.2,277.9L737.8,275.3L735.7,273.5L732.9,270.2L732.6,268.6L734.3,268.7L738.4,269.3L740.9,272.3L743,274.4L744.5,275.7L747.1,279L749.8,279L752,281.1L753.6,283.7L755.6,285.1L754.5,287.6L756,288.7L757,288.7L757.4,290.9L758.3,292.6L760.3,292.9L761.5,294.8L760.7,298.6ZM792.8,279.8L795.8,282.6L792.7,283L791.8,285.1L791.9,287.9L789.3,290L789.2,293L788,297.7L787.7,296.6L784.6,298L783.6,296.2L781.8,296L780.5,295L777.3,296.1L776.4,294.6L774.6,294.8L772.4,294.4L772.1,290.3L770.8,289.5L769.5,286.8L769.2,284.1L769.5,281.3L771,279.3L773,280.3L775,279.7L775.5,277.1L776.6,276.6L779.8,275.9L781.6,273.5L782.8,271.5L783.8,270.4L786,268.7L787.9,266.6L789.1,264.2L790.2,264.1L791.6,265.7L791.8,267L793.6,267.9L795.9,268.8L795.8,270L794,270.2L794.5,271.7L792.6,272.7L791.2,275.5L793.2,278.4ZM814.3,259.6L814.8,261.6L815,263.3L814.3,266.2L813.1,263L812,264.6L813,266.8L812.3,268.3L809.1,266.5L808.2,264.3L808.9,262.8L807.1,261.4L806.4,262.6L805.2,262.5L803.3,264.2L802.8,263.3L803.7,260.7L805.3,259.9L806.6,258.7L807.7,260.1L809.6,259.3L809.9,257.9L811.8,257.8L811.4,255.4L813.7,256.9L814,258.4ZM695.2,266.4L692.9,267.1L691.5,264.6L690.9,260.2L691.8,255.2L693.7,256.9L695.1,259.1L696.5,262.3L696.3,265.5ZM319,254.4L316.8,254.7L316.3,254.4L317.2,253.6L317.2,252.4L318.7,252L319.3,252.1ZM807.5,253.8L806.6,254.9L806,256.8L805.2,257.7L803.4,255.6L803.9,254.8L804.4,253.9L804.5,252L806,251.8L805.8,253.9L807.4,250.9ZM793.3,256.8L790,259.7L791.1,257.6L792.8,255.7L794.2,253.5L795.3,250.5L796,253L794.5,254.7ZM801.4,248.9L803.1,249.8L804.7,249.8L804.8,251.1L803.8,252.4L802.2,253.3L801.9,251.9L802,250.4ZM810.8,248L812,251.5L809.8,250.7L810,251.7L810.8,253.6L809.7,254.3L809.3,252.1L808.5,252L807.9,250.1L809.5,250.4L809.3,249.2L807.4,246.8L809.9,246.9ZM800,245.3L799.6,247.9L798.3,246.4L796.7,244L798.9,244.2ZM796.9,228.5L798.6,229.4L799.3,228.6L799.7,229.4L799.5,230.7L800.7,232.9L800.5,235.4L799.1,236.5L799.1,238.9L800,241.4L801.4,241.7L802.6,241.4L806.1,243.1L806,244.7L807,245.5L806.9,246.9L804.7,245.4L803.5,243.8L803,244.9L801,243.1L798.7,243.5L797.3,242.8L797.3,241.6L798,240.8L797.1,240.1L796.9,241.2L795.4,239.4L794.8,238.1L794.2,235.1L795.4,236.1L794.9,231.3L795.3,228.5ZM308.6,229.4L307.9,230.2L305.9,230.1L304.4,230.2L304.3,228.9L304.8,228.5L306.9,228.5L308.2,228.8ZM278.9,230.5L278.1,231L276.7,230.5L275.3,229.4L275.7,228.7L276.8,228.5L277.4,228.6L279.1,228.8L280.4,229.6L280.8,230.4ZM290.9,224.3L293.1,224.8L293.5,224.3L295.5,224.3L297,225.1L297.7,225L298,226.1L299.5,226L299.3,226.9L300.4,227.1L301.6,228.2L300.5,229.4L299.3,228.8L298.1,228.9L297.3,228.8L296.7,229.3L295.7,229.5L295.4,228.8L294.5,229.2L293.2,231.3L292.6,230.8L292.6,229.9L290.9,229.4L289.6,229.6L288.1,229.4L286.8,230L285.5,229L285.8,228L288.2,228.5L290.1,228.7L291.1,228L290.1,226.7L290.3,225.5L288.7,225L289.3,224.2ZM768.1,228L766.1,229.5L763.8,228.5L763.3,225.9L764.3,224.5L767,223.6L768.5,223.7L769.3,224.8L768.4,226.2ZM74.2,226.7L73.7,227.2L73.1,226.8L73.4,225.9L73.3,224.8L73.5,224.5L74.1,224L74,223.4L74.3,223.1L74.5,223.1L75.3,223.7L75.7,223.9L76,224.3L76.4,225.4L76.3,225.6L75.1,226.3ZM74,221.9L73.1,222.1L72.8,221.5L72.6,221.2L72.6,221L72.9,220.8L73.8,221.1L74.3,221.5ZM72.7,220.3L72.5,220.6L71.1,220.5L71.4,220.1ZM70.5,219.8L70.3,220L70.1,220L69.2,219.9L69.1,219.2L69,219L69.9,218.6L70,218.8ZM66.7,217.8L66.3,218.1L65.6,217.5L65.7,217.3L66.2,217L66.8,217.1ZM273.7,215.4L274.5,216.5L277,216.2L277.8,216.9L279.7,218.8L281.2,220.2L282,220.1L283.5,220.8L283.2,221.6L285.1,221.8L286.9,223L286.5,223.8L284.7,224.1L283,224.3L281.2,224.1L277.4,224.4L279.4,222.6L278.4,221.8L276.8,221.6L276,220.7L275.6,219L274.1,219.1L271.8,218.3L271.2,217.6L267.9,217.1L267,216.5L268.1,215.8L265.6,215.6L263.5,217.2L262.4,217.3L261.9,218L260.6,218.3L259.5,218.1L261,217.1L261.8,216L263.1,215.3L264.5,214.7L266.5,214.4L267.2,214.1L269.4,214.3L271.4,214.3ZM279.7,212.3L279,212.5L278.6,210.7L277.8,209.8L278.7,207.8L279.4,207.9L279.9,210.5ZM793.8,215.3L793.2,217.8L791.3,215.2L790.5,212.9L791.3,209.9L792.7,207.5L794.2,208.5L794.2,210.3ZM280.3,203.6L277.5,204.1L277.5,202.9L278.7,202.7L280.4,202.8ZM282.5,203.5L281.6,205.7L281.2,205.4L281.5,203.7L280.6,202.5L280.7,202.2ZM817.4,180.2L818.1,181.2L817.4,183.1L816,182.1L815,182.8L815,184.6L813.1,183.8L812.5,182.3L813.2,180.5L814.8,180.8L815.3,179.5ZM566.2,175.5L564.6,176.8L564.9,177.4L565,177.6L562.5,178.9L561.3,178.5L560.6,177.2L561.7,177.1L561.9,177.1L562.2,176.4L564,176.4ZM539.1,175.4L540.5,176.4L542.4,176.2L544.3,176.5L544.3,177L545.6,176.6L545.4,177.5L541.8,177.8L541.8,177.3L538.7,176.7ZM518.3,167.6L517.5,170L517.9,171L517.5,172.6L515.5,171.4L514.3,171.1L510.7,169.5L511,167.9L513.9,168.2L516.4,167.9ZM502.4,158.5L504,160.6L503.8,164.7L502.6,164.5L501.7,165.5L500.7,164.7L500.5,161L499.9,159.2L501.2,159.4ZM829.3,170.9L829.5,173.4L830.6,175L830.2,177.1L827.6,178.6L823.3,178.8L821.1,182.3L819,181.1L818,178.8L813.9,179.5L811.5,180.9L808.6,181L812,183.3L812.2,188.5L811,189.8L809.3,188.6L809,185.8L807.1,184.9L805.3,182.8L807.3,181.9L807.9,179.9L809.8,178.3L810.8,176.2L815.4,175.3L818.3,175.9L818.6,170.4L820.8,171.9L823.1,168.8L824,167.6L823.7,163.9L821.6,160.4L821.7,158.5L824,157.9L827.5,162.2L828.6,164.7L827.8,167.8ZM503.2,155.6L502.5,157.9L501.3,157.3L500.7,155.3L501.2,154.1L502.7,153ZM825.5,149.4L827.6,150.1L828.5,148.8L831,152.2L827.9,153L827.4,156.1L822.5,154L822.9,157.3L820.2,157.4L818.3,154.3L818.3,152L820.7,151.8L819.1,147.6L818.5,145.2L823.1,148.4ZM329,142.2L330.6,142.6L332.9,142.6L331.4,143.8L330.4,144L327.8,142.7L327.4,141.7L328.6,140.8ZM335.5,134.6L334.4,134.6L331.6,133.7L329.8,132.3L330.7,132L333.6,132.8L335.6,134ZM190.3,136.3L188.9,136.8L185.8,135.4L185.7,134.3L184.2,133.3L184.3,132.5L182.2,131.9L182.3,130.3L182.9,129.6L184.9,130.3L186.1,130.7L188.1,131L188.3,132L188.6,133.5L190.2,134.7ZM350,129.9L347.8,132.5L349.5,131.5L350.9,132.1L349.9,133.1L351.7,133.9L353,133.2L355.1,134.1L353.8,136.3L355.6,135.8L355.5,137.4L355.8,139.3L354.2,141.9L353.1,142L351.7,141.5L352.8,139L352.2,138.6L348.9,141.2L347.5,141.1L349.5,139.7L347.4,139L344.8,139.1L340.3,139.1L340.1,138.2L341.9,137.1L341.1,136.3L343.5,134.5L347.2,129.8L349.1,128.1L351.4,127.1L352.4,127.2L351.7,128ZM179.1,120L181.4,119.8L178.5,123.1L179,125.5L178.1,125.4L177.6,124.1L177.6,122.8L177.1,121.8L177.5,120.6L178.3,119.6ZM812.6,129.7L818.4,134.9L814.3,134L815.6,138.3L819.8,141.4L821.1,143.5L818.2,141.7L818,144L816.1,141.5L814.5,138.5L812.2,135.3L811.3,133L808.8,129.1L805.4,126.2L802.8,122.2L803.9,120.8L802.1,119.5L802.8,119.1L804.8,121L807.6,123.8L809.6,126.7ZM464.4,125.2L460.3,127L457.1,126.5L459.1,123.4L458,120.5L461.2,118.2L463,116.8L464.8,116.7L467.2,118.5L465.9,120.5L466.2,122.6ZM508.5,115.5L507.3,117.8L504.8,116.2L504.4,115L507.7,114ZM140.3,111.1L137.2,112.2L136.7,111.5L137.5,110.2L140.3,109.1L141.9,108.7L143.2,108.9L143.4,109.8ZM473.4,106.8L471,109.9L473.2,109.5L475.7,109.5L475.1,111.8L473,114.4L475.3,114.6L477.5,118.3L479,118.8L480.4,122.1L481.1,123.3L483.8,123.8L483.6,125.7L482.4,126.6L483.3,128.1L481.3,129.6L478.2,129.6L474.2,130.4L473.2,129.8L471.6,131.2L469.5,130.9L467.8,132L466.6,131.4L470,128.3L472.1,127.7L468.5,127.2L467.9,126L470.3,125.1L469.1,123.5L469.6,121.6L473,121.9L473.3,120.2L471.8,118.3L469.1,117.8L468.6,117L469.4,115.8L468.7,115L467.4,116.3L467.4,113.6L466.3,112.1L467.2,109.1L469,106.8L470.7,107.1ZM119.9,103.2L118.1,103.7L117.2,103.1L116.6,102.4L119.2,101.9L120.7,102.2ZM310.6,97L309,98.4L308.2,98.2L308,97.4L308.2,97.2L309.5,96.4L310.3,96.4ZM305.7,95.5L302.5,97L301,96.9L300.9,96.2L303.1,94.9L306,94.9ZM117.7,92.5L118.5,93.1L120.1,92.8L121,93.5L122.7,93.9L122.2,94.2L120,94.7L119,94.1L118.8,93.6L116.7,93.8L116.5,93.6ZM303.1,87.5L302.9,88.6L304.2,88.2L305,88.9L306.8,89.9L308.7,90.7L308.2,92L309.9,91.8L310.9,92.7L308.6,93.5L305.7,92.9L305.1,91.7L302.3,93.1L298.5,94.5L298.6,92.9L295.6,93.2L298.2,91.8L299.7,89.7L301.8,87.2ZM450.1,85.3L449.4,87.1L451.6,88.9L448.7,91L442.4,92.8L440.6,93.3L437.8,92.9L432.1,92L434.3,90.8L429.9,89.5L433.7,89L433.7,88.2L429.5,87.6L431.1,85.8L434.3,85.5L437.3,87.3L440.6,85.8L443.1,86.6L446.7,85.1ZM324.5,83.5L322.1,83.6L322.3,82.3L323.9,80.8L326,80.5L327.2,81.2L326.6,82.3L326.2,82.7ZM599.5,158.2L601.2,160.4L602.3,160.5L603.2,161.4L601.3,161.6L601.2,164L601,165.1L600.2,165.8L600.5,167.3L601.7,169.6L604.1,170.2L606.1,171.8L609.7,172.3L613.5,171.5L613.6,170.8L612.7,168.6L612.5,165.4L610.4,164.3L610.7,162.2L609,162.1L609,159.5L611.5,160.2L613.4,159.2L611.3,157.4L610.3,155.7L608.5,156.4L608.7,158.7L607.5,156.7L607.2,156L607.6,154.7L606.9,153.6L603.9,152.6L602.3,149.9L600.8,149.1L600.5,148.1L602.9,148.4L602.5,146.2L604.5,145.7L606.6,146.1L606.4,143.2L605.6,141.3L603.2,141.5L601.1,140.7L598.6,142.1L596.5,142.7L595.8,144.5L593.6,145L591.8,148.1L594.5,151L594.7,153L598,156.6ZM856,89.3L856,89.3L854.6,90.5L851.7,90.3L855.2,91.7L859,94L860.9,94.7L862.4,95.9L862.6,96.6L858,96L854.3,98.1L852.7,98.4L851.4,100.3L850.1,102L850.5,103.3L845.5,101.4L842,103.6L840,102.5L839.1,103.7L835.8,103.4L836.9,105.2L836.8,107.9L837.9,109.1L841,109.7L844.4,113.9L842.5,114L843.6,116.4L845.6,117.6L842.9,119.1L844.8,122.5L842,123.2L843.6,126.1L842.4,128.9L840,126.9L835.7,122.6L829.3,116.1L827,112.1L827.4,110.4L826.3,109.1L829.2,108.5L829.9,104.9L830.9,102L832.6,99.8L830.4,95.9L828.1,96.1L829.1,98.4L826.6,101.5L821.5,98L816.9,99L815.8,103.7L819.2,105.4L814.9,106.1L811.8,106.4L810.2,104.4L806.4,103.9L804.9,105.3L797.8,104.8L791.3,105.7L788.6,111.2L785,118L788.8,118.4L791.2,120.2L793.9,120.8L794.3,119.4L796.9,119.6L802.5,122.8L804.3,125.3L804.5,128.2L806.7,131.8L808.7,136.5L807.8,140.9L808.2,143L807,146.5L805.6,150L805,151.8L802.7,153.6L801.2,153.6L799,152.1L796.9,154.4L797,155.4L796,155.2L795.4,156.2L795.2,157.3L796.3,159.5L795.4,160.1L795.2,160.7L794.7,161.6L793.3,162.1L792.6,162.9L793.1,164.2L792.9,164.6L794.1,165.1L796.1,166.4L799.8,170L801.2,172L802.7,175.6L802.4,177.3L800.4,177.9L798.8,179.2L796.7,179.4L795.8,177.8L795.4,175.4L793,172.2L794.6,171.7L791.9,169.1L790.4,168.5L790.4,169.1L789.7,169.3L789.4,168.7L788.7,168.5L787.8,168L787.9,166.6L788.3,166.3L787.9,165.7L787.8,164L787.4,163.5L785.8,163.2L784.3,162.4L781.3,163.3L780.1,164.7L777.8,165.5L778.5,164.1L777.5,162.9L778.6,160.9L776.6,159.3L774.9,160.3L773,162.5L772.4,164.5L770,164.6L769.3,166L771.4,168.1L773.7,168.6L774.3,170L776.6,170.9L778.5,168.7L781.2,169.9L782.8,170L783.8,171.6L780.6,172.5L780.1,174.1L778.3,175.7L777.8,177.8L781.1,179.5L783.1,182.6L785.6,185.4L788.1,187.8L788.8,190.1L787.5,190.9L788.6,192.6L790.4,193.5L790.7,196L790.8,198.5L789.4,198.8L788.5,202.1L787.5,206.2L786,209.9L783.1,212.7L780.1,215.3L777.3,215.7L776,217L774.8,216L773.7,217.6L770.4,219.1L767.7,219.6L767.5,222.9L766,223L764.9,220.8L765.3,219.6L761.7,218.6L760.5,219.1L757.6,221.8L755.9,224.7L755.7,226.8L758.2,230.1L761.3,234.1L763.9,236L765.8,238.5L767.8,244.2L768,249.6L766,251.6L763.2,253.6L761.2,256.1L758.1,259L757,257L757.6,255L755.5,253.2L753.3,252.8L752,251.2L750.4,248L747.9,246.6L745.6,246.6L745.8,244.2L743.5,244.2L743.6,247.6L742.6,252.1L742,254.8L742.3,257L744,257.1L745.3,259.9L746,262.6L747.5,264.4L749.2,264.7L750.6,266.3L751.2,266.6L752.9,268.5L754.1,270.5L754.3,272.6L754.1,274L754.4,275L754.6,276.8L755.6,277.7L756.7,280.4L756.6,281.4L754.7,281.7L752.2,279.4L749,276.9L748.7,275.4L747.1,273.3L746.6,270.8L745.6,269.1L745.8,266.9L745.1,265.6L744,264.4L743.5,262.9L742,261.1L740.6,259.7L740.3,261.5L739.7,259.8L739.8,257.9L740.4,254.9L739.9,252.6L740.5,250.3L739.5,248.5L739.4,245.1L738.1,243.5L736.9,239.8L735.9,235.9L734.4,233.4L732.9,234.9L730.2,237.1L728.7,236.8L727,236.1L727.4,232.3L726.5,229.4L723.9,225.9L724.1,224.7L722.5,224.4L720.3,221.8L719.3,220.2L718.9,218.7L718.1,217.2L716.7,215.4L714.3,215.2L714.8,216.5L714.2,218.2L713,217.6L712.7,218.2L712,217.8L710.9,217.6L710.7,218.7L709,218.7L705.8,219.3L706.3,221.6L705.2,223.4L701.8,225.5L699.3,229.1L697.6,231.1L695.2,233.1L695.4,234.5L694.1,235.3L691.9,236.4L690.7,236.6L690.1,238.9L691.1,242.9L691.4,245.5L690.5,248.4L690.9,253.6L689.5,253.8L688.5,256.1L689.3,257.1L687,258L686.2,260.1L685.2,261L682.5,258.1L681.1,253.8L679.8,250.7L678.8,249.2L677.2,246.3L676.2,242.4L675.6,240.5L672.8,236.3L671.2,230.3L669.9,226.4L669.5,222.6L668.6,219.7L665.1,221.6L663.2,221.2L659.4,217.5L660.5,216.3L659.6,215.1L656.2,212.5L654.2,211.7L653.1,209.5L650.8,207.2L646.1,207.7L642,207.8L638.4,208.2L633.4,207.3L630.5,206.6L627.6,206.2L626,202.4L624.7,201.8L622.8,202.4L620.4,203.9L617.2,202.9L614.3,200.5L611.7,199.6L609.7,196.7L607.3,192.5L606,193L604.2,192L603.4,193.2L601.9,193.1L602.6,194.4L602.4,195.2L603.5,197.5L604.8,200.1L606.2,200.9L606.7,201.9L608.6,203.2L608.9,204.5L608.8,205.5L609.2,206.6L610.1,207.5L610.5,208.5L611,209.2L610.6,207L611.1,205.4L611.7,205L612.6,206L612.9,207.8L612.5,209.6L613.1,210.8L613.6,210.6L613.7,211.5L615.7,211L617.9,211.1L619.4,211.2L621,209.1L622.7,207.1L624.1,205.2L624.7,204.1L625,204.4L624.9,205.7L624.7,206.3L625.3,208.7L626.7,210.8L628.3,211.9L630.2,212.3L631.8,212.9L633.2,214.7L634,215.7L635,216.1L635,216.8L634.3,218.6L634,219.5L633,220.5L632.2,222.6L631,222.4L630.5,223.2L630.3,224.7L630.8,226.8L630.6,227.2L629.4,227.1L627.8,228.3L627.7,229.8L627.2,230.5L625.5,230.4L624.6,231.2L624.7,232.5L623.5,233.3L622,233L620.3,234.1L619.1,234.2L617.3,235.1L616.9,236.4L616.9,237.5L614.4,238.8L610.3,240.2L608,242.4L606.9,242.6L606.1,242.4L604.6,243.7L603,244.2L600.8,244.4L600.1,244.6L599.6,245.4L598.9,245.6L598.5,246.4L597.2,246.3L596.4,246.7L594.6,246.6L593.8,244.8L593.8,243.1L593.3,242.2L592.7,239.9L591.9,238.7L592.4,238.5L592,237.1L592.3,236.5L592.1,235.2L591.7,233.8L590.9,232.9L590.6,231.7L589.2,230.6L587.6,228L586.7,225.5L584.8,223.4L583.6,222.9L581.7,219.9L581.2,217.8L581.2,215.9L579.5,212.5L578.2,211.3L576.7,210.7L575.7,208.9L575.8,208.2L575,206.6L574.2,205.9L573,203.6L571.2,201.1L569.8,199L568.5,199L568.8,197.3L568.8,196.2L569,195L568.9,194.5L568.3,195.8L567.9,198.1L567.3,199.7L566.8,200.3L565.8,199.3L564.6,197.9L562.4,193.5L562.2,193.7L563.5,197L565.3,200.1L567.6,204.9L568.7,206.6L569.6,208.4L572.2,211.8L571.7,212.3L571.9,214.3L575.1,217.1L575.6,217.7L576.7,220.8L576.1,221.3L576.7,224.5L577.9,228.2L578.9,228.9L580.4,230.1L582.1,233.6L583,236.5L584.5,238L588.2,240.9L589.8,242.6L591.3,244.4L592.2,245.5L593.5,246.4L594.2,247.4L594.1,248.6L592.6,249.4L593.8,250.2L594.7,250.8L595.3,252L596.5,253.3L597.8,253.3L600.3,252.6L603.1,252.2L605.4,251.2L606.7,251L607.6,250.5L609.1,250.4L610,250.3L611.2,249.8L612.5,249.5L613.8,248.5L614.7,248.5L614.8,249.3L614.7,251.1L614.8,252.7L614.3,253.8L613.6,257.2L612.5,260.6L611,264.5L608.8,269L606.6,272.5L603.5,276.7L600.9,279.1L597,282.2L594.5,284.5L591.6,288.2L591,289.9L590.4,290.6L588.5,291.8L587.8,293.1L586.8,293.3L586.4,295.5L585.6,296.7L585,298.8L583.9,299.8L582.7,303.6L582.8,305.3L584.5,306.4L584.5,307.2L583.7,309.1L583.9,310L583.7,311.5L584.5,313.4L585.5,316.4L586.5,317.1L586.9,318.5L586.6,321.6L586.9,324.3L586.7,329.1L587.1,330.6L586.2,332.8L585.1,334.9L583.3,336.8L580.9,338L577.9,339.5L574.7,342.8L573.7,343.4L571.8,345.6L570.6,346.3L570.3,348.5L571.4,350.8L571.8,352.6L571.8,353.5L572.2,353.4L572,356.4L571.4,357.8L572,358.4L571.5,359.7L570.4,360.8L568.2,361.8L565,363.5L563.8,364.6L563.9,365.9L564.5,366.1L564.2,367.8L563.4,370L562.9,372.6L562.1,374L560.3,375.5L559.7,376L558.5,377.6L557.7,379.1L556.1,381.4L553,384.6L551.1,386.4L549.1,387.8L546.3,389L545,389.2L544.7,390L543.2,389.6L541.9,390.2L539.2,389.6L537.7,389.9L536.6,389.8L534,391L531.8,391.5L530.2,392.7L529,392.7L528,391.6L527.2,391.6L526.2,390.2L526.1,390.6L525.8,389.8L525.9,388L525.2,385.9L526,385.3L526.1,383L524.5,380.1L523.4,377.5L523.4,377.5L521.7,373.4L519.9,371.1L519,368.8L518.5,365.8L517.9,363.6L517.2,358.8L517.3,355.1L517,353.4L516,352.2L514.7,349.6L513.4,345.9L512.9,344L510.8,341L510.7,338.6L510.5,336.7L510.9,334L511.8,331.1L512,329.8L512.9,327.1L513.5,325.8L515.1,323.8L515.9,322.4L516.3,320.1L516.1,318.4L515.4,317.3L514.7,315.4L514,313.6L514.2,312.9L515,311.7L514.2,308.8L513.7,306.7L512.4,304.7L512.6,304.1L512.3,303.2L511.6,300.9L509.4,297.6L506.7,294.5L505,292L503.3,288.8L503.4,287.8L504,286.8L504.7,284.6L505.2,282.3L504.7,281.9L505.6,278.4L506,276L504.9,274L503.7,273.4L503.2,272.1L502.5,271.6L502.5,270.8L499.8,271.9L498.8,271.7L497.8,272.4L495.6,272.3L494.2,270.4L493.3,268.2L491.5,266.2L489.5,266.2L487.1,266.2L484.9,266.6L482.8,267.2L478.6,269L477.2,270.1L474.8,271L472.4,270.1L471.2,270.1L469.4,269.5L467.7,269.6L464.5,270.1L462.7,271L460.1,272.1L459.5,272L458.8,272L456.1,270.6L453.7,268.2L451.5,266.6L449.7,264.6L449,264.4L447.1,263.1L445.7,261.5L445.3,260.3L445,258.1L443.8,256.3L442.8,255.1L442.1,254.7L441.5,254L441.2,252.7L440.8,252L440.1,251.5L438.7,250.2L437.6,250L437,249.1L437,248.7L436.2,248L436.1,247.4L435.7,245L436,243.6L435,241.2L433.7,240.2L434.9,239.6L436.2,237.4L436.8,235.8L436.6,234.2L437.4,232.6L437.8,229.7L437.6,226.7L437.3,225.2L437.6,223.6L437,222.2L435.6,220.8L435.8,219.5L436,218.1L437,217.2L437.9,215.6L437.7,214.6L438.7,212.4L440.2,210.4L441.1,209.9L441.8,208.1L441.9,206.5L442.9,204.6L444.7,203.5L446.4,200.3L447.8,199.1L450.1,198.7L452.2,196.6L453.5,195.8L455.7,193.2L455.2,189.4L456.2,186.7L456.6,185.1L458.2,183L460.8,181.6L462.7,180.3L464.4,177.1L465.2,175.2L467.1,175.2L468.5,176.5L470.9,176.3L473.5,177L474.6,177L477,175.3L479.7,174.8L481.2,173.5L483.6,172.6L487.8,172.1L491.9,171.8L493.2,172.3L495.5,171L498.2,171L499.2,171.7L500.9,171.6L503.5,170.3L505.3,170.7L505.3,172.2L507.3,171.1L507.5,171.7L506.3,173.2L506.4,174.6L507.3,175.4L507,178.1L505.4,179.6L505.9,181.3L507.2,181.4L507.9,182.8L508.9,183.3L511.9,184.4L512.9,184.1L515.1,184.6L518.5,186L519.7,188.7L522.1,189.3L525.7,190.6L528.5,192.2L529.7,191.4L530.8,190L530.1,187.6L530.8,186.1L532.5,184.6L534.2,184.2L537.7,184.8L538.6,186.2L539.6,186.2L540.4,186.8L542.9,187.1L543.6,188.2L547,188.1L549.5,188.9L552,189.8L553.3,190.3L555.1,189.3L556.1,188.4L558.3,188.2L560.2,188.6L561,190.1L561.5,189.1L563.6,189.8L565.5,190L566.7,189.2L567.4,188.2L567.2,188L567.7,186.6L568,184.3L568.3,183.5L568.4,183.4L569,180.9L570,178.8L570,178.6L569.6,176.3L570,175L569,173.6L569.8,172.5L568.3,172.7L566.1,172L564.6,173.8L560.9,174.1L558.7,172.5L556,172.4L555.6,173.7L553.9,174L551.3,172.4L548.6,172.4L546.9,169.4L544.9,167.7L545.9,165.3L544.2,163.8L546.7,160.9L550.4,160.8L551.2,158.4L555.9,158.8L558.6,156.8L561.3,156L565.3,155.9L569.8,158.1L573.5,159.3L576.3,158.8L578.4,159.1L581,157.5L581.2,156.2L580.3,154.1L578.7,152.9L577.3,152.6L576.3,151.7L572.8,149.1L569.9,148L567.6,146.2L569.2,145.7L570.8,143.2L569.3,142L572.6,140.7L572.4,140.1L570.4,140.6L568.5,140.8L567.1,141.8L564.9,141.9L563,143.1L563.4,144.9L564.7,145.7L567.1,145.5L566.8,146.6L564.3,147.1L561.3,148.8L559.9,148.2L560.2,146.8L557.5,145.9L557.8,145.3L559.9,144.3L559.2,143.6L555.4,142.9L555,141.8L552.9,142.1L552.2,143.8L550.7,146L550.8,146.8L549.7,147.5L549,147.2L548.7,150.8L547.6,152.1L547,154.3L547.9,156L548.3,157.2L550.6,158.2L550.2,158.9L547.3,159.1L546.4,160L544.5,161.7L543.6,160.3L543.6,159.6L542.1,159.5L540.8,159.3L537.9,160.1L539.7,161.8L538.5,162.3L537.2,162.3L535.7,160.7L535.3,161.4L536,163.2L537.4,164.6L536.5,165.3L538,166.7L539.3,167.6L539.4,169.4L537.1,168.5L537.9,170.1L536.4,170.4L537.5,173.2L535.9,173.2L533.8,171.9L532.7,169.4L532.1,167.4L531,165.9L529.6,164.2L529.4,163.3L529,163.1L528.9,162.4L527.5,161.4L527.1,159.9L527.2,157.8L527.5,156.9L527,156.4L526.5,156.2L525.7,155.2L524.7,154.6L522.3,153.4L520.8,152.3L518.6,151.4L516.4,149.2L516.9,149L515.7,147.7L515.6,146.7L514,146.2L513.4,147.5L512.6,146.5L512.6,145.4L512.7,145.4L513.2,145.1L511.3,144.7L509.4,145.8L509.6,147.3L509.4,148.1L510.2,149.7L512.6,151.2L513.9,153.7L516.7,156.2L518.6,156.2L519.3,156.8L518.6,157.4L520.9,158.5L522.7,159.5L524.9,161.1L525.2,161.6L524.8,162.7L523.4,161.3L521.2,160.8L520.3,162.8L522.1,163.9L521.9,165.5L520.9,165.7L519.8,168.3L518.7,168.6L518.7,167.6L519.1,166L519.6,165.3L518.6,163.6L517.7,162L516.7,161.6L515.9,160.3L514.3,159.8L513.2,158.5L511.4,158.3L509.4,156.9L507.1,155L505.4,153.2L504.5,150.2L503.3,149.8L501.3,148.8L500.2,149.2L498.9,150.7L497.9,150.9L495.8,152.6L491,151.8L487.5,152.8L487.2,154.6L487.4,156.4L485.1,158.4L482,159.1L481.8,160.1L480.3,161.8L479.3,164.3L480.3,166L478.9,167.4L478.3,169.4L476.4,170L474.7,172.4L471.5,172.4L469.2,172.4L467.6,173.5L466.6,174.6L465.4,174.4L464.5,173.3L463.8,171.6L461.5,171.1L460.5,171.9L459.2,171.4L457.9,171.8L458.4,169.4L458.2,167.5L457.1,167.2L456.5,166L456.8,164L457.8,162.9L458,161.7L458.6,159.8L458.6,158.5L458.1,157.4L458.1,156.4L458.3,154.2L457.3,152.9L460.8,150.7L463.7,151.3L467,151.2L469.5,151.8L471.5,151.6L475.4,151.7L476.7,149.9L477.2,143.8L474.7,140.7L473,139.2L469.4,138L469.2,135.8L472.3,135.2L476.2,135.9L475.5,132.6L477.7,133.8L483.1,131.5L483.8,129.1L485.8,128.5L487.6,127.9L488.8,127.1L490.7,122.8L493.8,121.6L495.7,121.6L496.1,121L498,120.9L498.5,121.5L500,120.1L499.4,119L499.2,117.3L498.2,115.7L498,112.8L498.4,112L499,111.2L500.9,111L501.7,110.2L503.4,109.4L503.4,110.9L502.8,111.8L503.1,112.6L504.3,113L503.9,114.1L503.2,113.8L501.7,115.9L502.4,117.3L502.4,118.4L504.8,119.1L504.8,120.1L507.1,119.6L508.3,118.8L510.9,119.9L512.1,120.8L513.6,120L517,118.6L519.7,117.7L522,118.1L522.3,118.9L524.5,118.9L524.8,117.6L527.9,116.7L527.1,114.3L526.9,112.1L527.8,110.3L529.8,109.3L531.8,111.5L533.6,111.4L533.7,109.2L533.7,107.5L533,107.9L531.4,106.9L531,105.3L533.7,104.5L536.4,104.1L538.8,104.5L541.1,104.5L543.3,102.9L540.8,101.6L536.9,101.8L533.2,102.8L529.8,103.4L528.3,101.9L526.1,101L526.2,98.2L524.8,95.7L525.7,94.1L527.3,92.4L531.7,89.5L533,88.9L532.6,87.8L529.5,86.5L526,87.3L524.3,89.2L524.8,90.8L521.8,93L518,95.4L516.8,99.2L518.6,101.2L520.8,102.8L519.1,105.9L516.9,106.6L516.5,111.4L515.5,114L512.8,113.8L511.7,116L509.1,116.2L508.2,113.5L506.1,110.2L504.2,106.2L502.6,104.5L498.5,107.7L495.5,108.4L492.4,107L491.6,103.9L490.7,97.5L492.6,95.7L498.1,93.4L502.1,90.6L505.6,86.9L510.1,81.7L513.3,79.8L518.4,76.5L522.6,75.4L525.9,75.5L528.6,73.4L532.2,73.5L535.7,73L542.3,74.9L539.8,75.5L542.4,77.2L544.3,76.3L547.9,77.8L553.6,78.5L562,81.4L564,82.7L564.6,84.4L562.7,85.8L559.5,86.5L549.8,84.5L548.3,84.9L552.1,86.8L553.3,90.8L556.2,91.6L558,92.3L558,91L556.4,89.8L557.5,88.8L563,90.5L564.6,89.9L562.7,87.9L566.8,85.3L568.7,85.4L571,86.4L571.6,84.5L569.4,82.9L570,81.4L568,79.7L573.9,80.6L575.5,82.1L573.1,82.4L573.5,83.9L575.4,84.8L578.4,84.2L578.4,82.5L582.2,81.2L588.5,79L590,79.1L588.6,80.7L591.3,81L592.4,80.1L596.1,80L598.7,78.9L601.7,80.5L603.2,78.8L600.5,77.3L601.2,76.4L607.4,77.2L610.6,78L619.3,81L620,79.6L617.3,78.2L617,77.7L614.4,77.4L614.5,76.2L612.4,74.2L612,73.4L614.5,71.1L614.5,68.8L615.7,68.3L621.2,69L622.4,70.4L621.7,72.4L623.3,73.2L624.9,75L626.3,78.6L629.4,80.2L629.4,81.9L627.2,85.7L629.7,86.1L630.1,85.1L632,84.4L631.9,83.1L633,81.9L631.1,80.4L631.1,78.6L628.8,78.4L627.6,77L627.8,74.4L624.1,72.3L626.7,70.6L625.2,68.8L626.1,68.8L627.9,70.2L628.6,72.6L630.9,73.1L629,71.2L631.7,70.2L635.7,70.1L640.2,71.5L637.1,69.4L635.3,66.8L638.3,66.3L643,66.4L647,66.1L644.5,64.8L645.6,63.2L647.7,63.1L650.5,61.9L655.3,61.6L655.4,60.9L660.1,60.7L662.1,61.3L665.3,60L668.7,60L668.3,59L669.2,58L672.7,57.1L676.6,57.8L674.6,58.4L679.2,58.7L680.8,59.9L681.9,59.3L687.4,59.4L692.8,60.5L695.2,61.4L695.9,62.7L694.5,63.4L690.7,64.7L689.9,65.5L692.6,65.8L696,66.4L697.3,66L699.7,67.6L699.9,66.9L702.7,66.5L709.2,66.9L710.8,68.1L719.3,68.5L717.5,66.6L722.1,67L725.1,67L729.6,68.3L732,69.9L731.9,71L736.3,73L740.4,74L739.7,71.3L744,72.5L746.7,71.8L751.3,72.6L752,71.9L755.6,72.2L751.7,69.9L753.1,68.8L772.5,70.4L775.9,71.9L783.2,73.9L790.7,73.4L795.1,73.8L798,74.9L799.9,76.7L803.2,77.5L805.3,76.9L808.8,76.9L813.2,77.4L816.6,77.1L822.9,79.4L824.4,78.6L820.8,76.9L820.3,75.8L827.5,76.5L831.5,76.3L838.8,77.6L843.1,78.7L856,89.3ZM116.9,78.7L116.9,78.7L116.9,78.7L119.4,80.7L121.6,83.3L119.4,85L120,85.6L121.8,83.7L126.9,84.1L128.1,86.6L124.8,87.8L121,88.1L118,90.7L116.6,91.3L114.7,91.2L114.1,90.2L112.3,89.4L113.1,88.3L111.5,87.8L108.8,88.2L108.7,87.2L110.4,86.2L107.1,86.9L106.6,88.1L104,89.3L104,89.3L116.9,78.7ZM287.3,78.3L285.4,79.3L283.3,78.5L281.4,78.7L279.5,77.6L281.8,76.8L284,75.7L285.6,76.4L286.5,76.9L286.8,77.3ZM835.7,73L836.9,73.9L834.9,74L833.5,73.2L834.6,72.1L835.7,73ZM125.4,72.1L125.4,72.1L125.4,72.1L124.3,73L125.4,72.1ZM125.4,72.1L125.8,72L127.5,72L129.4,72.8L128.8,73.1L125.9,73.7L123.1,73.9ZM298.2,77.3L296.5,80L300.5,77.9L301.9,79.6L300.1,81.6L301,83.4L304.3,81.4L307.1,79.2L308.9,76.3L311.7,76.5L314.4,76.9L316.3,78.2L315.7,79.5L313.4,80.9L314.1,82.3L313.1,83.6L308,85.4L304.9,85.9L303.3,85.1L301.9,86.4L298.6,88.7L297.3,89.8L293.8,91.7L290.7,91.9L288.4,93L287.2,94.8L284.6,95.1L280.7,97.4L276.6,100.5L274.5,102.7L272.6,105.9L275.5,106.4L275.1,109.1L275.1,111.2L278.4,110.7L282,111.9L283.7,113L284.6,114.3L287,115.1L288.9,116.3L292.5,116.5L294.8,116.8L293.4,119.3L292.9,122.2L293.2,125.5L295.5,128.3L297.7,127.4L300.1,124.3L300.7,119.7L299.8,118.2L303.9,116.8L307.3,114.8L309.4,112.8L310,110.9L309.5,108.5L307.8,106.3L311.7,103.4L311.9,100.9L313.3,96.5L315.1,95.9L318.4,96.7L320.4,96.9L322.5,96.2L324.1,97.1L326,98.7L326.2,99.8L330,100L328.9,102.4L328.2,105.9L330.1,106.4L331,108L334.8,106.4L338.1,103.3L340,102L340.7,104.5L342.3,108.1L343.6,111.6L342,113.4L344.5,115L346,116.6L349.3,117.4L350.5,118.3L350.7,120.8L352.3,121.2L352.9,122.3L352.2,125.6L350.2,126.7L348.3,127.7L344.2,128.7L340.6,131.2L336.5,131.7L331.7,131L328.3,131L325.8,131.2L323.2,133.4L319.8,134.7L315.2,138.6L311.6,141.4L313.8,140.9L318.8,137L324.4,134.5L328,134.2L329.7,135.6L326.9,137.7L326.7,140.9L326.9,143.2L329.5,144.7L333.6,144.2L336.8,140.8L336.4,143L337.7,144.1L334.3,146.1L328.5,147.9L325.8,149.1L322.6,151.3L320.8,151.1L321.4,148.5L326.2,146L322.4,146.1L319.6,146.5L319.7,147.5L316.8,149L314,150L311.3,150.9L309.3,152.9L308.9,153.4L308.4,155L308.8,156.6L309.8,156.7L309.8,155.6L310.4,156.3L310,157.1L308.2,157.6L307,157.6L305.1,158.1L304,158.3L302.5,158.4L300.3,159.3L304,158.7L304.6,159.3L300.9,160.2L299.4,160.2L299.5,159.9L298.6,160.7L299.3,160.9L298.2,163.1L295.8,165.4L295.8,164.6L295.3,164.5L294.7,163.7L294.8,165.4L295.2,165.9L295,167.1L293.9,168.3L291.9,170.7L291.7,170.6L293,168.5L292,167.3L292.4,164.8L291.6,166.1L291.6,168L290.2,167.6L291.5,168.6L290.9,171.5L291.6,171.7L291.6,172.8L291.2,175.8L289.1,178.1L286.3,179.1L284.2,180.9L282.9,181.1L281.4,182.2L280.8,183.2L277.6,185.2L275.9,186.7L274.3,188.5L273.4,190.7L273.4,192.9L273.7,195.5L274.5,197.7L274.2,199.1L274.8,202.7L274.3,204.7L274,205.9L273,207.8L272.2,208.2L271,207.8L270.8,206.5L270,205.8L269.1,203.1L268.3,200.8L268.2,199.5L269.1,197.5L268.7,195.8L267.3,193.2L266.4,192.7L263.5,194.1L263.1,194L262.2,192.5L260.8,191.8L257.8,192.2L255.6,191.8L253.6,192L252.5,192.5L252.8,193.3L252.4,194.6L252.8,195.2L252.3,195.6L251.4,195.1L250.3,195.7L248.5,195.6L247,194L244.7,194.4L243,193.7L241.4,193.9L239,194.6L236.2,196.9L233.4,198.2L231.6,199.7L230.7,201.1L230.2,203.2L230.1,204.7L230.3,205.8L230.3,205.8L230.3,205.8L228.8,208.5L227.9,210.7L226.9,214.9L226.4,216.4L226.5,218L227.1,219.6L227.2,221.9L228.5,224.2L228.9,226L229.7,227.5L232.3,228.3L233.2,229.6L235.6,228.8L237.7,228.5L239.7,227.9L241.4,227.4L243.3,226.1L244.2,224.3L244.7,221.7L245.3,220.8L247.2,220L250.1,219.3L252.4,219.4L254,219.1L254.5,219.8L254.2,221.3L252.5,223.1L251.6,225L252,225.5L251.5,226.9L250.5,229.3L249.9,228.5L249.4,228.5L249.3,229L249.8,229L249.7,229.8L249.1,231.2L249.2,231.6L248.8,232.8L249,233L248.5,234.6L247.9,235.4L247.4,235.5L246.7,236.6L247.5,237.1L247.8,236.7L248.5,237.1L248.8,237.2L249.4,236.7L250.2,236.6L250.4,236.9L250.8,236.7L252,237L253.2,236.9L254.1,236.6L254.5,236.2L255.3,236.4L255.9,236.6L256.6,236.5L257.1,236.3L258.3,236.7L258.7,236.7L259.4,237.3L260.1,238L261,238.5L261.6,239.3L261.4,239.6L261.2,240.3L261.3,241.4L260.6,242.5L260.2,243.7L260,245.1L260.1,245.9L260,247.3L259.6,247.6L259.3,248.9L259.4,249.7L258.8,250.5L258.8,251.3L259.2,251.8L259.7,253.5L260.7,254.7L261.8,256L262.7,257.1L262.6,257.8L263.7,257.9L263.9,257.7L264.6,258.4L265.9,258.2L267.1,257.4L268.7,256.8L269.7,255.9L271.2,256.1L271,256.4L272.5,256.5L273.7,257L274.5,257.9L275.4,258.8L276.8,258.9L278.9,256.7L280,256.4L280.1,255.4L280.7,252.8L282.3,251.4L284,251.3L284.2,250.7L286.3,250.9L288.5,249.4L289.5,248.7L290.9,247.2L291.8,247.4L292.5,248.2L291.9,249.2L291.8,250L290.2,250.3L291,251.7L290.8,253.3L289.6,255.1L290.4,257.6L291.6,257.4L292.3,255.1L291.5,254.1L291.5,251.7L294.9,250.5L294.6,249L295.6,248.1L296.4,250.2L298.3,250.3L299.9,252L299.9,253L302.3,253L305.1,252.7L306.6,254.1L308.6,254.5L310.1,253.5L310.2,252.7L313.5,252.5L316.6,252.5L314.3,253.4L315.2,254.9L317.3,255.1L319.2,256.6L319.5,259.1L320.9,259L321.9,259.7L323.6,260.9L325.2,262.9L325.2,264.4L326.2,264.5L327.6,266L328.6,267.1L331.7,267.7L332,267.1L334.2,266.9L337,267.7L337.9,268.1L339.8,268.8L342.6,271.4L343,272.7L343.9,272.5L344.5,274.2L346,279.6L347.4,280.1L347.4,282.2L345.4,284.7L346.3,285.7L351,286.1L351.1,289.2L353.1,287.2L356.4,288.3L360.8,290.2L362.1,292L361.7,293.7L364.8,292.7L370,294.4L373.9,294.2L377.9,296.8L381.3,300.2L383.4,301.1L385.6,301.2L386.6,302.2L387.6,306.1L388,308L387.1,313.1L385.8,315.1L382.2,319.3L380.7,322.8L378.8,325.5L378.2,325.5L377.5,327.8L378,333.6L377.5,338.3L377.3,340.4L376.6,341.6L376.4,345.7L374,349.7L373.8,352.9L371.8,354.2L371.3,356.1L368.5,356.1L364.5,357.3L362.8,358.7L360,359.6L357.2,362L355.4,365.1L355.2,367.4L355.8,369.1L355.7,372.2L355.3,373.7L353.7,375.4L351.6,380.9L349.7,383.3L348.2,384.8L347.5,387.7L346.1,389.5L345.3,391.4L342.7,393.1L340.8,392.5L339.5,392.9L337,391.5L335.3,391.6L333.5,389.9L333.6,391.5L337.2,394.2L337.2,396.3L339,397.6L339.2,399.2L337.5,403.1L334.2,404.7L329.4,405.4L326.6,405.1L327.5,406.9L327.5,409.2L328.3,410.8L327.1,411.8L324.7,412.3L322.1,411.1L321.3,411.9L322.4,415L324.3,415.9L325.3,414.9L326.4,416.5L324.5,417.5L323,419.4L323.4,422.4L323.3,424L321,424L319.6,425.6L319.5,427.9L322.5,430.1L324.9,430.7L324.9,433.4L322.6,435.1L322.2,438.6L320.4,439.7L319.9,441.1L321.7,444.2L323.8,445.9L322.8,445.7L320.7,445.7L319.9,446.4L318.2,447.5L318.8,450.2L317.8,450.3L314.9,449.3L311.6,447.3L308.1,445.6L306.7,443.8L306.7,442L304.9,440.1L302.8,435L302.8,432.1L304.6,429.8L300.7,428.9L302.1,426.2L301.4,421.2L304.4,422.3L303.9,416L302,415.2L302.3,419L300.7,418.5L300.2,414.2L299.6,408.5L300.2,406.4L298.7,403.4L297.7,399.9L298.7,399.8L299.1,394.9L299.8,389.9L299.9,385.3L298.4,380.7L298.7,378.1L297.7,374.3L298.6,370.5L298.1,364.6L298,358.1L298,351.2L297.2,346.2L296.2,341.8L293.4,340.1L293,338.8L287.5,335.7L282.5,332.3L280.3,330.4L279,327.9L279.3,327L276.8,323L273.8,317.3L270.9,311.2L269.8,309.8L268.8,307.5L266.7,305.5L264.7,304.3L265.5,302.9L264.2,300L264.9,297.8L267,295.9L268.3,293.6L267.8,292.2L266.8,293.7L265.2,292.3L265.7,291.5L265.2,288.7L266.1,288.2L266.6,286.3L267.6,284.3L267.4,283.1L268.9,282.4L270.7,281.2L270.4,280.2L271.4,280L271.3,278.5L271.9,277.3L273.2,277.1L274.4,275.2L275.4,273.6L274.5,272.9L275,271.1L274.5,268.3L275.1,267.5L274.8,264.9L273.8,263.2L272.9,262.3L272.5,260.7L273.2,259.9L272.5,259.7L272.1,258.6L270.8,257.8L269.6,258L269,259.1L267.9,259.8L267.3,259.9L267,260.6L268.2,262.2L267.5,262.6L267.1,263.1L265.8,263.2L265.5,261.4L265.1,261.9L264.2,261.8L263.8,260.5L262.7,260.3L262,260L260.9,260L260.8,260.6L260.5,260.2L259.1,259.5L258.6,258.8L258.9,258.3L258.9,257.6L258.2,256.9L257.2,256.3L256.3,255.9L256.2,255L255.5,254.4L255.6,255.3L255.1,256.1L254.5,255.2L253.7,254.9L253.4,254.3L253.5,253.4L253.9,252.4L253.2,251.9L253.8,251.4L253,250.4L251.8,249.1L251.3,248.1L250.3,247.1L249.1,245.8L249.5,245.3L249.8,245.7L250.1,245.5L249.7,244.6L248.9,244.3L248.6,245L247,245L246.1,244.7L245.1,244.1L243.7,243.9L243,243.2L241.7,242.7L240,242.6L238.9,242L237.6,240.7L235,237.4L233.8,236.4L231.8,235.6L230.3,235.8L228,237L226.6,237.3L224.9,236.5L223,235.9L220.7,234.5L218.8,234.1L216.1,232.6L214.1,231.2L213.5,230.3L212.1,230.2L209.6,229.2L208.7,227.8L206.2,226L205.2,224.1L204.9,222.6L205.8,222.3L205.7,221.4L206.4,220.6L206.6,219.5L206,218.1L206,216.9L205.4,215.3L203.8,212.3L201.7,209.9L200.9,207.9L199,206.7L198.7,205.9L199.5,204L198.4,203.3L197.2,201.8L197.1,199.6L195.8,199.4L194.8,197.7L194,196.2L194.1,195.3L193.4,192.9L193.2,190.6L193.6,189.4L192.1,188.2L191.2,188.3L190,187.4L189.3,188.7L189.2,190.2L188.8,192.5L189.3,193.8L190.6,195.9L190.8,196.6L191.1,196.9L191.2,197.9L191.7,197.9L191.6,199.9L192.2,200.7L192.5,201.8L193.7,203.3L193.9,206.2L194.3,207.6L194.7,209L194.5,210.6L195.7,210.7L196.4,212.1L197.1,213.5L196.9,214.1L195.6,215.2L195.1,215.2L194.8,213.3L193.5,211.6L192,210.1L190.8,209.3L191.4,207L191.5,205.3L190.5,204.4L189,203L188.6,203.4L188.2,202.6L186.8,201.8L185.7,200L186,199.8L187,200L188.2,198.8L188.7,197.4L187.4,195.2L186.1,194.4L185.7,192.4L185.4,190.4L185,187.9L184.8,185.2L184.9,183.6L183.9,181.8L182.8,181.4L182.9,180.6L181.5,180.4L180.9,179.6L178.7,179.3L178.2,178.8L178.5,177.1L177.3,174L176.9,169.7L177.2,169L176.5,168L175.7,165.4L176.4,162.9L175.9,161.2L177.5,158.7L178.6,156L178.9,153.7L181.3,150.8L184.6,145.3L186.3,141.3L186.9,138.7L187,137.3L187.6,136.7L190.4,137.7L190.2,140.6L191.2,139.8L192.1,137.3L192.7,134.9L192.3,134.9L189.5,131.9L188.6,130.7L185.1,129.4L185.4,126.8L186.9,125L184.8,123.8L185.9,121.4L184.6,119.3L185.5,117.8L185,116.7L183.7,115.8L184.8,113.3L183.7,111L184.5,108.3L182.5,108.1L179.1,108L177.1,107.2L174.9,104.3L173.3,103.7L170.3,102.7L167.1,103L163.9,101.7L162.4,100.5L159.5,101.1L158.2,103L156.9,103.2L153.8,103.8L151.1,104.8L148.2,105.4L149.3,103.7L152.7,101L155.8,100.1L155.9,99.4L151.7,100.9L148.5,102.8L143.6,104.8L144,106.2L140.1,108.2L136.7,109.4L133.7,110.3L132.1,111.5L127.3,113L125.5,114.4L121.8,115.6L120.5,115.4L117.7,116.2L114.6,117.2L111.9,118.1L107.3,119L107.3,118.5L111,117.1L113.9,116.2L117.7,114.6L120.8,114.3L122.9,113.1L127.5,111.4L128.5,110.9L131,109.8L133.3,107.7L135.9,106L132.6,106.9L132.3,106.4L130.2,107.4L130.1,106L128.6,107L129,105.6L125.8,106.7L124.5,106.7L125.8,105L127.2,104L126.7,103L123.4,103.5L122.8,102.2L122,101.6L123.6,100L123.1,98.8L125.5,97.2L128.8,95.7L131,94.3L133,94.1L134,94.5L137,93.2L138.3,93.4L140.8,92.6L141.7,91.3L141,90.8L143.7,89.8L142.3,89.8L139.5,90.4L138.2,91L137.2,90.4L133.9,90.7L131.5,90.1L131.8,89L130.9,87.4L135.1,86.3L141.1,85L142.8,85L141.1,86.3L145.6,86.2L145.7,84.6L144.3,83.6L144.3,82.2L143.6,81.1L141.8,80.3L144.5,78.9L148.2,78.8L152.1,77.7L154,76.4L157.5,75.2L159.8,74.9L164.9,73.7L166.5,73.9L171.1,72.5L173.5,73.1L173.6,74.2L175,73.7L178.2,73.9L177.5,74.5L180,74.9L182.3,74.7L185.6,75.5L189.2,75.7L190.4,76.1L193.5,75.6L195.7,76.4L197.5,76.8L200.7,77.4L202.6,78.6L204.5,78.9L207.3,77.8L210.5,77L213.2,77.3L217.2,76.2L221.1,75.5L221.5,76.6L223.6,76L225.1,74.8L226.2,75.1L227.5,77.4L231.7,75.6L230.3,77.6L233.1,77.2L234.5,76.4L236.8,76.5L239,77.6L242.9,78.6L245.3,79L247.4,78.9L249.1,80.2L245.2,81.5L248.4,82.1L254.2,81.7L256.2,81.3L257.2,82.9L260.4,81.5L259.2,80.4L261.2,79.5L263.7,79.4L265.6,79.1L266.7,79.8L267.7,81.2L270.2,81L272.9,82.2L276.4,81.7L279.3,81.8L280.2,80.2L282.3,79.7L284.8,80.6L283.2,83.1L285.9,81L287.4,81.1L290.1,78.4L289,76.8L287.4,75.8L289.5,73L293.2,71.1L295.5,71.5L296.7,72.6L297.5,75.5L294.8,76.8ZM258.6,68.1L256.6,69.3L261.6,68.5L263.2,69.8L266.5,68.5L267.6,69.3L267.2,71.8L269,70.7L269.7,68.2L271.8,67.8L273.3,68.2L274.7,69.2L274,71.7L273.2,73.5L275.6,74.7L278.3,76L277.2,77.1L273.8,77.3L274.4,78.3L273,79.3L269.6,78.9L266.7,78.1L264.2,78.3L259.8,79.2L253.4,79.7L250.5,79.8L250.4,78.6L248.2,77.9L246.2,78.2L245.5,76.1L247,75.9L250.5,75.4L253.2,75.5L256.1,75.1L252.8,74.5L248.4,74.7L245.6,74.6L245.4,73.7L250.8,72.7L247.8,72.7L244.9,72L248.2,70.1L250.5,69.1L257.1,67.6ZM278,67.3L274.9,69L273.3,67.3L274.3,66.9L277,66.8ZM331.9,68.1L331.7,68.8L329.7,68.8L327.6,68.7L325.3,69L324.8,68.9L323.5,67.6L324.2,66.7L325.2,66.5L329.4,66.8ZM312.2,68L312.7,69.6L315.8,67.5L321.4,66.5L323.1,69.1L321.8,70.8L326.1,70L328.5,69L332.1,70.3L334.1,71.5L333.8,72.6L337.8,72L339,73.7L343.2,74.7L344.4,75.7L345.2,78.1L340.9,79.4L344.9,81.1L347.8,81.6L349.7,84.1L352.9,84.2L351.5,86.1L346.5,89.2L344.4,88.1L342.3,85.5L339.5,85.8L338.5,87.4L340,88.9L342.3,90.2L342.9,90.9L343.1,93.6L341.6,95.6L339.2,94.8L334.9,92.6L336.8,95L338.4,96.6L338.3,97.6L333,96.5L329.1,94.9L327.1,93.6L328.2,92.8L325.7,91.4L323.3,90.1L323,90.9L316.7,91.3L315.4,90.4L317.8,88.4L321.7,88.4L326.1,88L325.9,87L327.3,85.7L331.2,83.1L331.2,82L330.9,81.1L328.5,79.8L324.8,78.9L326.5,78.2L325.2,76.6L323.6,76.5L322.5,75.6L321,76.4L317.2,76.7L310.2,76.1L306.5,75.4L303.5,75L302.4,74.1L305.2,72.9L302.4,72.9L303.6,70.3L306.6,68.1L309.3,67.1L314.7,66.4ZM286.8,66.3L288.7,66.8L292.4,66.5L292.3,67.2L289.6,68.4L291.8,69.5L289.7,71.8L285.8,72.8L284.1,72.5L283.4,71.6L280,69.6L280.7,68.8L284.4,69.1L283.6,67.5ZM758.2,67.9L755.3,67.9L751,67.6L750.5,67.5L751.3,66.5L753.4,66.3L757.2,67.2ZM298.7,69L295.2,70.9L293.1,70.8L293.4,68.5L294.4,67.3L296.2,66.3L298.6,65.6L302.6,65.7L305.8,66.3L301.3,68.5ZM242.5,72.4L236.1,73.7L236.1,72.6L232.8,71.2L234.2,70.4L237.7,68.3L241,66.7L240.6,65.2L247.5,64.8L249.7,65.3L254.5,65.5L255.7,66.2L256.8,67.2L253.8,67.8L247.4,69.6L243.4,71.4ZM766.5,63.3L765.5,64.2L762.1,64L757.4,63L756.9,62.3L760.9,62.6ZM301.9,63.5L300.1,64.5L297.5,64.3L295.7,63.6L297.6,62.5L300.8,61.9L301.8,62.7ZM754.3,62.1L755,63.9L747.9,63.8L745.4,64.4L739.8,62.8L738.9,61.2L740.9,60.7L746,60.8ZM296.1,59.3L296.6,60.4L295.6,61.7L293.3,63.5L289.9,63.7L288.2,63.3L289.4,61.9L286.2,62.1L287.7,60.3L289.6,60.3L293.2,59.5L295.7,59.7ZM276.8,60.6L276.7,61.4L278.8,61L280.7,61.1L279.9,62.3L277.8,63.5L271,63.8L265.2,64.9L262.3,64.9L262.8,64.1L267.7,63.1L258.9,63.4L256.6,62.9L261.5,60.6L263.9,59.9L268.4,60.7L270.4,62.1L273.6,62.3L273,60L275.6,59.2L277.2,59.4ZM594.2,74.2L593.1,74.4L586.5,74.1L585.5,72.9L581.7,72.2L580.9,70.9L582.7,70.3L582,69L585,66.8L583.1,66.5L586.8,64.4L585.7,63.3L589.4,62L594.8,60.5L600.8,60L603.5,59.1L606.9,58.8L608.8,59.8L608,60.5L602,61.7L596.8,62.8L592,65.2L590.3,67.6L588.3,70L589.5,72.1ZM304,58.5L305.4,59.2L309.1,59.2L310.1,60L308.9,60.9L310.7,61.4L311.4,62L313.9,62.1L316.5,62.3L319.9,61.8L323.9,61.6L326.8,61.7L328.3,62.6L328,63.7L326.4,64.3L323.2,64.8L321,64.5L315.2,64.9L311.3,65L308.4,64.6L303.9,63.9L304.3,62.5L305,61.3L303.9,60.3L300.3,60L298.7,59.3L300.3,58.3ZM265.3,57.2L263.2,59L260.9,59.8L259,59.9L254.5,60.9L251.1,61.3L249.1,60.8L254.2,59L259.6,57.5L262.4,57.5ZM306.4,57.5L305.5,57.5L302.1,57.4L302.2,56.7L305.9,56.8L306.8,57.2ZM276.5,57.1L272.4,57.7L270.5,57L272.7,56.2L275.6,56L277.9,56.4ZM525.6,56.7L521.7,57.6L518.3,57.1L519.4,56.5L518.2,55.8L521.9,55.3L522.8,56.2ZM279.7,55L277,55.4L273.9,55.4L274.3,55.1L276.9,54.4L277.8,54.5ZM303.8,56.2L300.6,56.7L299.6,56.2L299.7,55.3L300.4,54.4L302.7,54.5L303.6,54.6L305.1,55.4ZM296.6,55.6L296.4,56.6L293.7,56.3L291.4,55.6L287.4,55.5L289.8,54.8L288.2,54.3L288.9,53.4L292.2,53.7L296.3,54.5ZM672.6,55.7L663.1,56.5L663.6,53.6L664.8,53.3L666.3,53.5L672.2,54.7ZM512.9,52.6L519.2,54.2L514.8,55.1L514.1,56.8L512.5,57.2L511.9,59.1L509.7,59.2L505.5,57.8L507.1,57L504.2,56.3L500.4,54.4L498.8,52.7L503.6,51.9L504.7,52.6L507.3,52.6L507.9,51.9L510.5,51.8ZM525.4,51L529.2,51.8L526.8,53L521.6,53.2L516.2,52.8L515.8,52.2L513.2,52.2L511,51.2L516.4,50.6L519.1,51.1L520.8,50.5ZM571.1,50.7L568.9,51L567.4,51.2L567.3,51.5L565.4,51.9L563.2,51.4L563.9,50.7L559.9,50.6L563.1,50.3L565.8,50.2L566.5,50.8L567.2,50.3L568.7,49.9L571.6,50.4ZM661.9,54.4L658.2,54.6L652.6,54L648.7,53.2L645.8,51.6L642.9,51.2L646,49.7L649.3,49.3L654,50.3L660.4,52.4ZM323.1,52.6L324.6,53.4L321.6,54L316.7,55.7L313.3,55.9L309.8,55.6L308.7,54.7L309.5,53.8L311.5,53.3L308.1,53.3L306.9,52.5L306.8,51.6L309,50.6L311,50L312.9,49.8L312.7,49.4L316.9,49.2L318,50.4L320.5,50.8L323,51.2ZM362.4,45.6L366.9,45.8L370.3,46L373,46.5L372.5,47L367.6,47.9L363,48.3L361,48.7L364.9,48.7L359.7,50L356.3,50.6L351.9,52.3L347.9,52.7L346.4,53.1L340.7,53.4L343,53.7L341.5,54.1L342.1,55.2L339.8,55.9L336.5,56.6L335,57.5L331.9,58.2L331.8,58.7L335,58.6L334.7,59.2L328.7,60.6L324.2,60L318.5,60.3L315.9,60.1L312.4,59.9L313.1,58.8L317,58.3L317.4,56.6L318.7,56.4L322.8,57.4L321.5,56L318.9,55.5L321.1,54.6L324.8,54.1L326,53.3L324.2,52.5L324.5,51.4L329.3,51.5L330.5,51.7L334,50.9L330.2,50.7L323.8,50.8L321.4,50.1L320.8,49.2L319.4,48.6L319.8,48L322.9,47.6L325,47.5L328.8,47.2L332.2,46.5L334.2,46.6L335.5,47.1L338,46.1L340.6,45.8L343.9,45.6L349.3,45.5L350,45.7L355.3,45.4L358.8,45.5ZM433.8,44.8L444,46.3L440.6,47.1L433.9,47.2L424.5,47.3L425.2,47.7L431.5,47.5L436.5,48.2L440.1,47.6L441.3,48.3L439.1,49.5L443.7,48.7L452.4,47.9L457.6,48.3L458.5,49.2L451,50.7L449.9,51.2L444.1,51.5L448.2,51.6L445.8,53.2L444.1,54.7L443.7,57.2L445.6,58.7L442.7,58.8L439.5,59.6L442.7,60.8L442.8,62.9L440.7,63.1L442.9,65.2L438.6,65.4L440.6,66.4L439.9,67.2L437.1,67.6L434.4,67.6L436.5,69.3L436.4,70.4L432.7,69.4L431.5,70.1L434.1,70.7L436.4,72.3L436.8,74.3L433.2,74.8L431.8,73.8L429.6,72.4L430,74.1L427.4,75.4L432.7,75.5L435.4,75.7L429.6,77.9L423.8,80L417.7,80.9L415.4,80.9L413.1,81.9L409.6,84.7L404.7,86.6L403.3,86.7L400.3,87.4L397.2,88L395,89.7L394.4,91.6L392.9,93.4L388.9,95.5L389.2,97.7L387.6,100L385.8,102.7L382.7,102.9L380.1,100.6L375.8,100.6L374.1,99.1L373.5,96.4L370.9,93L370.5,91.2L371,88.8L369,86.3L370.4,84.3L369.4,83.4L372.5,80.3L375.9,79.3L377.1,78.2L378.3,76.2L375.7,77.1L374.4,77.5L372.5,77.9L370.3,77L370.9,75.3L372.2,73.9L374.1,73.9L377.9,74.6L375.1,72.9L373.7,72.1L371.6,72.4L370.2,71.8L373.3,69.4L372.5,68.5L371.8,66.8L370.6,64.2L368.7,63.2L369.2,62.2L364.8,60.8L360.9,60.6L355.8,60.7L351.2,60.9L349.4,60.2L347.1,58.7L352.5,57.9L356.3,57.8L348.7,57.2L345.2,56.3L346.1,55.4L353.8,54.3L361.1,53.2L362.4,52.4L358.1,51.6L360.3,50.8L367.5,49.3L370.3,49.1L370.2,48.2L374.8,47.7L380.4,47.4L385.8,47.3L387.2,48L392.6,46.9L396.3,47.6L398.6,47.8L401.9,48.4L398.4,47.3L399.1,46.5L405.6,45.4L411.6,45.5L414.2,44.8L420.3,44.6Z';
+const GRAT = 'M82.9,462.2L67.5,446L53.6,429.2L41.5,412.1L31.2,394.8L22.5,377.4L15.5,360.1L10,342.7L6,325.4L2.3,290.8L4.3,256.2L7.3,238.9L11.9,221.6L17.9,204.2L25.6,186.8L36.5,166.8L49.7,146.9L65.2,127.5L82.9,108.6L102.5,90.6L123.7,73.5L146.9,57.5L160.1,50.3L175.6,44M149.1,462.2L124.7,429.2L106,394.8L92.9,360.1L85,325.4L81.9,290.8L83.5,256.2L89.9,221.6L101.3,186.8L110.4,166.8L121.4,146.9L134.3,127.5L149.1,108.6L165.4,90.6L183.1,73.5L202.4,57.5L213.4,50.3L226.4,44M215.3,462.2L195.7,429.2L180.8,394.8L170.3,360.1L164,325.4L161.6,290.8L162.8,256.2L167.9,221.6L177.1,186.8L184.3,166.8L193.1,146.9L203.5,127.5L215.3,108.6L242.5,73.5L257.9,57.5L266.7,50.3L277.1,44M281.5,462.2L266.8,429.2L255.6,394.8L247.7,360.1L243,325.4L241.2,290.8L242.1,256.2L245.9,221.6L252.8,186.8L264.8,146.9L281.5,108.6L301.8,73.5L313.4,57.5L320.1,50.3L327.8,44M347.6,462.2L337.9,429.2L330.4,394.8L325.2,360.1L322,325.4L320.8,290.8L321.4,256.2L324,221.6L328.5,186.8L336.6,146.9L347.6,108.6L361.2,73.5L369,57.5L378.5,44M413.8,462.2L405.2,394.8L401,325.4L400.7,256.2L404.3,186.8L408.3,146.9L413.8,108.6L420.6,73.5L424.5,57.5L429.3,44M480,462.2L480,394.8L480,325.4L480,256.2L480,186.8L480,108.6L480,44M546.2,462.2L554.8,394.8L559,325.4L559.3,256.2L555.7,186.8L551.7,146.9L546.2,108.6L539.4,73.5L535.5,57.5L530.7,44M612.4,462.2L622.1,429.2L629.6,394.8L634.8,360.1L638,325.4L639.2,290.8L638.6,256.2L636,221.6L631.5,186.8L623.4,146.9L612.4,108.6L598.8,73.5L591,57.5L581.5,44M678.5,462.2L693.2,429.2L704.4,394.8L712.3,360.1L717,325.4L718.8,290.8L717.9,256.2L714.1,221.6L707.2,186.8L695.2,146.9L678.5,108.6L658.2,73.5L646.6,57.5L639.9,50.3L632.2,44M744.7,462.2L764.3,429.2L779.2,394.8L789.7,360.1L796,325.4L798.4,290.8L797.2,256.2L792.1,221.6L782.9,186.8L775.7,166.8L766.9,146.9L756.5,127.5L744.7,108.6L717.5,73.5L702.1,57.5L693.3,50.3L682.9,44M810.9,462.2L835.3,429.2L854,394.8L867.1,360.1L875,325.4L878.1,290.8L876.5,256.2L870.1,221.6L858.7,186.8L849.6,166.8L838.6,146.9L825.7,127.5L810.9,108.6L794.6,90.6L776.9,73.5L757.6,57.5L746.6,50.3L733.6,44M22.7,377.8L29,377.8L35.4,377.8L41.7,377.8L48.1,377.8L54.4,377.8L60.8,377.8L67.1,377.8L73.5,377.8L79.8,377.8L86.2,377.8L92.5,377.8L98.9,377.8L105.2,377.8L111.6,377.8L118,377.8L124.3,377.8L130.7,377.8L137,377.8L143.4,377.8L149.7,377.8L156.1,377.8L162.4,377.8L168.8,377.8L175.1,377.8L181.5,377.8L187.8,377.8L194.2,377.8L200.5,377.8L206.9,377.8L213.2,377.8L219.6,377.8L225.9,377.8L232.3,377.8L238.6,377.8L245,377.8L251.3,377.8L257.7,377.8L264,377.8L270.4,377.8L276.7,377.8L283.1,377.8L289.4,377.8L295.8,377.8L302.2,377.8L308.5,377.8L314.9,377.8L321.2,377.8L327.6,377.8L333.9,377.8L340.3,377.8L346.6,377.8L353,377.8L359.3,377.8L365.7,377.8L372,377.8L378.4,377.8L384.7,377.8L391.1,377.8L397.4,377.8L403.8,377.8L410.1,377.8L416.5,377.8L422.8,377.8L429.2,377.8L435.5,377.8L441.9,377.8L448.2,377.8L454.6,377.8L460.9,377.8L467.3,377.8L473.6,377.8L480,377.8L486.4,377.8L492.7,377.8L499.1,377.8L505.4,377.8L511.8,377.8L518.1,377.8L524.5,377.8L530.8,377.8L537.2,377.8L543.5,377.8L549.9,377.8L556.2,377.8L562.6,377.8L568.9,377.8L575.3,377.8L581.6,377.8L588,377.8L594.3,377.8L600.7,377.8L607,377.8L613.4,377.8L619.7,377.8L626.1,377.8L632.4,377.8L638.8,377.8L645.1,377.8L651.5,377.8L657.8,377.8L664.2,377.8L670.6,377.8L676.9,377.8L683.3,377.8L689.6,377.8L696,377.8L702.3,377.8L708.7,377.8L715,377.8L721.4,377.8L727.7,377.8L734.1,377.8L740.4,377.8L746.8,377.8L753.1,377.8L759.5,377.8L765.8,377.8L772.2,377.8L778.5,377.8L784.9,377.8L791.2,377.8L797.6,377.8L803.9,377.8L810.3,377.8L816.6,377.8L823,377.8L829.3,377.8L835.7,377.8L842,377.8L848.4,377.8L854.8,377.8L861.1,377.8L867.5,377.8L873.8,377.8L880.2,377.8L886.5,377.8L892.9,377.8L899.2,377.8L905.6,377.8L911.9,377.8L918.3,377.8L924.6,377.8L931,377.8L937.3,377.8M2.3,285.4L8.9,285.4L15.5,285.4L22.2,285.4L28.8,285.4L35.4,285.4L42.1,285.4L48.7,285.4L55.3,285.4L62,285.4L68.6,285.4L75.2,285.4L81.9,285.4L88.5,285.4L95.2,285.4L101.8,285.4L108.4,285.4L115.1,285.4L121.7,285.4L128.3,285.4L135,285.4L141.6,285.4L148.2,285.4L154.9,285.4L161.5,285.4L168.1,285.4L174.8,285.4L181.4,285.4L188,285.4L194.7,285.4L201.3,285.4L208,285.4L214.6,285.4L221.2,285.4L227.9,285.4L234.5,285.4L241.1,285.4L247.8,285.4L254.4,285.4L261,285.4L267.7,285.4L274.3,285.4L280.9,285.4L287.6,285.4L294.2,285.4L300.8,285.4L307.5,285.4L314.1,285.4L320.8,285.4L327.4,285.4L334,285.4L340.7,285.4L347.3,285.4L353.9,285.4L360.6,285.4L367.2,285.4L373.8,285.4L380.5,285.4L387.1,285.4L393.7,285.4L400.4,285.4L407,285.4L413.6,285.4L420.3,285.4L426.9,285.4L433.6,285.4L440.2,285.4L446.8,285.4L453.5,285.4L460.1,285.4L466.7,285.4L473.4,285.4L480,285.4L486.6,285.4L493.3,285.4L499.9,285.4L506.5,285.4L513.2,285.4L519.8,285.4L526.4,285.4L533.1,285.4L539.7,285.4L546.4,285.4L553,285.4L559.6,285.4L566.3,285.4L572.9,285.4L579.5,285.4L586.2,285.4L592.8,285.4L599.4,285.4L606.1,285.4L612.7,285.4L619.3,285.4L626,285.4L632.6,285.4L639.2,285.4L645.9,285.4L652.5,285.4L659.2,285.4L665.8,285.4L672.4,285.4L679.1,285.4L685.7,285.4L692.3,285.4L699,285.4L705.6,285.4L712.2,285.4L718.9,285.4L725.5,285.4L732.1,285.4L738.8,285.4L745.4,285.4L752,285.4L758.7,285.4L765.3,285.4L772,285.4L778.6,285.4L785.2,285.4L791.9,285.4L798.5,285.4L805.1,285.4L811.8,285.4L818.4,285.4L825,285.4L831.7,285.4L838.3,285.4L844.9,285.4L851.6,285.4L858.2,285.4L864.8,285.4L871.5,285.4L878.1,285.4L884.8,285.4L891.4,285.4L898,285.4L904.7,285.4L911.3,285.4L917.9,285.4L924.6,285.4L931.2,285.4L937.8,285.4L944.5,285.4L951.1,285.4L957.7,285.4M22.7,193L29,193L35.4,193L41.7,193L48.1,193L54.4,193L60.8,193L67.1,193L73.5,193L79.8,193L86.2,193L92.5,193L98.9,193L105.2,193L111.6,193L118,193L124.3,193L130.7,193L137,193L143.4,193L149.7,193L156.1,193L162.4,193L168.8,193L175.1,193L181.5,193L187.8,193L194.2,193L200.5,193L206.9,193L213.2,193L219.6,193L225.9,193L232.3,193L238.6,193L245,193L251.3,193L257.7,193L264,193L270.4,193L276.7,193L283.1,193L289.4,193L295.8,193L302.2,193L308.5,193L314.9,193L321.2,193L327.6,193L333.9,193L340.3,193L346.6,193L353,193L359.3,193L365.7,193L372,193L378.4,193L384.7,193L391.1,193L397.4,193L403.8,193L410.1,193L416.5,193L422.8,193L429.2,193L435.5,193L441.9,193L448.2,193L454.6,193L460.9,193L467.3,193L473.6,193L480,193L486.4,193L492.7,193L499.1,193L505.4,193L511.8,193L518.1,193L524.5,193L530.8,193L537.2,193L543.5,193L549.9,193L556.2,193L562.6,193L568.9,193L575.3,193L581.6,193L588,193L594.3,193L600.7,193L607,193L613.4,193L619.7,193L626.1,193L632.4,193L638.8,193L645.1,193L651.5,193L657.8,193L664.2,193L670.6,193L676.9,193L683.3,193L689.6,193L696,193L702.3,193L708.7,193L715,193L721.4,193L727.7,193L734.1,193L740.4,193L746.8,193L753.1,193L759.5,193L765.8,193L772.2,193L778.5,193L784.9,193L791.2,193L797.6,193L803.9,193L810.3,193L816.6,193L823,193L829.3,193L835.7,193L842,193L848.4,193L854.8,193L861.1,193L867.5,193L873.8,193L880.2,193L886.5,193L892.9,193L899.2,193L905.6,193L911.9,193L918.3,193L924.6,193L931,193L937.3,193M88.8,103L94.2,103L99.6,103L105.1,103L110.5,103L115.9,103L121.4,103L126.8,103L132.2,103L137.7,103L143.1,103L148.5,103L154,103L159.4,103L164.8,103L170.3,103L175.7,103L181.1,103L186.6,103L192,103L197.4,103L202.9,103L208.3,103L213.7,103L219.2,103L224.6,103L230.1,103L235.5,103L240.9,103L246.4,103L251.8,103L257.2,103L262.7,103L268.1,103L273.5,103L279,103L284.4,103L289.8,103L295.3,103L300.7,103L306.1,103L311.6,103L317,103L322.4,103L327.9,103L333.3,103L338.7,103L344.2,103L349.6,103L355,103L360.5,103L365.9,103L371.3,103L376.8,103L382.2,103L387.6,103L393.1,103L398.5,103L403.9,103L409.4,103L414.8,103L420.2,103L425.7,103L431.1,103L436.5,103L442,103L447.4,103L452.8,103L458.3,103L463.7,103L469.1,103L474.6,103L480,103L485.4,103L490.9,103L496.3,103L501.7,103L507.2,103L512.6,103L518,103L523.5,103L528.9,103L534.3,103L539.8,103L545.2,103L550.6,103L556.1,103L561.5,103L566.9,103L572.4,103L577.8,103L583.2,103L588.7,103L594.1,103L599.5,103L605,103L610.4,103L615.8,103L621.3,103L626.7,103L632.1,103L637.6,103L643,103L648.4,103L653.9,103L659.3,103L664.7,103L670.2,103L675.6,103L681,103L686.5,103L691.9,103L697.3,103L702.8,103L708.2,103L713.6,103L719.1,103L724.5,103L729.9,103L735.4,103L740.8,103L746.3,103L751.7,103L757.1,103L762.6,103L768,103L773.4,103L778.9,103L784.3,103L789.7,103L795.2,103L800.6,103L806,103L811.5,103L816.9,103L822.3,103L827.8,103L833.2,103L838.6,103L844.1,103L849.5,103L854.9,103L860.4,103L865.8,103L871.2,103';
+const P = {"india": [670.1, 226.7], "uk": [479.7, 127.5], "ireland": [465.7, 122], "germany": [510.7, 124.5], "canada": [247.3, 114.3], "usa": [241, 166.8], "australia": [844.2, 388.7]};
+const DEST = [
+  {k:'uk',        n:'UK',        c:'#60b4ff', lx:0,   ly:-14, a:'middle'},
+  {k:'ireland',   n:'Ireland',   c:'#4ecdc4', lx:-13, ly:3,   a:'end'},
+  {k:'germany',   n:'Germany',   c:'#c07aff', lx:13,  ly:3,   a:'start'},
+  {k:'canada',    n:'Canada',    c:'#5dde8a', lx:0,   ly:-15, a:'middle'},
+  {k:'usa',       n:'USA',       c:'#ffb347', lx:0,   ly:21,  a:'middle'},
+  {k:'australia', n:'Australia', c:'#ff8fb1', lx:0,   ly:21,  a:'middle'}
+];
+
+/* ═══════ HELPERS ═══════ */
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let timers = [], rafMap = 0, rafPct = 0, pctNow = 0, routes = [], finished = false;
+
+const at = (ms, fn) => timers.push(setTimeout(fn, ms * CONFIG.speed));
+const svgEl = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+const show = id => $(id).classList.add('on');
+const leave = id => $(id).classList.add('leave');
+
+function setStage(n){ $('stg').textContent = String(n).padStart(2,'0') + '/05'; }
+
+function setMsg(i){
+  const m = $('msg');
+  m.style.opacity = 0;
+  at(250 / CONFIG.speed, () => { m.textContent = MESSAGES[i]; m.style.opacity = 1; });
+}
+
+function setProgress(p){
+  $('fill').style.width = p + '%';
+  cancelAnimationFrame(rafPct);
+  const from = pctNow, t0 = performance.now(), dur = reduced ? 1 : 550;
+  const tick = now => {
+    const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    pctNow = from + (p - from) * e;
+    $('pct').textContent = Math.round(pctNow) + '%';
+    if (k < 1) rafPct = requestAnimationFrame(tick);
+  };
+  rafPct = requestAnimationFrame(tick);
+}
+
+/* ═══════ CLOCK ═══════ */
+const clockFmt = new Intl.DateTimeFormat('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true});
+const tickClock = () => { $('clock').textContent = clockFmt.format(new Date()); };
+tickClock(); setInterval(tickClock, 1000);
+
+/* ═══════ BUILDERS (fresh DOM on every run = clean replay) ═══════ */
+function wordmarkSVG(){
+  return `<svg class="wordmark" viewBox="0 0 230 92" role="img" aria-label="Akbar Study Abroad">
+    <path d="M196 4 L224 0 L210 26 L204 15 Z" fill="#F22F3D"/><path d="M224 0 L204 15" stroke="#09080f" stroke-width="1.2"/>
+    <text x="115" y="48" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-weight="600" font-size="40" letter-spacing="9" fill="#ECEAF4">AKBAR</text>
+    <rect x="34" y="62" width="162" height="22" rx="2" fill="#F22F3D"/>
+    <text x="115" y="77.5" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-weight="500" font-size="10.5" letter-spacing="4.6" fill="#fff">STUDY ABROAD</text>
+  </svg>`;
+}
+
+function buildS1(){
+  $('s1').innerHTML = `<div class="s1-wrap">
+    <div class="logo-slot" id="logoSlot"></div>
+    <div class="divider"></div>
+    <div class="tagline">Your global admissions command center</div></div>`;
+  const img = new Image();
+  img.alt = 'Akbar Study Abroad';
+  img.className = 'logo' + (CONFIG.logoMode === 'invert' ? ' invert' : '');
+  img.referrerPolicy = 'no-referrer';
+  img.decoding = 'async';
+  img.onerror = () => { $('logoSlot').innerHTML = wordmarkSVG(); };
+  img.src = CONFIG.logoUrl;
+  $('logoSlot').appendChild(img);
+}
+
+function buildS2(){
+  $('s2').innerHTML = `<div class="hub" id="hub"><svg viewBox="0 0 24 24"><path d="M3 11.2 21 3.5l-6.6 17.3-3.1-7.3z"/><path d="M21 3.5l-9.7 10"/></svg></div>` +
+    LEADS.map(l => `<div class="card ${l.q}" style="--c:${l.c}"><div class="card-in">
+      <div class="c-top"><span class="c-dot"></span><span class="c-st">${l.st}</span><span class="c-time">${l.t} ago</span></div>
+      <div class="c-main"><div class="c-av">${l.ini}</div><div><div class="c-nm">${l.nm}</div><div class="c-mt">${l.mt}</div></div></div>
+      <div class="c-ft">Counsellor · <b>${l.co}</b></div></div></div>`).join('');
+}
+
+function buildS3(){
+  const parts = JOURNEY.map(([ic, name], i) =>
+    `<div class="node" id="n${i}"><div class="ico"><svg viewBox="0 0 24 24">${ICONS[ic]}</svg>
+      <span class="chk"><svg viewBox="0 0 12 12"><path d="M3 6.2l2 2 4-4.2"/></svg></span></div>
+      <span class="lbl">${name}</span></div>` + (i < JOURNEY.length - 1 ? `<div class="conn" id="c${i}"><i></i></div>` : ''));
+  $('s3').innerHTML = `<div class="s3-wrap"><div class="eyebrow">Student journey</div>
+    <div class="pipe">${parts.join('')}</div><div class="caption" id="cap">From first enquiry to university.</div></div>`;
+}
+
+function buildS4(){
+  $('s4').innerHTML = `<div class="s4-wrap"><div class="eyebrow">Global admissions network</div>
+    <svg class="map" id="map" viewBox="0 0 960 500" aria-label="Map of destinations connected to India">
+      <defs id="mdefs"></defs>
+      <path class="grat" d="${GRAT}"/><path class="land" d="${LAND}"/>
+      <g id="gRoutes"></g><g id="gPts"></g><g id="gNodes"></g>
+    </svg>
+    <div class="map-meta"><span>Origin <b>India</b></span><span>Destinations <b id="dCount">0</b>/6</span><span>Routes <b id="rCount">0</b> live</span></div></div>`;
+
+  const defs = $('mdefs'), gN = $('gNodes'), gR = $('gRoutes'), gP = $('gPts');
+  const halo = (id, c) => { const g = svgEl('radialGradient', {id}); g.append(svgEl('stop',{offset:'0','stop-color':c,'stop-opacity':'.38'}), svgEl('stop',{offset:'1','stop-color':c,'stop-opacity':'0'})); defs.append(g); };
+  const node = (x, y, c, label, lx, ly, a, r, origin) => {
+    const g = svgEl('g', {class:'nd' + (origin ? ' origin' : '')});
+    halo('h-' + label, c);
+    g.append(svgEl('circle',{cx:x,cy:y,r:origin?28:22,fill:`url(#h-${label})`}),
+             svgEl('circle',{class:'ring',cx:x,cy:y,r:origin?12:10,stroke:c}),
+             svgEl('circle',{class:'core',cx:x,cy:y,r,fill:c}));
+    const t = svgEl('text',{x:x+lx,y:y+ly,'text-anchor':a}); t.textContent = label; g.append(t);
+    gN.append(g); return g;
+  };
+
+  const [ox, oy] = P.india;
+  routes = DEST.map(d => {
+    const [x, y] = P[d.k], mx = (ox + x) / 2, my = (oy + y) / 2, dist = Math.hypot(x - ox, y - oy);
+    const cx = mx, cy = my - dist * 0.32;
+    const dPath = `M${ox} ${oy} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${x} ${y}`;
+    const g = svgEl('g', {class:'route'});
+    g.append(svgEl('path',{class:'trail',d:dPath,stroke:d.c,pathLength:1}), svgEl('path',{class:'flow',d:dPath,stroke:d.c}));
+    gR.append(g);
+    const glow = svgEl('circle',{class:'pt',r:5.5,fill:d.c,opacity:0}), dot = svgEl('circle',{class:'pt',r:2.5,fill:d.c,opacity:0});
+    gP.append(glow, dot);
+    const n = node(x, y, d.c, d.n, d.lx, d.ly, d.a, 5, false);
+    return {g, n, glow, dot, p:[ox,oy,cx,cy,x,y], dur: 1400 + dist * 3.2, t0: 0, live: false};
+  });
+  routes.origin = node(ox, oy, '#F22F3D', 'India', 0, 22, 'middle', 6, true);
+}
+
+function buildDash(){
+  const sk = (cls='') => `<div class="sk ${cls}"></div>`;
+  const heights = [44,62,38,74,56,90,68];
+  const rows = [['r'],['g'],['w'],['r']];
+  $('dash').innerHTML = `
+    <aside class="side" id="dSide"><div class="sk d brand"></div>
+      ${Array.from({length:7},(_,i)=>`<div class="sk d nav${i===0?' act':''}"></div>`).join('')}</aside>
+    <header class="top" id="dTop">${sk('search')}<span class="sp"></span>${sk('btn')}${sk('btn')}${sk('av')}</header>
+    <main class="main">
+      <div class="ttl" id="dTtl">${sk('a')}${sk('b')}</div>
+      <div class="kpis">${Array.from({length:4},()=>`<div class="panel kpi">${sk('l')}${sk('v')}${sk('dl')}</div>`).join('')}</div>
+      <div class="charts">
+        <div class="panel chart"><div class="ph">${sk('a')}${sk('b')}</div>
+          <div class="bars" id="dBars">${heights.map(h=>`<div class="bar" style="--h:${h}%"></div>`).join('')}</div></div>
+        <div class="panel chart"><div class="ph">${sk('a')}</div>
+          <div class="donut-row"><svg class="donut" id="dDonut" viewBox="0 0 120 120">
+            <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F22F3D" stop-opacity=".75"/><stop offset="1" stop-color="#F22F3D" stop-opacity=".3"/></linearGradient></defs>
+            <circle class="bgc" cx="60" cy="60" r="46"/><circle class="fgc" cx="60" cy="60" r="46"/></svg>
+            <div class="legend">${[80,64,72,52].map(w=>`<div class="sk" style="width:${w}%"></div>`).join('')}</div></div></div>
+      </div>
+      <div class="panel table" id="dTable">
+        <div class="tr h"><span></span>${sk('c')}${sk('c')}${sk('c x')}${sk('c x')}${sk('c')}</div>
+        ${rows.map(([b])=>`<div class="tr">${sk('ava')}${sk('c')}${sk('c')}${sk('c x')}${sk('c x')}<div class="sk badge ${b}"></div></div>`).join('')}
+      </div>
+    </main>`;
+}
+
+/* ═══════ MAP PARTICLES (single rAF loop) ═══════ */
+function mapLoop(now){
+  for (const r of routes){
+    if (!r.live) continue;
+    const t = ((now - r.t0) % r.dur) / r.dur, u = 1 - t, [x0,y0,cx,cy,x1,y1] = r.p;
+    const x = u*u*x0 + 2*u*t*cx + t*t*x1, y = u*u*y0 + 2*u*t*cy + t*t*y1;
+    const o = Math.sin(Math.PI * t);
+    r.dot.setAttribute('cx', x); r.dot.setAttribute('cy', y); r.dot.setAttribute('opacity', o.toFixed(3));
+    r.glow.setAttribute('cx', x); r.glow.setAttribute('cy', y); r.glow.setAttribute('opacity', (o * .22).toFixed(3));
+  }
+  rafMap = requestAnimationFrame(mapLoop);
+}
+
+/* ═══════ STAGE 5 · DASHBOARD (shared by full run and skip) ═══════ */
+function runDashboard(t){
+  at(t, () => {
+    cancelAnimationFrame(rafMap);
+    $('loader').classList.add('gone');
+    document.body.classList.add('light');
+    $('dash').classList.add('on'); $('dash').setAttribute('aria-hidden','false');
+    $('skip').classList.remove('show');
+    setStage(5);
+  });
+  at(t + 600, () => { $('loader').style.display = 'none'; });
+  at(t + 150, () => $('dSide').classList.add('in'));
+  document.querySelectorAll('#dash .nav').forEach((n, i) => at(t + 350 + i * 60, () => n.classList.add('in')));
+  at(t + 400, () => $('dTop').classList.add('in'));
+  at(t + 550, () => $('dTtl').classList.add('in'));
+  document.querySelectorAll('#dash .kpi').forEach((k, i) => at(t + 700 + i * 90, () => k.classList.add('in')));
+  at(t + 900, () => setMsg(6));
+  document.querySelectorAll('#dash .chart').forEach((c, i) => at(t + 1150 + i * 150, () => c.classList.add('in')));
+  at(t + 1350, () => { $('dBars').classList.add('in'); $('dDonut').classList.add('in'); });
+  at(t + 1750, () => $('dTable').classList.add('in'));
+  at(t + 2200, () => {
+    setProgress(100); setMsg(7); finished = true;
+    window.dispatchEvent(new CustomEvent('akbar:ready'));
+  });
+  at(t + 3700, () => $('replay').classList.add('show'));
+}
+
+/* ═══════ RESET ═══════ */
+function reset(){
+  timers.forEach(clearTimeout); timers = [];
+  cancelAnimationFrame(rafMap); cancelAnimationFrame(rafPct);
+  finished = false;
+  ['s1','s2','s3','s4'].forEach(id => $(id).className = 'stage ' + id);
+  buildS1(); buildS2(); buildS3(); buildS4(); buildDash();
+  const L = $('loader'); L.style.display = ''; L.classList.remove('gone');
+  const D = $('dash'); D.classList.remove('on'); D.setAttribute('aria-hidden','true');
+  document.body.classList.remove('light');
+  $('replay').classList.remove('show'); $('skip').classList.remove('show');
+  const f = $('fill'); f.classList.add('instant'); f.style.width = '0%'; void f.offsetWidth; f.classList.remove('instant');
+  pctNow = 0; $('pct').textContent = '0%'; $('msg').textContent = ''; setStage(1);
+}
+
+/* ═══════ TIMELINE ═══════ */
+function run(){
+  reset();
+
+  // STAGE 1 · Logo reveal (0 – 2.5s)
+  at(60,   () => { show('s1'); setMsg(0); setProgress(8); });
+  at(900,  () => $('skip').classList.add('show'));
+  at(1500, () => setProgress(20));
+
+  // STAGE 2 · Leads fly to hub (2.5 – 5s)
+  at(2500, () => { leave('s1'); show('s2'); setStage(2); setMsg(1); setProgress(27); });
+  document.querySelectorAll('#s2 .card').forEach((c, i) => {
+    at(2650 + i * 90, () => c.classList.add('in'));
+    at(4150 + i * 70, () => c.classList.add('absorb'));
+  });
+  at(3700, () => { setMsg(2); setProgress(36); });
+  at(4500, () => { $('hub').classList.add('flare'); setProgress(45); });
+  at(4850, () => $('hub').classList.remove('flare'));
+
+  // STAGE 3 · Student journey (5 – 8s)
+  at(5000, () => { leave('s2'); show('s3'); setStage(3); setMsg(3); });
+  const base = 5450;
+  JOURNEY.forEach((_, i) => {
+    const t = base + i * 360;
+    at(t,       () => $('n' + i).classList.add('active'));
+    at(t + 230, () => { const n = $('n' + i); n.classList.remove('active'); n.classList.add('done'); setProgress(Math.round(45 + (i + 1) * 23 / 6)); });
+    if (i < JOURNEY.length - 1) at(t + 200, () => $('c' + i).classList.add("lit"));
+  });
+  at(7450, () => $('cap').classList.add('on'));
+
+  // STAGE 4 · Global network (8 – 11s)
+  at(8000, () => { leave('s3'); show('s4'); setStage(4); setMsg(4); });
+  at(8350, () => { routes.origin.classList.add('on'); rafMap = requestAnimationFrame(mapLoop); });
+  routes.forEach((r, i) => at(8700 + i * 350, () => {
+    r.n.classList.add('on'); r.g.classList.add('on');
+    r.t0 = performance.now() + 500; r.live = true;
+    $('dCount').textContent = i + 1; $('rCount').textContent = i + 1;
+    setProgress(Math.round(68 + (i + 1) * 4.3));
+  }));
+  at(10500, () => { setMsg(5); setProgress(96); });
+  at(11000, () => leave('s4'));
+
+  // STAGE 5 · Dashboard skeleton (11.3 – 13.5s)
+  runDashboard(11300);
+}
+
+/* ═══════ SKIP / PUBLIC API ═══════ */
+function skip(){
+  if (finished || document.body.classList.contains('light')) return;
+  timers.forEach(clearTimeout); timers = [];
+  ['s1','s2','s3','s4'].forEach(id => $(id).classList.add('leave'));
+  setProgress(96); setMsg(5);
+  runDashboard(250);
+}
+
+$('replay').addEventListener('click', run);
+$('skip').addEventListener('click', skip);
+addEventListener('keydown', e => { if (e.key === 'Escape') skip(); });
+
+// Hook for the real CRM: call AkbarLoader.finish() when data has loaded; listen for 'akbar:ready' to mount the app.
+window.AkbarLoader = { replay: run, finish: skip };
+
+// Inside the Lead Ops dashboard (in a frame): the dashboard says when the leads are in ('akbar:finish');
+// we tell it when the dashboard stage is on screen ('akbar:intro-done'). No Replay button there.
+const EMBED = window.parent !== window;
+if (EMBED) {
+  addEventListener('message', e => { if (e.data === 'akbar:finish') skip(); });
+  addEventListener('akbar:ready', () => { try { parent.postMessage('akbar:intro-done', '*'); } catch (err) {} });
+  $('replay').style.display = 'none';
+  try { parent.postMessage('akbar:hello', '*'); } catch (err) {}
+}
+const start = () => run();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(start); else start();
+})();
+</script>
+</body>
+</html>
