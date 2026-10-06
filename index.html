@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '6 Oct 2026 · v40';
+window.AKBAR_BUILD = '6 Oct 2026 · v42';
 
 (function () {
   try {
@@ -4402,6 +4402,10 @@ Akbar Study Abroad</textarea>
 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 <span>WA Templates</span>
 </div>
+<div class="nav-item" data-arch-view="archive" role="button" tabindex="0" title="Move old Cold/Junk leads to an archive — faster dashboard, nothing deleted">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4"/></svg>
+<span>Lead Archive</span>
+</div>
 </div>
 
 <div class="nav-group" data-group="financials">
@@ -5159,21 +5163,21 @@ document.querySelectorAll('.status-btn:not(.current)').forEach(btn => {
 btn.addEventListener('click', (e) => {
 e.stopPropagation();
 const { leadId, branch, status } = btn.dataset;
-const originalLabel = btn.textContent;
-btn.disabled = true;
-btn.innerHTML = '<span class="btn-spinner"></span>';
+
+const idx0 = allRows.findIndex(r => r.leadId === leadId);
+const before = idx0 !== -1 ? allRows[idx0] : null;
+if (before) { allRows[idx0] = Object.assign({}, before, { status: status, statusSetAt: new Date().toISOString() }); forceRender(); }
+showToast(status + ' set for ' + ((before && before.name) || 'lead'), 'success');
 google.script.run
 .withSuccessHandler(updatedRow => {
 const idx = allRows.findIndex(r => r.leadId === leadId);
-if (idx !== -1) allRows[idx] = updatedRow;
-showToast(status + ' set for ' + (updatedRow.name || 'lead'), 'success');
-render();
+if (idx !== -1 && updatedRow && updatedRow.leadId && allRows[idx].status === status) { allRows[idx] = updatedRow; render(); }
 })
 .withFailureHandler(err => {
 console.error(err);
-btn.disabled = false;
-btn.textContent = originalLabel;
-showToast('Could not update status — the lead may have moved.', 'error');
+const idx = allRows.findIndex(r => r.leadId === leadId);
+if (idx !== -1 && before && allRows[idx].status === status) { allRows[idx] = before; forceRender(); }
+showToast('Could not save the status — changed back. ' + (err && err.message ? String(err.message).replace(/^Error:\s*/, '') : ''), 'error');
 })
 .setLeadStatus(window._authToken || "", branch, leadId, status);
 });
@@ -5187,33 +5191,40 @@ const textarea = document.querySelector(`.note-input[data-lead-id="${leadId}"]`)
 const noteStatusEl = document.querySelector(`[data-note-status-for="${leadId}"]`);
 
 if (!textarea || !textarea.value.trim()) { if (noteStatusEl) noteStatusEl.textContent = 'Type a remark first.'; if (textarea) textarea.focus(); return; }
-btn.disabled = true; textarea.readOnly = true;
-const label = btn.textContent; btn.innerHTML = '<span class="note-spin" aria-hidden="true"></span>Saving…';
+
+const typed = textarea.value, label = btn.textContent;
+const idxR = allRows.findIndex(r => r.leadId === leadId), beforeR = idxR !== -1 ? allRows[idxR] : null;
+const who = (window._viewerName || 'you');
+if (beforeR) { const d = new Date(); const stamp = '[' + d.getDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()] + ' ' + d.getFullYear() + ', ' + ((d.getHours() % 12) || 12) + ':' + String(d.getMinutes()).padStart(2, '0') + ' ' + (d.getHours() < 12 ? 'AM' : 'PM') + ' — ' + who + ']'; allRows[idxR] = Object.assign({}, beforeR, { remark: stamp + '\n' + typed.trim() + (beforeR.remark ? '\n\n' + beforeR.remark : '') }); }
+delete remarkDrafts[leadId];
+textarea.value = ''; textarea.blur();
+forceRender();
+const stNow0 = document.querySelector(`[data-note-status-for="${leadId}"]`);
+if (stNow0) { stNow0.textContent = 'Saving in the background…'; stNow0.classList.remove('ok'); stNow0.style.color = ''; }
 if (noteStatusEl) noteStatusEl.textContent = '';
 google.script.run
 .withSuccessHandler(updatedRow => {
 const idx = allRows.findIndex(r => r.leadId === leadId);
 if (idx !== -1) {
   if (updatedRow && updatedRow.leadId) allRows[idx] = updatedRow;
-  else { allRows[idx] = Object.assign({}, allRows[idx], { remark: (allRows[idx].remark ? allRows[idx].remark + '\n' : '') + '[just now] ' + (textarea ? textarea.value : '') }); setTimeout(loadData, 1500); }
+  else { setTimeout(loadData, 1500); }
 }
-delete remarkDrafts[leadId];
-if (textarea) { textarea.value = ''; textarea.readOnly = false; textarea.blur(); }
-btn.disabled = false; btn.textContent = label;
 forceRender();
 const st = document.querySelector(`[data-note-status-for="${leadId}"]`);
 if (st) { st.textContent = '✓ Remark saved with date, time and your name'; st.classList.add('ok'); setTimeout(() => { st.textContent = ''; st.classList.remove('ok'); }, 4000); }
 })
 .withFailureHandler(err => {
 console.error(err);
-btn.disabled = false; btn.textContent = label;
-if (textarea) textarea.readOnly = false;
+const idxF = allRows.findIndex(r => r.leadId === leadId);
+if (idxF !== -1 && beforeR) { allRows[idxF] = beforeR; forceRender(); }
+const taF = document.querySelector(`.note-input[data-lead-id="${leadId}"]`); if (taF) { taF.value = typed; remarkDrafts[leadId] = typed; }
+const btnF = document.querySelector(`.note-save-btn[data-lead-id="${leadId}"]`); if (btnF) { btnF.disabled = false; btnF.textContent = label; }
 const why = err && err.message ? String(err.message).replace(/^Error:\s*/, '') : 'no reply from the server';
 const stNow = document.querySelector(`[data-note-status-for="${leadId}"]`);
 if (stNow) { stNow.textContent = 'Not saved: ' + why; stNow.classList.remove('ok'); stNow.style.color = 'var(--red)'; }
 showToast('Could not save the remark: ' + why + ' — your text is still there.', 'error');
 })
-.setLeadNote(window._authToken || "", branch, leadId, textarea.value);
+.setLeadNote(window._authToken || "", branch, leadId, typed);
 });
 });
 
@@ -5224,23 +5235,22 @@ const { leadId, branch } = btn.dataset;
 const input = document.querySelector(`.counselor-input[data-lead-id="${leadId}"]`);
 const statusEl = document.querySelector(`[data-counselor-status-for="${leadId}"]`);
 if (!input) return;
-btn.disabled = true;
+
+const newC = input.value, idxC = allRows.findIndex(r => r.leadId === leadId), beforeC = idxC !== -1 ? allRows[idxC] : null;
+if (beforeC) allRows[idxC] = Object.assign({}, beforeC, { counselor: newC });
+if (statusEl) { statusEl.textContent = 'Assigned'; setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3000); }
+lastInsightsSignature = null; updateInsightsRow(allRows);
 google.script.run
 .withSuccessHandler(updatedRow => {
 const idx = allRows.findIndex(r => r.leadId === leadId);
-if (idx !== -1) allRows[idx] = updatedRow;
-btn.disabled = false;
-if (statusEl) {
-statusEl.textContent = 'Assigned';
-setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3000);
-}
-lastInsightsSignature = null;
-updateInsightsRow(allRows);
+if (idx !== -1 && updatedRow && updatedRow.leadId && allRows[idx].counselor === newC) allRows[idx] = updatedRow;
 })
 .withFailureHandler(err => {
 console.error(err);
-btn.disabled = false;
-showToast('Could not assign counselor — try refreshing.', 'error');
+const idx = allRows.findIndex(r => r.leadId === leadId);
+if (idx !== -1 && beforeC && allRows[idx].counselor === newC) { allRows[idx] = beforeC; forceRender(); }
+const st = document.querySelector(`[data-counselor-status-for="${leadId}"]`); if (st) st.textContent = '';
+showToast('Could not assign the counsellor — changed back. ' + (err && err.message ? String(err.message).replace(/^Error:\s*/, '') : ''), 'error');
 })
 .setLeadCounselor(window._authToken || "", branch, leadId, input.value);
 });
@@ -5335,28 +5345,24 @@ btn.onclick = async () => {
 const status = btn.dataset.bulkStatus;
 const ids = Array.from(selectedLeadIds);
 if (ids.length === 0) return;
-const original = btn.innerHTML;
-btn.innerHTML = '<span class="btn-spinner"></span>';
-document.querySelectorAll('.bulk-btn').forEach(b => b.disabled = true);
 
-let successCount = 0;
-for (const id of ids) {
-const row = allRows.find(r => r.leadId === id);
-if (!row) continue;
-try {
-const updated = await promisifyRun('setLeadStatus', row.branch, id, status);
-const idx = allRows.findIndex(r => r.leadId === id);
-if (idx !== -1) allRows[idx] = updated;
-successCount++;
-} catch (err) {
-console.error(err);
-}
-}
-
-btn.innerHTML = original;
-document.querySelectorAll('.bulk-btn').forEach(b => b.disabled = false);
+const olds = {};
+ids.forEach(id => { const i = allRows.findIndex(r => r.leadId === id); if (i !== -1) { olds[id] = allRows[i]; allRows[i] = Object.assign({}, allRows[i], { status: status, statusSetAt: new Date().toISOString() }); } });
 selectedLeadIds.clear();
-showToast(`${status} set for ${successCount} lead${successCount === 1 ? '' : 's'}`, successCount === ids.length ? 'success' : 'error');
+forceRender();
+const todo = ids.filter(id => olds[id]);
+showToast(status + ' set for ' + todo.length + ' lead' + (todo.length === 1 ? '' : 's') + ' — saving…', 'success');
+let successCount = 0, failed = 0, next = 0;
+const worker = async () => {
+while (next < todo.length) {
+const id = todo[next++], row = olds[id];
+try { const updated = await promisifyRun('setLeadStatus', row.branch, id, status); const i = allRows.findIndex(r => r.leadId === id); if (i !== -1 && updated && updated.leadId && allRows[i].status === status) allRows[i] = updated; successCount++; }
+catch (err) { console.error(err); failed++; const i = allRows.findIndex(r => r.leadId === id); if (i !== -1 && allRows[i].status === status) allRows[i] = row; }
+}
+};
+await Promise.all([worker(), worker(), worker(), worker()]);
+if (failed) { forceRender(); showToast(failed + ' of ' + todo.length + ' could not be saved and were changed back — try them again.', 'error'); }
+else showToast('Saved: ' + status + ' for ' + successCount + ' lead' + (successCount === 1 ? '' : 's'), 'success');
 render();
 };
 });
@@ -7010,7 +7016,7 @@ document.querySelector('#soundToggle .switch').classList.remove('on');
 }
 })();
 
-document.getElementById('search').addEventListener('input', render);
+document.getElementById('search').addEventListener('input', (function () { let t = 0; return function () { clearTimeout(t); t = setTimeout(render, 200); }; })());
 document.getElementById('bell').addEventListener('click', () => {
 bellFilterActive = !bellFilterActive;
 render();
@@ -18984,6 +18990,104 @@ const origSet = window.setStatusFilter;
 if (typeof origSet === 'function') window.setStatusFilter = function (btn, status) { const s = $('search'); if (activeStatusFilter === 'FollowUps' && status !== 'FollowUps' && s && s.value && F.list.some(f => s.value === f.leadName)) s.value = ''; origSet(btn, status); if (status === 'FollowUps') loadBoard(true); drawPanel(); };
 setInterval(() => loadBoard(false), 5000);
 window.akReloadFollowUps = () => loadBoard(true);
+})();
+</script>
+
+<style>
+.status-btn, .um-btn, .bulk-btn, .note-save-btn, .counselor-save-btn, .sf-btn, .dash-tab, .nav-item { transition-property: transform, background, color, border-color, box-shadow, opacity; }
+.status-btn:active:not(:disabled), .um-btn:active:not(:disabled), .bulk-btn:active:not(:disabled), .note-save-btn:active:not(:disabled), .counselor-save-btn:active:not(:disabled), .sf-btn:active { transform: scale(.96); }
+@media (prefers-reduced-motion: reduce) { .status-btn:active, .um-btn:active, .bulk-btn:active, .note-save-btn:active, .counselor-save-btn:active, .sf-btn:active { transform: none; } }
+</style>
+
+<style>
+#archView { min-height: 100vh; background: var(--canvas); }
+.arch-rules { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.7; color: var(--ink); }
+[data-arch-view] { display: none !important; }
+body.ak-sa [data-arch-view] { display: flex !important; }
+</style>
+<script>
+
+(function () {
+const $ = id => document.getElementById(id);
+const esc = v => escapeHtml(v == null ? '' : String(v));
+const run = (fn, ...args) => promisifyRun(fn, window._authToken || '', ...args);
+const errMsg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
+const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t || 'success'); };
+const num = n => Number(n || 0).toLocaleString('en-IN');
+const when = s => { const d = new Date(s); return !s || isNaN(d) ? '' : d.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }); };
+const OTHER = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView'];
+const A = { months: 12, data: null, poll: 0, results: [] };
+setInterval(() => { document.body.classList.toggle('ak-sa', !!window._isSuperAdmin && !document.body.classList.contains('tc-staff')); }, 2000);
+
+function open() {
+  if (!window._isSuperAdmin) return;
+  const app = document.querySelector('.app'); if (app) app.style.display = 'none';
+  OTHER.forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
+  if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
+  let root = $('archView'); if (!root) { root = document.createElement('div'); root.id = 'archView'; document.body.appendChild(root); }
+  root.style.display = 'block';
+  root.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-title">🗄️ Lead Archive</h1><div class="sx-sub">Old dead leads move to an archive tab in the same branch spreadsheet — the dashboard gets faster, nothing is deleted</div></div>
+<button class="um-btn" id="archBack">← Back to dashboard</button></div><div id="archBody"><div class="sx-card"><div class="skeleton" style="height:200px;"></div></div></div></div>`;
+  $('archBack').onclick = close;
+  window.scrollTo(0, 0);
+  load();
+}
+function close() { clearTimeout(A.poll); const root = $('archView'); if (root) { root.style.display = 'none'; root.innerHTML = ''; } const app = document.querySelector('.app'); if (app) app.style.display = ''; }
+function load() {
+  const b = $('archBody'); if (!b) return;
+  if (A.data) draw(); else b.innerHTML = '<div class="sx-card"><div class="sx-sub" style="margin-bottom:10px;">Checking every branch sheet… (can take up to a minute)</div><div class="skeleton" style="height:160px;"></div></div>';
+  run('getArchivePreview', A.months).then(d => { A.data = d; draw(); if (d.running) { clearTimeout(A.poll); A.poll = setTimeout(load, 20000); } })
+    .catch(e => { b.innerHTML = `<div class="sx-card sx-empty">${esc(errMsg(e))}</div>`; });
+}
+function draw() {
+  const d = A.data, b = $('archBody'); if (!d || !b) return;
+  const total = d.branches.reduce((t, x) => t + (x.eligible || 0), 0), working = d.branches.reduce((t, x) => t + (x.total || 0), 0);
+  const last = d.last;
+  b.innerHTML = `<div class="sx-card"><h3>Which leads move</h3><ul class="arch-rules">
+<li>Status <b>Cold</b> or <b>Junk</b></li><li>Created more than <select id="archMonths" aria-label="Months">${[12, 18, 24].map(m => `<option value="${m}" ${m === d.months ? 'selected' : ''}>${m} months</option>`).join('')}</select> ago, and status unchanged for ${d.idleDays}+ days</li>
+<li>Never moved if the lead has an open follow-up, an application, a visa case, a payment, an active student-app login or an open question</li>
+<li>Each lead is <b>copied</b> to the archive tab first and checked — only then taken out of the working list. You can restore any lead below.</li></ul></div>
+${d.running ? '<div class="fin-alert warm">⏳ Archiving is running in the background — this page refreshes every 20 seconds.</div>' : ''}
+<div class="sx-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;"><h3 style="margin:0;">Preview</h3>
+<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="um-btn primary" id="archGo" ${total && !d.running ? '' : 'disabled'}>Archive ${num(total)} lead${total === 1 ? '' : 's'} now</button></div></div>
+<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Branch</th><th class="num">Leads in working sheet</th><th class="num">Would move to archive</th><th class="num">Already archived</th></tr></thead><tbody>
+${d.branches.map(x => `<tr><td><b>${esc(x.branch)}</b></td>${x.error ? `<td colspan="3" class="sx-bad">${esc(x.error)}</td>` : `<td class="num">${num(x.total)}</td><td class="num"><b>${num(x.eligible)}</b>${x.total ? ` <span class="sx-sub">(${Math.round(x.eligible / x.total * 100)}%)</span>` : ''}</td><td class="num">${num(x.archived)}</td>`}</tr>`).join('')}
+<tr><td><b>Total</b></td><td class="num"><b>${num(working)}</b></td><td class="num"><b>${num(total)}</b></td><td></td></tr></tbody></table></div>
+<label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;"><input type="checkbox" id="archMonthly" ${d.monthly ? 'checked' : ''}> Do this automatically on the 1st of every month at 3 AM</label>
+${last ? `<div class="sx-sub" style="margin-top:8px;">Last run ${esc(when(last.at))} by ${esc(last.by)}: <b>${num(last.moved)}</b> moved${last.more ? ' · more left (continues by itself)' : ''} — ${esc((last.branches || []).map(x => x.branch + ' ' + (x.moved != null ? x.moved : x.skipped || x.error)).join(' · '))}</div>` : ''}</div>
+<div class="sx-card"><h3>Find and restore an archived lead</h3><div class="sx-filters" style="margin-bottom:8px;"><input type="search" id="archQ" placeholder="Name, phone or email" style="min-width:240px;"><select id="archBr"><option value="">All branches</option>${d.branches.map(x => `<option>${esc(x.branch)}</option>`).join('')}</select><button class="um-btn" id="archFind">Search</button><button class="um-btn primary" id="archRestore" style="display:none;">Restore selected</button></div><div id="archRes"></div></div>
+${d.log && d.log.length ? `<div class="sx-card"><h3>History</h3><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>When</th><th>Branch</th><th>Action</th><th class="num">Leads</th><th>By</th></tr></thead><tbody>${d.log.map(l => `<tr><td>${esc(when(l.at))}</td><td>${esc(l.branch)}</td><td>${esc(l.action)}</td><td class="num">${num(l.leads)}</td><td>${esc(l.by)}</td></tr>`).join('')}</tbody></table></div></div>` : ''}`;
+  $('archMonths').onchange = e => { A.months = Number(e.target.value); A.data = null; load(); };
+  const go = $('archGo'); if (go) go.onclick = () => {
+    if (!confirm('Move ' + num(total) + ' old Cold/Junk leads to the archive tabs?\n\nThey are copied first and can be restored at any time. This runs in the background and can take a few minutes.')) return;
+    go.disabled = true; go.textContent = 'Starting…';
+    run('startLeadArchive', A.months, null).then(() => { toast('Archiving started — it runs in the background.'); A.data.running = true; draw(); clearTimeout(A.poll); A.poll = setTimeout(load, 20000); }).catch(e => { go.disabled = false; toast(errMsg(e), 'error'); });
+  };
+  $('archMonthly').onchange = e => { run('setLeadArchiveMonthly', e.target.checked, A.months).then(r => toast(r.monthly ? 'Monthly archive on — 1st of every month, 3 AM' : 'Monthly archive off')).catch(err => { e.target.checked = !e.target.checked; toast(errMsg(err), 'error'); }); };
+  $('archFind').onclick = search; $('archQ').onkeydown = e => { if (e.key === 'Enter') search(); };
+  $('archRestore').onclick = restore;
+}
+function search() {
+  const q = $('archQ').value.trim(), res = $('archRes');
+  if (q.length < 3) { toast('Type at least 3 letters or digits', 'error'); return; }
+  res.innerHTML = '<div class="skeleton" style="height:60px;"></div>';
+  run('searchArchivedLeads', q, $('archBr').value).then(r => {
+    A.results = r.results || [];
+    $('archRestore').style.display = A.results.length ? '' : 'none';
+    res.innerHTML = A.results.length ? `<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th></th><th>Name</th><th>Phone</th><th>Branch</th><th>Status</th><th>Created</th><th>Counsellor</th></tr></thead><tbody>${A.results.map((x, i) => `<tr><td><input type="checkbox" data-arch-pick="${i}" aria-label="Select ${esc(x.name)}"></td><td><b>${esc(x.name)}</b><div class="sx-sub">${esc(x.email || '')}</div></td><td>${esc(x.phone)}</td><td>${esc(x.branch)}</td><td>${esc(x.status)}</td><td>${esc(when(x.createdAt))}</td><td>${esc(x.counselor || '—')}</td></tr>`).join('')}</tbody></table></div>` : '<div class="sx-empty">Nothing found in the archive.</div>';
+  }).catch(e => { res.innerHTML = `<div class="sx-empty">${esc(errMsg(e))}</div>`; });
+}
+function restore() {
+  const picks = Array.from(document.querySelectorAll('[data-arch-pick]:checked')).map(x => A.results[Number(x.dataset.archPick)]);
+  if (!picks.length) { toast('Tick the leads to restore', 'error'); return; }
+  const b = $('archRestore'); b.disabled = true; b.textContent = 'Restoring…';
+  run('restoreArchivedLeads', picks.map(p => ({ branch: p.branch, leadId: p.leadId }))).then(r => { b.disabled = false; b.textContent = 'Restore selected'; toast(r.restored + ' lead' + (r.restored === 1 ? '' : 's') + ' back in the working list'); search(); if (typeof loadData === 'function') loadData(); })
+    .catch(e => { b.disabled = false; b.textContent = 'Restore selected'; toast(errMsg(e), 'error'); });
+}
+document.querySelectorAll('[data-arch-view]').forEach(el => { el.addEventListener('click', open); el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } }); });
+const sb = document.getElementById('sidebar');
+if (sb) sb.addEventListener('click', e => { const it = e.target.closest('.nav-item, .lead-set-item'); if (it && !it.hasAttribute('data-arch-view') && $('archView') && $('archView').style.display === 'block') close(); }, true);
+window.openLeadArchive = open;
 })();
 </script>
 
