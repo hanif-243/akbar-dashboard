@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '6 Oct 2026 · v42';
+window.AKBAR_BUILD = '6 Oct 2026 · v43';
 
 (function () {
   try {
@@ -110,6 +110,21 @@ window.AKBAR_BUILD = '6 Oct 2026 · v42';
       });
     }
     var keyOf = function (fn, args) { return fn + '|' + JSON.stringify(args || []); };
+
+    var mem = {}, memOrder = [], navAt = 0, NOMEM = { getAuthState: 1, getDashboardData: 1, getStudentQuestionCount: 1, getMetaAdsToday: 1, getFollowUpBoard: 1, getNextCallLead: 1 };
+    document.addEventListener('click', function (e) { if (e.target && e.target.closest && e.target.closest('#sidebar .nav-item, .s10-tab, .sx-tab, [data-fin-go], [data-dash-tab]')) navAt = Date.now(); }, true);
+    function memPut(key, v) { mem[key] = { at: Date.now(), v: v }; memOrder = memOrder.filter(function (k) { return k !== key; }); memOrder.push(key); while (memOrder.length > 40) delete mem[memOrder.shift()]; }
+    function memCall(st, k, args) {
+      var key = keyOf(k, args), hit = mem[key];
+      if (hit && Date.now() - hit.at < 180000 && Date.now() - navAt < 2500) {
+        var copy = JSON.parse(JSON.stringify(hit.v));
+        if (st.s) setTimeout(function () { st.s(copy, st.u); }, 0);
+        callReal({ s: function (v) { memPut(key, v); } }, k, args);
+        return;
+      }
+      callReal(Object.assign({}, st, { s: function (v, u) { try { memPut(key, JSON.parse(JSON.stringify(v))); } catch (e) {   } if (st.s) st.s(v, u); } }), k, args);
+    }
+    window.akClearModuleMemory = function () { mem = {}; memOrder = []; };
     function callReal(st, fn, args) {
       var r = real;
       if (st.s) r = r.withSuccessHandler(st.s);
@@ -142,7 +157,8 @@ window.AKBAR_BUILD = '6 Oct 2026 · v42';
         return function () {
           var args = Array.prototype.slice.call(arguments);
           if (k === 'getDashboardData') { dashCall(st, args); return; }
-          if (!BATCH[k]) { if (!/^(get|startSessionTracking|updateSessionHeartbeat)/.test(k)) pre = {}; callReal(st, k, args); return; }
+          if (!BATCH[k] && /^get/.test(k) && !NOMEM[k]) { memCall(st, k, args); return; }
+          if (!BATCH[k]) { if (!/^(get|startSessionTracking|updateSessionHeartbeat)/.test(k)) { pre = {}; mem = {}; memOrder = []; } callReal(st, k, args); return; }
           var hit = pre[keyOf(k, args)];
           if (hit && Date.now() - hit.at < 10000) { hit.wait.push(function (res) { deliver(st, res, function () { callReal(st, k, args); }); }); if (hit.done) hit.flushWaits(); return; }
           queue.push({ st: st, fn: k, args: args });
@@ -5356,7 +5372,7 @@ let successCount = 0, failed = 0, next = 0;
 const worker = async () => {
 while (next < todo.length) {
 const id = todo[next++], row = olds[id];
-try { const updated = await promisifyRun('setLeadStatus', row.branch, id, status); const i = allRows.findIndex(r => r.leadId === id); if (i !== -1 && updated && updated.leadId && allRows[i].status === status) allRows[i] = updated; successCount++; }
+try { const updated = await promisifyRun('setLeadStatus', window._authToken || '', row.branch, id, status); const i = allRows.findIndex(r => r.leadId === id); if (i !== -1 && updated && updated.leadId && allRows[i].status === status) allRows[i] = updated; successCount++; }
 catch (err) { console.error(err); failed++; const i = allRows.findIndex(r => r.leadId === id); if (i !== -1 && allRows[i].status === status) allRows[i] = row; }
 }
 };
@@ -18535,7 +18551,7 @@ Object.assign(window, { openMetaAds, closeMetaAds, renderMetaAdsDashboard, rende
 
 (function () {
 var INTRO_URL = 'https:\x2F\x2Fhanif-243.github.io\x2Fakbar-dashboard\x2Floading.html';
-var MIN_MS = 5000, MAX_MS = 45000;
+var MIN_MS = 1500, MAX_MS = 45000;
 var S = { el: null, frame: null, active: false, alive: false, dataReady: false, introDone: false, finishSent: false, shownAt: 0, timers: [] };
 var $ = function (id) { return document.getElementById(id); };
 function later(fn, ms) { S.timers.push(setTimeout(fn, ms)); }
@@ -18568,6 +18584,7 @@ window.hideLoader = function () {
     if (!S.alive) { close(); return; }
     S.finishSent = true;
     try { S.frame.contentWindow.postMessage('akbar:finish', '*'); } catch (e) { close(); }
+    later(close, 1200);
   }, Math.max(0, MIN_MS - (Date.now() - S.shownAt)));
   later(function () { if (S.active) close(); }, Math.max(0, MIN_MS - (Date.now() - S.shownAt)) + 6000);
 };
@@ -19091,5 +19108,60 @@ window.openLeadArchive = open;
 })();
 </script>
 
+<style>.login-trust { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); margin: 10px 0 2px; cursor: pointer; text-align: left; } .login-trust input { width: 16px; height: 16px; accent-color: var(--red); }</style>
+<script>
+(function () {
+var PFX = 'akbar_trust_';
+function norm(u) { return String(u || '').trim().toLowerCase(); }
+function getDev(u) { try { return localStorage.getItem(PFX + norm(u)) || ''; } catch (e) { return ''; } }
+function setDev(u, v) { try { if (v) localStorage.setItem(PFX + norm(u), v); else localStorage.removeItem(PFX + norm(u)); } catch (e) {   } }
+var btn3 = document.getElementById('step3Btn');
+if (btn3 && !document.getElementById('trustDevice')) {
+  var lab = document.createElement('label'); lab.className = 'login-trust';
+  lab.innerHTML = '<input type="checkbox" id="trustDevice"> Trust this device for 30 days — no code next time';
+  btn3.parentNode.insertBefore(lab, btn3);
+}
+var login = document.getElementById('loginScreen');
+if (login && window.MutationObserver) {
+  var was = login.style.display !== 'none';
+  new MutationObserver(function () {
+    var open = login.style.display !== 'none';
+    if (was && !open) {
+      var d3 = document.getElementById('dot3'), cb = document.getElementById('trustDevice'), user = window._loginUsername || (typeof _loginUsername !== 'undefined' ? _loginUsername : '');
+      if (d3 && d3.classList.contains('active') && cb && cb.checked && user) {
+        setTimeout(function () {
+          if (!window._authToken) return;
+          promisifyRun('trustThisDevice', window._authToken, (navigator.platform || '') + ' · ' + navigator.userAgent.slice(0, 60)).then(function (r) { setDev(user, r.device); if (typeof showToast === 'function') showToast('This device is trusted for ' + r.days + ' days — no code next time', 'success'); }).catch(function () {});
+        }, 1500);
+      }
+      if (cb) cb.checked = false;
+    }
+    was = open;
+  }).observe(login, { attributes: true, attributeFilter: ['style'] });
+}
+
+var origPw = window.submitPassword;
+if (typeof origPw === 'function') window.submitPassword = function () {
+  var user = typeof _loginUsername !== 'undefined' ? _loginUsername : '', dev = getDev(user), pw = (document.getElementById('passwordInput') || {}).value || '';
+  if (!dev || !pw) { origPw(); return; }
+  loginSetLoading(2, true); loginShowMsg('step2Msg', '', false);
+  google.script.run.withSuccessHandler(function (r) {
+    loginSetLoading(2, false);
+    if (r && r.ok) {
+      try { localStorage.setItem('lo_token', r.token); } catch (e) {   }
+      loginShowMsg('step2Msg', 'Signed in on your trusted device — loading…', false);
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+      window._authToken = r.token;
+      window._isSuperAdmin = !!(r.user && r.user.role === 'Super Admin');
+      if (typeof loadData === 'function') loadData();
+      return;
+    }
+    if (r && r.needOtp) { setDev(user, ''); origPw(); return; }
+    loginShowMsg('step2Msg', (r && r.message) || 'Incorrect password.', true);
+  }).withFailureHandler(function () { loginSetLoading(2, false); origPw(); }).loginWithTrustedDevice(user, pw, dev);
+};
+})();
+</script>
 </body>
 </html>
