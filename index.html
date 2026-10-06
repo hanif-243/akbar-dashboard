@@ -45,7 +45,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '6 Oct 2026 · v37.2';
+window.AKBAR_BUILD = '6 Oct 2026 · v38';
 
 (function () {
   try {
@@ -18490,169 +18490,59 @@ Object.assign(window, { openMetaAds, closeMetaAds, renderMetaAdsDashboard, rende
 })();
 </script>
 
-<div id="loaderScreen" style="display:none;" aria-hidden="true">
-<canvas id="globeCanvas"></canvas>
-<div id="loaderContent" role="status" aria-live="polite">
-<img id="loaderLogo" src="https://lh3.googleusercontent.com/d/1YvFCQ2nNiUfMnjZ7jKe5NKLPcLI1WrxF=w320" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='https://drive.google.com/thumbnail?id=1YvFCQ2nNiUfMnjZ7jKe5NKLPcLI1WrxF&sz=w320';}" alt="Akbar Study Abroad">
-<div id="loaderTagline">Connecting students to their dream universities...</div>
-<div id="loaderProgress"><div id="loaderProgressBar"></div></div>
-<div id="loaderStatus">Initialising...</div>
-</div>
-</div>
 <style>
-
-#loaderScreen { position: fixed; inset: 0; background: radial-gradient(ellipse at 50% 45%, #2a2440 0%, #1a1628 60%, #120f1d 100%); z-index: 99990; display: flex; align-items: center; justify-content: center; flex-direction: column; transition: opacity .8s ease; }
-#loaderScreen.fade-out { opacity: 0; pointer-events: none; }
-#globeCanvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .85; z-index: 1; }
-#loaderContent { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center; padding: 20px; }
-#loaderLogo { width: 220px; max-width: 60vw; height: auto; opacity: 0; transform: translateY(10px); animation: loaderLogoIn 1s ease .5s forwards; filter: drop-shadow(0 0 30px rgba(242,47,61,.4)); }
-@keyframes loaderLogoIn { to { opacity: 1; transform: translateY(0); } }
-#loaderTagline { color: rgba(255,255,255,.78); font-size: 15px; font-weight: 600; font-family: 'IBM Plex Sans', sans-serif; letter-spacing: .3px; min-height: 22px; opacity: 0; animation: loaderFadeIn .8s ease 1.2s forwards; max-width: 320px; transition: opacity .3s; }
-#loaderTagline.swap { opacity: 0 !important; }
-@keyframes loaderFadeIn { to { opacity: 1; } }
-#loaderProgress { width: 240px; max-width: 70vw; height: 3px; background: rgba(255,255,255,.12); border-radius: 99px; overflow: hidden; opacity: 0; animation: loaderFadeIn .8s ease 1.4s forwards; }
-#loaderProgressBar { height: 100%; width: 0%; background: linear-gradient(90deg, #F22F3D, #ff6b6b); border-radius: 99px; box-shadow: 0 0 10px rgba(242,47,61,.6); }
-#loaderStatus { color: rgba(255,255,255,.45); font-size: 12px; font-weight: 500; font-family: 'IBM Plex Mono', monospace; letter-spacing: .5px; opacity: 0; animation: loaderFadeIn .8s ease 1.6s forwards; }
-#loaderScreen::before { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
-  background-image: radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,.4) 0%, transparent 100%), radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,.3) 0%, transparent 100%),
-  radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,.5) 0%, transparent 100%), radial-gradient(1px 1px at 70% 80%, rgba(255,255,255,.3) 0%, transparent 100%),
-  radial-gradient(1px 1px at 85% 35%, rgba(255,255,255,.4) 0%, transparent 100%), radial-gradient(1px 1px at 20% 85%, rgba(255,255,255,.2) 0%, transparent 100%),
-  radial-gradient(1px 1px at 60% 45%, rgba(255,255,255,.3) 0%, transparent 100%), radial-gradient(1px 1px at 90% 70%, rgba(255,255,255,.4) 0%, transparent 100%),
-  radial-gradient(1px 1px at 40% 30%, rgba(255,255,255,.2) 0%, transparent 100%), radial-gradient(1px 1px at 75% 15%, rgba(255,255,255,.5) 0%, transparent 100%); }
-@media (prefers-reduced-motion: reduce) { #loaderLogo, #loaderTagline, #loaderProgress, #loaderStatus { animation: none; opacity: 1; transform: none; } }
+#akIntro { position: fixed; inset: 0; z-index: 99990; background: #09080f; transition: opacity .7s ease; }
+#akIntro.out { opacity: 0; pointer-events: none; }
+#akIntro iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #09080f; }
 </style>
 <script>
 
 (function () {
-
-var DESTINATIONS = [
-  ['India', 78.9, 20.6, '#F22F3D', true], ['UK', -1.5, 52.4, '#4fc3f7', false], ['Canada', -96.8, 56.1, '#81c784', false],
-  ['Australia', 133.7, -25.3, '#ffb74d', false], ['Ireland', -8.2, 53.4, '#4db6ac', false], ['Germany', 10.4, 51.2, '#ce93d8', false],
-  ['New Zealand', 172.5, -40.9, '#f48fb1', false], ['UAE', 53.8, 23.4, '#fff176', false]
-];
-var TAGLINES = ['Connecting students to their dream universities...', 'Loading your leads and pipeline...', 'Preparing your analytics...', 'Fetching branch performance...', 'Almost ready...'];
-var STATUSES = [[20, 'Authenticating session...'], [45, 'Loading branch data...'], [70, 'Fetching leads...'], [90, 'Building dashboard...'], [100, 'Ready!']];
-var reduce = false; try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {   }
-var G = { canvas: null, ctx: null, w: 0, h: 0, cx: 0, cy: 0, r: 0, rot: -60, frame: null, active: false, hiding: false, timers: [], prog: 0, progTimer: null, dest: 0, tag: 0, shownAt: 0, msgLocked: false };
+var INTRO_URL = 'https:\x2F\x2Fhanif-243.github.io\x2Fakbar-dashboard\x2Floading.html';
+var MIN_MS = 5000, MAX_MS = 45000;
+var S = { el: null, frame: null, active: false, alive: false, dataReady: false, introDone: false, finishSent: false, shownAt: 0, timers: [] };
 var $ = function (id) { return document.getElementById(id); };
-function later(fn, ms) { G.timers.push(setTimeout(fn, ms)); }
-function every(fn, ms) { var t = setInterval(fn, ms); G.timers.push(t); return t; }
-function clearAll() { G.timers.forEach(function (t) { clearTimeout(t); clearInterval(t); }); G.timers = []; clearInterval(G.progTimer); if (G.frame) cancelAnimationFrame(G.frame); G.frame = null; }
+function later(fn, ms) { S.timers.push(setTimeout(fn, ms)); }
+function clearAll() { S.timers.forEach(clearTimeout); S.timers = []; }
 
-function project(lon, lat) {
-  var lo = (lon + G.rot) * Math.PI / 180, la = lat * Math.PI / 180;
-  var z = Math.cos(la) * Math.cos(lo);
-  return { x: G.cx + G.r * Math.cos(la) * Math.sin(lo), y: G.cy - G.r * Math.sin(la), z: z, visible: z > -0.1 };
+function onMessage(e) {
+  if (!S.frame || e.source !== S.frame.contentWindow) return;
+  if (e.data === 'akbar:hello') S.alive = true;
+  if (e.data === 'akbar:intro-done') { S.introDone = true; maybeClose(); }
 }
-function dot(x, y, s, fill) { var c = G.ctx; c.beginPath(); c.arc(x, y, s, 0, Math.PI * 2); c.fillStyle = fill; c.fill(); }
-function drawGlobe() {
-  var c = G.ctx, lat, lon, p;
-  c.clearRect(0, 0, G.w, G.h);
-  for (lat = -80; lat <= 80; lat += 20) for (lon = -180; lon < 180; lon += 8) { p = project(lon, lat); if (p.visible) dot(p.x, p.y, Math.max(0.3, 0.8 + p.z * 0.8), 'rgba(150,180,255,' + (0.1 + p.z * 0.25) + ')'); }
-  for (lon = -180; lon < 180; lon += 30) for (lat = -85; lat <= 85; lat += 5) { p = project(lon, lat); if (p.visible) dot(p.x, p.y, 0.6, 'rgba(130,160,255,' + (0.06 + p.z * 0.15) + ')'); }
-  var g = c.createRadialGradient(G.cx, G.cy, G.r * 0.85, G.cx, G.cy, G.r * 1.05);
-  g.addColorStop(0, 'rgba(80,120,255,0)'); g.addColorStop(0.7, 'rgba(80,120,255,0.06)'); g.addColorStop(1, 'rgba(80,120,255,0.18)');
-  c.beginPath(); c.arc(G.cx, G.cy, G.r, 0, Math.PI * 2); c.fillStyle = g; c.fill();
-}
-function drawArcs(now) {
-  var c = G.ctx, o = DESTINATIONS[0], op = project(o[1], o[2]);
-  if (!op.visible) return;
-  for (var i = 1; i <= G.dest && i < DESTINATIONS.length; i++) {
-    var d = DESTINATIONS[i], dp = project(d[1], d[2]);
-    if (!dp.visible) continue;
-    var mx = (op.x + dp.x) / 2, my = (op.y + dp.y) / 2 - G.r * 0.22;
-    c.beginPath(); c.moveTo(op.x, op.y); c.quadraticCurveTo(mx, my, dp.x, dp.y);
-    c.strokeStyle = d[3] + '70'; c.lineWidth = 1.2; c.setLineDash([6, 10]); c.lineDashOffset = -((now * 0.03 + i * 40) % 80); c.stroke(); c.setLineDash([]);
-    var t = (now * 0.0004 + i * 0.3) % 1, px = (1 - t) * (1 - t) * op.x + 2 * (1 - t) * t * mx + t * t * dp.x, py = (1 - t) * (1 - t) * op.y + 2 * (1 - t) * t * my + t * t * dp.y;
-    c.shadowColor = d[3]; c.shadowBlur = 8; dot(px, py, 2.5, d[3]); c.shadowBlur = 0;
-  }
-}
-function drawDestinations(now) {
-  var c = G.ctx;
-  for (var i = 0; i <= G.dest && i < DESTINATIONS.length; i++) {
-    var d = DESTINATIONS[i], p = project(d[1], d[2]);
-    if (!p.visible) continue;
-    var pulse = 0.7 + 0.3 * Math.sin(now / 600 + i * 1.2), s = d[4] ? 8 : 6;
-    var g = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, s * 3 * pulse);
-    g.addColorStop(0, d[3] + 'cc'); g.addColorStop(1, d[3] + '00');
-    dot(p.x, p.y, s * 3 * pulse, g);
-    c.shadowColor = d[3]; c.shadowBlur = 10; dot(p.x, p.y, s * 0.55, '#ffffff'); c.shadowBlur = 0;
-    if (p.z > 0.15) { c.font = '600 11px "IBM Plex Sans", sans-serif'; c.fillStyle = 'rgba(255,255,255,' + (0.5 + p.z * 0.5) + ')'; c.textAlign = 'center'; c.fillText(d[0], p.x, p.y - s - 5); }
-  }
-}
-function tick() {
-  if (!G.active || !G.ctx) return;
-  var now = Date.now();
-  if (!reduce) G.rot += 0.12;
-  drawGlobe(); drawArcs(now); drawDestinations(now);
-  G.frame = reduce ? null : requestAnimationFrame(tick);
-}
-function resize() {
-  if (!G.canvas || !G.ctx) return;
-  var dpr = Math.min(2, window.devicePixelRatio || 1);
-  G.w = window.innerWidth; G.h = window.innerHeight;
-  G.canvas.width = G.w * dpr; G.canvas.height = G.h * dpr;
-  G.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  G.cx = G.w / 2; G.cy = G.h / 2; G.r = Math.min(G.w, G.h) * (G.w < 600 ? 0.42 : 0.34);
-  if (reduce) tick();
-}
-function setProgress(target, ms) {
-  var start = G.prog, t0 = Date.now(), bar = $('loaderProgressBar'), st = $('loaderStatus');
-  clearInterval(G.progTimer);
-  G.progTimer = setInterval(function () {
-    var k = Math.min(1, (Date.now() - t0) / ms), e = 1 - Math.pow(1 - k, 3);
-    G.prog = start + (target - start) * e;
-    if (bar) bar.style.width = G.prog.toFixed(1) + '%';
-    if (st && !G.msgLocked) STATUSES.forEach(function (s) { if (G.prog >= s[0] - 0.5) st.textContent = s[1]; });
-    if (k >= 1) clearInterval(G.progTimer);
-  }, 16);
-}
+window.addEventListener('message', onMessage);
 
 window.showLoader = function () {
-  var scr = $('loaderScreen'); if (!scr) return;
-  clearAll();
-  G.active = true; G.hiding = false; G.dest = 0; G.tag = 0; G.prog = 0; G.rot = -60; G.shownAt = Date.now(); G.msgLocked = false;
-  scr.classList.remove('fade-out'); scr.style.display = 'flex'; scr.style.opacity = '1'; scr.setAttribute('aria-hidden', 'false');
-  var tg = $('loaderTagline'); if (tg) { tg.textContent = TAGLINES[0]; tg.classList.remove('swap'); }
-  var bar = $('loaderProgressBar'); if (bar) bar.style.width = '0%';
-  var st = $('loaderStatus'); if (st) st.textContent = 'Initialising...';
-  G.canvas = $('globeCanvas');
-  try { G.ctx = G.canvas && G.canvas.getContext ? G.canvas.getContext('2d') : null; } catch (e) { G.ctx = null; }
-  window.removeEventListener('resize', resize); window.addEventListener('resize', resize);
-  resize(); tick();
-  later(function () { every(function () { if (G.dest < DESTINATIONS.length - 1) G.dest++; }, 400); }, 800);
-  later(function () {
-    every(function () {
-      var el = $('loaderTagline'); if (!el) return;
-      G.tag = (G.tag + 1) % TAGLINES.length; el.classList.add('swap');
-      setTimeout(function () { el.textContent = TAGLINES[G.tag]; el.classList.remove('swap'); }, 300);
-    }, 1800);
-  }, 1500);
-  later(function () { setProgress(25, 600); }, 200);
-  later(function () { setProgress(55, 800); }, 1200);
-  later(function () { setProgress(80, 600); }, 2500);
-  later(function () { setProgress(92, 6000); }, 3200);
-  later(function () { window.hideLoader(); }, 30000);
+  close(true);
+  S.active = true; S.alive = false; S.dataReady = false; S.introDone = false; S.finishSent = false; S.shownAt = Date.now();
+  var el = document.createElement('div'); el.id = 'akIntro'; el.setAttribute('aria-hidden', 'true');
+  var fr = document.createElement('iframe'); fr.title = 'Loading'; fr.setAttribute('aria-hidden', 'true'); fr.src = INTRO_URL + '?embed=1';
+  el.appendChild(fr); document.body.appendChild(el);
+  S.el = el; S.frame = fr;
+  later(function () { if (!S.alive && S.dataReady) close(); }, 6000);
+  later(function () { close(); }, MAX_MS);
 };
-window.updateLoaderProgress = function (pct, msg) {
-  if (!G.active) return;
-  setProgress(Math.max(G.prog, Math.min(100, Number(pct) || 0)), 500);
-  if (msg) { var s = $('loaderStatus'); if (s) { s.textContent = msg; G.msgLocked = true; } }
-};
+window.updateLoaderProgress = function () {};
 
 window.hideLoader = function () {
-  if (!G.active || G.hiding) return;
-  G.hiding = true; G.msgLocked = false;
-  var wait = Math.max(0, 1800 - (Date.now() - G.shownAt));
-  setTimeout(function () {
-    setProgress(100, 400);
-    setTimeout(function () {
-      var scr = $('loaderScreen'); if (!scr) return;
-      scr.classList.add('fade-out');
-      setTimeout(function () { G.active = false; clearAll(); window.removeEventListener('resize', resize); scr.style.display = 'none'; scr.classList.remove('fade-out'); scr.setAttribute('aria-hidden', 'true'); }, 850);
-    }, 450);
-  }, wait);
+  if (!S.active || S.dataReady) return;
+  S.dataReady = true;
+  later(function () {
+    if (!S.active || S.finishSent) return;
+    if (!S.alive) { close(); return; }
+    S.finishSent = true;
+    try { S.frame.contentWindow.postMessage('akbar:finish', '*'); } catch (e) { close(); }
+  }, Math.max(0, MIN_MS - (Date.now() - S.shownAt)));
+  later(function () { if (S.active) close(); }, Math.max(0, MIN_MS - (Date.now() - S.shownAt)) + 6000);
 };
+function maybeClose() { if (S.introDone && S.dataReady) later(close, 500); }
+function close(instant) {
+  if (!S.el) { S.active = false; return; }
+  var el = S.el; S.el = null; S.frame = null; S.active = false; clearAll();
+  if (instant) { el.remove(); return; }
+  el.classList.add('out');
+  setTimeout(function () { el.remove(); }, 750);
+}
 
 var login = $('loginScreen');
 function signedInNow() { var d3 = $('dot3'); return d3 && d3.classList.contains('active'); }
@@ -18661,22 +18551,22 @@ function dataReady() {
   var views = ['appTeamView', 'b2bView', 'visaView', 'telecallerView', 'tcView'];
   for (var i = 0; i < views.length; i++) { var v = $(views[i]); if (v && v.style.display === 'block' && v.innerHTML.length > 200) return true; }
   if (document.body.classList.contains('tc-staff')) return true;
-  var tl = $('topLoader'); return G.sawLoad && tl && !tl.classList.contains('active') && Date.now() - G.shownAt > 2500;
+  var tl = $('topLoader'); return S.sawLoad && tl && !tl.classList.contains('active') && Date.now() - S.shownAt > 2500;
 }
 if (login && window.MutationObserver) {
   var wasOpen = login.style.display !== 'none';
   new MutationObserver(function () {
     var open = login.style.display !== 'none';
     if (wasOpen && !open && signedInNow()) {
-      G.sawLoad = false; window.showLoader();
+      S.sawLoad = false; window.showLoader();
       var tl = $('topLoader');
       var poll = setInterval(function () {
-        if (!G.active) { clearInterval(poll); return; }
-        if (tl && tl.classList.contains('active')) G.sawLoad = true;
-        if (dataReady()) { clearInterval(poll); window.updateLoaderProgress(96, 'Building dashboard...'); window.hideLoader(); }
-      }, 150);
+        if (!S.active) { clearInterval(poll); return; }
+        if (tl && tl.classList.contains('active')) S.sawLoad = true;
+        if (dataReady()) { clearInterval(poll); window.hideLoader(); }
+      }, 200);
     }
-    if (open && G.active) window.hideLoader();
+    if (open && S.active) close();
     wasOpen = open;
   }).observe(login, { attributes: true, attributeFilter: ['style'] });
 }
