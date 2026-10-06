@@ -35,6 +35,11 @@ label { display: block; font-weight: 600; font-size: 13px; margin: 0 0 6px; }
 .code { text-align: center; font-size: 26px !important; letter-spacing: .5em !important; padding: 12px 0 12px .5em !important; }
 .btn { width: 100%; border: 0; border-radius: 12px; background: var(--red); color: #fff; font: inherit; font-weight: 700; font-size: 16px; padding: 14px; margin-top: 14px; cursor: pointer; min-height: 50px; }
 .btn:disabled { opacity: .6; }
+.btn2 { width: 100%; border: 1.5px solid var(--navy); border-radius: 12px; background: #fff; color: var(--navy); font: inherit; font-weight: 700; font-size: 15px; padding: 12px; margin-top: 10px; cursor: pointer; min-height: 48px; }
+.or { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; margin: 18px 0 2px; } .or:before, .or:after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.in select { flex: 1; border: 0; outline: none; font: inherit; font-size: 16px; padding: 13px 14px; background: transparent; color: var(--ink); min-width: 0; }
+.in input.plain { padding-left: 14px; letter-spacing: 0; font-size: 16px; }
+.fine { font-size: 12px; color: var(--muted); margin-top: 10px; line-height: 1.4; }
 .link { background: none; border: 0; color: var(--navy); font: inherit; font-weight: 600; font-size: 14px; margin-top: 12px; cursor: pointer; text-decoration: underline; padding: 6px; }
 .msg { font-size: 13.5px; margin-top: 12px; min-height: 18px; color: var(--muted); }
 .msg.bad { color: #b3141f; }
@@ -56,7 +61,7 @@ var API = 'https://script.google.com/macros/s/AKfycbx6CcjiRhhaqd5hn--2GQDRs1a3Zc
 var KEY = 'akbar_student_session';
 var PAGE_FNS = ['getStudentPortalData', 'submitStudentDocument', 'submitStudentFeedback', 'getStudentPortalExtras', 'setStudentChecklistItem', 'askStudentQuestion'];
 var view = document.getElementById('view');
-var state = { phone: '', sent: '' };
+var state = { phone: '', sent: '', mode: 'login', info: null, su: {} };
 
 function newRid() { var a = ''; while (a.length < 24) a += Math.random().toString(36).slice(2); return 'r' + Date.now().toString(36) + a.slice(0, 20); }
 function call(fn, args, tries, rid) {
@@ -80,10 +85,14 @@ function nice(e) {
 function loading(t) { view.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;"><div class="spin"></div><div class="sub">' + esc(t || 'Loading your journey…') + '</div></div>'; }
 
 function phoneView(msg, bad) {
-  view.innerHTML = '<div class="card"><h1>Welcome 👋</h1><p>Sign in with the mobile number you gave Akbar Study Abroad.</p>' +
+  state.mode = 'login';
+  view.innerHTML = '<div class="card"><h1>Welcome 👋</h1><p>Already talking to Akbar Study Abroad? Sign in with your mobile number.</p>' +
     '<label for="ph">Mobile number</label><div class="in"><span>+91</span><input id="ph" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="14" placeholder="98470 12345" value="' + esc(state.phone) + '"></div>' +
-    '<button class="btn" id="go">Send my code</button><button class="link" id="have">I already have a code</button><div class="msg ' + (bad ? 'bad' : '') + '" id="msg">' + esc(msg || '') + '</div></div>' +
+    '<button class="btn" id="go">Send my code</button><button class="link" id="have">I already have a code</button><div class="msg ' + (bad ? 'bad' : '') + '" id="msg">' + esc(msg || '') + '</div>' +
+    '<div class="or">new to Akbar?</div><button class="btn2" id="new">✨ Create your free account</button><button class="btn2" id="demo" style="border-color:var(--border);color:var(--ink)">👀 Explore the app first</button></div>' +
     '<div class="foot">Your study abroad journey · Akbar Study Abroad</div>';
+  document.getElementById('new').onclick = function () { signupView(); };
+  document.getElementById('demo').onclick = openDemo;
   var ph = document.getElementById('ph');
   ph.focus();
   ph.onkeydown = function (e) { if (e.key === 'Enter') send(); };
@@ -102,29 +111,76 @@ function send() {
   }).catch(function (e) { b.disabled = false; b.textContent = 'Send my code'; show(nice(e), true); });
 }
 function codeView(msg, bad) {
-  var where = state.sent === 'counsellor' ? 'Enter the code your counsellor sent you on WhatsApp.' : 'We emailed a 6-digit code to <b>' + esc(state.sent) + '</b>. It works for 10 minutes.';
+  var where = state.sent === 'counsellor' ? 'Enter the code your counsellor sent you on WhatsApp.' : 'We emailed a 6-digit code to <b>' + esc(state.sent) + '</b>. It works for ' + (state.mode === 'signup' ? '15' : '10') + ' minutes. Check Spam if you don’t see it.';
   view.innerHTML = '<div class="card"><h1>Enter your code</h1><p>' + where + '</p>' +
     '<label for="cd">6-digit code</label><div class="in"><input id="cd" class="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••"></div>' +
-    '<button class="btn" id="ok">Sign in</button><button class="link" id="back">Use a different number</button><div class="msg ' + (bad ? 'bad' : '') + '" id="msg">' + esc(msg || '') + '</div></div>';
+    '<button class="btn" id="ok">' + (state.mode === 'signup' ? 'Create my account' : 'Sign in') + '</button><button class="link" id="back">' + (state.mode === 'signup' ? 'Change my details' : 'Use a different number') + '</button><div class="msg ' + (bad ? 'bad' : '') + '" id="msg">' + esc(msg || '') + '</div></div>';
   var cd = document.getElementById('cd');
   cd.focus();
   cd.oninput = function () { cd.value = digits(cd.value).slice(0, 6); if (cd.value.length === 6) verify(); };
   document.getElementById('ok').onclick = verify;
-  document.getElementById('back').onclick = function () { phoneView(); };
+  document.getElementById('back').onclick = function () { if (state.mode === 'signup') signupView(); else phoneView(); };
 }
 function verify() {
   var cd = document.getElementById('cd'), b = document.getElementById('ok');
   if (digits(cd.value).length !== 6) { show('Enter all 6 digits.', true); return; }
   b.disabled = true; b.textContent = 'Checking…'; show('');
-  call('studentLoginVerify', [state.phone, cd.value, navigator.userAgent.slice(0, 120)]).then(function (r) {
+  call(state.mode === 'signup' ? 'studentSignupVerify' : 'studentLoginVerify', [state.phone, cd.value, navigator.userAgent.slice(0, 120)]).then(function (r) {
     set(KEY, r.session); openPortal(r.token, true);
-  }).catch(function (e) { b.disabled = false; b.textContent = 'Sign in'; cd.value = ''; show(nice(e), true); });
+  }).catch(function (e) { b.disabled = false; b.textContent = state.mode === 'signup' ? 'Create my account' : 'Sign in'; cd.value = ''; show(nice(e), true); });
 }
 
-function shim(signedIn) {
-  return '<script>(function(){var API=' + JSON.stringify(API) + ',KEY=' + JSON.stringify(KEY) + ',OK=' + JSON.stringify(PAGE_FNS) + ';' +
+// ---- OPEN STUDENT APP: create an account (becomes a new lead) ----
+function signupView(msg, bad) {
+  state.mode = 'signup';
+  var su = state.su, info = state.info;
+  if (!info) { loading('One moment…'); call('getStudentAppInfo', []).then(function (r) { state.info = r; signupView(msg, bad); }).catch(function (e) { phoneView(nice(e), true); }); return; }
+  var opt = function (list, cur, blank) { return '<option value="">' + esc(blank) + '</option>' + list.map(function (x) { return '<option' + (x === cur ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join(''); };
+  view.innerHTML = '<div class="card"><h1>Create your account ✨</h1><p>Free. Your counsellor will contact you, and you can follow your whole journey here.</p>' +
+    '<label for="suN">Full name</label><div class="in"><input id="suN" class="plain" type="text" autocomplete="name" maxlength="80" value="' + esc(su.name || '') + '"></div>' +
+    '<label for="suP" style="margin-top:12px">Mobile number</label><div class="in"><span>+91</span><input id="suP" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="14" placeholder="98470 12345" value="' + esc(su.phone || state.phone || '') + '"></div>' +
+    '<label for="suE" style="margin-top:12px">Email (your code is sent here)</label><div class="in"><input id="suE" class="plain" type="email" autocomplete="email" maxlength="120" value="' + esc(su.email || '') + '"></div>' +
+    '<label for="suC" style="margin-top:12px">Where do you want to study?</label><div class="in"><select id="suC">' + opt(info.countries, su.country, 'Choose a country') + '</select></div>' +
+    '<label for="suB" style="margin-top:12px">Nearest Akbar branch</label><div class="in"><select id="suB">' + opt(info.branches, su.branch, 'Choose a branch') + '</select></div>' +
+    '<button class="btn" id="suGo">Send my code</button><div class="msg ' + (bad ? 'bad' : '') + '" id="msg">' + esc(msg || '') + '</div>' +
+    '<div class="fine">By creating an account you agree that Akbar Study Abroad may contact you by phone, WhatsApp or email about studying abroad.</div>' +
+    '<button class="link" id="suBack">I already have an account — sign in</button></div>';
+  document.getElementById('suGo').onclick = sendSignup;
+  document.getElementById('suBack').onclick = function () { phoneView(); };
+}
+function sendSignup() {
+  var v = function (id) { return String(document.getElementById(id).value || '').trim(); };
+  state.su = { name: v('suN'), phone: v('suP'), email: v('suE'), country: v('suC'), branch: v('suB') };
+  var su = state.su;
+  if (su.name.length < 2) { show('Enter your full name.', true); return; }
+  if (digits(su.phone).length < 10) { show('Enter your 10-digit mobile number.', true); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(su.email)) { show('Enter a valid email.', true); return; }
+  if (!su.country) { show('Choose where you want to study.', true); return; }
+  if (!su.branch) { show('Choose your nearest branch.', true); return; }
+  var b = document.getElementById('suGo'); b.disabled = true; b.textContent = 'Sending…'; show('');
+  state.phone = su.phone;
+  call('studentSignupStart', [su]).then(function (r) {
+    if (r.exists) {
+      state.mode = 'login';
+      return call('studentLoginStart', [su.phone]).then(function (x) {
+        if (x.sent === 'email') { state.sent = x.to; codeView('You already have an account with us — we sent you a sign-in code.'); }
+        else phoneView('You already have an account with us. ' + (x.message || ''), true);
+      });
+    }
+    state.sent = r.to; codeView();
+  }).catch(function (e) { b.disabled = false; b.textContent = 'Send my code'; show(nice(e), true); });
+}
+// ---- OPEN STUDENT APP: explore with a sample student ----
+function openDemo() {
+  loading('Opening the demo…');
+  call('getStudentAppDemo', []).then(function (r) { writePage(String(r.html || ''), false, true); })
+    .catch(function (e) { phoneView(nice(e), true); });
+}
+
+function shim(signedIn, demo) {
+  return '<script>(function(){var API=' + JSON.stringify(API) + ',KEY=' + JSON.stringify(KEY) + ',OK=' + JSON.stringify(PAGE_FNS) + ',DEMO=' + (demo ? 'true' : 'false') + ';' +
     'function run(){var ok=null,fail=null,r={withSuccessHandler:function(f){ok=f;return r},withFailureHandler:function(f){fail=f;return r},withUserObject:function(){return r}};' +
-    'OK.forEach(function(fn){r[fn]=function(){var a=[].slice.call(arguments);fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({fn:fn,args:a})})' +
+    'OK.forEach(function(fn){r[fn]=function(){if(DEMO){setTimeout(function(){fail&&fail(new Error("This is a demo — create your free account to use this."))},60);return}var a=[].slice.call(arguments);fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({fn:fn,args:a})})' +
     '.then(function(x){return x.text()}).then(function(t){var j;try{j=JSON.parse(t)}catch(e){throw new Error("Google was busy — please try again.")}if(j.ok){ok&&ok(j.v)}else{throw new Error(j.e||"SERVER_ERROR")}})' +
     '.catch(function(e){if(String(e&&e.message).indexOf("fetch")!==-1)e=new Error("No connection — check your internet and try again.");fail&&fail(e)})}});return r}' +
     'window.google={script:{get run(){return run()}}};document.title="Akbar Student";' +
@@ -133,21 +189,24 @@ function shim(signedIn) {
     'document.addEventListener("DOMContentLoaded",function(){var f=document.createElement("div");f.style.cssText="text-align:center;padding:4px 16px 24px;font-size:13px;color:#6B7280";' +
     'var ios=/iphone|ipad|ipod/i.test(navigator.userAgent),sa=window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches||navigator.standalone;' +
     'f.innerHTML=(sa?"":"<button id=\\"akInstall\\" style=\\"display:none;border:0;background:#302D40;color:#fff;border-radius:10px;padding:10px 16px;font:inherit;font-weight:700;margin:0 6px 10px\\">📲 Install the Akbar app</button>"+(ios?"<div style=\\"margin-bottom:10px\\">📲 To get the app: tap Share → <b>Add to Home Screen</b></div>":""))' +
-    '+' + (signedIn ? '"<button id=\\"akOut\\" style=\\"border:0;background:none;color:#6B7280;text-decoration:underline;font:inherit;cursor:pointer\\">Sign out</button>"' : '""') + ';' +
+    '+' + (demo ? '"<div style=\\"background:#302D40;color:#fff;border-radius:14px;padding:14px;margin:0 auto 12px;max-width:520px\\"><b>👀 You are exploring a demo</b><br><span style=\\"opacity:.8\\">This is how your journey will look with Akbar Study Abroad.</span><br><button id=\\"akSignup\\" style=\\"margin-top:10px;border:0;background:#F22F3D;color:#fff;border-radius:10px;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer\\">✨ Create your free account</button> <button id=\\"akHome\\" style=\\"margin-top:10px;border:0;background:none;color:#fff;text-decoration:underline;font:inherit;cursor:pointer\\">Back</button></div>"+' : '') + (signedIn ? '"<button id=\\"akOut\\" style=\\"border:0;background:none;color:#6B7280;text-decoration:underline;font:inherit;cursor:pointer\\">Sign out</button>"' : '""') + ';' +
     'var app=document.getElementById("app");(app&&app.parentNode?app.parentNode:document.body).insertBefore(f,document.getElementById("sxNav")||null);' +
     'var ib=document.getElementById("akInstall");if(ib){if(window.__akInstall)ib.style.display="inline-block";ib.onclick=function(){if(window.__akInstall){window.__akInstall.prompt();window.__akInstall=null;ib.style.display="none"}}}' +
+    'var su=document.getElementById("akSignup");if(su)su.onclick=function(){location.replace(location.pathname+"#signup")};var hm=document.getElementById("akHome");if(hm)hm.onclick=function(){location.replace(location.pathname)};' +
     'var ob=document.getElementById("akOut");if(ob)ob.onclick=function(){var s=null;try{s=localStorage.getItem(KEY);localStorage.removeItem(KEY)}catch(e){}' +
     'fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({fn:"studentLogout",args:[s]})}).catch(function(){}).then(function(){location.replace(location.pathname)})}});' +
     '})();<\/script>';
 }
+function writePage(html, signedIn, demo) {
+  html = html.replace(/<link rel="manifest"[^>]*>/i, '<link rel="manifest" href="manifest.json">').replace(/<base target="_top">/i, '');
+  html = html.replace(/<link rel="apple-touch-icon"[^>]*>/i, '<link rel="apple-touch-icon" href="apple-touch-icon.png">');
+  html = html.replace('<head>', '<head>' + shim(signedIn, demo));
+  document.open(); document.write(html); document.close();
+}
 function openPortal(token, signedIn) {
   loading();
   call('getStudentAppPage', [token]).then(function (r) {
-    var html = String(r.html || '');
-    html = html.replace(/<link rel="manifest"[^>]*>/i, '<link rel="manifest" href="manifest.json">').replace(/<base target="_top">/i, '');
-    html = html.replace(/<link rel="apple-touch-icon"[^>]*>/i, '<link rel="apple-touch-icon" href="apple-touch-icon.png">');
-    html = html.replace('<head>', '<head>' + shim(signedIn));
-    document.open(); document.write(html); document.close();
+    writePage(String(r.html || ''), signedIn, false);
   }).catch(function (e) {
     var m = String(e && e.message);
     if (m === 'TOKEN_EXPIRED' || m === 'INVALID_TOKEN' || m === 'TOKEN_REVOKED') { phoneView(nice(e), true); return; }
@@ -173,6 +232,8 @@ function start() {
   }
   var lt = null; try { lt = sessionStorage.getItem('akbar_link_token'); } catch (e) { lt = null; }
   if (lt) { openPortal(lt, false); return; }
+  if (/#signup/.test(h)) { try { history.replaceState(null, '', location.pathname); } catch (e) { /* ignore */ } signupView(); return; }
+  if (/#demo/.test(h)) { try { history.replaceState(null, '', location.pathname); } catch (e) { /* ignore */ } openDemo(); return; }
   phoneView();
 }
 start();
