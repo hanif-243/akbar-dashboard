@@ -7,6 +7,16 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 (function () {
   if (window.google && window.google.script && window.google.script.run) return;
   var API = window.AKBAR_API;
+  var bad = 0;
+  function backupBar() {
+    if (document.getElementById('akBackupBar') || !document.body) return;
+    var b = document.createElement('div'); b.id = 'akBackupBar';
+    b.setAttribute('style', 'position:fixed;left:0;right:0;top:0;z-index:2147483000;background:#302D40;color:#fff;font:600 14px/1.4 system-ui,Segoe UI,Roboto,sans-serif;padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;box-shadow:0 4px 18px rgba(0,0,0,.25)');
+    b.innerHTML = '<span>Google is not answering on this network.</span><a id="akBackupGo" style="background:#F22F3D;color:#fff;border-radius:8px;padding:7px 12px;text-decoration:none">Open the backup link</a><button id="akBackupX" style="background:none;border:0;color:#fff;opacity:.7;font:inherit;cursor:pointer">✕</button>';
+    document.body.appendChild(b);
+    document.getElementById('akBackupGo').href = API;
+    document.getElementById('akBackupX').onclick = function () { b.remove(); };
+  }
   function newRid() { var a = ''; while (a.length < 24) a += Math.random().toString(36).slice(2); return 'r' + Date.now().toString(36) + a.slice(0, 20); }
   function call(st, fn, args, retries, rid) {
     rid = rid || newRid();
@@ -18,6 +28,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
           var m = new RegExp('<title>([^<]*)<' + '\x2Ftitle>', 'i').exec(t || ''), title = m ? m[1].trim() : '';
           var err = new Error('NOTJSON'); err.title = title; err.signIn = /sign.?in|google accounts|access|permission/i.test(title + ' ' + String(t || '').slice(0, 2000)); throw err;
         }
+        bad = 0; // BACKUP LINK: a good answer resets the count
         if (j && j.ok) { if (st.s) st.s(j.v, st.u); }
         else if (st.f) st.f(new Error((j && j.e) || 'Request failed'), st.u);
       })
@@ -25,6 +36,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
         // SAFE RETRY (6 Oct 2026): ask again with the same receipt number — the server gives back the saved answer, so a save never happens twice
         if (retries > 0) { setTimeout(function () { call(st, fn, args, retries - 1, rid); }, 2500 + Math.floor(Math.random() * 2500)); return; }
         if (!st.f) return;
+        if (++bad >= 2) backupBar(); // BACKUP LINK
         if (e && e.message === 'NOTJSON') {
           if (e.signIn) { st.f(new Error('Google asked for a sign-in instead of answering. In Apps Script, Deploy → Manage deployments must have "Who has access: Anyone".'), st.u); return; }
           st.f(new Error('Google was busy and did not answer' + (e.title ? ' ("' + e.title + '")' : '') + '. Please try again in a moment.'), st.u);
@@ -47,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '6 Oct 2026 · v39';
+window.AKBAR_BUILD = '6 Oct 2026 · v40';
 
 (function () {
   try {
@@ -4700,7 +4712,9 @@ Log out
 <button onclick="setStatusFilter(this,'Unassigned')" class="sf-btn" data-tone="junk" id="sfUnassignedBtn"><span class="sf-dot"></span>Unassigned<span class="sf-count" data-sf-count="Unassigned"></span></button>
 <button onclick="setStatusFilter(this,'Telecaller')" class="sf-btn" data-tone="new" id="sfTcBtn"><span class="tc-badge" style="margin:0;">TC</span>Telecaller<span class="sf-count" data-sf-count="Telecaller"></span></button>
 <button onclick="setStatusFilter(this,'Inactive7')" class="sf-btn" data-tone="cold" id="sfInactiveBtn" title="No remark, status change or follow-up for 7+ days (Junk and converted excluded)"><span class="sf-dot"></span>Inactive 7d+<span class="sf-count" data-sf-count="Inactive7"></span></button>
+<button onclick="setStatusFilter(this,'FollowUps')" class="sf-btn" data-tone="warm" id="sfFollowUpsBtn" title="Open follow-ups — overdue first"><span class="sf-dot"></span>Follow-ups<span class="sf-count" data-sf-count="FollowUps"></span></button>
 </div>
+<div id="fuPanel"></div>
 <div class="bulk-bar" id="bulkBar">
 <span class="bulk-count" id="bulkCount">0 selected</span>
 <div class="bulk-actions" id="bulkActions">
@@ -6279,7 +6293,8 @@ let dateRangeTo = null;
 let activeStatusFilter = null;
 
 function updateStatusFilterCounts(rows) {
-const counts = { All: rows.length, Hot: 0, Warm: 0, Cold: 0, Junk: 0, New: 0, Duplicates: 0, Telecaller: 0, Unassigned: 0, Inactive7: 0 };
+const counts = { All: rows.length, Hot: 0, Warm: 0, Cold: 0, Junk: 0, New: 0, Duplicates: 0, Telecaller: 0, Unassigned: 0, Inactive7: 0, FollowUps: 0 };
+counts.FollowUps = typeof window.akFuCount === 'function' ? window.akFuCount(rows) : 0;
 rows.forEach(r => {
 const label = statusPill(r.status).label;
 if (counts[label] !== undefined) counts[label]++;
@@ -6324,6 +6339,7 @@ if (activeStatusFilter === 'Duplicates') return !!getDupInfo(r);
 if (activeStatusFilter === 'Telecaller') return isTelecallerLead(r);
 if (activeStatusFilter === 'Unassigned') return !String(r.counselor || '').trim();
 if (activeStatusFilter === 'Inactive7') return typeof window.s10IsInactive === 'function' && window.s10IsInactive(r);
+if (activeStatusFilter === 'FollowUps') return typeof window.akFuHas === 'function' && window.akFuHas(r);
 if (activeStatusFilter && statusPill(r.status).label !== activeStatusFilter) return false;
 return true;
 });
@@ -18724,6 +18740,250 @@ box.innerHTML = `Sign-in code <b style="font-size:18px;letter-spacing:3px;">${es
 };
 }
 new MutationObserver(addButton).observe(document.body, { childList: true, subtree: true });
+})();
+</script>
+
+<style>
+#callView { min-height: 100vh; background: var(--canvas); }
+.cq-stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.cq-stat { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; box-shadow: var(--shadow); }
+.cq-stat .l { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.cq-stat .n { font-size: 24px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.cq-stat .d { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.cq-cols { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.cq-lead h2 { margin: 0; font-size: 22px; letter-spacing: -.01em; }
+.cq-phone { font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 600; margin: 6px 0 10px; letter-spacing: .02em; }
+.cq-facts { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.cq-facts span { background: var(--canvas); border-radius: 8px; padding: 4px 9px; font-size: 12.5px; }
+.cq-facts b { color: var(--muted); font-weight: 600; margin-right: 4px; }
+.cq-callrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+.cq-call { background: #1FA855 !important; border-color: #1FA855 !important; color: #fff !important; font-size: 15px !important; padding: 11px 18px !important; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; border-radius: 10px; font-weight: 700; }
+.cq-timer { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600; padding: 6px 12px; border-radius: 10px; background: var(--canvas); min-width: 86px; text-align: center; }
+.cq-timer.on { background: rgba(31,157,99,.12); color: var(--ok); }
+.cq-results { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 8px 0 12px; }
+.cq-results button { border: 1.5px solid var(--border); background: var(--card); color: var(--ink); border-radius: 10px; padding: 10px 6px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.cq-results button.ok.on { background: var(--ok); border-color: var(--ok); color: #fff; }
+.cq-results button.no.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+.cq-results button.bad.on { background: var(--red); border-color: var(--red); color: #fff; }
+.cq-box { background: var(--canvas); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+.cq-box label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin: 0 0 4px; }
+.cq-box input, .cq-box select, .cq-lead textarea { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13.5px; background: var(--card); color: var(--ink); box-sizing: border-box; }
+.cq-lead textarea { min-height: 70px; resize: vertical; }
+.cq-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cq-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.cq-actions .um-btn { padding: 11px 16px; font-size: 13.5px; }
+.cq-script { white-space: pre-wrap; font-size: 14px; line-height: 1.6; }
+.cq-script mark { background: rgba(242,47,61,.12); color: var(--ink); border-radius: 4px; padding: 0 3px; }
+.cq-prev { font-size: 12.5px; color: var(--muted); white-space: pre-wrap; max-height: 110px; overflow: auto; background: var(--canvas); border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; }
+.cq-empty { text-align: center; padding: 50px 20px; }
+.cq-empty .big { font-size: 46px; }
+.cq-start { position: relative; }
+#fuPanel { display: none; padding: 10px 16px 4px; border-bottom: 1px solid var(--border); }
+#fuPanel.on { display: block; }
+.fu-group { margin-bottom: 10px; }
+.fu-group h4 { margin: 0 0 6px; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.fu-group h4.over { color: var(--red); } .fu-group h4.today { color: var(--warm); }
+.fu-item { display: flex; gap: 10px; align-items: center; padding: 7px 10px; border-radius: 10px; background: var(--canvas); margin-bottom: 5px; cursor: pointer; font-size: 13px; flex-wrap: wrap; }
+.fu-item:hover { box-shadow: inset 0 0 0 1px var(--navy); }
+.fu-item .w { font-family: 'IBM Plex Mono', monospace; font-size: 12px; min-width: 120px; color: var(--ink); }
+.fu-item .n { font-weight: 700; flex: 1; min-width: 140px; }
+.fu-item .m { color: var(--muted); font-size: 12px; }
+@media (max-width: 1000px) { .cq-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } .cq-cols { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 560px) { .cq-results { grid-template-columns: repeat(2, minmax(0, 1fr)); } .cq-two { grid-template-columns: 1fr; } }
+</style>
+<script>
+
+(function () {
+const $ = id => document.getElementById(id);
+const esc = v => escapeHtml(v == null ? '' : String(v));
+const run = (fn, ...args) => promisifyRun(fn, window._authToken || '', ...args);
+const errMsg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
+const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t || 'success'); };
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const fmtDay = ymd => { const p = String(ymd || '').split('-'); return p.length < 3 ? '' : Number(p[2]) + ' ' + MON[Number(p[1]) - 1]; };
+const dur = s => { s = Math.round(Number(s) || 0); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? h + 'h ' + m + 'm' : m + 'm ' + (s % 60) + 's'; };
+const clean = p => String(p || '').replace(/^p:/i, '').trim();
+const digits = p => clean(p).replace(/\D/g, '');
+const today = () => { const d = new Date(Date.now() + 330 * 60000); return d.toISOString().slice(0, 10); };
+const OTHER = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView'];
+
+const C = { setup: null, branch: '', lead: null, result: '', skip: [], timerAt: 0, timerSec: 0, timerId: 0, busy: false };
+function isCallerRole() {
+  if (document.body.classList.contains('tc-staff')) return true;
+  if (window._isSuperAdmin) return true;
+  return typeof viewerBranch !== 'undefined' && !!viewerBranch && typeof viewerCounselor !== 'undefined' && !viewerCounselor;
+}
+function openCalling() {
+  const app = document.querySelector('.app'); if (app) app.style.display = 'none';
+  OTHER.forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
+  if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
+  let root = $('callView');
+  if (!root) { root = document.createElement('div'); root.id = 'callView'; document.body.appendChild(root); }
+  root.style.display = 'block';
+  root.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-title">📞 Calling queue</h1><div class="sx-sub" id="cqSub">Loading…</div></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><select id="cqBranch" style="display:none;" aria-label="Branch"></select><button class="um-btn" id="cqBack">← Back to dashboard</button></div></div>
+<div id="cqStats"></div><div id="cqBody"><div class="sx-card"><div class="skeleton" style="height:220px;"></div></div></div></div>`;
+  $('cqBack').onclick = closeCalling;
+  window.scrollTo(0, 0);
+  loadSetup();
+}
+function closeCalling() {
+  stopTimer();
+  const root = $('callView'); if (root) { root.style.display = 'none'; root.innerHTML = ''; }
+  const app = document.querySelector('.app'); if (app) app.style.display = '';
+  if (typeof loadData === 'function') loadData();
+}
+function loadSetup() {
+  run('getCallingSetup', C.branch).then(s => {
+    C.setup = s; C.branch = s.branch;
+    $('cqSub').textContent = s.branch + ' · bulk leads one by one · signed in as ' + s.me;
+    const sel = $('cqBranch');
+    if (s.branches.length > 1) { sel.style.display = ''; sel.innerHTML = s.branches.map(b => `<option ${b === s.branch ? 'selected' : ''}>${esc(b)}</option>`).join(''); sel.onchange = () => { C.branch = sel.value; C.lead = null; C.skip = []; loadSetup(); }; }
+    drawStats(s.stats); draw();
+  }).catch(e => { $('cqBody').innerHTML = `<div class="sx-card sx-empty">${esc(errMsg(e))}</div>`; });
+}
+function drawStats(st) {
+  if (!st || !$('cqStats')) return;
+  const t = st.today, a = st.total;
+  const card = (l, n, d) => `<div class="cq-stat"><div class="l">${esc(l)}</div><div class="n">${n}</div>${d ? `<div class="d">${d}</div>` : ''}</div>`;
+  let h = `<div class="cq-stats">${card('Calls today', t.calls)}${card('Connected', t.connected, t.calls ? Math.round(t.connected / t.calls * 100) + '% of calls' : '')}${card('Talk time today', dur(t.talkSec))}
+${card('Interested', t.interested)}${card('Handed over', t.handovers)}${card('All-time calls', a.calls, dur(a.talkSec) + ' talk time')}</div>`;
+  if (st.team && st.team.length) h += `<div class="sx-card"><h3>Team today</h3><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Telecaller</th><th class="num">Calls</th><th class="num">Connected</th><th class="num">Talk time</th><th class="num">Interested</th><th class="num">Handed over</th></tr></thead><tbody>${st.team.map(x => `<tr><td><b>${esc(x.name)}</b></td><td class="num">${x.calls}</td><td class="num">${x.connected}</td><td class="num">${dur(x.talkSec)}</td><td class="num">${x.interested}</td><td class="num">${x.handovers}</td></tr>`).join('')}</tbody></table></div></div>`;
+  $('cqStats').innerHTML = h;
+}
+function fillScript(text, l) {
+  const v = { name: (l && l.name) || 'there', me: C.setup.me, branch: C.branch, country: (l && l.country) || '—', qualification: (l && l.qualification) || '—', englishTest: (l && l.englishTest) || '—', budget: (l && l.budget) || '—' };
+  return esc(text).replace(/\{(name|me|branch|country|qualification|englishTest|budget)\}/g, (m, k) => '<mark>' + esc(v[k]) + '</mark>');
+}
+function scriptCard() {
+  return `<div class="sx-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><h3 style="margin:0;">📋 Call script</h3>${C.setup.canEditScript ? '<button class="um-btn" id="cqEditScript">Edit script</button>' : ''}</div>
+<div class="cq-script" style="margin-top:10px;">${fillScript(C.setup.script, C.lead)}</div></div>`;
+}
+function draw() {
+  const b = $('cqBody'); if (!b || !C.setup) return;
+  if (!C.lead) {
+    b.innerHTML = `<div class="cq-cols"><div class="sx-card cq-empty"><div class="big">📞</div><p class="sx-sub" style="font-size:14px;margin:10px 0 18px;">Press the button and the next fresh lead is reserved for you — no picking from a list.</p>
+<button class="um-btn primary" id="cqNext" style="font-size:16px;padding:14px 26px;">▶ Next lead</button><div class="sx-sub" id="cqMsg" style="margin-top:14px;"></div></div>${scriptCard()}</div>`;
+    $('cqNext').onclick = next; wireScript(); return;
+  }
+  const l = C.lead, R = C.setup.results, res = R.find(r => r.result === C.result);
+  const cls = r => r.result === 'Interested' || r.result === 'Call back later' ? 'ok' : r.status === 'Junk' || r.status === 'Cold' ? 'bad' : 'no';
+  const facts = [['Country', l.country], ['Qualification', l.qualification], ['Source', l.campaign], ['Uploaded', l.createdAt ? fmtDay(String(l.createdAt).slice(0, 10)) : ''], ['Tries', l.tries ? l.tries + (l.lastResult ? ' · last: ' + l.lastResult : '') : 'first call']].filter(f => f[1]);
+  b.innerHTML = `<div class="cq-cols"><div class="sx-card cq-lead">
+<h2>${esc(l.name || 'No name')}</h2><div class="cq-phone">${esc(clean(l.phone) || 'No phone')}</div>
+<div class="cq-facts">${facts.map(f => `<span><b>${esc(f[0])}</b>${esc(f[1])}</span>`).join('')}</div>
+${l.remark ? `<div class="cq-prev">${esc(l.remark)}</div>` : ''}
+<div class="cq-callrow">${digits(l.phone) ? `<a class="cq-call" id="cqCall" href="tel:${esc(digits(l.phone).length === 10 ? '+91' + digits(l.phone) : '+' + digits(l.phone))}">📞 Call<\x2Fa><a class="um-btn" target="_blank" rel="noopener" href="https:\x2F\x2Fwa.me/${esc(digits(l.phone).length === 10 ? '91' + digits(l.phone) : digits(l.phone))}">WhatsApp</a>` : ''}
+<span class="cq-timer ${C.timerId ? 'on' : ''}" id="cqTimer">${clock()}</span><button class="um-btn" id="cqTimerBtn">${C.timerId ? '⏸ Stop timer' : '⏱ Start timer'}</button></div>
+<label class="f" style="font-size:12px;font-weight:700;color:var(--muted);">Call result</label>
+<div class="cq-results">${R.map(r => `<button type="button" class="${cls(r)} ${r.result === C.result ? 'on' : ''}" data-cq-res="${esc(r.result)}">${esc(r.result)}</button>`).join('')}</div>
+${C.result === 'Call back later' ? `<div class="cq-box"><div class="cq-two"><div><label for="cqCbD">Call back on</label><input type="date" id="cqCbD" min="${today()}" value="${esc(C.cbDate || '')}"></div><div><label for="cqCbT">At</label><input type="time" id="cqCbT" value="${esc(C.cbTime || '')}"></div></div></div>` : ''}
+${C.result === 'Interested' ? `<div class="cq-box"><div class="cq-two"><div><label for="cqHo">Hand over to counsellor</label><select id="cqHo"><option value="">Keep with me for now</option>${C.setup.counsellors.map(n => `<option ${n === C.ho ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></div><div><label for="cqHoNote">Note for the counsellor</label><input type="text" id="cqHoNote" value="${esc(C.hoNote || '')}" placeholder="e.g. wants UK, Sept intake, call after 6 pm"></div></div><div class="sx-sub" style="margin-top:6px;">The counsellor gets a notification and an email from you.</div></div>` : ''}
+<label class="f" for="cqNotes" style="font-size:12px;font-weight:700;color:var(--muted);">Notes</label><textarea id="cqNotes" placeholder="What did they say?">${esc(C.notes || '')}</textarea>
+<div class="cq-actions"><button class="um-btn primary" id="cqSave" ${C.result ? '' : 'disabled'}>${res && res.result === 'Interested' && C.ho ? '🤝 Hand over & next' : '✓ Save & next'}</button><button class="um-btn" id="cqSkip" title="Skip this lead for now — it stays in the queue">Skip</button><button class="um-btn" id="cqStop">Save & stop</button></div>
+<div class="sx-sub" style="margin-top:8px;">${res ? (res.status ? 'Lead becomes <b>' + esc(res.status) + '</b>.' : res.connected ? '' : 'The lead comes back to the queue in 3 hours (up to 4 tries).') : ''}</div>
+</div>${scriptCard()}</div>`;
+  b.querySelectorAll('[data-cq-res]').forEach(x => x.onclick = () => { keep(); C.result = x.dataset.cqRes; if (C.timerId && !(R.find(r => r.result === C.result) || {}).connected) stopTimer(); draw(); });
+  $('cqTimerBtn').onclick = () => { if (C.timerId) stopTimer(); else startTimer(); draw(); };
+  const call = $('cqCall'); if (call) call.addEventListener('click', () => { if (!C.timerId) { startTimer(); setTimeout(draw, 50); } });
+  $('cqSave').onclick = () => save(true);
+  $('cqStop').onclick = () => save(false);
+  $('cqSkip').onclick = () => { stopTimer(); C.skip.push(C.lead.leadId); C.lead = null; next(); };
+  const ho = $('cqHo'); if (ho) ho.onchange = () => { keep(); draw(); };
+  wireScript();
+}
+function keep() {
+  const n = $('cqNotes'); if (n) C.notes = n.value;
+  const d = $('cqCbD'); if (d) C.cbDate = d.value; const t = $('cqCbT'); if (t) C.cbTime = t.value;
+  const h = $('cqHo'); if (h) C.ho = h.value; const hn = $('cqHoNote'); if (hn) C.hoNote = hn.value;
+}
+function wireScript() {
+  const e = $('cqEditScript'); if (!e) return;
+  e.onclick = () => {
+    const bg = document.createElement('div'); bg.className = 'cmdk-backdrop open';
+    bg.innerHTML = `<div class="cmdk-box" style="max-width:640px;" role="dialog" aria-modal="true"><div class="preview-modal-header"><span style="font-size:14px;font-weight:800;flex:1;">Edit call script</span><button class="counselor-save-btn" data-x>Close</button></div><div class="s10-body">
+<div class="sx-sub" style="margin-bottom:6px;">You can use {name} {me} {branch} {country} {qualification} {englishTest} {budget} — they are filled in for each lead.</div>
+<textarea id="cqScriptTxt" style="min-height:300px;">${esc(C.setup.script)}</textarea><div class="s10-actions"><button class="um-btn primary" id="cqScriptSave">Save script</button></div></div></div>`;
+    document.body.appendChild(bg);
+    bg.addEventListener('click', ev => { if (ev.target === bg || ev.target.hasAttribute('data-x')) bg.remove(); });
+    $('cqScriptSave').onclick = () => { const v = $('cqScriptTxt').value; run('saveCallScript', v).then(() => { C.setup.script = v.trim(); bg.remove(); toast('Call script saved'); draw(); }).catch(err => toast(errMsg(err), 'error')); };
+  };
+}
+function clock() { const s = C.timerSec + (C.timerId ? Math.floor((Date.now() - C.timerAt) / 1000) : 0); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
+function startTimer() { if (C.timerId) return; C.timerAt = Date.now(); C.timerId = setInterval(() => { const t = $('cqTimer'); if (t) t.textContent = clock(); }, 1000); }
+function stopTimer() { if (!C.timerId) return; C.timerSec += Math.floor((Date.now() - C.timerAt) / 1000); clearInterval(C.timerId); C.timerId = 0; }
+function resetLead() { stopTimer(); C.timerSec = 0; C.result = ''; C.notes = ''; C.cbDate = ''; C.cbTime = ''; C.ho = ''; C.hoNote = ''; }
+function next() {
+  resetLead();
+  const b = $('cqNext'); if (b) { b.disabled = true; b.textContent = 'Finding the next lead…'; }
+  run('getNextCallLead', C.branch, C.skip).then(r => {
+    if (!r.lead) { C.lead = null; draw(); const m = $('cqMsg'); if (m) m.textContent = r.message || 'No leads right now.'; return; }
+    C.lead = r.lead; draw();
+  }).catch(e => { C.lead = null; draw(); toast(errMsg(e), 'error'); });
+}
+function save(goNext) {
+  if (C.busy || !C.lead || !C.result) return;
+  keep(); stopTimer();
+  const res = C.setup.results.find(r => r.result === C.result);
+  const p = { branch: C.branch, leadId: C.lead.leadId, leadName: C.lead.name, phone: C.lead.phone, result: C.result, talkSec: res && res.connected ? C.timerSec : 0, notes: C.notes || '' };
+  if (C.result === 'Call back later') { if (!C.cbDate) { toast('Pick the call-back date', 'error'); return; } p.callBack = { date: C.cbDate, time: C.cbTime || '' }; }
+  if (C.result === 'Interested' && C.ho) p.handover = { counsellor: C.ho, note: C.hoNote || '' };
+  C.busy = true;
+  const btn = $('cqSave'); if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+  run('saveCallResult', p).then(r => {
+    C.busy = false; drawStats(r.stats);
+    toast(r.handedOverTo ? 'Handed over to ' + r.handedOverTo + ' — they have been notified' : 'Saved: ' + p.result);
+    C.lead = null;
+    if (goNext) next(); else { resetLead(); draw(); }
+  }).catch(e => { C.busy = false; toast(errMsg(e), 'error'); draw(); });
+}
+function addStartButton() {
+  const banner = $('leadsetBanner');
+  if (!banner || $('cqStartBtn') || !isCallerRole()) return;
+  const b = document.createElement('button'); b.className = 'um-btn primary cq-start'; b.id = 'cqStartBtn'; b.type = 'button'; b.textContent = '📞 Start calling';
+  b.title = 'Calling queue: next lead, call result, talk time, script, hand over';
+  b.onclick = openCalling;
+  banner.insertBefore(b, banner.querySelector('[data-leadset="main"]') || null);
+}
+setInterval(addStartButton, 2000);
+const sb = document.getElementById('sidebar');
+if (sb) sb.addEventListener('click', e => { const it = e.target.closest('.nav-item, .lead-set-item'); if (it && $('callView') && $('callView').style.display === 'block') { stopTimer(); $('callView').style.display = 'none'; const app = document.querySelector('.app'); if (app) app.style.display = ''; } }, true);
+window.openCallingQueue = openCalling;
+
+const F = { list: [], set: {}, at: 0, busy: false };
+window.akFuHas = r => !!F.set[r.branch + '|' + r.leadId];
+window.akFuCount = rows => rows.reduce((n, r) => n + (F.set[r.branch + '|' + r.leadId] ? 1 : 0), 0);
+function loadBoard(force) {
+  if (F.busy || !window._authToken || typeof allRows === 'undefined' || !allRows.length) return;
+  if (!force && Date.now() - F.at < 180000) return;
+  if (document.hidden && !force) return;
+  F.busy = true; F.at = Date.now();
+  run('getFollowUpBoard').then(d => {
+    F.busy = false; F.list = d.followUps || []; F.set = {};
+    F.list.forEach(f => { F.set[f.branch + '|' + f.leadId] = 1; });
+    const btn = $('sfFollowUpsBtn'); if (btn) btn.title = d.overdue + ' overdue · ' + d.today + ' today · ' + d.total + ' open follow-ups';
+    if (typeof render === 'function') render();
+    drawPanel();
+  }).catch(() => { F.busy = false; F.at = 0; });
+}
+function drawPanel() {
+  const p = $('fuPanel'); if (!p) return;
+  const on = typeof activeStatusFilter !== 'undefined' && activeStatusFilter === 'FollowUps';
+  p.classList.toggle('on', on);
+  if (!on) return;
+  const inView = F.list.filter(f => (typeof activeBranch === 'undefined' || activeBranch === 'All' || f.branch === activeBranch));
+  const groups = [['overdue', '⚠ Overdue', 'over'], ['today', 'Today', 'today'], ['upcoming', 'Upcoming', '']];
+  const rowsByLead = {}; (typeof allRows !== 'undefined' ? allRows : []).forEach(r => { rowsByLead[r.branch + '|' + r.leadId] = r; });
+  p.innerHTML = inView.length ? groups.map(g => { const L = inView.filter(f => f.state === g[0]); return L.length ? `<div class="fu-group"><h4 class="${g[2]}">${g[1]} · ${L.length}</h4>${L.slice(0, 60).map(f => {
+    const r = rowsByLead[f.branch + '|' + f.leadId];
+    return `<div class="fu-item" data-fu-lead="${esc(f.branch + '|' + f.leadId)}" data-fu-name="${esc((r && r.name) || f.leadName || '')}"><span class="w">${esc(fmtDay(f.date) || 'No date')}${f.time ? ' · ' + esc(f.time) : ''}</span><span class="n">${esc((r && r.name) || f.leadName || f.leadId)}</span><span class="m">${esc(f.type || 'Follow-up')} · ${esc(f.counselor || f.createdBy || '—')}${f.branch ? ' · ' + esc(f.branch) : ''}</span>${f.notes ? `<span class="m" style="flex-basis:100%;">${esc(f.notes)}</span>` : ''}</div>`; }).join('')}${L.length > 60 ? `<div class="sx-sub">+ ${L.length - 60} more</div>` : ''}</div>` : ''; }).join('')
+    : '<div class="sx-sub" style="padding:6px 0 10px;">No open follow-ups. 🎉</div>';
+  p.querySelectorAll('[data-fu-name]').forEach(x => x.onclick = () => { const s = $('search'); if (s && x.dataset.fuName) { s.value = x.dataset.fuName; if (typeof render === 'function') render(); } });
+}
+const origSet = window.setStatusFilter;
+if (typeof origSet === 'function') window.setStatusFilter = function (btn, status) { const s = $('search'); if (activeStatusFilter === 'FollowUps' && status !== 'FollowUps' && s && s.value && F.list.some(f => s.value === f.leadName)) s.value = ''; origSet(btn, status); if (status === 'FollowUps') loadBoard(true); drawPanel(); };
+setInterval(() => loadBoard(false), 5000);
+window.akReloadFollowUps = () => loadBoard(true);
 })();
 </script>
 
