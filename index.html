@@ -45,7 +45,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '6 Oct 2026 · v37.1';
+window.AKBAR_BUILD = '6 Oct 2026 · v37.2';
 
 (function () {
   try {
@@ -17923,7 +17923,7 @@ ${d.forms.map(f => `<tr><td><b>${esc(f.formName)}</b><div class="sx-sub">${esc(f
 <td><select data-ml-br="${esc(f.formId)}">${brOpts(f.branch)}</select></td><td><input type="checkbox" data-ml-on="${esc(f.formId)}" ${f.enabled ? 'checked' : ''} aria-label="Import leads from ${esc(f.formName)}"></td>
 <td class="num">${Number(f.imported) || 0}</td><td>${f.lastLeadAt ? esc(new Date(f.lastLeadAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })) : '—'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="sx-empty">Save the token and Page ID, then click “Load my lead forms”.</div>'}</div>
 <div class="sx-card"><div style="font-weight:800;margin-bottom:6px;">3 · Automatic import</div>
-<div>${d.running ? '<span class="lq-pill ok">On — checking Meta every minute</span>' : '<span class="lq-pill no">Off</span>'}
+<div>${d.running ? '<span class="lq-pill ok">On — checking Meta every 5 minutes</span>' : '<span class="lq-pill no">Off</span>'}
 <span class="sx-sub" style="margin-left:8px;">Last check: ${esc(when)} · ${esc(st.message || '—')}</span></div>
 <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;"><button class="um-btn ${d.running ? '' : 'primary'}" id="mlToggle">${d.running ? 'Turn off' : 'Turn on'}</button><button class="um-btn" id="mlNow">Check now</button></div>
 <p class="lq-note"><b>Important:</b> once leads arrive here, switch off your old connection that copies Meta leads into the branch sheets (Zapier / LeadsBridge / similar) for these forms — otherwise the same lead can be added twice. A lead already in the sheet is never imported twice from here.</p></div>`;
