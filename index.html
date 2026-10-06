@@ -45,7 +45,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '6 Oct 2026 · v37';
+window.AKBAR_BUILD = '6 Oct 2026 · v37.1';
 
 (function () {
   try {
@@ -6861,6 +6861,7 @@ window._dashInFlight = setAsked; window._dashInFlightAt = Date.now();
 loader.classList.add('active');
 
 google.script.run.withSuccessHandler(function(response) {
+if (!(response && response.__cached)) window._loadRetry = 0;
 if (!(response && response.__cached) && window._dashInFlight === setAsked) window._dashInFlight = null;
 if (setAsked !== (window._leadSet || 'main')) return;
 loader.classList.remove('active');
@@ -6955,9 +6956,21 @@ if (window._dashInFlight === setAsked) window._dashInFlight = null;
 if (setAsked !== (window._leadSet || 'main')) return;
 loader.classList.remove('active');
 console.error(err);
-document.getElementById('emptyStateText').textContent = 'Error loading data — check the Run Log tab.';
-document.getElementById('emptyState').style.display = 'flex';
-showToast('Could not load leads — ' + (err && err.message ? String(err.message).replace(/^Error:\s*/, '') : 'check your connection.'), 'error');
+
+const msgErr = err && err.message ? String(err.message).replace(/^Error:\s*/, '') : '';
+const hasRows = typeof allRows !== 'undefined' && allRows && allRows.length;
+const loginProblem = /SESSION_EXPIRED|ACCESS_DENIED|not signed in|log ?in/i.test(msgErr);
+window._loadRetry = (window._loadRetry || 0) + 1;
+if (!loginProblem && window._loadRetry <= 4) {
+const wait = [6000, 15000, 30000, 60000][window._loadRetry - 1];
+if (!hasRows) { document.getElementById('emptyStateText').textContent = 'Google is busy — loading your leads again in a few seconds…'; document.getElementById('emptyState').style.display = 'flex'; loader.classList.add('active'); }
+setTimeout(loadData, wait);
+return;
+}
+window._loadRetry = 0;
+document.getElementById('emptyStateText').textContent = hasRows ? 'Could not refresh — showing the last loaded leads.' : 'Could not load leads — press ↻ or reload the page.';
+if (!hasRows) document.getElementById('emptyState').style.display = 'flex';
+showToast('Could not load leads — ' + (msgErr || 'check your connection.'), 'error');
 }).getDashboardData(window._authToken || "", { leadSet: window._leadSet || 'main', since: window._dashSig || '' });
 }
 
