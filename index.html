@@ -47,7 +47,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '6 Oct 2026 · v38';
+window.AKBAR_BUILD = '6 Oct 2026 · v39';
 
 (function () {
   try {
@@ -18185,11 +18185,23 @@ document.querySelectorAll('#maBody [data-ma-go]').forEach(b => b.onclick = () =>
 function syncNow(btn) {
 busy(btn, true, 'Syncing… (up to a minute)');
 const range = M.f.days === 'custom' ? { since: M.f.from, until: M.f.to } : { days: M.f.days };
+startSync(range, () => { busy(btn, false); M.settings = null; reloadData(); refreshToday(true); });
+}
+
+function startSync(range, done) {
 run('syncMetaAds', range).then(r => {
-busy(btn, false);
-if (r && r.error) { toast('Sync failed: ' + r.error, 'error'); } else toast(`Synced ${r.campaigns} campaigns · ${inr(r.spend)} · ${r.leads} leads`);
-M.settings = null; reloadData(); refreshToday(true);
-}).catch(e => { busy(btn, false); toast(errMsg(e), 'error'); });
+if (r && r.error) { toast('Sync failed: ' + r.error, 'error'); done(); return; }
+if (!r || !r.started) { toast(`Synced ${r.campaigns} campaigns · ${inr(r.spend)} · ${r.leads} leads`); done(); return; }
+toast('Sync started — the numbers update in about a minute.');
+const t0 = Date.now();
+const poll = () => run('getMetaAdsSettings').then(s => {
+const ls = s.lastSync || {};
+if (ls.at && ls.at !== r.previousSyncAt) { M.settings = s; if (ls.ok) toast(`Synced ${ls.campaigns || 0} campaigns · ${inr(ls.spend)} · ${ls.leads || 0} leads`); else toast('Sync failed: ' + (ls.error || 'unknown error'), 'error'); done(); return; }
+if (Date.now() - t0 > 240000) { toast('The sync is taking long — it will finish in the background. Refresh in a few minutes.', 'error'); done(); return; }
+setTimeout(poll, 6000);
+}).catch(() => { if (Date.now() - t0 > 240000) done(); else setTimeout(poll, 8000); });
+setTimeout(poll, 8000);
+}).catch(e => { toast(errMsg(e), 'error'); done(); });
 }
 function setupCard() {
 return `<div class="sx-card"><h3>Connect your Meta ad account</h3><p class="sx-sub" style="font-size:13px;">Meta Ads isn't connected yet. Add your access token and Ad Account ID once — after that the numbers update every hour.</p>
@@ -18428,7 +18440,7 @@ M.settings = null; M.data = null; run('getMetaAdsSettings').then(d => { M.settin
 const tb = $('maTest'); if (tb) tb.onclick = () => { busy(tb, true, 'Testing…'); run('testMetaConnection').then(r => { busy(tb, false); $('maTestOut').innerHTML = r.ok ? `<span class="sx-good">✓ Working.</span> Token of <b>${esc(r.tokenOwner)}</b> · ${esc(r.accountName)} (${esc(r.accountStatus)}, ${esc(r.currency)}) · ${esc(r.expiryText || '')}${r.missingScopes && r.missingScopes.length ? ' · <span class="sx-bad">missing permission: ' + esc(r.missingScopes.join(', ')) + '</span>' : ''}` : `<span class="sx-bad">✗ ${esc(r.error || 'Not working')}</span>`; }).catch(e => { busy(tb, false); $('maTestOut').textContent = errMsg(e); }); };
 const au = $('maAuto'); if (au) au.onchange = () => { au.disabled = true; run(au.checked ? 'installMetaAdsTrigger' : 'removeMetaAdsTrigger').then(() => { toast(au.checked ? 'Auto-sync on — every hour' : 'Auto-sync off'); return run('getMetaAdsSettings'); }).then(d => { M.settings = d; renderMetaSettings(d); }).catch(e => { au.disabled = false; au.checked = !au.checked; toast(errMsg(e), 'error'); }); };
 const ins = $('maInstall'); if (ins) ins.onclick = () => { busy(ins, true); run('installMetaAdsTrigger').then(() => run('getMetaAdsSettings')).then(d => { toast('Auto-sync on — every hour'); M.settings = d; renderMetaSettings(d); }).catch(e => { busy(ins, false); toast(errMsg(e), 'error'); }); };
-const sy = $('maSyncS'); if (sy) sy.onclick = () => { busy(sy, true, 'Syncing…'); run('syncMetaAds', { days: 30 }).then(r => { if (r && r.error) toast('Sync failed: ' + r.error, 'error'); else toast(`Synced ${r.campaigns} campaigns · ${inr(r.spend)} · ${r.leads} leads`); M.data = null; M.perf = null; refreshToday(true); return run('getMetaAdsSettings'); }).then(d => { M.settings = d; renderMetaSettings(d); }).catch(e => { busy(sy, false); toast(errMsg(e), 'error'); }); };
+const sy = $('maSyncS'); if (sy) sy.onclick = () => { busy(sy, true, 'Syncing… (up to a minute)'); startSync({ days: 30 }, () => { M.data = null; M.perf = null; refreshToday(true); run('getMetaAdsSettings').then(d => { M.settings = d; if (M.tab === 'settings') renderMetaSettings(d); }).catch(() => busy(sy, false)); }); };
 const su = $('maSetup'); if (su) su.onclick = () => { busy(su, true); run('setupMetaAdsModule').then(r => { busy(su, false); toast(r.created.length ? 'Created: ' + r.created.join(', ') : 'All Meta sheets are already there'); }).catch(e => { busy(su, false); toast(errMsg(e), 'error'); }); };
 wireTagSection(s);
 }

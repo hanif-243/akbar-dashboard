@@ -58,11 +58,13 @@ var PAGE_FNS = ['getStudentPortalData', 'submitStudentDocument', 'submitStudentF
 var view = document.getElementById('view');
 var state = { phone: '', sent: '' };
 
-function call(fn, args, tries) {
-  return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args || [] }) })
+function newRid() { var a = ''; while (a.length < 24) a += Math.random().toString(36).slice(2); return 'r' + Date.now().toString(36) + a.slice(0, 20); }
+function call(fn, args, tries, rid) {
+  rid = rid || newRid();
+  return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args || [], rid: rid }) })
     .then(function (r) { return r.text(); })
     .then(function (t) { var j; try { j = JSON.parse(t); } catch (e) { throw new Error('BUSY'); } if (!j.ok) throw new Error(j.e || 'SERVER_ERROR'); return j.v; })
-    .catch(function (e) { if ((tries || 0) < 1 && (e.message === 'BUSY' || e.name === 'TypeError')) return new Promise(function (ok) { setTimeout(ok, 1500); }).then(function () { return call(fn, args, 1); }); throw e; });
+    .catch(function (e) { if ((tries || 0) < 2 && (e.message === 'BUSY' || e.name === 'TypeError')) return new Promise(function (ok) { setTimeout(ok, 2500); }).then(function () { return call(fn, args, (tries || 0) + 1, rid); }); throw e; });
 }
 function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function set(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { /* private mode */ } }
