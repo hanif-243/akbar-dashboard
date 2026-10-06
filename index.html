@@ -7,9 +7,11 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 (function () {
   if (window.google && window.google.script && window.google.script.run) return;
   var API = window.AKBAR_API;
-  function call(st, fn, args, retries) {
+  function newRid() { var a = ''; while (a.length < 24) a += Math.random().toString(36).slice(2); return 'r' + Date.now().toString(36) + a.slice(0, 20); }
+  function call(st, fn, args, retries, rid) {
+    rid = rid || newRid();
     if (!/^https:/.test(API)) { if (st.f) st.f(new Error('The dashboard is not connected yet: set apiUrl in _source\x2Fpages.config.json and rebuild.'), st.u); return; }
-    fetch(API, { method: 'POST', headers: { 'Content-Type': 'text\x2Fplain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }), redirect: 'follow' })
+    fetch(API, { method: 'POST', headers: { 'Content-Type': 'text\x2Fplain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args, rid: rid }), redirect: 'follow' })
       .then(function (r) { return r.text(); })
       .then(function (t) {
         var j = null; try { j = JSON.parse(t); } catch (e) {
@@ -20,12 +22,12 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
         else if (st.f) st.f(new Error((j && j.e) || 'Request failed'), st.u);
       })
       .catch(function (e) {
-        // reads try again (Google sometimes answers "busy"); saves never repeat, so nothing is added twice
-        if (retries > 0) { setTimeout(function () { call(st, fn, args, retries - 1); }, 3000 + Math.floor(Math.random() * 3000)); return; } // LESS LOAD (6 Oct 2026): one retry, after 3–6 s
+        // SAFE RETRY (6 Oct 2026): ask again with the same receipt number — the server gives back the saved answer, so a save never happens twice
+        if (retries > 0) { setTimeout(function () { call(st, fn, args, retries - 1, rid); }, 2500 + Math.floor(Math.random() * 2500)); return; }
         if (!st.f) return;
         if (e && e.message === 'NOTJSON') {
           if (e.signIn) { st.f(new Error('Google asked for a sign-in instead of answering. In Apps Script, Deploy → Manage deployments must have "Who has access: Anyone".'), st.u); return; }
-          st.f(new Error('Google was busy and did not answer' + (e.title ? ' ("' + e.title + '")' : '') + '. Please try again in a moment' + (/^get|runBatch/.test(fn) ? '.' : ' — check first that it was not already saved.')), st.u);
+          st.f(new Error('Google was busy and did not answer' + (e.title ? ' ("' + e.title + '")' : '') + '. Please try again in a moment.'), st.u);
           return;
         }
         st.f(new Error('Could not reach the server — check your internet connection.'), st.u);
@@ -37,7 +39,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
       if (k === 'withFailureHandler') return function (h) { return runner(Object.assign({}, st, { f: h })); };
       if (k === 'withUserObject') return function (u) { return runner(Object.assign({}, st, { u: u })); };
       if (typeof k !== 'string') return undefined;
-      return function () { call(st, k, Array.prototype.slice.call(arguments), /^(get|runBatch)/.test(k) ? 1 : 0); }; // reads retry once; saves never repeat
+      return function () { call(st, k, Array.prototype.slice.call(arguments), 2); }; // SAFE RETRY: up to 2 more tries, same receipt number
     } });
   }
   window.google = { script: { run: runner({}) } };
