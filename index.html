@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '6 Oct 2026 · v44';
+window.AKBAR_BUILD = '7 Oct 2026 · v45';
 
 (function () {
   try {
@@ -16840,7 +16840,7 @@ Object.assign(window, { renderEnrollments, renderAccommodation, openFXRates: ope
 (function () {
 const B = { data: null, tab: 'students', q: '', agent: '', stage: '', teamMode: false, loading: false };
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const TABS = [['students', 'Students'], ['visa', 'Visa cases'], ['agents', 'Agents & dues']];
+const TABS = [['students', 'Students'], ['visa', 'Visa cases'], ['agents', 'Agents & dues'], ['database', '📇 Database'], ['broadcast', '📣 Broadcast']];
 const $ = id => document.getElementById(id);
 const tok = () => window._authToken || '';
 const run = (fn, ...args) => promisifyRun(fn, tok(), ...args);
@@ -16920,7 +16920,7 @@ $('b2bAddStudent').onclick = () => studentForm(null);
 $('b2bAddAgent').onclick = () => agentForm(null);
 $('b2bAddCase').onclick = () => caseForm(null, '');
 $('b2bImport').onclick = () => importForm(B.agent || '');
-root.querySelectorAll('[data-b2b-tab]').forEach(b => b.onclick = () => { B.tab = b.dataset.b2bTab; root.querySelectorAll('[data-b2b-tab]').forEach(x => x.classList.toggle('active', x === b)); render(); });
+root.querySelectorAll('[data-b2b-tab]').forEach(b => b.onclick = () => { B.tab = b.dataset.b2bTab; if (B.tab === 'database') B.db = null; if (B.tab === 'broadcast') B.cast = null; root.querySelectorAll('[data-b2b-tab]').forEach(x => x.classList.toggle('active', x === b)); render(); });
 let qt = null;
 $('b2bQ').oninput = () => { clearTimeout(qt); qt = setTimeout(() => { B.q = val('b2bQ'); render(); }, 200); };
 $('b2bAgentF').onchange = () => { B.agent = val('b2bAgentF'); render(); };
@@ -16955,11 +16955,12 @@ $('b2bKpis').innerHTML = `<div class="sx-kpis">
 <div class="sx-kpi"><div class="sx-sub">Visa fees pending from agents</div><div style="font-size:24px;font-weight:800;" class="${s.pending ? 'sx-bad' : ''}">${inr(s.pending)}</div><div class="sx-sub">${inr(s.received)} received of ${inr(s.fee)}</div>${s.commDue ? `<div class="sx-sub">Commission due to agents: <b>${inr(s.commDue)}</b></div>` : ''}</div></div>`;
 $('b2bAgentF').innerHTML = opts(d.agents.map(a => [a.id, a.name + (a.company ? ' · ' + a.company : '')]), B.agent, 'All agents');
 $('b2bStageF').innerHTML = opts(O().stages, B.stage, 'Any visa stage');
-$('b2bStageF').style.display = B.tab === 'agents' ? 'none' : '';
+$('b2bStageF').style.display = ['students', 'visa'].indexOf(B.tab) === -1 ? 'none' : '';
+$('b2bAgentF').style.display = ['database', 'broadcast'].indexOf(B.tab) === -1 ? '' : 'none';
 $('b2bSub').textContent = 'Students shared by partner agents · leads · applications · visa cases · agent dues · signed in as ' + d.me.name;
 const stTab = document.querySelector('[data-b2b-tab="students"]'); if (stTab) stTab.innerHTML = 'Students' + (s.openRequests ? ` <span class="b2b-reqn ${s.overdueRequests ? 'late' : ''}">${s.openRequests}</span>` : '');
 const agTab = document.querySelector('[data-b2b-tab="agents"]'); if (agTab) agTab.innerHTML = 'Agents & dues' + (s.mouIssues ? ` <span class="b2b-reqn late" title="Agents without a valid signed MOU">${s.mouIssues}</span>` : '');
-if (B.tab === 'students') renderStudents(); else if (B.tab === 'visa') renderCases(); else renderAgents();
+if (B.tab === 'students') renderStudents(); else if (B.tab === 'visa') renderCases(); else if (B.tab === 'database') renderDatabase(); else if (B.tab === 'broadcast') renderBroadcast(); else renderAgents();
 }
 const qMatch = (...parts) => !B.q || parts.join(' ').toLowerCase().indexOf(B.q.toLowerCase()) !== -1;
 function latestCase(st) { const cs = st.visaCases.map(caseById).filter(Boolean); return cs.length ? cs[cs.length - 1] : null; }
@@ -17113,7 +17114,7 @@ modal(st.name + ' · ' + st.id, `<div class="b2b-info">
 <div class="b2b-sec"><h4><span>1 · Lead for a counsellor</span><button class="um-btn" id="b2bSvLead">${st.lead ? 'Re-assign' : '＋ Add as lead'}</button></h4>
 ${st.lead ? `<div class="b2b-li"><span class="grow">In <b>${esc(st.lead.branch)}</b> leads · counsellor <b>${esc(st.lead.counsellor || 'unassigned')}</b></span><span class="b2b-pill ok">${esc(st.lead.status || 'Lead')}</span></div>` : '<div class="sx-sub">Not in the leads list yet. Adding puts them in the branch lead list with Source “Agent: ' + esc(st.agentName) + '”.</div>'}</div>
 <div class="b2b-sec"><h4><span>2 · University applications (${st.applications.length})</span><button class="um-btn" id="b2bSvApp">＋ Application</button></h4>
-${st.applications.length ? `<div class="b2b-list">${st.applications.map(a => `<div class="b2b-li"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${esc(a.id)}</span><span class="grow"><b>${esc(a.university || '—')}</b> · ${esc(a.course || '')} <span class="sx-sub">${esc(a.country || '')} ${esc(a.intake || '')}</span></span><span class="sx-sub">Exec: ${esc(a.exec || '—')}</span><span class="b2b-pill">${esc(a.status || 'New')}</span></div>`).join('')}</div><div class="b2b-note">Applications are worked in the Applications section by the Application Executive (Student ID ${esc(st.id)}).</div>` : '<div class="sx-sub">No applications yet.</div>'}</div>
+${st.applications.length ? `<div class="b2b-list">${st.applications.map(a => `<div class="b2b-li"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${esc(a.id)}</span><span class="grow"><b>${esc(a.university || '—')}</b> · ${esc(a.course || '')} <span class="sx-sub">${esc(a.country || '')} ${esc(a.intake || '')}</span></span><span class="sx-sub">Exec: ${esc(a.exec || '—')}</span><span class="b2b-pill">${esc(a.status || 'New')}</span><button class="um-btn" data-b2b-appdocs="${esc(a.id)}" title="Documents for the application team">📎 ${(B.data.appDocCount || {})[a.id] || 0}</button></div>`).join('')}</div><div class="b2b-note">Applications are worked in the Applications section by the Application Executive (Student ID ${esc(st.id)}).</div>` : '<div class="sx-sub">No applications yet.</div>'}</div>
 ${(st.requests || []).length ? `<div class="b2b-sec b2b-reqsec"><h4><span>⚑ Requests from the application team (${st.requests.filter(q => q.open).length} open)</span></h4><div class="b2b-list">${st.requests.map(q => `<div class="b2b-li"><span class="b2b-pill ${q.kind === 'Condition' ? 'bad' : ''}">${q.kind === 'Condition' ? '⚑ Condition' : '📄 Documents'}</span><span class="grow"><b>${esc(q.title)}</b><div class="sx-sub">${esc(q.university || '')} · from ${esc(q.raisedBy)}${q.dueDate ? ' · needed by ' + esc(fmtDate(q.dueDate)) : ''}${q.thread.length ? ' · ' + q.thread.length + ' repl' + (q.thread.length === 1 ? 'y' : 'ies') : ''}</div></span><span class="b2b-pill ${q.status === 'Done' ? 'ok' : q.status === 'Cancelled' ? 'muted' : q.overdue ? 'bad' : 'warm'}">${esc(q.overdue ? 'Overdue' : q.status)}</span><button class="um-btn" data-b2b-req="${esc(q.id)}">Open</button></div>`).join('')}</div></div>` : ''}
 <div class="b2b-sec"><h4><span>3 · Visa cases (${cases.length})</span><button class="um-btn" id="b2bSvCase">＋ Visa case</button></h4>
 ${cases.length ? `<div class="b2b-list">${cases.map(c => `<div class="b2b-li"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${esc(c.id)}</span><span class="grow">${esc(c.visaType)} · ${esc(c.country || '')} ${esc(c.university || '')}<div class="sx-sub">Handled by ${esc(c.officer || '—')} · pending ${inr(c.pending)}</div></span>${stagePill(c.stage)}<button class="um-btn" data-b2b-sv-case="${esc(c.id)}">Open</button></div>`).join('')}</div>` : '<div class="sx-sub">No visa case yet.</div>'}</div>
@@ -17122,6 +17123,7 @@ ${sc.length ? `<div class="b2b-list">${sc.map(c => `<div class="b2b-li"><span cl
 <div class="sx-modal-actions"><button class="um-btn" id="b2bSvEdit" style="margin-right:auto;">✎ Edit student</button><button class="um-btn" id="b2bSvAgent">🤝 Agent profile</button><button class="um-btn sx-wa" id="b2bSvWa">WhatsApp agent</button></div>`, 760);
 $('b2bSvLead').onclick = () => leadForm(st.id);
 $('b2bSvApp').onclick = () => appForm(st.id);
+document.querySelectorAll('[data-b2b-appdocs]').forEach(b => b.onclick = () => appDocsView(b.dataset.b2bAppdocs, st.id));
 $('b2bSvCase').onclick = () => caseForm(null, st.id);
 $('b2bSvEdit').onclick = () => studentForm(st);
 $('b2bSvWa').onclick = () => waStudent(st.id);
@@ -17154,6 +17156,7 @@ function afterSave(studentId) { B.loading = false; run('getB2BDesk').then(d => {
 
 function appForm(id) {
 const st = studentById(id); if (!st) return;
+const pk = docPicker('b2bAp');
 const br0 = st.branch || (st.lead && st.lead.branch) || '';
 modal('New application · ' + st.name, `<div class="b2b-form">
 ${fld('University *', `<input type="text" id="b2bApUni">`)}${fld('Course', `<input type="text" id="b2bApCourse" value="${esc(st.course)}">`)}
@@ -17161,14 +17164,24 @@ ${fld('Country', `<input type="text" id="b2bApCountry" value="${esc(st.country)}
 ${fld('Branch *', `<select id="b2bApBranch">${opts(O().branches, br0, 'Choose branch…')}</select>`)}${fld('Application Executive', `<select id="b2bApExec">${opts(execsFor(br0), '', 'Choose executive…')}</select>`)}
 ${fld('Counsellor', `<select id="b2bApCoun">${opts(counsellorsFor(br0), st.lead ? st.lead.counsellor : '', 'None')}</select>`)}${fld('Application fee (₹)', `<div class="b2b-money"><span>₹</span><input type="number" min="0" step="any" id="b2bApFee"></div>`)}
 ${fld('Remarks', `<textarea id="b2bApRem" style="min-height:60px;"></textarea>`, true)}</div>
-<div class="b2b-note">Goes into Applications with Student ID ${esc(st.id)} — the executive sees it in their list.</div>
+${pk.html}
+<div class="b2b-note">Goes into Applications with Student ID ${esc(st.id)} — the executive sees it in their list, with these documents under Student Docs.</div>
 ${errBox('b2bApErr')}<div class="sx-modal-actions"><button class="um-btn" id="b2bApBack">← Back</button><button class="um-btn primary" id="b2bApSave">Create application</button></div>`, 640);
+pk.wire();
 $('b2bApBranch').onchange = () => { const b = val('b2bApBranch'); $('b2bApExec').innerHTML = opts(execsFor(b), '', 'Choose executive…'); $('b2bApCoun').innerHTML = opts(counsellorsFor(b), '', 'None'); };
 $('b2bApBack').onclick = () => studentView(st.id);
 $('b2bApSave').onclick = () => {
 const btn = $('b2bApSave'); busy(btn, true); formErr('b2bApErr');
 run('b2bCreateApplication', st.id, { university: val('b2bApUni'), course: val('b2bApCourse'), country: val('b2bApCountry'), intake: intakeVal('b2bApIntake'), branch: val('b2bApBranch'), executive: val('b2bApExec'), counsellor: val('b2bApCoun'), fee: num('b2bApFee'), remarks: val('b2bApRem') })
-.then(r => { toast('Application ' + r.id + ' created'); afterSave(st.id); })
+.then(r => {
+if (!pk.files().length) { toast('Application ' + r.id + ' created'); afterSave(st.id); return; }
+btn.textContent = 'Uploading documents…';
+return pk.upload(r.id, (k, n) => { btn.textContent = 'Uploading ' + k + ' of ' + n + '…'; }).then(u => {
+if (u.done) run('notifyB2BApplicationDocs', r.id, u.done).catch(() => {});
+toast('Application ' + r.id + ' created with ' + u.done + ' document' + (u.done === 1 ? '' : 's') + (u.failed ? ' — ' + u.failed + ' did not upload, add them from 📎 on the student' : ''), u.failed ? 'error' : 'success');
+afterSave(st.id);
+});
+})
 .catch(err => { busy(btn, false); formErr('b2bApErr', err); });
 };
 }
@@ -17586,6 +17599,329 @@ waCompose(a.id, msg + sign());
 toast('Download the PDF and attach it in WhatsApp', 'success');
 };
 show();
+}
+
+function readListRows(fileEl, pasteText) {
+const f = fileEl && fileEl.files[0];
+if (f) {
+const ext = (f.name.split('.').pop() || '').toLowerCase();
+if (['xlsx', 'xls', 'csv'].indexOf(ext) === -1) return Promise.reject(new Error('Choose an .xlsx, .xls or .csv file.'));
+if (f.size > 8 * 1024 * 1024) return Promise.reject(new Error('That file is over 8 MB.'));
+return f.arrayBuffer().then(buf => ext === 'csv' || typeof loadSheetJS !== 'function' ? parseCsvText(new TextDecoder('utf-8').decode(buf))
+: loadSheetJS().then(X => { const wb = X.read(buf, { type: 'array' }); return X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: '' })
+.map(r => r.map(c => typeof c === 'number' && Number.isInteger(c) ? c.toLocaleString('fullwide', { useGrouping: false }) : c)); }));
+}
+const paste = String(pasteText || '');
+if (!paste.trim()) return Promise.reject(new Error('Choose the file, or paste the rows from Excel.'));
+return Promise.resolve(paste.indexOf('\t') !== -1 ? paste.replace(/\r/g, '').split('\n').map(l => l.split('\t')) : parseCsvText(paste));
+}
+const cleanRows = rows => (rows || []).map(r => (r || []).map(c => String(c == null ? '' : c).trim())).filter(r => r.some(c => c !== ''));
+
+const DB_COLS = [['name', /^(contact|full|agent|student|person|owner)?name$|^name|contactperson|^agent$/], ['phone', /phone|mobile|whatsapp|contactno|cell|^number$|^no$/], ['email', /e?mail/],
+['company', /company|school|college|agency|organi[sz]ation|institute|consultancy|firm|business/], ['city', /city|town|district|location|place/], ['country', /country|state|region/]];
+function dbMap(headers) {
+const map = {}, used = {};
+headers.forEach((h, i) => { const k = String(h || '').toLowerCase().replace(/[\s_\/\-.()#:]+/g, ''); if (!k) return; for (const [f, re] of DB_COLS) { if (map[f] === undefined && re.test(k)) { map[f] = i; used[i] = 1; return; } } });
+return { map: map, extra: headers.map((h, i) => used[i] || !String(h || '').trim() ? -1 : i).filter(i => i !== -1) };
+}
+function loadDb(force) {
+if (B.dbBusy) return; if (B.db && !force) { renderDatabase(); return; }
+B.dbBusy = true;
+run('getB2BDatabases').then(d => { B.dbBusy = false; B.db = d; if (B.tab === 'database') renderDatabase(); })
+.catch(e => { B.dbBusy = false; if (B.tab === 'database' && $('b2bBody')) $('b2bBody').innerHTML = `<div class="sx-card sx-empty">${esc(errMsg(e))}</div>`; });
+}
+function renderDatabase() {
+const body = $('b2bBody'); if (!body) return;
+if (!B.db) { body.innerHTML = '<div class="sx-card"><div class="skeleton" style="height:180px;"></div></div>'; loadDb(); return; }
+const list = B.db.databases.filter(x => qMatch(x.id, x.name, x.source, x.notes, (x.byTelecaller || []).map(t => t.name).join(' ')));
+body.innerHTML = `<div class="sx-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><div><h3 style="margin:0;">📇 Calling databases</h3><div class="sx-sub">Import a list, share it out to telecallers — each one works her contacts on her own “B2B Database” screen.</div></div>
+<div class="sx-actions"><button class="um-btn primary" id="b2bDbNew">＋ Import a database</button><button class="um-btn" id="b2bDbRefresh">↻</button></div></div></div>
+${!list.length ? `<div class="sx-card sx-empty">${B.db.databases.length ? 'No database matches.' : 'No databases yet — import your first contact list.'}</div>` : `<div class="sx-card"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Database</th><th class="num">Contacts</th><th class="num">Not assigned</th><th class="num">Called</th><th class="num">Interested</th><th>Telecallers (called / given)</th><th></th></tr></thead><tbody>
+${list.map(x => `<tr><td><b>${esc(x.name)}</b><div class="sx-sub">${esc(x.id)}${x.source ? ' · ' + esc(x.source) : ''} · ${esc(fmtStamp(x.createdAt))}</div></td><td class="num">${x.total}</td><td class="num ${x.unassigned ? 'b2b-due' : ''}">${x.unassigned}</td>
+<td class="num">${x.called}<div class="sx-sub">${x.total ? Math.round(x.called / x.total * 100) : 0}%</div></td><td class="num"><b class="sx-good">${x.interested}</b>${x.converted ? `<div class="sx-sub">${x.converted} became agents</div>` : ''}</td>
+<td style="font-size:12.5px;">${(x.byTelecaller || []).map(t => esc(t.name) + ' <span class="sx-sub">' + t.done + '/' + t.total + '</span>').join('<br>') || '<span class="sx-sub">—</span>'}</td>
+<td><div class="sx-actions"><button class="um-btn primary" data-db-assign="${esc(x.id)}">Assign</button><button class="um-btn" data-db-open="${esc(x.id)}">Contacts</button><button class="um-btn" data-db-del="${esc(x.id)}" title="Hide this database (contacts are kept in the sheet)">Remove</button></div></td></tr>`).join('')}
+</tbody></table></div></div>`}`;
+$('b2bDbNew').onclick = dbImportForm; $('b2bDbRefresh').onclick = () => { B.db = null; renderDatabase(); };
+body.querySelectorAll('[data-db-assign]').forEach(b => b.onclick = () => dbAssignForm(b.dataset.dbAssign));
+body.querySelectorAll('[data-db-open]').forEach(b => b.onclick = () => dbContacts(b.dataset.dbOpen));
+body.querySelectorAll('[data-db-del]').forEach(b => b.onclick = () => {
+const x = B.db.databases.find(z => z.id === b.dataset.dbDel);
+if (!x || !confirm('Remove database “' + x.name + '” (' + x.total + ' contacts)? Telecallers stop seeing it. Nothing is deleted from the sheet.')) return;
+b.disabled = true; run('removeB2BDatabase', x.id).then(() => { toast('Database removed'); B.db = null; renderDatabase(); }).catch(e => { b.disabled = false; toast(errMsg(e), 'error'); });
+});
+}
+function dbImportForm() {
+const max = (B.db && B.db.importMax) || 3000;
+let checked = null;
+modal('📇 Import a calling database', `<div class="b2b-form">${fld('Database name *', '<input type="text" id="dbImName" placeholder="e.g. Kerala agents — Oct 2026">')}${fld('Source', '<input type="text" id="dbImSrc" placeholder="e.g. Education fair, purchased list">')}</div>
+<div class="b2b-sec"><h4><span>Excel / CSV file</span><button class="um-btn" id="dbImTpl">⬇ Template</button></h4><input type="file" id="dbImFile" accept=".xlsx,.xls,.csv" aria-label="Contact list file">
+<div class="b2b-note">…or paste the rows from Excel / Google Sheets <b>with the header row</b>:</div><textarea id="dbImPaste" style="min-height:90px;font-family:'IBM Plex Mono',monospace;font-size:12px;" placeholder="Name&#9;Phone&#9;Email&#9;Company&#9;City"></textarea>
+<div class="b2b-note">Needs a <b>Phone</b> column. Also read: Name, Email, Company / School / Agency, City, Country — every other column is kept as “other details” for the telecaller. Up to ${max} contacts; a phone already in another database is skipped.</div></div>
+<div id="dbImPrev"></div>${errBox('dbImErr')}<div class="sx-modal-actions"><button class="um-btn" id="dbImCheck">Check the list</button><button class="um-btn primary" id="dbImGo" disabled>Import</button></div>`, 780);
+const reset = () => { checked = null; $('dbImGo').disabled = true; $('dbImGo').textContent = 'Import'; };
+$('dbImFile').addEventListener('change', reset); $('dbImPaste').addEventListener('input', reset);
+$('dbImTpl').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿Name,Phone,Email,Company,City,Country,Notes\r\nRahul Menon,+91 98470 12345,rahul@edu.in,Bright Future Consultancy,Kochi,India,met at fair\r\n'], { type: 'text/csv' })); a.download = 'b2b-database-template.csv'; document.body.appendChild(a); a.click(); a.remove(); };
+$('dbImCheck').onclick = () => {
+const btn = $('dbImCheck'); formErr('dbImErr'); reset();
+if (!val('dbImName')) { formErr('dbImErr', 'Give the database a name.'); return; }
+busy(btn, true, 'Reading…');
+readListRows($('dbImFile'), $('dbImPaste').value).then(rows => {
+rows = cleanRows(rows);
+if (rows.length < 2) throw new Error('No contacts found — the list needs a header row and at least one contact.');
+const m = dbMap(rows[0]);
+if (m.map.phone === undefined) throw new Error('No “Phone” column found. The first row must be the header (Name, Phone, Email, Company, City…).');
+const list = rows.slice(1).map((r, i) => { const o = { line: i + 2 }; Object.keys(m.map).forEach(f => { o[f] = r[m.map[f]] || ''; }); o.extra = m.extra.map(j => r[j] ? rows[0][j] + ': ' + r[j] : '').filter(Boolean).join(' · '); return o; });
+if (list.length > max) throw new Error('That list has ' + list.length + ' contacts. Import at most ' + max + ' at a time.');
+btn.textContent = 'Checking…';
+return run('importB2BDatabase', { name: val('dbImName'), source: val('dbImSrc'), dryRun: true }, list).then(r => ({ r: r, list: list }));
+}).then(({ r, list }) => {
+busy(btn, false); checked = list;
+$('dbImPrev').innerHTML = `<div class="b2b-sec"><h4><span><span class="sx-good">${r.ready} ready</span>${r.skipped.length ? ' · <span class="sx-bad">' + r.skipped.length + ' skipped</span>' : ''}</span></h4>
+${r.skipped.length ? `<div class="sx-table-wrap" style="max-height:170px;overflow:auto;"><table class="sx-table"><thead><tr><th class="num">Row</th><th>Contact</th><th>Why skipped</th></tr></thead><tbody>${r.skipped.slice(0, 300).map(x => `<tr><td class="num">${x.line}</td><td>${esc(x.name || '—')}</td><td class="sx-bad">${esc(x.reason)}</td></tr>`).join('')}</tbody></table></div>` : ''}
+<div class="sx-table-wrap" style="max-height:200px;overflow:auto;margin-top:6px;"><table class="sx-table"><thead><tr><th>Name</th><th>Phone</th><th>Company · city</th></tr></thead><tbody>${list.slice(0, 50).map(x => `<tr><td>${esc(x.name || '—')}</td><td>${esc(x.phone)}</td><td>${esc([x.company, x.city].filter(Boolean).join(' · '))}</td></tr>`).join('')}</tbody></table></div>${list.length > 50 ? `<div class="b2b-note">First 50 of ${list.length} rows shown.</div>` : ''}</div>`;
+$('dbImGo').disabled = !r.ready; $('dbImGo').textContent = r.ready ? 'Import ' + r.ready + ' contacts' : 'Nothing to import';
+}).catch(e => { busy(btn, false); formErr('dbImErr', e); });
+};
+$('dbImGo').onclick = () => {
+if (!checked) return; const btn = $('dbImGo'); busy(btn, true, 'Importing…'); formErr('dbImErr');
+run('importB2BDatabase', { name: val('dbImName'), source: val('dbImSrc') }, checked).then(r => {
+toast(r.added + ' contacts imported' + (r.skipped.length ? ' · ' + r.skipped.length + ' skipped' : ''));
+B.db = null; B.dbBusy = false; run('getB2BDatabases').then(d => { B.db = d; renderDatabase(); dbAssignForm(r.dbId); }).catch(() => { closeModal(1); renderDatabase(); });
+}).catch(e => { busy(btn, false); formErr('dbImErr', e); });
+};
+}
+function dbAssignForm(dbId) {
+const x = B.db && B.db.databases.find(z => z.id === dbId); if (!x) return;
+const tcs = B.db.telecallers || [];
+const mine = x.byTelecaller || [];
+modal('Assign · ' + x.name, `<div class="b2b-note" style="margin-top:0;"><b>${x.unassigned}</b> of ${x.total} contacts are not assigned yet.</div>
+${!tcs.length ? '<div class="fin-alert warm">No telecaller logins yet — add one in User Management (role “Telecaller”).</div>' : `<div class="b2b-sec" style="border-top:0;margin-top:4px;"><h4><span>Share the unassigned contacts</span></h4>
+<div class="b2b-list">${tcs.map(t => { const m = mine.find(z => z.username === t.username); return `<label class="b2b-li" style="cursor:pointer;"><input type="checkbox" data-db-tc="${esc(t.username)}"><span class="grow"><b>${esc(t.name)}</b> <span class="sx-sub">${esc(t.branch || '')}</span></span>${m ? `<span class="sx-sub">has ${m.total} · called ${m.done}</span>` : ''}</label>`; }).join('')}</div>
+<div class="b2b-form" style="margin-top:8px;">${fld('How many each (empty = share all evenly)', '<input type="number" min="1" step="1" id="dbAsPer" placeholder="e.g. 100">')}<div class="b2b-note" id="dbAsHint" style="align-self:end;"></div></div>
+<div class="sx-modal-actions"><button class="um-btn primary" id="dbAsGo" ${x.unassigned ? '' : 'disabled'}>Assign</button></div></div>`}
+${mine.length ? `<div class="b2b-sec"><h4><span>Move or take back (only contacts not called yet)</span></h4><div class="b2b-form">
+${fld('From', `<select id="dbMvFrom">${opts(mine.map(t => [t.username, t.name + ' (' + (t.total - t.done) + ' not called)']), '', 'Choose…')}</select>`)}${fld('To', `<select id="dbMvTo">${opts(tcs.map(t => [t.username, t.name]), '', 'Take back (unassigned)')}</select>`)}</div>
+<div class="sx-modal-actions"><button class="um-btn" id="dbMvGo">Move contacts</button></div></div>` : ''}
+${errBox('dbAsErr')}<div class="sx-modal-actions"><button class="um-btn" id="dbAsClose">Done</button></div>`, 620);
+$('dbAsClose').onclick = () => closeModal(1);
+const hint = () => { const n = document.querySelectorAll('[data-db-tc]:checked').length, per = num('dbAsPer'); $('dbAsHint').textContent = n ? (per ? Math.min(x.unassigned, per * n) + ' contacts → ' + n + ' telecaller' + (n === 1 ? '' : 's') : 'about ' + Math.ceil(x.unassigned / n) + ' each') : 'Tick the telecallers'; };
+if ($('dbAsGo')) {
+document.querySelectorAll('[data-db-tc]').forEach(c => c.onchange = hint); $('dbAsPer').oninput = hint; hint();
+$('dbAsGo').onclick = () => {
+const who = Array.from(document.querySelectorAll('[data-db-tc]:checked')).map(c => c.dataset.dbTc);
+if (!who.length) { formErr('dbAsErr', 'Tick at least one telecaller.'); return; }
+const btn = $('dbAsGo'); busy(btn, true, 'Assigning…'); formErr('dbAsErr');
+run('assignB2BDatabase', x.id, { mode: 'split', telecallers: who, perPerson: num('dbAsPer') || '' }).then(r => {
+toast('Assigned — ' + Object.keys(r.assigned).map(k => k + ' ' + r.assigned[k]).join(' · ') + '. They have been notified.');
+run('getB2BDatabases').then(d => { B.db = d; renderDatabase(); dbAssignForm(x.id); }).catch(() => closeModal(1));
+}).catch(e => { busy(btn, false); formErr('dbAsErr', e); });
+};
+}
+if ($('dbMvGo')) $('dbMvGo').onclick = () => {
+if (!val('dbMvFrom')) { formErr('dbAsErr', 'Choose whose contacts to move.'); return; }
+const btn = $('dbMvGo'); busy(btn, true, 'Moving…'); formErr('dbAsErr');
+run('assignB2BDatabase', x.id, val('dbMvTo') ? { mode: 'move', from: val('dbMvFrom'), to: val('dbMvTo') } : { mode: 'clear', from: val('dbMvFrom') }).then(r => {
+toast('Moved ' + Object.keys(r.assigned).map(k => r.assigned[k] + ' → ' + k).join(''));
+run('getB2BDatabases').then(d => { B.db = d; renderDatabase(); dbAssignForm(x.id); }).catch(() => closeModal(1));
+}).catch(e => { busy(btn, false); formErr('dbAsErr', e); });
+};
+}
+function dbContacts(dbId) {
+const x = B.db && B.db.databases.find(z => z.id === dbId); if (!x) return;
+const st = { q: '', status: '', who: '', rows: null };
+const body = modal('Contacts · ' + x.name, '<div class="skeleton" style="height:240px;"></div>', 1000);
+const draw = () => {
+const rows = st.rows.filter(r => (!st.status || (r.status || 'New') === st.status) && (!st.who || (st.who === '-' ? !r.assignedTo : r.assignedTo === st.who))
+&& (!st.q || [r.name, r.phone, r.email, r.company, r.city, r.remark].join(' ').toLowerCase().indexOf(st.q) !== -1));
+$('dbCtList').innerHTML = `<div class="sx-sub" style="margin:6px 0;">${rows.length} contact${rows.length === 1 ? '' : 's'}${rows.length > 400 ? ' — first 400 shown, narrow the search' : ''}</div><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Contact</th><th>Phone</th><th>Telecaller</th><th>Result</th><th>Last remark</th><th></th></tr></thead><tbody>
+${rows.slice(0, 400).map(r => `<tr><td><b>${esc(r.name)}</b><div class="sx-sub">${esc([r.company, r.city, r.country].filter(Boolean).join(' · '))}</div></td><td>${esc(r.phone)}${r.email ? `<div class="sx-sub">${esc(r.email)}</div>` : ''}</td><td>${esc(r.assignedName || '—')}</td>
+<td><span class="b2b-pill ${r.status === 'Interested' || r.status === 'Converted' ? 'ok' : r.status === 'Call back' ? 'warm' : /Not|Wrong/.test(r.status || '') ? 'bad' : 'muted'}">${esc(r.status || 'New')}</span>${r.calls ? `<div class="sx-sub">${r.calls} call${r.calls === 1 ? '' : 's'}${r.followUp ? ' · back ' + esc(fmtDate(r.followUp)) : ''}</div>` : ''}</td>
+<td style="font-size:12px;max-width:280px;">${esc(String(r.remark || '').split('\n')[0]).slice(0, 180)}</td>
+<td>${r.agentId ? `<span class="b2b-pill ok">${esc(r.agentId)}</span>` : r.status === 'Interested' ? `<button class="um-btn primary" data-db-agent="${esc(r.id)}">＋ Make agent</button>` : ''}</td></tr>`).join('')}</tbody></table></div>`;
+document.querySelectorAll('[data-db-agent]').forEach(b => b.onclick = () => {
+const r = st.rows.find(z => z.id === b.dataset.dbAgent); if (!r || !confirm('Add ' + r.name + ' as a partner agent on the B2B desk?')) return;
+b.disabled = true; run('convertB2BContactToAgent', r.id).then(res => { r.agentId = res.id; r.status = 'Converted'; toast(r.name + ' is now agent ' + res.id); draw(); B.loading = false; load(); }).catch(e => { b.disabled = false; toast(errMsg(e), 'error'); });
+});
+};
+run('getB2BDatabaseContacts', x.id).then(d => {
+st.rows = d.rows;
+const tcs = Array.from(new Set(d.rows.filter(r => r.assignedTo).map(r => r.assignedTo + '|' + r.assignedName))).map(s => s.split('|'));
+body.innerHTML = `<div class="sx-filters" style="margin:0;"><input type="search" id="dbCtQ" placeholder="Search name, phone, company, remark…" style="min-width:220px;"><select id="dbCtSt" aria-label="Result">${opts((B.db.results || []), '', 'Any result')}</select><select id="dbCtWho" aria-label="Telecaller">${opts([['-', 'Not assigned']].concat(tcs), '', 'Any telecaller')}</select></div><div id="dbCtList"></div>`;
+let t = null; $('dbCtQ').oninput = () => { clearTimeout(t); t = setTimeout(() => { st.q = val('dbCtQ').toLowerCase(); draw(); }, 200); };
+$('dbCtSt').onchange = () => { st.status = val('dbCtSt'); draw(); }; $('dbCtWho').onchange = () => { st.who = val('dbCtWho'); draw(); };
+draw();
+}).catch(e => { body.innerHTML = `<div class="sx-empty">${esc(errMsg(e))}</div>`; });
+}
+
+function loadCast(force) {
+if (B.castBusy) return; if (B.cast && !force) { renderBroadcast(); return; }
+B.castBusy = true;
+run('getB2BBroadcasts').then(d => { B.castBusy = false; B.cast = d; if (B.tab === 'broadcast') renderBroadcast(); })
+.catch(e => { B.castBusy = false; if (B.tab === 'broadcast' && $('b2bBody')) $('b2bBody').innerHTML = `<div class="sx-card sx-empty">${esc(errMsg(e))}</div>`; });
+}
+const castById = id => ((B.cast && B.cast.list) || []).find(b => b.id === id);
+function renderBroadcast() {
+const body = $('b2bBody'); if (!body) return;
+if (!B.cast) { body.innerHTML = '<div class="sx-card"><div class="skeleton" style="height:180px;"></div></div>'; loadCast(); return; }
+const list = B.cast.list.filter(b => qMatch(b.id, b.title, b.message, b.audience, b.createdBy));
+body.innerHTML = `<div class="sx-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><div><h3 style="margin:0;">📣 Broadcast to agents</h3><div class="sx-sub">A message and a creative to some or all agents — by email in one click, and WhatsApp one agent at a time (you press Send in WhatsApp).</div></div>
+<div class="sx-actions"><button class="um-btn primary" id="bcNew">＋ New broadcast</button><button class="um-btn" id="bcRefresh">↻</button></div></div></div>
+${!list.length ? `<div class="sx-card sx-empty">${B.cast.list.length ? 'No broadcast matches.' : 'No broadcasts yet.'}</div>` : `<div class="sx-card"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Broadcast</th><th>Audience</th><th class="num">WhatsApp</th><th class="num">Email</th><th></th></tr></thead><tbody>
+${list.map(b => { const n = b.recipients.length; return `<tr class="b2b-row" data-bc-open="${esc(b.id)}"><td><b>${esc(b.title)}</b>${b.fileName ? ' <span class="b2b-pill">🖼 creative</span>' : ''}<div class="sx-sub">${esc(b.id)} · ${esc(fmtStamp(b.createdAt))} · ${esc(b.createdBy)}</div></td><td>${esc(b.audience || n + ' agents')}</td>
+<td class="num">${b.whatsapped}/${n}</td><td class="num">${b.emailed}/${n}</td><td><div class="sx-actions"><button class="um-btn" data-bc-open="${esc(b.id)}">Open</button><button class="um-btn" data-bc-del="${esc(b.id)}">Remove</button></div></td></tr>`; }).join('')}
+</tbody></table></div></div>`}`;
+$('bcNew').onclick = castForm; $('bcRefresh').onclick = () => { B.cast = null; renderBroadcast(); };
+body.querySelectorAll('[data-bc-del]').forEach(b => b.onclick = e => { e.stopPropagation(); const c = castById(b.dataset.bcDel); if (!c || !confirm('Remove broadcast “' + c.title + '” from the list?')) return;
+run('removeB2BBroadcast', c.id).then(() => { toast('Removed'); B.cast = null; renderBroadcast(); }).catch(err => toast(errMsg(err), 'error')); });
+body.querySelectorAll('[data-bc-open]').forEach(b => b.onclick = e => { if (e.target.closest('[data-bc-del]')) return; e.stopPropagation(); castSend(b.dataset.bcOpen); });
+}
+function castForm() {
+const d = B.data; if (!d) return;
+const agents = d.agents.slice().sort((a, b) => a.name.localeCompare(b.name));
+const cities = Array.from(new Set(agents.map(a => a.city).filter(Boolean))).sort();
+const pick = {}; agents.forEach(a => { pick[a.id] = a.active !== false; });
+modal('📣 New broadcast', `<div class="b2b-form">${fld('Title (for your list and the email subject)', '<input type="text" id="bcTitle" placeholder="e.g. January 2027 intake — UK scholarships">', true)}
+${fld('Message', '<textarea id="bcMsg" style="min-height:130px;" placeholder="Hi {name},&#10;&#10;…"></textarea>', true)}
+<div class="full b2b-note" style="margin-top:-4px;">Use <b>{name}</b>, <b>{company}</b> or <b>{city}</b> — each agent gets their own.</div>
+${fld('Creative (image, PDF or MP4 · up to 10 MB)', '<input type="file" id="bcFile" accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.mp4">', true)}
+<label class="full" style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;margin-top:4px;"><input type="checkbox" id="bcLink"> <span>Add a view link to the creative at the end of the message, so it opens from WhatsApp too <span class="sx-sub">(anyone who has the link can view the creative)</span></span></label></div>
+<div class="b2b-sec"><h4><span>Send to <span id="bcCount"></span></span></h4>
+<div class="sx-filters" style="margin:0 0 6px;"><button class="um-btn" data-bc-q="all">All active</button><button class="um-btn" data-bc-q="mou">MOU signed</button><button class="um-btn" data-bc-q="none">None</button>${cities.length ? `<select id="bcCity" aria-label="City">${opts(cities, '', 'By city…')}</select>` : ''}<input type="search" id="bcFind" placeholder="Find agent…" style="min-width:140px;"></div>
+<div class="b2b-list" id="bcAgents" style="max-height:260px;overflow:auto;"></div></div>
+${errBox('bcErr')}<div class="sx-modal-actions"><button class="um-btn primary" id="bcSave">Create broadcast →</button></div>`, 760);
+const drawAgents = () => {
+const q = val('bcFind').toLowerCase();
+$('bcAgents').innerHTML = agents.filter(a => !q || [a.name, a.company, a.city].join(' ').toLowerCase().indexOf(q) !== -1).map(a => `<label class="b2b-li" style="cursor:pointer;"><input type="checkbox" data-bc-ag="${esc(a.id)}" ${pick[a.id] ? 'checked' : ''}><span class="grow"><b>${esc(a.name)}</b> <span class="sx-sub">${esc([a.company, a.city].filter(Boolean).join(' · '))}</span></span><span class="sx-sub">${a.phone ? '📱' : '<span class="sx-bad">no WhatsApp</span>'} ${a.email ? '✉' : '<span class="sx-bad">no email</span>'}</span>${a.active === false ? '<span class="b2b-pill muted">inactive</span>' : ''}</label>`).join('') || '<div class="sx-sub">No agents.</div>';
+document.querySelectorAll('[data-bc-ag]').forEach(c => c.onchange = () => { pick[c.dataset.bcAg] = c.checked; count(); });
+count();
+};
+const count = () => { const n = agents.filter(a => pick[a.id]).length; $('bcCount').textContent = '(' + n + ' agent' + (n === 1 ? '' : 's') + ')'; };
+document.querySelectorAll('[data-bc-q]').forEach(b => b.onclick = () => { const k = b.dataset.bcQ; agents.forEach(a => { pick[a.id] = k === 'all' ? a.active !== false : k === 'mou' ? a.active !== false && a.mou && a.mou.status === 'Signed' : false; }); drawAgents(); });
+if ($('bcCity')) $('bcCity').onchange = () => { const c = val('bcCity'); if (!c) return; agents.forEach(a => { pick[a.id] = a.city === c && a.active !== false; }); drawAgents(); };
+let ft = null; $('bcFind').oninput = () => { clearTimeout(ft); ft = setTimeout(drawAgents, 150); };
+drawAgents();
+$('bcSave').onclick = () => {
+const ids = agents.filter(a => pick[a.id]).map(a => a.id), f = $('bcFile').files[0], btn = $('bcSave');
+formErr('bcErr');
+if (!ids.length) { formErr('bcErr', 'Choose at least one agent.'); return; }
+if (!val('bcMsg') && !f) { formErr('bcErr', 'Write the message or add a creative.'); return; }
+if (f && f.size > 10 * 1024 * 1024) { formErr('bcErr', 'The creative is larger than 10 MB.'); return; }
+const city = $('bcCity') ? val('bcCity') : '';
+const audience = ids.length === agents.filter(a => a.active !== false).length ? 'All active agents (' + ids.length + ')' : (city ? 'Agents in ' + city + ' (' + ids.length + ')' : ids.length + ' selected agents');
+busy(btn, true, f ? 'Uploading creative…' : 'Saving…');
+const send = creative => run('createB2BBroadcast', { title: val('bcTitle'), message: val('bcMsg'), agentIds: ids, audience: audience, creative: creative, shareLink: $('bcLink').checked })
+.then(r => { toast('Broadcast ' + r.id + ' ready to send'); B.castBusy = false; run('getB2BBroadcasts').then(d2 => { B.cast = d2; if (B.tab === 'broadcast') renderBroadcast(); castSend(r.id); }).catch(() => closeModal(1)); })
+.catch(e => { busy(btn, false); formErr('bcErr', e); });
+if (!f) { send(null); return; }
+const rd = new FileReader();
+rd.onload = () => send({ name: f.name, mimeType: f.type || 'application/octet-stream', base64: String(rd.result).split(',')[1] || '' });
+rd.onerror = () => { busy(btn, false); formErr('bcErr', 'Could not read the creative.'); };
+rd.readAsDataURL(f);
+};
+}
+const castText = (b, r) => String(b.message || '').replace(/\{name\}/gi, r.name || '').replace(/\{company\}/gi, r.company || r.name || '').replace(/\{city\}/gi, r.city || '') + (b.link ? '\n\n' + b.link : '');
+function castSend(id) {
+const b = castById(id); if (!b) return;
+const rec = b.recipients, n = rec.length;
+const waLeft = rec.filter(r => !r.wa && waNumber(r.phone)), mailLeft = rec.filter(r => !r.mail && r.email);
+modal('📣 ' + b.title, `<div class="b2b-req-body" style="margin-top:0;white-space:pre-wrap;">${esc(castText(b, { name: '{name}', company: '{company}', city: '{city}' }))}</div>
+${b.fileName ? `<div class="b2b-li" style="margin-top:8px;"><span class="grow">🖼 <b>${esc(b.fileName)}</b>${b.link ? ' <span class="sx-sub">· view link added to the message</span>' : '<div class="sx-sub">Download it once, then attach it in each WhatsApp chat.</div>'}</span><button class="um-btn" id="bcView">View</button><button class="um-btn" id="bcDl">⬇ Download</button></div>` : ''}
+<div class="sx-kpis" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:10px;">
+<div class="sx-kpi"><div class="sx-sub">WhatsApp opened</div><div style="font-size:22px;font-weight:800;">${b.whatsapped}/${n}</div><div class="sx-sub">${waLeft.length} to go</div></div>
+<div class="sx-kpi"><div class="sx-sub">Emailed</div><div style="font-size:22px;font-weight:800;">${b.emailed}/${n}</div><div class="sx-sub">${mailLeft.length} with email still to send${B.cast && B.cast.emailLeft != null ? ' · ' + Math.max(0, B.cast.emailLeft) + ' emails left today' : ''}</div></div></div>
+<div class="sx-actions" style="margin:4px 0 8px;"><button class="um-btn sx-wa" id="bcNextWa" ${waLeft.length ? '' : 'disabled'}>WhatsApp next agent →</button><button class="um-btn primary" id="bcMail" ${mailLeft.length ? '' : 'disabled'}>✉ Email ${mailLeft.length} agent${mailLeft.length === 1 ? '' : 's'} now</button></div>
+<div class="b2b-list" style="max-height:300px;overflow:auto;">${rec.map(r => `<div class="b2b-li"><span class="grow"><b>${esc(r.name)}</b> <span class="sx-sub">${esc([r.company, r.city].filter(Boolean).join(' · '))}</span></span>
+${r.mail ? '<span class="b2b-pill ok">✉ sent</span>' : r.email ? '<span class="b2b-pill muted">✉ not yet</span>' : '<span class="sx-sub">no email</span>'}
+${waNumber(r.phone) ? `<button class="um-btn sx-wa" data-bc-wa="${esc(r.id)}">${r.wa ? '✓ WhatsApp again' : 'WhatsApp'}</button>` : '<span class="sx-sub">no WhatsApp</span>'}</div>`).join('')}</div>
+${errBox('bcSendErr')}<div class="b2b-note">WhatsApp opens with the agent’s own message — you press Send there; nothing is sent automatically.</div>`, 760);
+const openWa = r => {
+window.open('https:\x2F\x2Fwa.me\x2F' + waNumber(r.phone) + '?text=' + encodeURIComponent(castText(b, r)), '_blank');
+r.wa = new Date().toISOString(); b.whatsapped = rec.filter(z => z.wa).length;
+run('markB2BBroadcastWhatsApp', b.id, r.id).catch(() => {});
+castSend(b.id);
+};
+document.querySelectorAll('[data-bc-wa]').forEach(x => x.onclick = () => openWa(rec.find(r => r.id === x.dataset.bcWa)));
+$('bcNextWa').onclick = () => { const r = rec.find(z => !z.wa && waNumber(z.phone)); if (r) openWa(r); };
+$('bcMail').onclick = () => {
+if (!confirm('Email this broadcast' + (b.fileName ? ' with the creative attached' : '') + ' to ' + mailLeft.length + ' agent' + (mailLeft.length === 1 ? '' : 's') + '? Replies come back to you.')) return;
+const btn = $('bcMail'); busy(btn, true, 'Sending…'); formErr('bcSendErr');
+run('emailB2BBroadcast', b.id).then(r => {
+toast(r.sent + ' email' + (r.sent === 1 ? '' : 's') + ' sent' + (r.left ? ' · ' + r.left + ' left — the daily email limit was reached, send the rest tomorrow' : ''), r.left ? 'error' : 'success');
+B.castBusy = false; run('getB2BBroadcasts').then(d => { B.cast = d; if (B.tab === 'broadcast') renderBroadcast(); castSend(b.id); });
+}).catch(e => { busy(btn, false); formErr('bcSendErr', e); });
+};
+if ($('bcView')) $('bcView').onclick = () => viewFile('Creative · ' + b.fileName, run('getB2BBroadcastCreative', b.id));
+if ($('bcDl')) $('bcDl').onclick = () => { const btn = $('bcDl'); busy(btn, true, 'Downloading…'); run('getB2BBroadcastCreative', b.id).then(f => { busy(btn, false); saveFile(f); }).catch(e => { busy(btn, false); formErr('bcSendErr', e); }); };
+}
+
+const APP_DOC_TYPES = () => (O().appDocTypes && O().appDocTypes.length ? O().appDocTypes : ['Passport', '10th Marksheet', '12th Marksheet', 'Degree Certificate', 'Academic Transcripts', 'English Test (IELTS/TOEFL/PTE)', 'Statement of Purpose', 'Letters of Recommendation', 'Resume / CV', 'Passport Photo', 'Other']);
+const DOC_GUESS = [[/passport.*photo|photo/i, 'Passport Photo'], [/passport/i, 'Passport'], [/10th|sslc|tenth/i, '10th Marksheet'], [/12th|plus.?two|hsc|twelfth/i, '12th Marksheet'],
+[/degree|provisional|convocation/i, 'Degree Certificate'], [/transcript|mark.?sheet|semester|consolidated/i, 'Academic Transcripts'], [/ielts|toefl|pte|duolingo|english/i, 'English Test (IELTS/TOEFL/PTE)'],
+[/sop|statement.?of.?purpose|personal.?statement/i, 'Statement of Purpose'], [/lor|recommend/i, 'Letters of Recommendation'], [/cv|resume/i, 'Resume / CV']];
+function guessDocType(name) { const t = APP_DOC_TYPES(); const g = DOC_GUESS.find(([re]) => re.test(name)); return g && t.indexOf(g[1]) !== -1 ? g[1] : (t.indexOf('Other') !== -1 ? 'Other' : t[t.length - 1]); }
+const DOC_OK = /\.(pdf|jpe?g|png|docx?)$/i;
+
+function docPicker(prefix) {
+const files = [];
+const html = `<div class="b2b-sec"><h4><span>📎 Student documents for the application team <span id="${prefix}DocN" class="sx-sub"></span></span></h4>
+<input type="file" id="${prefix}DocIn" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" aria-label="Add documents">
+<div class="b2b-note">Pick several files at once (PDF, JPG, PNG, Word · up to 10 MB each). We guess the type from the file name — change it if needed.</div>
+<div class="b2b-list" id="${prefix}DocList" style="margin-top:6px;"></div></div>`;
+const draw = () => {
+$(prefix + 'DocN').textContent = files.length ? '(' + files.length + ')' : '';
+$(prefix + 'DocList').innerHTML = files.map((f, i) => `<div class="b2b-li"><select class="b2b-stage" data-doc-type="${i}" aria-label="Type of ${esc(f.file.name)}">${opts(APP_DOC_TYPES(), f.type)}</select><span class="grow">${esc(f.file.name)} <span class="sx-sub">${Math.round(f.file.size / 1024)} KB</span></span>${f.state ? `<span class="b2b-pill ${f.state === 'done' ? 'ok' : f.state === 'error' ? 'bad' : 'warm'}">${f.state === 'done' ? '✓ uploaded' : f.state === 'error' ? '✗ ' + esc(f.err || 'failed') : 'uploading…'}</span>` : `<button class="um-btn" data-doc-x="${i}" title="Remove">✕</button>`}</div>`).join('');
+document.querySelectorAll(`#${prefix}DocList [data-doc-type]`).forEach(s => s.onchange = () => { files[Number(s.dataset.docType)].type = s.value; });
+document.querySelectorAll(`#${prefix}DocList [data-doc-x]`).forEach(b => b.onclick = () => { files.splice(Number(b.dataset.docX), 1); draw(); });
+};
+const wire = () => {
+$(prefix + 'DocIn').onchange = e => {
+Array.from(e.target.files || []).forEach(f => {
+if (!DOC_OK.test(f.name)) { toast(f.name + ': only PDF, JPG, PNG or Word files', 'error'); return; }
+if (f.size > 10 * 1024 * 1024) { toast(f.name + ' is larger than 10 MB', 'error'); return; }
+files.push({ file: f, type: guessDocType(f.name), state: '' });
+});
+e.target.value = ''; draw();
+};
+draw();
+};
+
+const upload = (appId, onStep) => {
+let i = 0, done = 0, failed = 0;
+const nextOne = () => {
+while (i < files.length && files[i].state === 'done') i++;
+if (i >= files.length) return Promise.resolve({ done: done, failed: failed });
+const f = files[i]; f.state = 'up'; draw(); if (onStep) onStep(i + 1, files.length);
+return f.file.arrayBuffer().then(buf => { let s = ''; const u = new Uint8Array(buf); for (let k = 0; k < u.length; k += 32768) s += String.fromCharCode.apply(null, u.subarray(k, k + 32768)); return btoa(s); })
+.then(b64 => run('uploadB2BApplicationDoc', appId, f.type, { name: f.file.name, mimeType: f.file.type || '', base64: b64 }))
+.then(() => { f.state = 'done'; done++; }, e => { f.state = 'error'; f.err = errMsg(e); failed++; })
+.then(() => { draw(); i++; return nextOne(); });
+};
+return nextOne();
+};
+return { html: html, wire: wire, files: () => files, upload: upload };
+}
+function appDocsView(appId, studentId) {
+const b = modal('📎 Documents · ' + appId, '<div class="skeleton" style="height:200px;"></div>', 720, 2);
+const pk = docPicker('b2bAd');
+run('getB2BApplicationDocs', appId).then(d => {
+const have = {}; d.docs.forEach(x => { have[x.type] = (have[x.type] || 0) + 1; });
+b.innerHTML = `<div class="b2b-note" style="margin-top:0;"><b>${esc(d.app.student)}</b> · ${esc(d.app.university || '')} · executive ${esc(d.app.exec || '—')}</div>
+<div class="b2b-sec" style="border-top:0;"><h4><span>Already uploaded (${d.docs.length})</span></h4>${d.docs.length ? `<div class="b2b-list">${d.docs.map(x => `<div class="b2b-li"><span class="grow"><b>${esc(x.type)}</b> · ${esc(x.fileName || x.name || '')}<div class="sx-sub">${esc(x.uploadedBy || x.by || '')}</div></span><span class="b2b-pill ${x.status === 'Verified' ? 'ok' : x.status === 'Rejected' ? 'bad' : 'warm'}">${esc(x.status)}</span></div>`).join('')}</div>` : '<div class="sx-sub">None yet.</div>'}
+<div class="b2b-note">Checklist: ${d.required.map(r => (have[r] ? '✓ ' : '○ ') + esc(r)).join(' · ')}</div></div>
+${pk.html}${errBox('b2bAdErr')}<div class="sx-modal-actions"><button class="um-btn primary" id="b2bAdGo">Upload</button></div>`;
+pk.wire();
+$('b2bAdGo').onclick = () => {
+if (!pk.files().some(f => f.state !== 'done')) { formErr('b2bAdErr', 'Add the files first.'); return; }
+const btn = $('b2bAdGo'); busy(btn, true, 'Uploading…'); formErr('b2bAdErr');
+pk.upload(appId, (k, n) => { btn.textContent = 'Uploading ' + k + ' of ' + n + '…'; }).then(r => {
+busy(btn, false);
+if (r.done) { run('notifyB2BApplicationDocs', appId, r.done).catch(() => {}); toast(r.done + ' document' + (r.done === 1 ? '' : 's') + ' uploaded — the application team is notified'); }
+if (r.failed) formErr('b2bAdErr', r.failed + ' file' + (r.failed === 1 ? '' : 's') + ' did not upload — see the red marks, then press Upload again.');
+else { closeModal(2); afterSave(studentId); }
+});
+};
+}).catch(e => { b.innerHTML = `<div class="sx-empty">${esc(errMsg(e))}</div>`; });
 }
 
 window.openB2BDesk = openB2BDesk;
@@ -19363,7 +19699,7 @@ const errMsg = e => (e && e.message ? e.message : String(e || 'Something went wr
 const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t || 'success'); };
 const num = n => Number(n || 0).toLocaleString('en-IN');
 const when = s => { const d = new Date(s); return !s || isNaN(d) ? '' : d.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }); };
-const OTHER = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView'];
+const OTHER = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'b2bDbView'];
 const A = { months: 12, data: null, poll: 0, results: [] };
 setInterval(() => { document.body.classList.toggle('ak-sa', !!window._isSuperAdmin && !document.body.classList.contains('tc-staff')); }, 2000);
 
@@ -19494,5 +19830,147 @@ if (typeof origPw === 'function') window.submitPassword = function () {
 };
 })();
 </script>
+
+<style>
+#b2bDbView { min-height: 100vh; background: var(--canvas); }
+.tdb-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
+.tdb-top { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+.tdb-top .grow { flex: 1; min-width: 200px; }
+.tdb-name { font-weight: 800; font-size: 15px; }
+.tdb-res { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.tdb-res button { border: 1px solid var(--border); background: var(--canvas); color: var(--ink); border-radius: 999px; padding: 6px 11px; font: inherit; font-size: 12.5px; cursor: pointer; }
+.tdb-res button.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+.tdb-row2 { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+.tdb-row2 input[type=text] { flex: 1; min-width: 200px; }
+.tdb-hist { font-size: 12px; color: var(--muted); margin-top: 8px; white-space: pre-wrap; max-height: 64px; overflow: hidden; }
+.tdb-btn { display: none; }
+body.tc-staff .tdb-btn { display: inline-flex; }
+</style>
+<script>
+
+(function () {
+const $ = id => document.getElementById(id);
+const esc = v => escapeHtml(v == null ? '' : String(v));
+const run = (fn, ...args) => promisifyRun(fn, window._authToken || '', ...args);
+const errMsg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
+const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t || 'success'); };
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const fmtDate = ymd => { const p = String(ymd || '').slice(0, 10).split('-'); return p.length < 3 ? '' : Number(p[2]) + ' ' + MON[Number(p[1]) - 1]; };
+const waNum = phone => { let d = String(phone || '').replace(/[^\d+]/g, '').replace(/^\+/, ''); if (/^0[6-9]\d{9}$/.test(d)) d = d.slice(1); if (/^[6-9]\d{9}$/.test(d)) d = '91' + d; return d.length >= 8 ? d : ''; };
+const OTHER = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'archView'];
+const S = { data: null, tab: 'new', q: '', pick: {}, busy: {} };
+
+function open() {
+  const app = document.querySelector('.app'); if (app) app.style.display = 'none';
+  OTHER.forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
+  if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
+  let root = $('b2bDbView'); if (!root) { root = document.createElement('div'); root.id = 'b2bDbView'; document.body.appendChild(root); }
+  root.style.display = 'block';
+  root.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-title">📇 B2B Database</h1><div class="sx-sub">Contacts the B2B team gave you — call, note the result, set a call-back. Separate from your leads.</div></div>
+<div style="display:flex;gap:8px;"><button class="um-btn" id="tdbRefresh">↻ Refresh</button><button class="um-btn" id="tdbBack">← Back to dashboard</button></div></div>
+<div id="tdbKpis"></div><div class="sx-tabs" role="tablist" id="tdbTabs"></div>
+<div class="sx-filters"><input type="search" id="tdbQ" placeholder="Search name, phone, company, city…" style="min-width:240px;"></div>
+<div id="tdbBody"><div class="sx-card"><div class="skeleton" style="height:220px;"></div></div></div></div>`;
+  $('tdbBack').onclick = close; $('tdbRefresh').onclick = load;
+  let t = null; $('tdbQ').oninput = () => { clearTimeout(t); t = setTimeout(() => { S.q = $('tdbQ').value.trim().toLowerCase(); draw(); }, 200); };
+  window.scrollTo(0, 0);
+  if (S.data) draw();
+  load();
+}
+function close() { const root = $('b2bDbView'); if (root) { root.style.display = 'none'; root.innerHTML = ''; } const app = document.querySelector('.app'); if (app) app.style.display = ''; count(); }
+function load() {
+  run('getMyB2BContacts').then(d => { S.data = d; draw(); })
+    .catch(e => { const b = $('tdbBody'); if (b) b.innerHTML = `<div class="sx-card sx-empty">${esc(errMsg(e))}</div>`; });
+}
+const TABS = [['new', 'To call'], ['due', 'Call-backs due'], ['interested', 'Interested'], ['all', 'All']];
+function inTab(r, tab, today) {
+  const s = r.status || 'New';
+  if (tab === 'new') return s === 'New';
+  if (tab === 'due') return s === 'Call back' && r.followUp && r.followUp <= today;
+  if (tab === 'interested') return s === 'Interested' || s === 'Converted';
+  return true;
+}
+function draw() {
+  const d = S.data, body = $('tdbBody'); if (!d || !body) return;
+  const today = d.today, sm = summary();
+  $('tdbKpis').innerHTML = `<div class="sx-kpis"><div class="sx-kpi"><div class="sx-sub">My contacts</div><div style="font-size:24px;font-weight:800;">${sm.total}</div><div class="sx-sub">${sm.fresh} not called yet</div></div>
+<div class="sx-kpi"><div class="sx-sub">Called today</div><div style="font-size:24px;font-weight:800;">${sm.calledToday}</div><div class="sx-sub">keep going!</div></div>
+<div class="sx-kpi"><div class="sx-sub">Call-backs due</div><div style="font-size:24px;font-weight:800;" class="${sm.due ? 'sx-bad' : ''}">${sm.due}</div><div class="sx-sub">today or earlier</div></div>
+<div class="sx-kpi"><div class="sx-sub">Interested</div><div style="font-size:24px;font-weight:800;" class="sx-good">${sm.interested}</div><div class="sx-sub">the B2B team is told</div></div></div>`;
+  $('tdbTabs').innerHTML = TABS.map(t => { const n = d.rows.filter(r => inTab(r, t[0], today)).length; return `<button class="sx-tab ${S.tab === t[0] ? 'active' : ''}" data-tdb-tab="${t[0]}" role="tab">${t[1]} <span class="sx-sub">${n}</span></button>`; }).join('');
+  document.querySelectorAll('[data-tdb-tab]').forEach(b => b.onclick = () => { S.tab = b.dataset.tdbTab; draw(); });
+  const rows = d.rows.filter(r => inTab(r, S.tab, today) && (!S.q || [r.name, r.phone, r.email, r.company, r.city, r.country, r.extra, r.dbName].join(' ').toLowerCase().indexOf(S.q) !== -1))
+    .sort((a, b) => S.tab === 'due' ? String(a.followUp).localeCompare(String(b.followUp)) : String(b.lastCallAt || '').localeCompare(String(a.lastCallAt || '')) || 0);
+  if (!d.rows.length) { body.innerHTML = '<div class="sx-card sx-empty">No B2B contacts assigned to you yet. The B2B team will share a database with you.</div>'; return; }
+  if (!rows.length) { body.innerHTML = `<div class="sx-card sx-empty">${S.tab === 'new' ? '🎉 Everyone here has been called.' : 'Nothing here.'}</div>`; return; }
+  body.innerHTML = rows.slice(0, 150).map(r => card(r, today)).join('') + (rows.length > 150 ? `<div class="sx-sub">Showing 150 of ${rows.length} — finish these or use the search.</div>` : '');
+  wire(body);
+}
+function summary() {
+  const d = S.data, today = d.today;
+  return { total: d.rows.length, fresh: d.rows.filter(r => (r.status || 'New') === 'New').length, calledToday: d.rows.filter(r => String(r.lastCallAt || '').slice(0, 10) === today).length,
+    due: d.rows.filter(r => r.status === 'Call back' && r.followUp && r.followUp <= today).length, interested: d.rows.filter(r => r.status === 'Interested' || r.status === 'Converted').length };
+}
+function card(r, today) {
+  const p = S.pick[r.id] || {}, wa = waNum(r.phone), res = (S.data.results || []).filter(x => x !== 'New' && x !== 'Converted');
+  return `<div class="tdb-card" data-tdb="${esc(r.id)}"><div class="tdb-top"><div class="grow"><div class="tdb-name">${esc(r.name)}</div>
+<div class="sx-sub">${esc([r.company, r.city, r.country].filter(Boolean).join(' · '))}${r.email ? ' · ' + esc(r.email) : ''}</div>${r.extra ? `<div class="sx-sub">${esc(r.extra)}</div>` : ''}<div class="sx-sub">📇 ${esc(r.dbName)}</div></div>
+<div style="text-align:right;"><div style="font-weight:700;">${esc(r.phone)}</div><div class="sx-actions" style="justify-content:flex-end;margin-top:4px;"><a class="um-btn primary" href="tel:${esc(String(r.phone).replace(/[^\d+]/g, ''))}">📞 Call</a>${wa ? `<a class="um-btn sx-wa" href="https:\x2F\x2Fwa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ''}</div>
+<div style="margin-top:4px;">${r.status && r.status !== 'New' ? `<span class="b2b-pill ${r.status === 'Interested' || r.status === 'Converted' ? 'ok' : r.status === 'Call back' ? 'warm' : 'muted'}">${esc(r.status)}${r.status === 'Call back' && r.followUp ? ' · ' + esc(fmtDate(r.followUp)) + (r.followUp <= today ? ' (due)' : '') : ''}</span>` : ''}${r.calls ? ` <span class="sx-sub">${r.calls} call${r.calls === 1 ? '' : 's'}</span>` : ''}</div></div></div>
+<div class="tdb-res">${res.map(x => `<button type="button" class="${p.status === x ? 'on' : ''}" data-tdb-res="${esc(x)}">${esc(x)}</button>`).join('')}</div>
+<div class="tdb-row2"><input type="text" data-tdb-note placeholder="Remark — what did they say?" value="${esc(p.remark || '')}" aria-label="Remark for ${esc(r.name)}">
+<input type="date" data-tdb-date value="${esc(p.followUp || '')}" style="display:${p.status === 'Call back' ? '' : 'none'};" aria-label="Call back on">
+<button class="um-btn primary" data-tdb-save ${p.status && !S.busy[r.id] ? '' : 'disabled'}>${S.busy[r.id] ? 'Saving…' : 'Save'}</button></div>
+${r.remark ? `<div class="tdb-hist">${esc(r.remark)}</div>` : ''}</div>`;
+}
+function wire(body) {
+  body.querySelectorAll('[data-tdb]').forEach(c => {
+    const id = c.dataset.tdb, p = S.pick[id] = S.pick[id] || {};
+    c.querySelectorAll('[data-tdb-res]').forEach(b => b.onclick = () => { p.status = b.dataset.tdbRes;
+      c.querySelectorAll('[data-tdb-res]').forEach(x => x.classList.toggle('on', x === b));
+      c.querySelector('[data-tdb-date]').style.display = p.status === 'Call back' ? '' : 'none';
+      if (p.status === 'Call back' && !p.followUp) { const t = new Date(Date.now() + 864e5 + 330 * 60000).toISOString().slice(0, 10); p.followUp = t; c.querySelector('[data-tdb-date]').value = t; }
+      c.querySelector('[data-tdb-save]').disabled = false; });
+    c.querySelector('[data-tdb-note]').oninput = e => { p.remark = e.target.value; };
+    c.querySelector('[data-tdb-note]').onkeydown = e => { if (e.key === 'Enter' && p.status) save(id); };
+    c.querySelector('[data-tdb-date]').onchange = e => { p.followUp = e.target.value; };
+    c.querySelector('[data-tdb-save]').onclick = () => save(id);
+  });
+}
+function save(id) {
+  const p = S.pick[id]; if (!p || !p.status || S.busy[id]) return;
+  if (p.status === 'Call back' && !p.followUp) { toast('Pick the call-back date', 'error'); return; }
+  S.busy[id] = true; draw();
+  run('saveB2BContactResult', id, { status: p.status, remark: p.remark || '', followUp: p.followUp || '' }).then(r => {
+    S.busy[id] = false; delete S.pick[id];
+    const row = S.data.rows.find(x => x.id === id); if (row) Object.assign(row, r.contact);
+    toast(p.status === 'Interested' ? 'Saved — the B2B team has been told ⭐' : 'Saved: ' + p.status);
+    draw();
+  }).catch(e => { S.busy[id] = false; draw(); toast(errMsg(e), 'error'); });
+}
+
+let cnt = null, cntAt = 0;
+function count() {
+  if (!window._authToken || !document.body.classList.contains('tc-staff') || Date.now() - cntAt < 300000) return;
+  cntAt = Date.now();
+  run('getMyB2BContactCount').then(r => { cnt = r; label(); }).catch(() => {});
+}
+function label() { const b = $('tdbStartBtn'); if (b) b.textContent = '📇 B2B Database' + (cnt && cnt.total ? ' (' + cnt.fresh + ' to call)' : ''); }
+function addButton() {
+  const banner = $('leadsetBanner');
+  if (!banner || !document.body.classList.contains('tc-staff')) return;
+  if (!$('tdbStartBtn')) {
+    const b = document.createElement('button'); b.className = 'um-btn tdb-btn'; b.id = 'tdbStartBtn'; b.type = 'button'; b.title = 'Contacts the B2B team gave you to call';
+    b.onclick = open; banner.insertBefore(b, banner.querySelector('[data-leadset="main"]') || null); label();
+  }
+  if (!cnt) count();
+}
+setInterval(addButton, 2000);
+const sb = document.getElementById('sidebar');
+if (sb) sb.addEventListener('click', e => { const it = e.target.closest('.nav-item, .lead-set-item'); if (it && $('b2bDbView') && $('b2bDbView').style.display === 'block') close(); }, true);
+window.openB2BContacts = open;
+})();
+</script>
+
 </body>
 </html>
