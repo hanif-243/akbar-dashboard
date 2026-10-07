@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '7 Oct 2026 · v45';
+window.AKBAR_BUILD = '7 Oct 2026 · v46';
 
 (function () {
   try {
@@ -78,7 +78,7 @@ window.AKBAR_BUILD = '7 Oct 2026 · v45';
       setTimeout(function () { res(null); }, 500);
       idb(function (db) {
         if (!db) { res(null); return; }
-        try { var g2 = db.transaction(ST, 'readonly').objectStore(ST).get('last'); g2.onsuccess = function () { var v = g2.result; res(v && v.token === tok && Date.now() - v.at < 6 * 3600000 ? v : null); }; g2.onerror = function () { res(null); }; } catch (e) { res(null); }
+        try { var g2 = db.transaction(ST, 'readonly').objectStore(ST).get('last'); g2.onsuccess = function () { var v = g2.result; res(v && v.token === tok && Date.now() - v.at < 48 * 3600000 ? v : null); }; g2.onerror = function () { res(null); }; } catch (e) { res(null); }
       });
     });
     function dashSave(token, resp) { idb(function (db) { if (!db) return; try { db.transaction(ST, 'readwrite').objectStore(ST).put({ token: token, at: Date.now(), resp: resp }, 'last'); } catch (e) {   } }); }
@@ -16843,7 +16843,13 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const TABS = [['students', 'Students'], ['visa', 'Visa cases'], ['agents', 'Agents & dues'], ['database', '📇 Database'], ['broadcast', '📣 Broadcast']];
 const $ = id => document.getElementById(id);
 const tok = () => window._authToken || '';
-const run = (fn, ...args) => promisifyRun(fn, tok(), ...args);
+
+const DO = { saveB2BAgentFull: 1, saveB2BStudent: 1, deleteB2BStudent: 1, b2bAssignLead: 1, b2bCreateApplication: 1, saveB2BVisaCase: 1, setB2BVisaStage: 1, deleteB2BVisaCase: 1, saveB2BCommission: 1, setB2BVisaDocStatus: 1, uploadB2BVisaDoc: 1, uploadB2BAgentMou: 1, convertB2BContactToAgent: 1, respondAppRequest: 1, sendB2BStudentPortal: 1 };
+const run = (fn, ...args) => {
+if (DO[fn]) return promisifyRun('b2bDo', tok(), fn, args).then(o => { if (o && o.desk) { B.data = o.desk; B.fresh = Date.now(); } return o ? o.r : null; });
+if (fn === 'getB2BDesk' && B.fresh && Date.now() - B.fresh < 8000) { B.fresh = 0; return Promise.resolve(B.data); }
+return promisifyRun(fn, tok(), ...args);
+};
 const esc = v => escapeHtml(v == null ? '' : String(v));
 const errMsg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
 const inr = n => '₹' + Math.round(Number(n) || 0).toLocaleString('en-IN');
@@ -16877,7 +16883,7 @@ $(k + 'Body').innerHTML = html;
 bg.classList.add('open');
 return $(k + 'Body');
 }
-function closeModal(layer) { const bg = $((layer === 2 ? 'b2bM2' : 'b2bM1') + 'Bg'); if (bg) { bg.classList.remove('open'); if (typeof window.akbarClosePicker === 'function') window.akbarClosePicker(); } }
+function closeModal(layer) { const bg = $((layer === 2 ? 'b2bM2' : 'b2bM1') + 'Bg'); if (bg) { const was = bg.classList.contains('open'); bg.classList.remove('open'); if (typeof window.akbarClosePicker === 'function') window.akbarClosePicker(); if (was && layer === 2 && typeof B.onClose2 === 'function') B.onClose2(); } }
 document.addEventListener('keydown', e => {
 if (e.key !== 'Escape') return;
 const m2 = $('b2bM2Bg'), m1 = $('b2bM1Bg');
@@ -17120,10 +17126,11 @@ ${(st.requests || []).length ? `<div class="b2b-sec b2b-reqsec"><h4><span>⚑ Re
 ${cases.length ? `<div class="b2b-list">${cases.map(c => `<div class="b2b-li"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${esc(c.id)}</span><span class="grow">${esc(c.visaType)} · ${esc(c.country || '')} ${esc(c.university || '')}<div class="sx-sub">Handled by ${esc(c.officer || '—')} · pending ${inr(c.pending)}</div></span>${stagePill(c.stage)}<button class="um-btn" data-b2b-sv-case="${esc(c.id)}">Open</button></div>`).join('')}</div>` : '<div class="sx-sub">No visa case yet.</div>'}</div>
 ${(() => { const sc = (B.data.commission || []).filter(c => c.studentId === st.id); return `<div class="b2b-sec"><h4><span>4 · Agent commission (${sc.filter(c => c.status !== 'Cancelled').length})</span><button class="um-btn" id="b2bSvComm">＋ Commission</button></h4>
 ${sc.length ? `<div class="b2b-list">${sc.map(c => `<div class="b2b-li"><span class="grow"><b>${inr(c.amount)}</b> · ${esc(c.university || '—')} ${esc(c.intake || '')}<div class="sx-sub">${c.paidAmount ? 'paid ' + inr(c.paidAmount) + (c.paidDate ? ' on ' + esc(fmtDate(c.paidDate)) : '') : esc(c.basis || '')}</div></span>${commPill(c.status)}<button class="um-btn" data-b2b-sv-comm="${esc(c.id)}">Edit</button></div>`).join('')}</div>` : `<div class="sx-sub">No commission line yet · agent terms: ${esc(commTerms(ag))}</div>`}</div>`; })()}
-<div class="sx-modal-actions"><button class="um-btn" id="b2bSvEdit" style="margin-right:auto;">✎ Edit student</button><button class="um-btn" id="b2bSvAgent">🤝 Agent profile</button><button class="um-btn sx-wa" id="b2bSvWa">WhatsApp agent</button></div>`, 760);
+<div class="sx-modal-actions"><button class="um-btn" id="b2bSvEdit" style="margin-right:auto;">✎ Edit student</button><button class="um-btn" id="b2bSvPortal" title="Send the student their portal / app link">🎓 Student portal</button><button class="um-btn" id="b2bSvAgent">🤝 Agent profile</button><button class="um-btn sx-wa" id="b2bSvWa">WhatsApp agent</button></div>`, 760);
 $('b2bSvLead').onclick = () => leadForm(st.id);
 $('b2bSvApp').onclick = () => appForm(st.id);
-document.querySelectorAll('[data-b2b-appdocs]').forEach(b => b.onclick = () => appDocsView(b.dataset.b2bAppdocs, st.id));
+document.querySelectorAll('[data-b2b-appdocs]').forEach(b => b.onclick = () => docsPopup(b.dataset.b2bAppdocs, st.id, false));
+$('b2bSvPortal').onclick = () => portalView(st.id);
 $('b2bSvCase').onclick = () => caseForm(null, st.id);
 $('b2bSvEdit').onclick = () => studentForm(st);
 $('b2bSvWa').onclick = () => waStudent(st.id);
@@ -17156,7 +17163,6 @@ function afterSave(studentId) { B.loading = false; run('getB2BDesk').then(d => {
 
 function appForm(id) {
 const st = studentById(id); if (!st) return;
-const pk = docPicker('b2bAp');
 const br0 = st.branch || (st.lead && st.lead.branch) || '';
 modal('New application · ' + st.name, `<div class="b2b-form">
 ${fld('University *', `<input type="text" id="b2bApUni">`)}${fld('Course', `<input type="text" id="b2bApCourse" value="${esc(st.course)}">`)}
@@ -17164,24 +17170,14 @@ ${fld('Country', `<input type="text" id="b2bApCountry" value="${esc(st.country)}
 ${fld('Branch *', `<select id="b2bApBranch">${opts(O().branches, br0, 'Choose branch…')}</select>`)}${fld('Application Executive', `<select id="b2bApExec">${opts(execsFor(br0), '', 'Choose executive…')}</select>`)}
 ${fld('Counsellor', `<select id="b2bApCoun">${opts(counsellorsFor(br0), st.lead ? st.lead.counsellor : '', 'None')}</select>`)}${fld('Application fee (₹)', `<div class="b2b-money"><span>₹</span><input type="number" min="0" step="any" id="b2bApFee"></div>`)}
 ${fld('Remarks', `<textarea id="b2bApRem" style="min-height:60px;"></textarea>`, true)}</div>
-${pk.html}
-<div class="b2b-note">Goes into Applications with Student ID ${esc(st.id)} — the executive sees it in their list, with these documents under Student Docs.</div>
+<div class="b2b-note">Goes into Applications with Student ID ${esc(st.id)} — the executive sees it in their list. Next, the documents checklist opens so you can upload the student’s documents.</div>
 ${errBox('b2bApErr')}<div class="sx-modal-actions"><button class="um-btn" id="b2bApBack">← Back</button><button class="um-btn primary" id="b2bApSave">Create application</button></div>`, 640);
-pk.wire();
 $('b2bApBranch').onchange = () => { const b = val('b2bApBranch'); $('b2bApExec').innerHTML = opts(execsFor(b), '', 'Choose executive…'); $('b2bApCoun').innerHTML = opts(counsellorsFor(b), '', 'None'); };
 $('b2bApBack').onclick = () => studentView(st.id);
 $('b2bApSave').onclick = () => {
 const btn = $('b2bApSave'); busy(btn, true); formErr('b2bApErr');
 run('b2bCreateApplication', st.id, { university: val('b2bApUni'), course: val('b2bApCourse'), country: val('b2bApCountry'), intake: intakeVal('b2bApIntake'), branch: val('b2bApBranch'), executive: val('b2bApExec'), counsellor: val('b2bApCoun'), fee: num('b2bApFee'), remarks: val('b2bApRem') })
-.then(r => {
-if (!pk.files().length) { toast('Application ' + r.id + ' created'); afterSave(st.id); return; }
-btn.textContent = 'Uploading documents…';
-return pk.upload(r.id, (k, n) => { btn.textContent = 'Uploading ' + k + ' of ' + n + '…'; }).then(u => {
-if (u.done) run('notifyB2BApplicationDocs', r.id, u.done).catch(() => {});
-toast('Application ' + r.id + ' created with ' + u.done + ' document' + (u.done === 1 ? '' : 's') + (u.failed ? ' — ' + u.failed + ' did not upload, add them from 📎 on the student' : ''), u.failed ? 'error' : 'success');
-afterSave(st.id);
-});
-})
+.then(r => { toast('Application ' + r.id + ' created'); afterSave(st.id); docsPopup(r.id, st.id, true); })
 .catch(err => { busy(btn, false); formErr('b2bApErr', err); });
 };
 }
@@ -17855,73 +17851,106 @@ if ($('bcView')) $('bcView').onclick = () => viewFile('Creative · ' + b.fileNam
 if ($('bcDl')) $('bcDl').onclick = () => { const btn = $('bcDl'); busy(btn, true, 'Downloading…'); run('getB2BBroadcastCreative', b.id).then(f => { busy(btn, false); saveFile(f); }).catch(e => { busy(btn, false); formErr('bcSendErr', e); }); };
 }
 
-const APP_DOC_TYPES = () => (O().appDocTypes && O().appDocTypes.length ? O().appDocTypes : ['Passport', '10th Marksheet', '12th Marksheet', 'Degree Certificate', 'Academic Transcripts', 'English Test (IELTS/TOEFL/PTE)', 'Statement of Purpose', 'Letters of Recommendation', 'Resume / CV', 'Passport Photo', 'Other']);
-const DOC_GUESS = [[/passport.*photo|photo/i, 'Passport Photo'], [/passport/i, 'Passport'], [/10th|sslc|tenth/i, '10th Marksheet'], [/12th|plus.?two|hsc|twelfth/i, '12th Marksheet'],
-[/degree|provisional|convocation/i, 'Degree Certificate'], [/transcript|mark.?sheet|semester|consolidated/i, 'Academic Transcripts'], [/ielts|toefl|pte|duolingo|english/i, 'English Test (IELTS/TOEFL/PTE)'],
-[/sop|statement.?of.?purpose|personal.?statement/i, 'Statement of Purpose'], [/lor|recommend/i, 'Letters of Recommendation'], [/cv|resume/i, 'Resume / CV']];
-function guessDocType(name) { const t = APP_DOC_TYPES(); const g = DOC_GUESS.find(([re]) => re.test(name)); return g && t.indexOf(g[1]) !== -1 ? g[1] : (t.indexOf('Other') !== -1 ? 'Other' : t[t.length - 1]); }
-const DOC_OK = /\.(pdf|jpe?g|png|docx?)$/i;
-
-function docPicker(prefix) {
-const files = [];
-const html = `<div class="b2b-sec"><h4><span>📎 Student documents for the application team <span id="${prefix}DocN" class="sx-sub"></span></span></h4>
-<input type="file" id="${prefix}DocIn" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" aria-label="Add documents">
-<div class="b2b-note">Pick several files at once (PDF, JPG, PNG, Word · up to 10 MB each). We guess the type from the file name — change it if needed.</div>
-<div class="b2b-list" id="${prefix}DocList" style="margin-top:6px;"></div></div>`;
+function docsPopup(appId, studentId, isNew) {
+const D = { data: null, uploaded: 0 };
+const box = modal('📎 Documents · ' + appId, '<div class="skeleton" style="height:260px;"></div>', 860, 2);
+const when = s => s ? new Date(s).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '';
 const draw = () => {
-$(prefix + 'DocN').textContent = files.length ? '(' + files.length + ')' : '';
-$(prefix + 'DocList').innerHTML = files.map((f, i) => `<div class="b2b-li"><select class="b2b-stage" data-doc-type="${i}" aria-label="Type of ${esc(f.file.name)}">${opts(APP_DOC_TYPES(), f.type)}</select><span class="grow">${esc(f.file.name)} <span class="sx-sub">${Math.round(f.file.size / 1024)} KB</span></span>${f.state ? `<span class="b2b-pill ${f.state === 'done' ? 'ok' : f.state === 'error' ? 'bad' : 'warm'}">${f.state === 'done' ? '✓ uploaded' : f.state === 'error' ? '✗ ' + esc(f.err || 'failed') : 'uploading…'}</span>` : `<button class="um-btn" data-doc-x="${i}" title="Remove">✕</button>`}</div>`).join('');
-document.querySelectorAll(`#${prefix}DocList [data-doc-type]`).forEach(s => s.onchange = () => { files[Number(s.dataset.docType)].type = s.value; });
-document.querySelectorAll(`#${prefix}DocList [data-doc-x]`).forEach(b => b.onclick = () => { files.splice(Number(b.dataset.docX), 1); draw(); });
+const d = D.data, a = d.app, p = d.progress, pct = p.total ? Math.round(p.have / p.total * 100) : 0;
+$('b2bM2Title').textContent = '📎 ' + a.student + ' · ' + a.id;
+const docsFor = type => d.docs.filter(x => x.type.toLowerCase() === type.toLowerCase());
+const reqLower = d.required.map(x => x.toLowerCase());
+const others = d.docs.filter(x => reqLower.indexOf(x.type.toLowerCase()) === -1);
+const statusOf = type => (d.checklist.find(c => c.type === type) || {}).status || 'Missing';
+const fileRow = (x, showType) => `<div class="app-doc-file" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) 90px auto;">
+<div>${showType ? `<div class="meta" style="font-weight:600;color:var(--ink);">${esc(x.type)}</div>` : ''}<div class="fn" title="${esc(x.name)}">${esc(x.name)}</div><div class="meta">${x.sizeKb} KB</div></div>
+<div class="meta">${esc(x.by)}<br>${esc(when(x.at))}</div><span class="at-pill ${esc(x.status)}">${esc(x.status)}</span>
+<div class="acts"><button class="icon-btn" data-dd-dl="${esc(x.fileId)}" title="Download" aria-label="Download">⬇</button>${x.status === 'Verified' ? '' : `<button class="icon-btn" data-dd-rm="${esc(x.fileId)}" title="Remove" aria-label="Remove" style="color:var(--red);">🗑</button>`}</div></div>`;
+box.innerHTML = `${isNew ? `<div class="fin-alert" style="margin:0 0 10px;background:rgba(31,157,99,.1);color:var(--ok);">✅ Application ${esc(a.id)} sent to the application team${a.exec ? ' (' + esc(a.exec) + ')' : ''}. Now upload the student’s documents below.</div>` : ''}
+<div class="sx-sub" style="margin-bottom:8px;">${esc([a.exec ? 'Executive ' + a.exec : '', a.country, a.university, a.course].filter(Boolean).join(' · '))}</div>
+<div class="at-doc-progress"><span>${p.have} of ${p.total} required documents uploaded · ${p.verified} verified${p.rejected ? ' · ' + p.rejected + ' rejected' : ''}</span><div class="at-track" style="flex:1;"><div class="at-fill ok" style="width:${pct}%"></div></div><span>${pct}%</span></div>
+<div class="sx-sub" style="margin-bottom:8px;">PDF, JPG, PNG, DOC, DOCX · max 10 MB · click Upload or drag files onto a row (several at once is fine)</div>
+${d.required.map(type => `<div class="app-doc-row upload-zone" data-dd-type="${esc(type)}"><div class="head"><span class="name">${esc(type)}</span><span class="at-pill ${statusOf(type)}">${statusOf(type)}</span><button class="um-btn" data-dd-up>Upload</button></div>
+${docsFor(type).map(x => fileRow(x, false)).join('')}</div>`).join('')}
+<div class="card-section-title" style="margin-top:16px;">Other document</div>
+<div class="at-other upload-zone" data-dd-type=""><input id="ddOtherType" placeholder="Document name, e.g. Bank Statement" aria-label="Other document name"><button class="um-btn" data-dd-up>Upload</button></div>
+${others.length ? `<div class="app-doc-row" style="margin-top:8px;"><div class="head"><span class="name">Other uploads</span></div>${others.map(x => fileRow(x, true)).join('')}</div>` : ''}
+<input type="file" id="ddFile" multiple accept="${esc(d.allowedExtensions.map(x => '.' + x).join(','))}" style="display:none;">
+<div class="at-form-msg" id="ddMsg"></div>
+<div class="sx-modal-actions"><button class="um-btn primary" id="ddDone">Done</button></div>`;
+wire();
+};
+const msg = (t, err) => { const m = $('ddMsg'); if (m) { m.textContent = t; m.className = 'at-form-msg' + (err ? ' err' : ''); } };
+let pendingType = '';
+const typeFor = zone => zone.dataset.ddType || ($('ddOtherType') ? $('ddOtherType').value.trim() : '');
+const upload = (type, files) => {
+const list = Array.from(files || []), d = D.data;
+let i = 0;
+const next = () => {
+if (i >= list.length) return;
+const f = list[i++], ext = (f.name.split('.').pop() || '').toLowerCase();
+if (f.name.indexOf('.') === -1 || d.allowedExtensions.indexOf(ext) === -1) { msg(f.name + ': only PDF, JPG, PNG, DOC or DOCX files.', true); return next(); }
+if (f.size > d.maxBytes) { msg(f.name + ' is larger than 10 MB.', true); return next(); }
+msg('Uploading ' + f.name + ' as “' + type + '”' + (list.length > 1 ? ' (' + i + ' of ' + list.length + ')' : '') + '…');
+box.classList.add('at-busy');
+const rd = new FileReader();
+rd.onload = () => run('uploadB2BStudentDocument', appId, type, { name: f.name, mimeType: f.type || '', base64: String(rd.result).split(',')[1] || '' })
+.then(res => { D.uploaded++; D.data = res; box.classList.remove('at-busy'); draw(); toast('Uploaded ' + f.name); next(); })
+.catch(e => { box.classList.remove('at-busy'); msg(errMsg(e), true); next(); });
+rd.onerror = () => { box.classList.remove('at-busy'); msg('Could not read ' + f.name, true); next(); };
+rd.readAsDataURL(f);
+};
+next();
 };
 const wire = () => {
-$(prefix + 'DocIn').onchange = e => {
-Array.from(e.target.files || []).forEach(f => {
-if (!DOC_OK.test(f.name)) { toast(f.name + ': only PDF, JPG, PNG or Word files', 'error'); return; }
-if (f.size > 10 * 1024 * 1024) { toast(f.name + ' is larger than 10 MB', 'error'); return; }
-files.push({ file: f, type: guessDocType(f.name), state: '' });
+const input = $('ddFile');
+box.querySelectorAll('.upload-zone[data-dd-type]').forEach(zone => {
+const btn = zone.querySelector('[data-dd-up]');
+const need = () => { msg('Type a name for the other document first.', true); $('ddOtherType').focus(); };
+btn.onclick = () => { const t = typeFor(zone); if (!t) return need(); pendingType = t; input.value = ''; input.click(); };
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag'); const t = typeFor(zone); if (!t) return need(); upload(t, e.dataTransfer && e.dataTransfer.files); });
 });
-e.target.value = ''; draw();
+input.onchange = () => upload(pendingType, input.files);
+box.querySelectorAll('[data-dd-dl]').forEach(b => b.onclick = () => { b.disabled = true; run('getB2BDocumentFile', appId, b.dataset.ddDl).then(f => { b.disabled = false; saveFile(f); }).catch(e => { b.disabled = false; msg(errMsg(e), true); }); });
+box.querySelectorAll('[data-dd-rm]').forEach(b => b.onclick = () => {
+if (!confirm('Remove this file from the application? (It is kept in Drive.)')) return;
+box.classList.add('at-busy');
+run('removeB2BStudentDocument', appId, b.dataset.ddRm).then(res => { box.classList.remove('at-busy'); D.data = res; draw(); toast('File removed'); }).catch(e => { box.classList.remove('at-busy'); msg(errMsg(e), true); });
+});
+$('ddDone').onclick = () => closeModal(2);
 };
-draw();
+B.onClose2 = () => {
+B.onClose2 = null;
+if (D.uploaded) { toast(D.uploaded + ' document' + (D.uploaded === 1 ? '' : 's') + ' uploaded — the application team can see them'); afterSave(studentId); }
 };
-
-const upload = (appId, onStep) => {
-let i = 0, done = 0, failed = 0;
-const nextOne = () => {
-while (i < files.length && files[i].state === 'done') i++;
-if (i >= files.length) return Promise.resolve({ done: done, failed: failed });
-const f = files[i]; f.state = 'up'; draw(); if (onStep) onStep(i + 1, files.length);
-return f.file.arrayBuffer().then(buf => { let s = ''; const u = new Uint8Array(buf); for (let k = 0; k < u.length; k += 32768) s += String.fromCharCode.apply(null, u.subarray(k, k + 32768)); return btoa(s); })
-.then(b64 => run('uploadB2BApplicationDoc', appId, f.type, { name: f.file.name, mimeType: f.file.type || '', base64: b64 }))
-.then(() => { f.state = 'done'; done++; }, e => { f.state = 'error'; f.err = errMsg(e); failed++; })
-.then(() => { draw(); i++; return nextOne(); });
-};
-return nextOne();
-};
-return { html: html, wire: wire, files: () => files, upload: upload };
+run('getB2BStudentDocuments', appId).then(d => { D.data = d; draw(); }).catch(e => { box.innerHTML = `<div class="sx-empty">${esc(errMsg(e))}</div>`; });
 }
-function appDocsView(appId, studentId) {
-const b = modal('📎 Documents · ' + appId, '<div class="skeleton" style="height:200px;"></div>', 720, 2);
-const pk = docPicker('b2bAd');
-run('getB2BApplicationDocs', appId).then(d => {
-const have = {}; d.docs.forEach(x => { have[x.type] = (have[x.type] || 0) + 1; });
-b.innerHTML = `<div class="b2b-note" style="margin-top:0;"><b>${esc(d.app.student)}</b> · ${esc(d.app.university || '')} · executive ${esc(d.app.exec || '—')}</div>
-<div class="b2b-sec" style="border-top:0;"><h4><span>Already uploaded (${d.docs.length})</span></h4>${d.docs.length ? `<div class="b2b-list">${d.docs.map(x => `<div class="b2b-li"><span class="grow"><b>${esc(x.type)}</b> · ${esc(x.fileName || x.name || '')}<div class="sx-sub">${esc(x.uploadedBy || x.by || '')}</div></span><span class="b2b-pill ${x.status === 'Verified' ? 'ok' : x.status === 'Rejected' ? 'bad' : 'warm'}">${esc(x.status)}</span></div>`).join('')}</div>` : '<div class="sx-sub">None yet.</div>'}
-<div class="b2b-note">Checklist: ${d.required.map(r => (have[r] ? '✓ ' : '○ ') + esc(r)).join(' · ')}</div></div>
-${pk.html}${errBox('b2bAdErr')}<div class="sx-modal-actions"><button class="um-btn primary" id="b2bAdGo">Upload</button></div>`;
-pk.wire();
-$('b2bAdGo').onclick = () => {
-if (!pk.files().some(f => f.state !== 'done')) { formErr('b2bAdErr', 'Add the files first.'); return; }
-const btn = $('b2bAdGo'); busy(btn, true, 'Uploading…'); formErr('b2bAdErr');
-pk.upload(appId, (k, n) => { btn.textContent = 'Uploading ' + k + ' of ' + n + '…'; }).then(r => {
-busy(btn, false);
-if (r.done) { run('notifyB2BApplicationDocs', appId, r.done).catch(() => {}); toast(r.done + ' document' + (r.done === 1 ? '' : 's') + ' uploaded — the application team is notified'); }
-if (r.failed) formErr('b2bAdErr', r.failed + ' file' + (r.failed === 1 ? '' : 's') + ' did not upload — see the red marks, then press Upload again.');
-else { closeModal(2); afterSave(studentId); }
-});
-};
-}).catch(e => { b.innerHTML = `<div class="sx-empty">${esc(errMsg(e))}</div>`; });
+
+function portalView(studentId) {
+const st = studentById(studentId); if (!st) return;
+const box = modal('🎓 Student portal · ' + st.name, '<div class="skeleton" style="height:160px;"></div>', 600, 2);
+const show = (p, note) => run('sendB2BStudentPortal', st.id, p || {}).then(r => {
+const s2 = studentById(st.id) || st;
+box.innerHTML = `${note ? `<div class="fin-alert" style="margin:0 0 10px;background:rgba(31,157,99,.1);color:var(--ok);">${esc(note)}</div>` : ''}${r.addedLead ? `<div class="fin-alert warm" style="margin:0 0 10px;">Added to ${esc((s2.lead && s2.lead.branch) || s2.branch || '')} leads so the portal can track the student.</div>` : ''}
+<div class="sx-sub">The student sees their applications, documents, visa, payments and checklist, can ask questions, and can install it as an app (sign-in with their mobile number).</div>
+<label class="f" style="margin-top:10px;">Portal link ${r.reused ? '<span class="sx-sub">(the student’s current link)</span>' : '<span class="sx-sub">(new)</span>'}</label>
+<div style="display:flex;gap:8px;"><input type="text" id="b2bPtUrl" value="${esc(r.portalUrl)}" readonly style="flex:1;"><button class="um-btn" id="b2bPtCopy">Copy</button></div>
+<label class="f" style="margin-top:10px;">Message</label><textarea id="b2bPtMsg" style="min-height:120px;">${esc(r.message)}</textarea>
+<div class="sx-modal-actions" style="flex-wrap:wrap;">
+<button class="um-btn" id="b2bPtNew" style="margin-right:auto;" title="Stops the old link and makes a new one">↻ New link</button>
+<button class="um-btn" id="b2bPtAgent">Send via agent</button>
+${r.studentEmail ? '<button class="um-btn" id="b2bPtMail">✉ Email student</button>' : ''}
+${r.studentPhone ? '<button class="um-btn sx-wa" id="b2bPtWa">WhatsApp student</button>' : ''}</div>
+<div class="b2b-note">WhatsApp opens with the message — you press Send there.</div>`;
+$('b2bPtCopy').onclick = () => { const t = $('b2bPtUrl'); t.select(); try { navigator.clipboard.writeText(t.value).then(() => toast('Link copied')); } catch (e) { document.execCommand('copy'); toast('Link copied'); } };
+if ($('b2bPtWa')) $('b2bPtWa').onclick = () => window.open('https:\x2F\x2Fwa.me\x2F' + waNumber(r.studentPhone) + '?text=' + encodeURIComponent(val('b2bPtMsg')), '_blank');
+$('b2bPtAgent').onclick = () => waCompose(st.agentId, 'Hi ' + st.agentName + ',\nPlease forward this to ' + st.name + ' — their personal student portal:\n\n' + val('b2bPtMsg') + sign());
+if ($('b2bPtMail')) $('b2bPtMail').onclick = () => { if (!confirm('Email the portal link to ' + r.studentEmail + '?')) return; const b = $('b2bPtMail'); busy(b, true, 'Sending…'); show({ email: true }, 'Emailed to ' + r.studentEmail); };
+$('b2bPtNew').onclick = () => { if (!confirm('Make a new link? The old link stops working.')) return; box.innerHTML = '<div class="skeleton" style="height:160px;"></div>'; show({ forceNew: true }, 'New link made — send it to the student.'); };
+}).catch(e => { box.innerHTML = `<div class="fin-alert">${esc(errMsg(e))}</div>`; });
+show({});
 }
 
 window.openB2BDesk = openB2BDesk;
