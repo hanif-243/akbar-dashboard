@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '6 Oct 2026 · v43';
+window.AKBAR_BUILD = '6 Oct 2026 · v44';
 
 (function () {
   try {
@@ -112,17 +112,67 @@ window.AKBAR_BUILD = '6 Oct 2026 · v43';
     var keyOf = function (fn, args) { return fn + '|' + JSON.stringify(args || []); };
 
     var mem = {}, memOrder = [], navAt = 0, NOMEM = { getAuthState: 1, getDashboardData: 1, getStudentQuestionCount: 1, getMetaAdsToday: 1, getFollowUpBoard: 1, getNextCallLead: 1 };
-    document.addEventListener('click', function (e) { if (e.target && e.target.closest && e.target.closest('#sidebar .nav-item, .s10-tab, .sx-tab, [data-fin-go], [data-dash-tab]')) navAt = Date.now(); }, true);
+    var lastNavEl = null, userAt = 0, NAVSEL = '#sidebar .nav-item, .s10-tab, .sx-tab, [data-fin-go], [data-dash-tab]';
+    document.addEventListener('click', function (e) { var el = e.target && e.target.closest && e.target.closest(NAVSEL); if (el) { navAt = Date.now(); lastNavEl = el; } }, true);
+    ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) { document.addEventListener(ev, function () { userAt = Date.now(); }, { capture: true, passive: true }); });
+
+    var KEEP = 'ak_mod:', NOKEEP = /File|Pdf|Statement|Preview|Search|Demo|Next|Count|Export|Download|Question/;
+    function keepKey(k, args) { var t = window._authToken || ''; return KEEP + k + '|' + JSON.stringify((args || []).map(function (a) { return a === t ? '#' : a; })); }
+    function keepGet(key, cb) {
+      var done = false, fin = function (v) { if (!done) { done = true; cb(v); } };
+      setTimeout(function () { fin(null); }, 400);
+      idb(function (db) { if (!db) { fin(null); return; } try { var g2 = db.transaction(ST, 'readonly').objectStore(ST).get(key); g2.onsuccess = function () { var v = g2.result; fin(v && v.token === (window._authToken || '') && Date.now() - v.at < 864e5 ? v : null); }; g2.onerror = function () { fin(null); }; } catch (e) { fin(null); } });
+    }
+    function keepPut(key, v) {
+      try { if (JSON.stringify(v).length > 1500000) return; } catch (e) { return; }
+      var idx = []; try { idx = JSON.parse(localStorage.getItem('ak_mod_idx') || '[]'); } catch (e) { idx = []; }
+      idx = idx.filter(function (k) { return k !== key; }); idx.push(key); var drop = idx.length > 40 ? idx.splice(0, idx.length - 40) : [];
+      try { localStorage.setItem('ak_mod_idx', JSON.stringify(idx)); } catch (e) {   }
+      idb(function (db) { if (!db) return; try { var os = db.transaction(ST, 'readwrite').objectStore(ST); os.put({ token: window._authToken || '', at: Date.now(), v: v }, key); drop.forEach(function (k) { os.delete(k); }); } catch (e) {   } });
+    }
+    var chipT = null;
+    function chip(text, kind, ms, onTap) {
+      var el = document.getElementById('akSavedChip');
+      if (!el) { el = document.createElement('button'); el.id = 'akSavedChip'; el.type = 'button'; el.setAttribute('aria-live', 'polite'); el.style.cssText = 'position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:21000;border:1px solid var(--border,#ddd);border-radius:999px;padding:7px 14px;font:600 12.5px/1.2 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.18);cursor:default;max-width:calc(100vw - 32px);'; document.body.appendChild(el); }
+      el.textContent = text; el.style.display = '';
+      el.style.background = kind === 'act' ? 'var(--navy,#302D40)' : kind === 'bad' ? 'var(--red,#F22F3D)' : 'var(--card,#fff)';
+      el.style.color = kind === 'act' || kind === 'bad' ? '#fff' : 'var(--ink,#222)';
+      el.style.cursor = onTap ? 'pointer' : 'default';
+      el.onclick = function () { el.style.display = 'none'; if (onTap) onTap(); };
+      clearTimeout(chipT); if (ms) chipT = setTimeout(function () { el.style.display = 'none'; }, ms);
+    }
+    function ago(at) { var m = Math.round((Date.now() - at) / 60000); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : Math.round(m / 60) + ' h ago'; }
+    var reopenT = null;
+    function alive(el) { return !!el && (typeof el === 'function' || document.body.contains(el)); }
+    function reopen(el) { clearTimeout(reopenT); reopenT = setTimeout(function () { if (alive(el)) { navAt = Date.now(); lastNavEl = el; if (typeof el === 'function') el(); else el.click(); } }, 250); }
+    window.akNavNow = function (re) { navAt = Date.now(); if (re) lastNavEl = re; };
     function memPut(key, v) { mem[key] = { at: Date.now(), v: v }; memOrder = memOrder.filter(function (k) { return k !== key; }); memOrder.push(key); while (memOrder.length > 40) delete mem[memOrder.shift()]; }
     function memCall(st, k, args) {
-      var key = keyOf(k, args), hit = mem[key];
-      if (hit && Date.now() - hit.at < 180000 && Date.now() - navAt < 2500) {
+      var key = keyOf(k, args), hit = mem[key], nav = Date.now() - navAt < 2500, keepable = !NOKEEP.test(k);
+      var store = function (v) { try { var c = JSON.parse(JSON.stringify(v)); memPut(key, c); if (keepable) keepPut(keepKey(k, args), c); } catch (e) {   } };
+      if (hit && Date.now() - hit.at < 180000 && nav) {
         var copy = JSON.parse(JSON.stringify(hit.v));
         if (st.s) setTimeout(function () { st.s(copy, st.u); }, 0);
-        callReal({ s: function (v) { memPut(key, v); } }, k, args);
+        if (Date.now() - hit.at > 15000) callReal({ s: store }, k, args);
         return;
       }
-      callReal(Object.assign({}, st, { s: function (v, u) { try { memPut(key, JSON.parse(JSON.stringify(v))); } catch (e) {   } if (st.s) st.s(v, u); } }), k, args);
+      var plain = function () { callReal(Object.assign({}, st, { s: function (v, u) { store(v); if (st.s) st.s(v, u); } }), k, args); };
+      if (!nav || !keepable) { plain(); return; }
+      keepGet(keepKey(k, args), function (rec) {
+        if (!rec) { plain(); return; }
+        var servedAt = Date.now(), el = lastNavEl, old = '';
+        try { old = JSON.stringify(rec.v); } catch (e) { plain(); return; }
+        if (st.s) st.s(JSON.parse(old), st.u);
+        chip('⚡ Saved copy from ' + ago(rec.at) + ' · updating…', '', 0);
+        callReal({ s: function (v) {
+          store(v);
+          var same = false; try { same = JSON.stringify(v) === old; } catch (e) {   }
+          if (same) { chip('✓ Up to date', '', 1200); return; }
+          var idle = userAt <= servedAt + 60 && !document.querySelector('.cmdk-backdrop.open') && alive(el);
+          if (idle) { chip('✓ Updated', '', 1500); reopen(el); }
+          else chip('↻ New data ready — tap to show', 'act', 0, function () { reopen(el); });
+        }, f: function () { chip('Couldn’t refresh — showing the saved copy', 'bad', 5000); } }, k, args);
+      });
     }
     window.akClearModuleMemory = function () { mem = {}; memOrder = []; };
     function callReal(st, fn, args) {
@@ -16852,13 +16902,14 @@ function openB2BDesk(o) {
 o = o || {};
 if (o.teamMode && B.teamMode && $('b2bView').style.display === 'block') return;
 B.teamMode = B.teamMode || !!o.teamMode;
+if (!B.data && typeof window.akNavNow === 'function') window.akNavNow(() => { B.loading = false; load(); });
 const app = document.querySelector('.app'); if (app) app.style.display = 'none';
 ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'visaView'].forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
 if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
 const root = $('b2bView');
 root.style.display = 'block';
 root.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-title">🤝 B2B Desk</h1><div class="sx-sub" id="b2bSub">Students shared by partner agents · leads · applications · visa cases · agent dues</div></div>
-<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="um-btn primary" id="b2bAddStudent">+ Student</button><button class="um-btn" id="b2bAddCase">+ Visa case</button><button class="um-btn" id="b2bAddAgent">+ Agent</button><button class="um-btn" id="b2bRefresh">↻ Refresh</button><button class="um-btn" id="b2bBack">${B.teamMode ? 'Sign out' : '← Back to dashboard'}</button></div></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="um-btn primary" id="b2bAddStudent">+ Student</button><button class="um-btn" id="b2bAddCase">+ Visa case</button><button class="um-btn" id="b2bAddAgent">+ Agent</button><button class="um-btn" id="b2bImport" title="Add many students from the agent's Excel / CSV list">⇪ Import students</button><button class="um-btn" id="b2bRefresh">↻ Refresh</button><button class="um-btn" id="b2bBack">${B.teamMode ? 'Sign out' : '← Back to dashboard'}</button></div></div>
 <div id="b2bKpis"></div>
 <div class="sx-tabs" role="tablist" style="flex-wrap:nowrap;">${TABS.map(t => `<button class="sx-tab ${t[0] === B.tab ? 'active' : ''}" data-b2b-tab="${t[0]}" role="tab">${t[1]}</button>`).join('')}</div>
 <div class="sx-filters"><input type="text" id="b2bQ" placeholder="Search student, ID, passport, university…" value="${esc(B.q)}" style="min-width:240px;"><select id="b2bAgentF" aria-label="Agent"></select><select id="b2bStageF" aria-label="Visa stage"></select></div>
@@ -16868,6 +16919,7 @@ $('b2bRefresh').onclick = () => load();
 $('b2bAddStudent').onclick = () => studentForm(null);
 $('b2bAddAgent').onclick = () => agentForm(null);
 $('b2bAddCase').onclick = () => caseForm(null, '');
+$('b2bImport').onclick = () => importForm(B.agent || '');
 root.querySelectorAll('[data-b2b-tab]').forEach(b => b.onclick = () => { B.tab = b.dataset.b2bTab; root.querySelectorAll('[data-b2b-tab]').forEach(x => x.classList.toggle('active', x === b)); render(); });
 let qt = null;
 $('b2bQ').oninput = () => { clearTimeout(qt); qt = setTimeout(() => { B.q = val('b2bQ'); render(); }, 200); };
@@ -16900,12 +16952,13 @@ $('b2bKpis').innerHTML = `<div class="sx-kpis">
 <div class="sx-kpi"><div class="sx-sub">Agent students</div><div style="font-size:24px;font-weight:800;">${s.students}</div><div class="sx-sub ${s.openRequests ? 'sx-bad' : ''}">${d.agents.length} agents${s.openRequests ? ' · ⚑ ' + s.openRequests + ' open request' + (s.openRequests === 1 ? '' : 's') : ''}</div></div>
 <div class="sx-kpi"><div class="sx-sub">Open visa cases</div><div style="font-size:24px;font-weight:800;">${s.openCases}</div><div class="sx-sub ${s.stuck ? 'sx-bad' : ''}">${s.stuck ? s.stuck + ' stuck over ' + O().stuckDays + ' days' : 'none stuck'}</div></div>
 <div class="sx-kpi"><div class="sx-sub">Visas approved</div><div style="font-size:24px;font-weight:800;" class="sx-good">${s.approved}</div><div class="sx-sub">all time</div></div>
-<div class="sx-kpi"><div class="sx-sub">Visa fees pending from agents</div><div style="font-size:24px;font-weight:800;" class="${s.pending ? 'sx-bad' : ''}">${inr(s.pending)}</div><div class="sx-sub">${inr(s.received)} received of ${inr(s.fee)}</div></div></div>`;
+<div class="sx-kpi"><div class="sx-sub">Visa fees pending from agents</div><div style="font-size:24px;font-weight:800;" class="${s.pending ? 'sx-bad' : ''}">${inr(s.pending)}</div><div class="sx-sub">${inr(s.received)} received of ${inr(s.fee)}</div>${s.commDue ? `<div class="sx-sub">Commission due to agents: <b>${inr(s.commDue)}</b></div>` : ''}</div></div>`;
 $('b2bAgentF').innerHTML = opts(d.agents.map(a => [a.id, a.name + (a.company ? ' · ' + a.company : '')]), B.agent, 'All agents');
 $('b2bStageF').innerHTML = opts(O().stages, B.stage, 'Any visa stage');
 $('b2bStageF').style.display = B.tab === 'agents' ? 'none' : '';
 $('b2bSub').textContent = 'Students shared by partner agents · leads · applications · visa cases · agent dues · signed in as ' + d.me.name;
 const stTab = document.querySelector('[data-b2b-tab="students"]'); if (stTab) stTab.innerHTML = 'Students' + (s.openRequests ? ` <span class="b2b-reqn ${s.overdueRequests ? 'late' : ''}">${s.openRequests}</span>` : '');
+const agTab = document.querySelector('[data-b2b-tab="agents"]'); if (agTab) agTab.innerHTML = 'Agents & dues' + (s.mouIssues ? ` <span class="b2b-reqn late" title="Agents without a valid signed MOU">${s.mouIssues}</span>` : '');
 if (B.tab === 'students') renderStudents(); else if (B.tab === 'visa') renderCases(); else renderAgents();
 }
 const qMatch = (...parts) => !B.q || parts.join(' ').toLowerCase().indexOf(B.q.toLowerCase()) !== -1;
@@ -16952,22 +17005,25 @@ ${rows.map(c => `<tr class="b2b-row" data-b2b-case="${esc(c.id)}">
 
 function renderAgents() {
 const rows = B.data.byAgent.filter(a => (!B.agent || a.id === B.agent) && qMatch(a.id, a.name, a.company, a.phone))
-.sort((a, b) => b.pending - a.pending || a.name.localeCompare(b.name));
-const t = rows.reduce((o, a) => { o.fee += a.fee; o.received += a.received; o.pending += a.pending; return o; }, { fee: 0, received: 0, pending: 0 });
+.sort((a, b) => (b.pending + (b.commDue || 0)) - (a.pending + (a.commDue || 0)) || a.name.localeCompare(b.name));
+const t = rows.reduce((o, a) => { o.fee += a.fee; o.received += a.received; o.pending += a.pending; o.commDue += a.commDue || 0; o.commPaid += a.commPaid || 0; o.commExpected += a.commExpected || 0; return o; }, { fee: 0, received: 0, pending: 0, commDue: 0, commPaid: 0, commExpected: 0 });
 $('b2bBody').innerHTML = !rows.length ? `<div class="sx-card sx-empty">No agents yet — click “+ Agent”.</div>` :
-`<div class="sx-card"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Agent</th><th>Phone</th><th class="num">Students</th><th class="num">Visa cases</th><th class="num">Approved</th><th class="num">Fee charged</th><th class="num">Received</th><th class="num">Pending</th><th></th></tr></thead><tbody>
-${rows.map(a => { const ag = agentById(a.id) || {}; return `<tr>
-<td><b>${esc(a.name)}</b>${ag.active === false ? ' <span class="b2b-pill muted">inactive</span>' : ''}<div class="sx-sub">${esc([a.company, ag.city].filter(Boolean).join(' · '))}</div></td>
-<td>${esc(a.phone || '—')}</td><td class="num">${a.students}</td><td class="num">${a.cases}${a.open ? `<div class="sx-sub">${a.open} open</div>` : ''}</td><td class="num">${a.approved}</td>
-<td class="num">${inr(a.fee)}</td><td class="num">${inr(a.received)}</td><td class="num ${a.pending ? 'b2b-due' : ''}">${inr(a.pending)}</td>
-<td><div class="sx-actions"><button class="um-btn" data-b2b-agent="${esc(a.id)}">Edit</button><button class="um-btn sx-wa" data-b2b-wa-agent="${esc(a.id)}" title="WhatsApp the agent a status summary">WhatsApp</button></div></td></tr>`; }).join('')}
-<tr><td colspan="5"><b>Total</b></td><td class="num"><b>${inr(t.fee)}</b></td><td class="num"><b>${inr(t.received)}</b></td><td class="num b2b-due">${inr(t.pending)}</td><td></td></tr>
+`<div class="sx-card"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Agent</th><th>MOU</th><th>Commission terms</th><th class="num">Students</th><th class="num">Visa cases</th><th class="num">Approved</th><th class="num">Visa fees pending</th><th class="num">Commission due</th><th></th></tr></thead><tbody>
+${rows.map(a => { const ag = agentById(a.id) || {}; return `<tr class="b2b-row" data-b2b-agent-open="${esc(a.id)}">
+<td><b>${esc(a.name)}</b>${ag.active === false ? ' <span class="b2b-pill muted">inactive</span>' : ''}<div class="sx-sub">${esc([a.company, ag.city, a.phone].filter(Boolean).join(' · '))}</div></td>
+<td>${mouPill(ag.mou)}${ag.mouExpiry ? `<div class="sx-sub">until ${esc(fmtDate(ag.mouExpiry))}</div>` : ''}</td>
+<td style="font-size:12.5px;">${esc(commTerms(ag))}</td>
+<td class="num">${a.students}</td><td class="num">${a.cases}${a.open ? `<div class="sx-sub">${a.open} open</div>` : ''}</td><td class="num">${a.approved}</td>
+<td class="num ${a.pending ? 'b2b-due' : ''}">${inr(a.pending)}<div class="sx-sub">of ${inr(a.fee)}</div></td>
+<td class="num">${inr(a.commDue)}${a.commExpected ? `<div class="sx-sub">${inr(a.commExpected)} expected</div>` : ''}</td>
+<td><div class="sx-actions"><button class="um-btn" data-b2b-agent-open="${esc(a.id)}">Open</button><button class="um-btn" data-b2b-stmt="${esc(a.id)}" title="Statement for this agent — PDF / email / WhatsApp">📄 Statement</button><button class="um-btn sx-wa" data-b2b-wa-agent="${esc(a.id)}" title="WhatsApp the agent a status summary">WhatsApp</button></div></td></tr>`; }).join('')}
+<tr><td colspan="6"><b>Total</b></td><td class="num b2b-due"><b>${inr(t.pending)}</b><div class="sx-sub">of ${inr(t.fee)}</div></td><td class="num"><b>${inr(t.commDue)}</b><div class="sx-sub">${inr(t.commPaid)} paid</div></td><td></td></tr>
 </tbody></table></div></div>`;
 }
 
 document.addEventListener('click', e => {
 if (!e.target.closest('#b2bView')) return;
-const b = e.target.closest('button[data-b2b-lead], button[data-b2b-app], button[data-b2b-newcase], button[data-b2b-agent], button[data-b2b-wa-case], button[data-b2b-wa-agent]');
+const b = e.target.closest('button[data-b2b-lead], button[data-b2b-app], button[data-b2b-newcase], button[data-b2b-agent], button[data-b2b-wa-case], button[data-b2b-wa-agent], button[data-b2b-agent-open], button[data-b2b-stmt]');
 if (b) {
 e.stopPropagation();
 if (b.dataset.b2bLead) leadForm(b.dataset.b2bLead);
@@ -16976,9 +17032,12 @@ else if (b.dataset.b2bNewcase) caseForm(null, b.dataset.b2bNewcase);
 else if (b.dataset.b2bAgent) agentForm(agentById(b.dataset.b2bAgent));
 else if (b.dataset.b2bWaCase) waCase(b.dataset.b2bWaCase);
 else if (b.dataset.b2bWaAgent) waAgent(b.dataset.b2bWaAgent);
+else if (b.dataset.b2bAgentOpen) agentView(b.dataset.b2bAgentOpen);
+else if (b.dataset.b2bStmt) statementView(b.dataset.b2bStmt);
 return;
 }
 if (e.target.closest('select')) return;
+const ar = e.target.closest('[data-b2b-agent-open]'); if (ar) { agentView(ar.dataset.b2bAgentOpen); return; }
 const sr = e.target.closest('[data-b2b-student]'); if (sr) { studentView(sr.dataset.b2bStudent); return; }
 const cr = e.target.closest('[data-b2b-case]'); if (cr) caseForm(caseById(cr.dataset.b2bCase), '');
 });
@@ -16992,16 +17051,28 @@ run('setB2BVisaStage', sel.dataset.b2bStage, sel.value).then(() => reload('Stage
 
 function agentForm(a) {
 a = a || {};
-const body = modal(a.id ? 'Edit agent · ' + a.id : 'Add partner agent', `<div class="b2b-form">
+const T = O();
+modal(a.id ? 'Edit agent · ' + a.id : 'Add partner agent', `<div class="b2b-form">
 ${fld('Agent name *', `<input type="text" id="b2bAgName" value="${esc(a.name)}">`)}${fld('Company', `<input type="text" id="b2bAgCo" value="${esc(a.company)}">`)}
-${fld('WhatsApp number', `<input type="text" id="b2bAgPhone" value="${esc(a.phone)}" placeholder="+91 98xxx xxxxx">`)}${fld('Email', `<input type="text" id="b2bAgEmail" value="${esc(a.email)}">`)}
+${fld('WhatsApp number', `<input type="text" id="b2bAgPhone" value="${esc(a.phone)}" placeholder="+91 98xxx xxxxx">`)}${fld('Email', `<input type="text" id="b2bAgEmail" value="${esc(a.email)}" placeholder="for emailing statements">`)}
 ${fld('City', `<input type="text" id="b2bAgCity" value="${esc(a.city)}">`)}${a.id ? fld('Status', `<select id="b2bAgActive">${opts([['1', 'Active'], ['0', 'Inactive']], a.active === false ? '0' : '1')}</select>`) : '<div></div>'}
-${fld('Notes', `<textarea id="b2bAgNotes" style="min-height:70px;">${esc(a.notes)}</textarea>`, true)}</div>
-${errBox('b2bAgErr')}<div class="sx-modal-actions"><button class="um-btn primary" id="b2bAgSave">Save agent</button></div>`, 560);
+<div class="full b2b-sec" style="margin-top:10px;padding-top:8px;"><h4><span>Commission terms</span></h4></div>
+${fld('Commission type', `<select id="b2bAgCommType">${opts(COMM_TYPES(), a.commType || '', 'Not set')}</select>`)}
+<div><label class="f" id="b2bAgRateL" for="b2bAgCommRate">Rate</label><input type="number" min="0" step="any" id="b2bAgCommRate" value="${esc(a.commRate == null ? '' : a.commRate)}"></div>
+${fld('Terms / notes', `<textarea id="b2bAgCommTerms" style="min-height:52px;" placeholder="e.g. paid 30 days after the university pays us; split for scholarships">${esc(a.commTerms)}</textarea>`, true)}
+<div class="full b2b-sec" style="margin-top:10px;padding-top:8px;"><h4><span>MOU</span></h4></div>
+${fld('MOU status', `<select id="b2bAgMou">${opts(T.mouStatuses || ['Not sent', 'Sent for signing', 'Signed', 'Expired'], a.mouStatus || 'Not sent')}</select>`)}<div class="b2b-note" style="align-self:end;">Upload the signed file from the agent’s profile.</div>
+${fld('Signed on', `<input type="date" id="b2bAgMouS" value="${esc(a.mouSigned || '')}">`)}${fld('Valid until', `<input type="date" id="b2bAgMouE" value="${esc(a.mouExpiry || '')}">`)}
+${fld('Notes', `<textarea id="b2bAgNotes" style="min-height:60px;">${esc(a.notes)}</textarea>`, true)}</div>
+${errBox('b2bAgErr')}<div class="sx-modal-actions">${a.id ? '<button class="um-btn" id="b2bAgBack" style="margin-right:auto;">← Agent</button>' : ''}<button class="um-btn primary" id="b2bAgSave">Save agent</button></div>`, 640);
+const rateL = () => { const t = val('b2bAgCommType'); $('b2bAgRateL').textContent = t.indexOf('Percent') === 0 ? 'Rate (% of first-year tuition)' : t === 'No commission' || !t ? 'Rate' : 'Rate (₹ per student)'; $('b2bAgCommRate').disabled = t === 'No commission'; };
+$('b2bAgCommType').onchange = rateL; rateL();
+if ($('b2bAgBack')) $('b2bAgBack').onclick = () => agentView(a.id);
 $('b2bAgSave').onclick = () => {
 const btn = $('b2bAgSave'); busy(btn, true); formErr('b2bAgErr');
-run('saveB2BAgent', { id: a.id || '', name: val('b2bAgName'), company: val('b2bAgCo'), phone: val('b2bAgPhone'), email: val('b2bAgEmail'), city: val('b2bAgCity'), notes: val('b2bAgNotes'), active: a.id ? val('b2bAgActive') === '1' : true })
-.then(() => { closeModal(1); reload('Agent saved'); }).catch(err => { busy(btn, false); formErr('b2bAgErr', err); });
+run('saveB2BAgentFull', { id: a.id || '', name: val('b2bAgName'), company: val('b2bAgCo'), phone: val('b2bAgPhone'), email: val('b2bAgEmail'), city: val('b2bAgCity'), notes: val('b2bAgNotes'), active: a.id ? val('b2bAgActive') === '1' : true,
+commType: val('b2bAgCommType'), commRate: val('b2bAgCommType') === 'No commission' ? '' : val('b2bAgCommRate'), commTerms: val('b2bAgCommTerms'), mouStatus: val('b2bAgMou'), mouSigned: val('b2bAgMouS'), mouExpiry: val('b2bAgMouE') })
+.then(r => { toast('Agent saved'); afterAgent(r.id); }).catch(err => { busy(btn, false); formErr('b2bAgErr', err); });
 };
 }
 
@@ -17038,7 +17109,7 @@ const cases = st.visaCases.map(caseById).filter(Boolean);
 modal(st.name + ' · ' + st.id, `<div class="b2b-info">
 <div><small>Agent</small>${esc(st.agentName)}${ag.phone ? `<div class="sx-sub">${esc(ag.phone)}</div>` : ''}</div><div><small>Phone</small>${esc(st.phone || '—')}</div><div><small>Email</small>${esc(st.email || '—')}</div>
 <div><small>Passport</small>${esc(st.passportNo || '—')}</div><div><small>Country · intake</small>${esc(st.country || '—')} ${esc(st.intake || '')}</div><div><small>Course</small>${esc(st.course || '—')}</div>
-<div><small>Branch</small>${esc(st.branch || '—')}</div><div><small>Added</small>${esc(fmtStamp(st.createdAt))} · ${esc(st.createdBy || '')}</div>${st.notes ? `<div><small>Notes</small>${esc(st.notes)}</div>` : ''}</div>
+<div><small>Branch</small>${esc(st.branch || '—')}</div><div><small>Added</small>${esc(fmtStamp(st.createdAt))} · ${esc(st.createdBy || '')}</div><div><small>Agent MOU · commission</small>${mouPill(ag.mou)} <span class="sx-sub">${esc(commTerms(ag))}</span></div>${st.notes ? `<div><small>Notes</small>${esc(st.notes)}</div>` : ''}</div>
 <div class="b2b-sec"><h4><span>1 · Lead for a counsellor</span><button class="um-btn" id="b2bSvLead">${st.lead ? 'Re-assign' : '＋ Add as lead'}</button></h4>
 ${st.lead ? `<div class="b2b-li"><span class="grow">In <b>${esc(st.lead.branch)}</b> leads · counsellor <b>${esc(st.lead.counsellor || 'unassigned')}</b></span><span class="b2b-pill ok">${esc(st.lead.status || 'Lead')}</span></div>` : '<div class="sx-sub">Not in the leads list yet. Adding puts them in the branch lead list with Source “Agent: ' + esc(st.agentName) + '”.</div>'}</div>
 <div class="b2b-sec"><h4><span>2 · University applications (${st.applications.length})</span><button class="um-btn" id="b2bSvApp">＋ Application</button></h4>
@@ -17046,12 +17117,17 @@ ${st.applications.length ? `<div class="b2b-list">${st.applications.map(a => `<d
 ${(st.requests || []).length ? `<div class="b2b-sec b2b-reqsec"><h4><span>⚑ Requests from the application team (${st.requests.filter(q => q.open).length} open)</span></h4><div class="b2b-list">${st.requests.map(q => `<div class="b2b-li"><span class="b2b-pill ${q.kind === 'Condition' ? 'bad' : ''}">${q.kind === 'Condition' ? '⚑ Condition' : '📄 Documents'}</span><span class="grow"><b>${esc(q.title)}</b><div class="sx-sub">${esc(q.university || '')} · from ${esc(q.raisedBy)}${q.dueDate ? ' · needed by ' + esc(fmtDate(q.dueDate)) : ''}${q.thread.length ? ' · ' + q.thread.length + ' repl' + (q.thread.length === 1 ? 'y' : 'ies') : ''}</div></span><span class="b2b-pill ${q.status === 'Done' ? 'ok' : q.status === 'Cancelled' ? 'muted' : q.overdue ? 'bad' : 'warm'}">${esc(q.overdue ? 'Overdue' : q.status)}</span><button class="um-btn" data-b2b-req="${esc(q.id)}">Open</button></div>`).join('')}</div></div>` : ''}
 <div class="b2b-sec"><h4><span>3 · Visa cases (${cases.length})</span><button class="um-btn" id="b2bSvCase">＋ Visa case</button></h4>
 ${cases.length ? `<div class="b2b-list">${cases.map(c => `<div class="b2b-li"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${esc(c.id)}</span><span class="grow">${esc(c.visaType)} · ${esc(c.country || '')} ${esc(c.university || '')}<div class="sx-sub">Handled by ${esc(c.officer || '—')} · pending ${inr(c.pending)}</div></span>${stagePill(c.stage)}<button class="um-btn" data-b2b-sv-case="${esc(c.id)}">Open</button></div>`).join('')}</div>` : '<div class="sx-sub">No visa case yet.</div>'}</div>
-<div class="sx-modal-actions"><button class="um-btn" id="b2bSvEdit" style="margin-right:auto;">✎ Edit student</button><button class="um-btn sx-wa" id="b2bSvWa">WhatsApp agent</button></div>`, 760);
+${(() => { const sc = (B.data.commission || []).filter(c => c.studentId === st.id); return `<div class="b2b-sec"><h4><span>4 · Agent commission (${sc.filter(c => c.status !== 'Cancelled').length})</span><button class="um-btn" id="b2bSvComm">＋ Commission</button></h4>
+${sc.length ? `<div class="b2b-list">${sc.map(c => `<div class="b2b-li"><span class="grow"><b>${inr(c.amount)}</b> · ${esc(c.university || '—')} ${esc(c.intake || '')}<div class="sx-sub">${c.paidAmount ? 'paid ' + inr(c.paidAmount) + (c.paidDate ? ' on ' + esc(fmtDate(c.paidDate)) : '') : esc(c.basis || '')}</div></span>${commPill(c.status)}<button class="um-btn" data-b2b-sv-comm="${esc(c.id)}">Edit</button></div>`).join('')}</div>` : `<div class="sx-sub">No commission line yet · agent terms: ${esc(commTerms(ag))}</div>`}</div>`; })()}
+<div class="sx-modal-actions"><button class="um-btn" id="b2bSvEdit" style="margin-right:auto;">✎ Edit student</button><button class="um-btn" id="b2bSvAgent">🤝 Agent profile</button><button class="um-btn sx-wa" id="b2bSvWa">WhatsApp agent</button></div>`, 760);
 $('b2bSvLead').onclick = () => leadForm(st.id);
 $('b2bSvApp').onclick = () => appForm(st.id);
 $('b2bSvCase').onclick = () => caseForm(null, st.id);
 $('b2bSvEdit').onclick = () => studentForm(st);
 $('b2bSvWa').onclick = () => waStudent(st.id);
+$('b2bSvAgent').onclick = () => agentView(st.agentId);
+$('b2bSvComm').onclick = () => commForm(null, { agentId: st.agentId, studentId: st.id, _back: st.id });
+document.querySelectorAll('[data-b2b-sv-comm]').forEach(b => b.onclick = () => commForm(commById(b.dataset.b2bSvComm), { _back: st.id }));
 document.querySelectorAll('[data-b2b-req]').forEach(b => b.onclick = () => reqView(st.id, b.dataset.b2bReq));
 document.querySelectorAll('[data-b2b-sv-case]').forEach(b => b.onclick = () => caseForm(caseById(b.dataset.b2bSvCase), ''));
 }
@@ -17255,6 +17331,261 @@ const body = modal('WhatsApp to ' + (ag.name || 'agent'), `${n ? '' : '<div clas
 $('b2bWaCopy').onclick = () => { const t = $('b2bWaText'); t.select(); try { navigator.clipboard.writeText(t.value).then(() => toast('Copied')); } catch (e) { document.execCommand('copy'); toast('Copied'); } };
 if (n) $('b2bWaOpen').onclick = () => { window.open('https:\x2F\x2Fwa.me\x2F' + n + '?text=' + encodeURIComponent(val('b2bWaText')), '_blank'); closeModal(2); };
 return body;
+}
+
+const COMM_TYPES = () => O().commTypes || ['Percent of first-year tuition', 'Fixed per enrolled student', 'Fixed per visa approved', 'No commission'];
+const commById = id => ((B.data && B.data.commission) || []).find(c => c.id === id);
+const mouPill = m => { m = m || { status: 'Not sent' }; const cls = m.status === 'Signed' ? (m.expiring ? 'warm' : 'ok') : m.status === 'Expired' ? 'bad' : 'muted'; return `<span class="b2b-pill ${cls}">${esc(m.status === 'Signed' && m.expiring ? 'Signed · ends in ' + Math.max(0, m.daysLeft) + 'd' : m.status)}</span>`; };
+const commTerms = a => { if (!a || !a.commType) return 'Commission not set'; if (a.commType === 'No commission') return 'No commission'; const has = a.commRate != null && a.commRate !== ''; const pct = a.commType.indexOf('Percent') === 0; return (has ? (pct ? a.commRate + '% ' : inr(a.commRate) + ' ') : '') + a.commType.replace(/^Percent /, '').replace(/^Fixed /, ''); };
+const commPill = st => `<span class="b2b-pill ${st === 'Paid' ? 'ok' : st === 'Due' ? 'warm' : st === 'Cancelled' ? 'muted' : ''}">${esc(st || 'Expected')}</span>`;
+function afterAgent(agentId) { B.loading = false; run('getB2BDesk').then(d => { B.data = d; render(); if (agentId) agentView(agentId); else closeModal(1); }).catch(() => { closeModal(1); load(); }); }
+function b64Blob(f) { const bin = atob(f.base64), bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i); return { bytes: bytes, url: URL.createObjectURL(new Blob([bytes], { type: f.mimeType })) }; }
+function saveFile(f) { const b = b64Blob(f), a = document.createElement('a'); a.href = b.url; a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(b.url), 60000); }
+
+function agentView(id) {
+const a = agentById(id); if (!a || !B.data) return;
+const x = (B.data.byAgent || []).find(r => r.id === id) || {};
+const comm = (B.data.commission || []).filter(c => c.agentId === id).sort((p, q) => (q.status !== 'Cancelled') - (p.status !== 'Cancelled') || String(q.createdAt).localeCompare(String(p.createdAt)));
+const studs = B.data.students.filter(s => s.agentId === id);
+const noComm = a.commType && a.commType !== 'No commission' ? studs.filter(s => !(s.commission || []).length && (s.applications.length || s.visaCases.length)) : [];
+const m = a.mou || { status: 'Not sent' };
+const warn = m.status === 'Expired' ? 'The MOU has expired — renew it before sharing new students.' : m.expiring ? 'The MOU ends on ' + fmtDate(a.mouExpiry) + ' — start the renewal.' : m.status !== 'Signed' ? 'No signed MOU on file yet.' : '';
+modal('🤝 ' + a.name + (a.company ? ' · ' + a.company : ''), `<div class="b2b-info">
+<div><small>Agent ID</small>${esc(a.id)}${a.active === false ? ' <span class="b2b-pill muted">inactive</span>' : ''}</div><div><small>WhatsApp</small>${esc(a.phone || '—')}</div><div><small>Email</small>${esc(a.email || '—')}</div>
+<div><small>City</small>${esc(a.city || '—')}</div><div><small>Added</small>${esc(fmtStamp(a.createdAt))}</div>${a.notes ? `<div><small>Notes</small>${esc(a.notes)}</div>` : '<div></div>'}</div>
+<div class="b2b-sec"><h4><span>MOU</span>${a.mouFileId ? '<button class="um-btn" id="b2bAvMouView">📎 View MOU</button>' : ''}</h4>
+<div class="b2b-li"><span class="grow">${mouPill(m)} ${a.mouSigned ? ' · signed ' + esc(fmtDate(a.mouSigned)) : ''}${a.mouExpiry ? ' · valid until <b class="' + (m.status === 'Expired' || m.expiring ? 'b2b-due' : '') + '">' + esc(fmtDate(a.mouExpiry)) + '</b>' : ''}${a.mouFileName ? `<div class="sx-sub">📎 ${esc(a.mouFileName)}</div>` : ''}</span></div>
+${warn ? `<div class="fin-alert warm" style="margin:8px 0 0;">${esc(warn)}</div>` : ''}
+<div class="b2b-li" style="margin-top:8px;"><input type="file" id="b2bAvMouFile" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx" class="grow" aria-label="MOU file"><button class="um-btn primary" id="b2bAvMouUp">${a.mouFileId ? 'Replace MOU file' : 'Upload signed MOU'}</button></div></div>
+<div class="b2b-sec"><h4><span>Commission terms</span></h4><div class="b2b-li"><span class="grow"><b>${esc(commTerms(a))}</b>${a.commTerms ? `<div class="sx-sub">${esc(a.commTerms)}</div>` : ''}</span></div></div>
+<div class="b2b-sec"><h4><span>Numbers</span></h4><div class="b2b-info">
+<div><small>Students shared</small><b>${studs.length}</b></div><div><small>Visa cases</small><b>${x.cases || 0}</b>${x.open ? ' · ' + x.open + ' open' : ''}</div><div><small>Visas approved</small><b class="sx-good">${x.approved || 0}</b></div>
+<div><small>Visa fees — agent owes us</small><b class="${x.pending ? 'b2b-due' : ''}">${inr(x.pending)}</b><div class="sx-sub">${inr(x.received)} received of ${inr(x.fee)}</div></div>
+<div><small>Commission — we owe the agent</small><b class="${x.commDue ? 'b2b-due' : ''}">${inr(x.commDue)}</b><div class="sx-sub">${inr(x.commPaid)} paid so far</div></div>
+<div><small>Commission expected</small><b>${inr(x.commExpected)}</b><div class="sx-sub">becomes due on enrolment</div></div></div></div>
+<div class="b2b-sec"><h4><span>Commission ledger (${comm.filter(c => c.status !== 'Cancelled').length})</span><button class="um-btn" id="b2bAvComm">＋ Commission</button></h4>
+${comm.length ? `<div class="b2b-list">${comm.map(c => `<div class="b2b-li"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${esc(c.id)}</span><span class="grow"><b>${esc(c.student)}</b> · ${esc(c.university || '—')} ${esc(c.intake || '')}<div class="sx-sub">${inr(c.amount)}${c.paidAmount ? ' · paid ' + inr(c.paidAmount) + (c.paidDate ? ' on ' + esc(fmtDate(c.paidDate)) : '') : ''}${c.paidRef ? ' · ' + esc(c.paidRef) : ''}${c.dueDate && c.status === 'Due' ? ' · due ' + esc(fmtDate(c.dueDate)) : ''}</div></span>${commPill(c.status)}<button class="um-btn" data-b2b-comm-edit="${esc(c.id)}">Edit</button>${c.status === 'Expected' || c.status === 'Due' ? `<button class="um-btn" data-b2b-comm-paid="${esc(c.id)}">✓ Paid</button>` : ''}</div>`).join('')}</div>` : '<div class="sx-sub">No commission lines yet.</div>'}
+${noComm.length ? `<div class="b2b-note" style="margin-top:8px;">Students with applications but no commission line: ${noComm.slice(0, 12).map(s => `<button class="um-btn" style="padding:2px 8px;font-size:11.5px;margin:2px;" data-b2b-comm-new="${esc(s.id)}">＋ ${esc(s.name)}</button>`).join('')}${noComm.length > 12 ? ' …' : ''}</div>` : ''}</div>
+${errBox('b2bAvErr')}<div class="sx-modal-actions"><button class="um-btn" id="b2bAvEdit" style="margin-right:auto;">✎ Edit agent</button><button class="um-btn" id="b2bAvImport">⇪ Import students</button><button class="um-btn primary" id="b2bAvStmt">📄 Statement</button><button class="um-btn sx-wa" id="b2bAvWa">WhatsApp</button></div>`, 800);
+$('b2bAvEdit').onclick = () => agentForm(a);
+$('b2bAvImport').onclick = () => importForm(a.id);
+$('b2bAvStmt').onclick = () => statementView(a.id);
+$('b2bAvWa').onclick = () => waAgent(a.id);
+$('b2bAvComm').onclick = () => commForm(null, { agentId: a.id });
+document.querySelectorAll('[data-b2b-comm-edit]').forEach(b => b.onclick = () => commForm(commById(b.dataset.b2bCommEdit), {}));
+document.querySelectorAll('[data-b2b-comm-paid]').forEach(b => b.onclick = () => commForm(commById(b.dataset.b2bCommPaid), { status: 'Paid' }));
+document.querySelectorAll('[data-b2b-comm-new]').forEach(b => b.onclick = () => commForm(null, { agentId: a.id, studentId: b.dataset.b2bCommNew }));
+if ($('b2bAvMouView')) $('b2bAvMouView').onclick = () => viewFile('MOU · ' + a.name, run('getB2BAgentMouFile', a.id));
+$('b2bAvMouUp').onclick = () => {
+const f = $('b2bAvMouFile').files[0], btn = $('b2bAvMouUp');
+if (!f) { formErr('b2bAvErr', 'Choose the MOU file first.'); return; }
+if (f.size > 10 * 1024 * 1024) { formErr('b2bAvErr', 'The file is larger than 10 MB.'); return; }
+busy(btn, true, 'Uploading…'); formErr('b2bAvErr');
+const rd = new FileReader();
+rd.onload = () => run('uploadB2BAgentMou', a.id, { name: f.name, mimeType: f.type || 'application/octet-stream', base64: String(rd.result).split(',')[1] || '' })
+.then(() => { toast('MOU uploaded'); afterAgent(a.id); }).catch(err => { busy(btn, false); formErr('b2bAvErr', err); });
+rd.onerror = () => { busy(btn, false); formErr('b2bAvErr', 'Could not read that file.'); };
+rd.readAsDataURL(f);
+};
+}
+function viewFile(title, promise) {
+const b = modal(title, '<div class="skeleton" style="height:300px;"></div>', 900, 2);
+promise.then(f => {
+const bb = b64Blob(f), isPdf = /pdf/i.test(f.mimeType), isImg = /^image\x2F/i.test(f.mimeType);
+b.innerHTML = `<div class="pdf-bar"><b>📎 ${esc(f.name)}</b><a class="um-btn primary" href="${bb.url}" download="${esc(f.name)}">⬇ Download</a></div>
+${isPdf ? '<div class="pdf-pages" id="b2bFilePages"><div class="skeleton" style="height:420px;"></div></div>' : isImg ? `<img src="${bb.url}" alt="${esc(f.name)}" style="max-width:100%;border-radius:10px;border:1px solid var(--border);">` : '<div class="sx-empty">No preview for this file type — use Download.</div>'}`;
+if (isPdf) { const host = $('b2bFilePages'); if (typeof window.akRenderPdf === 'function') window.akRenderPdf(host, bb.bytes).catch(e => { host.innerHTML = `<div class="sx-empty">${esc(errMsg(e))} — use Download.</div>`; }); else host.innerHTML = '<div class="sx-empty">Use Download to open this PDF.</div>'; }
+}).catch(e => { b.innerHTML = `<div class="sx-empty">${esc(errMsg(e))}</div>`; });
+}
+
+function commForm(c, preset) {
+preset = preset || {};
+const isNew = !c || !c.id;
+c = Object.assign({}, c || {}, preset);
+const st0 = studentById(c.studentId);
+const agentId = c.agentId || (st0 && st0.agentId) || '';
+const a = agentById(agentId) || {};
+const back = () => { if (c._back) studentView(c._back); else agentView(agentId); };
+const done = () => { if (c._back) afterSave(c._back); else afterAgent(agentId); };
+const studs = B.data.students.filter(s => s.agentId === agentId).map(s => [s.id, s.name + ' · ' + s.id]);
+const appsOf = sid => ((studentById(sid) || {}).applications || []);
+const pct = (a.commType || '').indexOf('Percent') === 0;
+const v = (k, fb) => c[k] != null && c[k] !== '' ? c[k] : fb;
+const firstApp = st0 && st0.applications.length ? st0.applications[st0.applications.length - 1] : null;
+const defRate = isNew ? v('rate', a.commRate) : c.rate;
+const defAmt = isNew && !pct && a.commRate ? a.commRate : c.amount;
+const paidNow = c.status === 'Paid' && !(Number(c.paidAmount) > 0);
+modal((isNew ? 'Add commission' : 'Commission · ' + c.id) + (a.name ? ' · ' + a.name : ''), `<div class="b2b-form">
+${fld('Student *', isNew && !c.studentId ? `<select id="b2bCmSt">${opts(studs, '', 'Choose student…')}</select>` : `<input type="text" value="${esc((st0 && st0.name) || c.student)}" disabled><input type="hidden" id="b2bCmSt" value="${esc(c.studentId)}">`)}
+${fld('Application', `<select id="b2bCmApp"></select>`)}
+${fld('University', `<input type="text" id="b2bCmUni" value="${esc(v('university', isNew && firstApp ? firstApp.university : ''))}">`)}${fld('Intake', intakeField('b2bCmIntake', v('intake', isNew && firstApp ? firstApp.intake : (st0 && st0.intake) || '')))}
+${fld('Basis', `<input type="text" id="b2bCmBasis" value="${esc(v('basis', a.commType || ''))}" placeholder="e.g. 12% of first-year tuition">`)}<div></div>
+${fld('First-year tuition / basis (₹)', `<div class="b2b-money"><span>₹</span><input type="number" min="0" step="any" id="b2bCmTuition" value="${esc(v('tuition', ''))}"></div>`)}
+${fld(pct ? 'Rate (%)' : 'Rate (₹ per student)', `<input type="number" min="0" step="any" id="b2bCmRate" value="${esc(defRate == null ? '' : defRate)}">`)}
+${fld('Commission amount (₹) *', `<div class="b2b-money"><span>₹</span><input type="number" min="0" step="any" id="b2bCmAmt" value="${esc(defAmt == null ? '' : defAmt)}"></div>`)}
+${fld('Status', `<select id="b2bCmStatus">${opts(O().commStatuses || ['Expected', 'Due', 'Paid', 'Cancelled'], v('status', 'Expected'))}</select>`)}
+${fld('Due date', `<input type="date" id="b2bCmDue" value="${esc(v('dueDate', ''))}">`)}<div></div>
+${fld('Paid (₹)', `<div class="b2b-money"><span>₹</span><input type="number" min="0" step="any" id="b2bCmPaid" value="${esc(paidNow ? v('amount', '') : v('paidAmount', ''))}"></div>`)}
+${fld('Paid on', `<input type="date" id="b2bCmPaidOn" value="${esc(paidNow ? O().today || '' : v('paidDate', ''))}">`)}
+${fld('Payment reference (UTR / cheque)', `<input type="text" id="b2bCmRef" value="${esc(v('paidRef', ''))}">`, true)}
+${fld('Notes', `<textarea id="b2bCmNotes" style="min-height:56px;">${esc(v('notes', ''))}</textarea>`, true)}</div>
+<div class="b2b-note">Expected = student applied · Due = student enrolled, we owe the agent · Paid = settled. Agent terms: <b>${esc(commTerms(a))}</b>${a.commTerms ? ' — ' + esc(a.commTerms) : ''}</div>
+${errBox('b2bCmErr')}<div class="sx-modal-actions">${!isNew ? '<button class="um-btn" id="b2bCmDel" style="margin-right:auto;color:var(--red);">Remove line</button>' : ''}<button class="um-btn" id="b2bCmBack">← Back</button><button class="um-btn primary" id="b2bCmSave">${isNew ? 'Add commission' : 'Save'}</button></div>`, 680);
+const fillApps = sid => { $('b2bCmApp').innerHTML = opts(appsOf(sid).map(p => [p.id, (p.university || '—') + ' · ' + (p.status || 'New') + ' · ' + p.id]), c.appId || (isNew && firstApp && sid === c.studentId ? firstApp.id : ''), 'Not linked to an application'); };
+fillApps(c.studentId || '');
+let auto = isNew;
+const calc = () => { if (!auto) return; const t = num('b2bCmTuition'), r = num('b2bCmRate'); if (pct && t && r) $('b2bCmAmt').value = Math.round(t * r / 100); else if (!pct && r) $('b2bCmAmt').value = r; };
+['b2bCmTuition', 'b2bCmRate'].forEach(i => $(i).addEventListener('input', calc));
+$('b2bCmAmt').addEventListener('input', () => { auto = false; });
+if ($('b2bCmSt').tagName === 'SELECT') $('b2bCmSt').onchange = () => { const s = studentById(val('b2bCmSt')); fillApps(val('b2bCmSt')); const p = s && s.applications.length ? s.applications[s.applications.length - 1] : null; if (p) { $('b2bCmUni').value = p.university || ''; $('b2bCmApp').value = p.id; } };
+$('b2bCmApp').onchange = () => { const p = appsOf(val('b2bCmSt')).find(z => z.id === val('b2bCmApp')); if (p) { $('b2bCmUni').value = p.university || $('b2bCmUni').value; } };
+$('b2bCmStatus').onchange = () => { if (val('b2bCmStatus') === 'Paid') { if (!num('b2bCmPaid')) $('b2bCmPaid').value = num('b2bCmAmt') || ''; if (!val('b2bCmPaidOn')) $('b2bCmPaidOn').value = O().today || ''; } };
+$('b2bCmBack').onclick = back;
+$('b2bCmSave').onclick = () => {
+const btn = $('b2bCmSave'); busy(btn, true); formErr('b2bCmErr');
+run('saveB2BCommission', { id: c.id || '', studentId: val('b2bCmSt'), appId: val('b2bCmApp'), university: val('b2bCmUni'), intake: intakeVal('b2bCmIntake'), basis: val('b2bCmBasis'),
+tuition: val('b2bCmTuition'), rate: val('b2bCmRate'), amount: num('b2bCmAmt'), status: val('b2bCmStatus'), dueDate: val('b2bCmDue'), paidAmount: num('b2bCmPaid'), paidDate: val('b2bCmPaidOn'), paidRef: val('b2bCmRef'), notes: val('b2bCmNotes') })
+.then(r => { toast(isNew ? 'Commission ' + r.id + ' added' : 'Commission saved'); done(); })
+.catch(err => { busy(btn, false); formErr('b2bCmErr', err); });
+};
+if (!isNew) $('b2bCmDel').onclick = () => {
+if (!confirm('Remove commission line ' + c.id + '? (It is hidden, not deleted.)')) return;
+run('saveB2BCommission', { id: c.id, remove: true }).then(() => { toast('Commission line removed'); done(); }).catch(err => formErr('b2bCmErr', err));
+};
+}
+
+const IMPORT_COLS = [['name', /^(student)?(full)?name$|^studentname|^name/], ['phone', /phone|mobile|whatsapp|contact|cell/], ['email', /e?mail/], ['passportNo', /passport/],
+['country', /country|destination/], ['course', /course|program|programme|subject/], ['intake', /intake|session|semester/], ['branch', /branch|office/], ['notes', /note|remark|comment/]];
+function importMap(headers) {
+const map = {};
+headers.forEach((h, i) => { const k = String(h || '').toLowerCase().replace(/[\s_\/\-.()#:]+/g, ''); if (!k || /agent/.test(k)) return; for (const [f, re] of IMPORT_COLS) { if (map[f] === undefined && re.test(k)) { map[f] = i; return; } } });
+return map;
+}
+function importReadRows() {
+const f = $('b2bImFile').files[0], paste = $('b2bImPaste').value;
+if (f) {
+const ext = (f.name.split('.').pop() || '').toLowerCase();
+if (['xlsx', 'xls', 'csv'].indexOf(ext) === -1) return Promise.reject(new Error('Choose an .xlsx, .xls or .csv file.'));
+if (f.size > 5 * 1024 * 1024) return Promise.reject(new Error('That file is over 5 MB.'));
+return f.arrayBuffer().then(buf => ext === 'csv' || typeof loadSheetJS !== 'function' ? parseCsvText(new TextDecoder('utf-8').decode(buf))
+: loadSheetJS().then(X => { const wb = X.read(buf, { type: 'array' }); return X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: '' })
+.map(r => r.map(c => typeof c === 'number' && Number.isInteger(c) ? c.toLocaleString('fullwide', { useGrouping: false }) : c)); }));
+}
+if (!paste.trim()) return Promise.reject(new Error('Choose the file, or paste the rows from Excel.'));
+return Promise.resolve(paste.indexOf('\t') !== -1 ? paste.replace(/\r/g, '').split('\n').map(l => l.split('\t')) : parseCsvText(paste));
+}
+function importForm(agentId) {
+const d = B.data; if (!d) return;
+if (!d.agents.length) { agentForm(null); toast('Add the partner agent first, then import their list.', 'error'); return; }
+const max = O().importMax || 500;
+const agents = d.agents.filter(a => a.active !== false || a.id === agentId).map(a => [a.id, a.name + (a.company ? ' · ' + a.company : '')]);
+let checked = null;
+modal('⇪ Import an agent’s student list', `<div class="b2b-form">
+${fld('Agent who sent the list *', `<select id="b2bImAgent">${opts(agents, agentId, 'Choose agent…')}</select>`)}${fld('Our branch for these students', `<select id="b2bImBranch">${opts(O().branches, '', 'From the Branch column (or none)')}</select>`)}</div>
+<div class="b2b-sec"><h4><span>Excel / CSV file</span><button class="um-btn" id="b2bImTpl">⬇ Template</button></h4>
+<input type="file" id="b2bImFile" accept=".xlsx,.xls,.csv" aria-label="Student list file">
+<div class="b2b-note">…or copy the rows from Excel / Google Sheets <b>with the header row</b> and paste them here:</div>
+<textarea id="b2bImPaste" style="min-height:96px;font-family:'IBM Plex Mono',monospace;font-size:12px;" placeholder="Name&#9;Phone&#9;Email&#9;Passport&#9;Country&#9;Course&#9;Intake"></textarea>
+<div class="b2b-note">Columns we read (any order): <b>Name</b> (required), Phone, Email, Passport, Country, Course, Intake, Branch, Notes. Up to ${max} students. Students already on the desk (same passport or phone) are skipped.</div></div>
+<div id="b2bImPrev"></div>
+${errBox('b2bImErr')}<div class="sx-modal-actions">${agentId ? '<button class="um-btn" id="b2bImBack" style="margin-right:auto;">← Agent</button>' : ''}<button class="um-btn" id="b2bImCheck">Check the list</button><button class="um-btn primary" id="b2bImGo" disabled>Import</button></div>`, 820);
+const reset = () => { checked = null; $('b2bImGo').disabled = true; $('b2bImGo').textContent = 'Import'; };
+['b2bImAgent', 'b2bImBranch', 'b2bImFile', 'b2bImPaste'].forEach(i => $(i).addEventListener(i === 'b2bImPaste' ? 'input' : 'change', reset));
+if ($('b2bImBack')) $('b2bImBack').onclick = () => agentView(agentId);
+$('b2bImTpl').onclick = () => {
+const csv = 'Name,Phone,Email,Passport,Country,Course,Intake,Branch,Notes\r\nAisha Khan,+91 98765 43210,aisha@example.com,N1234567,United Kingdom,MSc Data Science,Jan 2027,,\r\n';
+const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' })); a.download = 'agent-student-list-template.csv'; document.body.appendChild(a); a.click(); a.remove();
+};
+$('b2bImCheck').onclick = () => {
+const btn = $('b2bImCheck'), ag = val('b2bImAgent');
+formErr('b2bImErr'); reset();
+if (!ag) { formErr('b2bImErr', 'Choose the agent who sent this list.'); return; }
+busy(btn, true, 'Reading…');
+importReadRows().then(rows => {
+rows = (rows || []).map(r => (r || []).map(c => String(c == null ? '' : c).trim())).filter(r => r.some(c => c !== ''));
+if (rows.length < 2) throw new Error('No students found — the list needs a header row and at least one student.');
+const map = importMap(rows[0]);
+if (map.name === undefined) throw new Error('No “Name” column found. The first row must be the header: Name, Phone, Email, Passport, Country, Course, Intake…');
+const list = rows.slice(1).map((r, i) => { const o = { line: i + 2 }; Object.keys(map).forEach(f => { o[f] = r[map[f]] || ''; }); return o; });
+if (list.length > max) throw new Error('That list has ' + list.length + ' students. Import at most ' + max + ' at a time (split the file).');
+btn.textContent = 'Checking…';
+return run('importB2BStudents', ag, list, { branch: val('b2bImBranch'), dryRun: true }).then(r => ({ r: r, list: list, map: map }));
+}).then(({ r, list, map }) => {
+busy(btn, false);
+checked = { agent: ag, branch: val('b2bImBranch'), list: list };
+const ok = r.rows.filter(x => x.ok), bad = r.rows.filter(x => !x.ok);
+const used = Object.keys(map).map(f => ({ name: 'Name', phone: 'Phone', email: 'Email', passportNo: 'Passport', country: 'Country', course: 'Course', intake: 'Intake', branch: 'Branch', notes: 'Notes' })[f]).join(', ');
+$('b2bImPrev').innerHTML = `<div class="b2b-sec"><h4><span>Check result — <span class="sx-good">${ok.length} ready</span>${bad.length ? ' · <span class="sx-bad">' + bad.length + ' skipped</span>' : ''}</span></h4>
+<div class="b2b-note" style="margin-top:0;">Columns found: ${esc(used)}</div>
+${bad.length ? `<div class="sx-table-wrap" style="max-height:180px;overflow:auto;margin-top:6px;"><table class="sx-table"><thead><tr><th class="num">Row</th><th>Name</th><th>Why skipped</th></tr></thead><tbody>${bad.map(x => `<tr><td class="num">${x.line}</td><td>${esc(x.name || '—')}</td><td class="sx-bad">${esc(x.reason)}</td></tr>`).join('')}</tbody></table></div>` : ''}
+${ok.length ? `<div class="sx-table-wrap" style="max-height:240px;overflow:auto;margin-top:6px;"><table class="sx-table"><thead><tr><th class="num">Row</th><th>Name</th><th>Phone</th><th>Country · intake</th><th>Branch</th></tr></thead><tbody>${ok.slice(0, 200).map(x => { const s = list.find(l => l.line === x.line) || {}; return `<tr><td class="num">${x.line}</td><td><b>${esc(x.name)}</b>${s.email ? `<div class="sx-sub">${esc(s.email)}</div>` : ''}</td><td>${esc(s.phone || '—')}</td><td>${esc(x.country || '—')} <span class="sx-sub">${esc(x.intake || '')}</span></td><td>${esc(x.branch || '—')}</td></tr>`; }).join('')}</tbody></table></div>${ok.length > 200 ? `<div class="b2b-note">…and ${ok.length - 200} more.</div>` : ''}` : ''}</div>`;
+const go = $('b2bImGo'); go.disabled = !ok.length; go.textContent = ok.length ? 'Import ' + ok.length + ' student' + (ok.length === 1 ? '' : 's') : 'Nothing to import';
+}).catch(err => { busy(btn, false); formErr('b2bImErr', err); });
+};
+$('b2bImGo').onclick = () => {
+if (!checked) return;
+const btn = $('b2bImGo'); busy(btn, true, 'Importing…'); formErr('b2bImErr');
+run('importB2BStudents', checked.agent, checked.list, { branch: checked.branch })
+.then(r => { toast(r.added + ' student' + (r.added === 1 ? '' : 's') + ' added' + (r.skipped.length ? ' · ' + r.skipped.length + ' skipped' : '')); afterAgent(checked.agent); })
+.catch(err => { busy(btn, false); formErr('b2bImErr', err); });
+};
+}
+
+function statementView(agentId) {
+const a = agentById(agentId); if (!a) return;
+const today = O().today || new Date().toISOString().slice(0, 10);
+const y = Number(today.slice(0, 4)), mo = Number(today.slice(5, 7));
+const fyStart = (mo >= 4 ? y : y - 1) + '-04-01';
+const m3 = (() => { const d = new Date(today + 'T00:00:00Z'); d.setUTCMonth(d.getUTCMonth() - 3); return d.toISOString().slice(0, 10); })();
+const quick = [['All time', '', ''], ['This month', today.slice(0, 8) + '01', today], ['Last 3 months', m3, today], ['This financial year', fyStart, today]];
+let last = null;
+modal('📄 Statement · ' + a.name, `<div class="sx-filters" style="margin:0 0 8px;">${quick.map((q, i) => `<button class="um-btn" data-b2b-sm-q="${i}">${q[0]}</button>`).join('')}</div>
+<div class="b2b-form">${fld('From', '<input type="date" id="b2bSmFrom">')}${fld('To', '<input type="date" id="b2bSmTo">')}</div>
+<div class="b2b-note" style="margin-top:0;">The period picks the students, visa cases and commission lines added in it. Leave both empty for everything.</div>
+<div id="b2bSmBody" style="margin-top:10px;"><div class="skeleton" style="height:220px;"></div></div>
+${errBox('b2bSmErr')}<div class="sx-modal-actions"><button class="um-btn" id="b2bSmBack" style="margin-right:auto;">← Agent</button><button class="um-btn sx-wa" id="b2bSmWa" disabled>WhatsApp summary</button><button class="um-btn" id="b2bSmMail" disabled title="${a.email ? 'Sends the PDF to ' + esc(a.email) : 'Add the agent’s email first'}">✉ Email PDF to agent</button><button class="um-btn primary" id="b2bSmPdf" disabled>⬇ Download PDF</button></div>`, 860);
+const show = () => {
+const from = val('b2bSmFrom'), to = val('b2bSmTo'), host = $('b2bSmBody');
+['b2bSmWa', 'b2bSmMail', 'b2bSmPdf'].forEach(i => { $(i).disabled = true; });
+host.innerHTML = '<div class="skeleton" style="height:220px;"></div>'; formErr('b2bSmErr');
+run('getB2BAgentStatement', a.id, from, to).then(s => {
+if (val('b2bSmFrom') !== from || val('b2bSmTo') !== to) return;
+last = s; const t = s.totals;
+host.innerHTML = `<div class="sx-kpis" style="grid-template-columns:repeat(4,minmax(0,1fr));">
+<div class="sx-kpi"><div class="sx-sub">Students shared</div><div style="font-size:22px;font-weight:800;">${t.students}</div><div class="sx-sub">${t.applications} applications</div></div>
+<div class="sx-kpi"><div class="sx-sub">Visas approved</div><div style="font-size:22px;font-weight:800;" class="sx-good">${t.approved}</div><div class="sx-sub">${s.cases.length} visa cases</div></div>
+<div class="sx-kpi"><div class="sx-sub">Visa fees pending (agent owes)</div><div style="font-size:22px;font-weight:800;" class="${t.pending ? 'sx-bad' : ''}">${inr(t.pending)}</div><div class="sx-sub">${inr(t.received)} of ${inr(t.fee)}</div></div>
+<div class="sx-kpi"><div class="sx-sub">Commission due (we owe)</div><div style="font-size:22px;font-weight:800;">${inr(t.commDue)}</div><div class="sx-sub">${inr(t.commPaid)} paid · ${inr(t.commExpected)} expected</div></div></div>
+<div class="sx-table-wrap" style="max-height:260px;overflow:auto;"><table class="sx-table"><thead><tr><th>Student</th><th>Applications</th><th>Visa</th></tr></thead><tbody>${s.students.map(x => `<tr><td><b>${esc(x.name)}</b><div class="sx-sub">${esc(x.id)} · ${esc(x.country || '')} ${esc(x.intake || '')}</div></td><td>${x.applications.map(p => esc(p.university || '—') + ' — <b>' + esc(p.status) + '</b>').join('<br>') || '<span class="sx-sub">—</span>'}</td><td>${x.visa ? stagePill(x.visa) : '—'}</td></tr>`).join('') || '<tr><td colspan="3" class="sx-sub">No students in this period.</td></tr>'}</tbody></table></div>
+${s.cases.length ? `<div class="sx-table-wrap" style="margin-top:8px;"><table class="sx-table"><thead><tr><th>Visa case</th><th>Stage</th><th class="num">Fee</th><th class="num">Received</th><th class="num">Pending</th></tr></thead><tbody>${s.cases.map(c => `<tr><td>${esc(c.student)} <span class="sx-sub">${esc(c.id)}</span></td><td>${stagePill(c.stage)}</td><td class="num">${inr(c.fee)}</td><td class="num">${inr(c.received)}</td><td class="num ${c.pending ? 'b2b-due' : ''}">${inr(c.pending)}</td></tr>`).join('')}</tbody></table></div>` : ''}
+${s.commission.length ? `<div class="sx-table-wrap" style="margin-top:8px;"><table class="sx-table"><thead><tr><th>Commission</th><th>Status</th><th class="num">Amount</th><th class="num">Paid</th><th class="num">Balance</th></tr></thead><tbody>${s.commission.map(c => `<tr><td>${esc(c.student)} <span class="sx-sub">${esc(c.university || '')}</span></td><td>${commPill(c.status)}</td><td class="num">${inr(c.amount)}</td><td class="num">${inr(c.paidAmount)}</td><td class="num">${c.status === 'Expected' ? '<span class="sx-sub">on enrolment</span>' : inr(c.left)}</td></tr>`).join('')}</tbody></table></div>` : ''}`;
+$('b2bSmPdf').disabled = false; $('b2bSmWa').disabled = false; $('b2bSmMail').disabled = !a.email;
+}).catch(err => { host.innerHTML = ''; formErr('b2bSmErr', err); });
+};
+document.querySelectorAll('[data-b2b-sm-q]').forEach(b => b.onclick = () => { const q = quick[Number(b.dataset.b2bSmQ)]; $('b2bSmFrom').value = q[1]; $('b2bSmTo').value = q[2]; show(); });
+['b2bSmFrom', 'b2bSmTo'].forEach(i => $(i).addEventListener('change', show));
+$('b2bSmBack').onclick = () => agentView(a.id);
+$('b2bSmPdf').onclick = () => {
+const btn = $('b2bSmPdf'); busy(btn, true, 'Making PDF…'); formErr('b2bSmErr');
+run('getB2BAgentStatementPdf', a.id, val('b2bSmFrom'), val('b2bSmTo')).then(f => { busy(btn, false); saveFile(f); toast('Statement downloaded'); }).catch(err => { busy(btn, false); formErr('b2bSmErr', err); });
+};
+$('b2bSmMail').onclick = () => {
+if (!a.email) return;
+if (!confirm('Email this statement as a PDF to ' + a.name + ' (' + a.email + ')? Replies come back to you.')) return;
+const btn = $('b2bSmMail'); busy(btn, true, 'Sending…'); formErr('b2bSmErr');
+run('emailB2BAgentStatement', a.id, val('b2bSmFrom'), val('b2bSmTo'), '').then(r => { busy(btn, false); toast('Statement emailed to ' + r.to); }).catch(err => { busy(btn, false); formErr('b2bSmErr', err); });
+};
+$('b2bSmWa').onclick = () => {
+if (!last) return; const t = last.totals;
+let msg = 'Hi ' + a.name + ',\nYour statement with Akbar Study Abroad' + (last.from || last.to ? ' (' + (last.from ? fmtDate(last.from) : 'start') + ' – ' + fmtDate(last.to || last.today) + ')' : '') + ':\n\n'
++ '• Students shared: ' + t.students + ' (' + t.applications + ' applications)\n• Visas approved: ' + t.approved
++ '\n• Visa service fees: ' + inr(t.fee) + ' · received ' + inr(t.received) + (t.pending ? ' · *pending ' + inr(t.pending) + '*' : ' · fully paid ✅')
++ (t.commDue || t.commPaid || t.commExpected ? '\n• Your commission: due ' + inr(t.commDue) + ' · paid ' + inr(t.commPaid) + (t.commExpected ? ' · expected ' + inr(t.commExpected) : '') : '')
++ '\n\nThe full statement PDF is attached.';
+waCompose(a.id, msg + sign());
+toast('Download the PDF and attach it in WhatsApp', 'success');
+};
+show();
 }
 
 window.openB2BDesk = openB2BDesk;
