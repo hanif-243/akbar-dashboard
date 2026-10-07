@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '7 Oct 2026 · v47';
+window.AKBAR_BUILD = '7 Oct 2026 · v48';
 
 (function () {
   try {
@@ -4795,6 +4795,7 @@ Log out
 <button class="dash-tab" role="tab" data-dash-tab="markets"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span>Markets</span></button>
 </div>
 </nav>
+<div id="todayBoard" data-dash-section="overview"></div>
 <div id="maTodayRow" data-dash-section="overview"></div>
 <div class="insights-row" id="trendCardWrap" data-dash-section="overview" style="grid-template-columns: 1fr;">
 <div class="insight-card"><div class="skeleton" style="height:170px;"></div></div>
@@ -5202,7 +5203,7 @@ return `
           ${detailTabsBar(r)}
           <div data-dt-panel="details" ${dtHidden(r, 'details')}>
           <div class="lead-manage">
-            ${viewerCounselor ? '' : `<button class="um-btn" data-edit-lead="${r.leadId}" data-branch="${r.branch}">✏️ Edit details</button>`}
+            ${viewerCounselor ? (typeof window.akFixLeadBtn === 'function' ? window.akFixLeadBtn(r) : '') : `<button class="um-btn" data-edit-lead="${r.leadId}" data-branch="${r.branch}">✏️ Edit details</button>`}
             ${(window._isSuperAdmin || (viewerBranch && !viewerCounselor)) ? `<button class="um-btn danger" data-delete-lead="${r.leadId}" data-branch="${r.branch}">🗑 Delete lead</button>` : ''}
           </div>
           <div class="detail-grid">
@@ -5226,6 +5227,7 @@ data-lead-id="${r.leadId}" data-branch="${r.branch}" data-status="${s}"
 ${isCurrent ? 'disabled' : ''}>${s}</button>`;
 }).join('')}
           </div>
+          ${typeof window.akCallOutcomeHtml === 'function' ? window.akCallOutcomeHtml(r) : ''}
 
           ${renderConvertSection(r)}
           <div class="lvisa" data-lvisa="${escapeHtml(r.leadId)}" data-branch="${escapeHtml(r.branch)}"></div><!-- SESSION 13A: visa status -->
@@ -6643,7 +6645,7 @@ function forceRender() { window._forceRender = true; try { render(); } finally {
 
 function leadPopBusy() {
   const td = document.querySelector('#tableBody tr.detail-row.lead-pop > td'); if (!td) return false;
-  if (td.querySelector('.followup-form.open, .note-save-btn[disabled], .followup-save-btn[disabled]')) return true;
+  if (td.querySelector('.followup-form.open, .co-form.on, .note-save-btn[disabled], .followup-save-btn[disabled]')) return true;
   const a = document.activeElement;
   return !!(a && td.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));
 }
@@ -19720,6 +19722,7 @@ window.openCallingQueue = openCalling;
 const F = { list: [], set: {}, at: 0, busy: false };
 window.akFuHas = r => !!F.set[r.branch + '|' + r.leadId];
 window.akFuCount = rows => rows.reduce((n, r) => n + (F.set[r.branch + '|' + r.leadId] ? 1 : 0), 0);
+window.akFuList = () => F.list;
 function loadBoard(force) {
   if (F.busy || !window._authToken || typeof allRows === 'undefined' || !allRows.length) return;
   if (!force && Date.now() - F.at < 180000) return;
@@ -20046,6 +20049,322 @@ setInterval(addButton, 2000);
 const sb = document.getElementById('sidebar');
 if (sb) sb.addEventListener('click', e => { const it = e.target.closest('.nav-item, .lead-set-item'); if (it && $('b2bDbView') && $('b2bDbView').style.display === 'block') close(); }, true);
 window.openB2BContacts = open;
+})();
+</script>
+
+<style>
+#todayBoard:empty { display: none; }
+.td-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin: 0 0 14px; }
+.td-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.td-head h3 { margin: 0; font-size: 16px; flex: 1; min-width: 180px; }
+.td-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.td-chip { border: 1px solid var(--border); background: var(--canvas); color: var(--ink); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.td-chip.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+.td-chip .n { margin-left: 6px; }
+.td-chip.bad .n { color: var(--red); } .td-chip.on.bad .n { color: #fff; }
+.td-list { display: flex; flex-direction: column; gap: 6px; }
+.td-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--canvas); font-size: 13px; flex-wrap: wrap; }
+.td-item .w { min-width: 92px; font-weight: 700; font-size: 12px; }
+.td-item .w.bad { color: var(--red); }
+.td-item .n { flex: 1; min-width: 150px; }
+.td-item .n small { display: block; color: var(--muted); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 420px; }
+.td-item .a { display: flex; gap: 6px; }
+.td-item .a .um-btn { padding: 4px 10px; font-size: 12px; }
+.td-empty { color: var(--muted); font-size: 13px; padding: 6px 2px; }
+.td-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.td-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.td-table td { padding: 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.td-table .num { text-align: right; }
+.td-badge { display: inline-block; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px; margin-left: 6px; }
+.td-badge.over { background: var(--red-dim); color: var(--red); } .td-badge.behind { background: rgba(217,138,31,.14); color: var(--warm); } .td-badge.ok { background: rgba(31,157,99,.12); color: var(--ok); }
+.td-scroll { overflow-x: auto; }
+.co-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 10px 0 4px; }
+.co-row .label { font-size: 12.5px; font-weight: 700; color: var(--muted); margin-right: 2px; }
+.co-btn { border: 1px solid var(--border); background: var(--card); color: var(--ink); border-radius: 999px; padding: 5px 11px; font: inherit; font-size: 12px; cursor: pointer; }
+.co-btn:hover { border-color: var(--navy); }
+.co-btn.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+.co-form { display: none; gap: 8px; align-items: center; flex-wrap: wrap; margin: 6px 0 8px; padding: 8px 10px; background: var(--canvas); border-radius: 10px; }
+.co-form.on { display: flex; }
+.co-form input[type=text] { flex: 1; min-width: 180px; }
+.co-form input, .co-form select { border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; font: inherit; font-size: 12.5px; background: var(--card); color: var(--ink); }
+.co-msg { font-size: 12px; color: var(--muted); }
+#tdModalBg { z-index: 20600; }
+@media (max-width: 700px) { .td-item .w { min-width: 0; width: 100%; } }
+</style>
+<script>
+(function () {
+const $ = id => document.getElementById(id);
+const esc = v => escapeHtml(v == null ? '' : String(v));
+const run = (fn, ...args) => promisifyRun(fn, window._authToken || '', ...args);
+const errMsg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
+const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t || 'success'); };
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const rowsAll = () => (typeof allRows !== 'undefined' && allRows) || [];
+const me = () => (typeof viewerCounselor !== 'undefined' && viewerCounselor && viewerCounselor.name) || '';
+const isCoun = () => !!me();
+const isMgr = () => !isCoun() && typeof viewerBranch !== 'undefined' && !!viewerBranch && !document.body.classList.contains('tc-staff');
+const isSA = () => !!window._isSuperAdmin && !document.body.classList.contains('tc-staff');
+const norm = s => String(s || '').trim().toLowerCase();
+const label = r => (typeof statusPill === 'function' ? statusPill(r.status).label : String(r.status || 'New'));
+const OPEN = { New: 1, Hot: 1, Warm: 1 };
+const phoneOf = r => String(r.phone || '').replace(/^p:/i, '');
+const waNum = p => { let d = String(p || '').replace(/[^\d+]/g, '').replace(/^\+/, ''); if (/^0[6-9]\d{9}$/.test(d)) d = d.slice(1); if (/^[6-9]\d{9}$/.test(d)) d = '91' + d; return d.length >= 8 ? d : ''; };
+const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const todayStamp = () => { const d = new Date(); return String(d.getDate()).padStart(2, '0') + ' ' + MON[d.getMonth()] + ' ' + d.getFullYear(); };
+const ago = iso => { const t = Date.parse(iso || ''); if (!t) return ''; const m = Math.round((Date.now() - t) / 60000); return m < 60 ? m + ' min' : m < 1440 ? Math.round(m / 60) + ' h' : Math.round(m / 1440) + ' d'; };
+const fuList = () => (typeof window.akFuList === 'function' ? window.akFuList() : []) || [];
+
+function lastTouch(r) {
+  let best = Math.max(Date.parse(r.statusSetAt || '') || 0, Date.parse(r.createdAt || '') || 0);
+  const m = /\[(\d{1,2}) ([A-Z][a-z]{2}) (\d{4}), (\d{1,2}):(\d{2}) ([ap]m)/i.exec(String(r.remark || ''));
+  if (m) { const h = (Number(m[4]) % 12) + (/p/i.test(m[6]) ? 12 : 0); const t = new Date(Number(m[3]), MON.indexOf(m[2]), Number(m[1]), h, Number(m[5])).getTime(); if (t > best) best = t; }
+  return best;
+}
+
+function openLead(r) {
+  if (!r) return;
+  const all = document.querySelector('.sf-btn[data-tone="all"]');
+  if (all && typeof activeStatusFilter !== 'undefined' && activeStatusFilter && typeof setStatusFilter === 'function') setStatusFilter(all, '');
+  const s = $('search'); if (s) s.value = phoneOf(r) || r.name || '';
+  if (typeof expandedLeadIds !== 'undefined') { expandedLeadIds.clear(); expandedLeadIds.add(r.leadId); }
+  if (typeof window.setDashSection === 'function') window.setDashSection('leads');
+  if (typeof forceRender === 'function') forceRender(); else if (typeof render === 'function') render();
+  const t = document.querySelector('.table-card'); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+const byKey = () => { const m = {}; rowsAll().forEach(r => { m[r.branch + '|' + r.leadId] = r; }); return m; };
+function itemHtml(r, when, whenBad, sub) {
+  const wa = waNum(phoneOf(r));
+  return `<div class="td-item"><span class="w ${whenBad ? 'bad' : ''}">${esc(when)}</span><span class="n"><b>${esc(r.name || '—')}</b> <span class="sx-sub">${esc(label(r))}</span>${sub ? `<small>${esc(sub)}</small>` : ''}</span>
+<span class="a">${phoneOf(r) ? `<a class="um-btn" href="tel:${esc(phoneOf(r).replace(/[^\d+]/g, ''))}" title="Call">📞</a>` : ''}${wa ? `<a class="um-btn sx-wa" href="https:\x2F\x2Fwa.me/${wa}" target="_blank" rel="noopener" title="WhatsApp">WA</a>` : ''}<button class="um-btn primary" data-td-open="${esc(r.branch + '|' + r.leadId)}">Open</button></span></div>`;
+}
+
+const D = { tab: 'missed', calls: null, callsAt: 0, sig: '' };
+function myDay() {
+  const name = me(), rows = rowsAll().filter(r => norm(r.counselor) === norm(name)), keyed = byKey();
+  const fus = fuList().filter(f => norm(f.counselor) === norm(name) || !f.counselor);
+  const missed = fus.filter(f => f.state === 'overdue').map(f => ({ f: f, r: keyed[f.branch + '|' + f.leadId] })).filter(x => x.r);
+  const today = fus.filter(f => f.state === 'today').map(f => ({ f: f, r: keyed[f.branch + '|' + f.leadId] })).filter(x => x.r);
+  const fresh = rows.filter(r => label(r) === 'New').sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
+  const cold = rows.filter(r => (label(r) === 'Hot' || label(r) === 'Warm') && Date.now() - lastTouch(r) > 3 * 864e5 && !fus.some(f => f.leadId === r.leadId)).sort((a, b) => lastTouch(a) - lastTouch(b));
+  const groups = { missed: missed, today: today, fresh: fresh, cold: cold };
+  if (!D.userTab || !groups[D.tab].length) D.tab = ['missed', 'today', 'fresh', 'cold'].find(k => groups[k].length) || 'missed';
+  const fmtDue = f => { if (!f.dueAt) return 'No date'; const d = new Date(f.dueAt), days = Math.floor((Date.now() - d.getTime()) / 864e5); return f.state === 'overdue' ? (days >= 1 ? days + ' d late' : 'today, late') : (f.time || 'today'); };
+  const list = D.tab === 'missed' ? missed.map(x => itemHtml(x.r, fmtDue(x.f), true, x.f.notes || x.f.type))
+    : D.tab === 'today' ? today.map(x => itemHtml(x.r, x.f.time || 'Today', false, x.f.notes || x.f.type))
+    : D.tab === 'fresh' ? fresh.map(r => itemHtml(r, ago(r.createdAt) + ' ago', Date.now() - Date.parse(r.createdAt || '') > 3600e3, r.source || r.campaign || ''))
+    : cold.map(r => itemHtml(r, ago(new Date(lastTouch(r)).toISOString()) + ' quiet', true, String(r.remark || '').split('\n')[1] || 'No recent remark'));
+  const c = D.calls;
+  const d0 = new Date();
+  return `<div class="td-card"><div class="td-head"><h3>☀ My day · ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d0.getDay()]} ${d0.getDate()} ${MON[d0.getMonth()]}</h3>
+<span class="sx-sub">${c ? `📞 ${c.calls} call${c.calls === 1 ? '' : 's'} today · ${c.connected} connected · talk ${Math.round(c.talkSec / 60)} min` : ''}</span></div>
+<div class="td-chips">${[['missed', '⚠ Missed follow-ups', 1], ['today', '📅 Due today', 0], ['fresh', '🆕 New leads to call', 0], ['cold', '😴 Hot/Warm quiet 3+ days', 1]].map(t => `<button class="td-chip ${D.tab === t[0] ? 'on' : ''} ${t[2] && groups[t[0]].length ? 'bad' : ''}" data-td-tab="${t[0]}">${t[1]}<span class="n">${groups[t[0]].length}</span></button>`).join('')}</div>
+<div class="td-list">${list.slice(0, 12).join('') || `<div class="td-empty">${{ missed: '🎉 No missed follow-ups.', today: 'Nothing due today.', fresh: 'No new leads waiting — great.', cold: 'Every hot and warm lead was touched recently.' }[D.tab]}</div>`}</div>
+${list.length > 12 ? `<div class="td-empty">+ ${list.length - 12} more — work these first.</div>` : ''}</div>`;
+}
+
+const M = { fixes: null, batches: null, at: 0, busy: false };
+function teamBoard() {
+  const br = isMgr() ? viewerBranch : (typeof activeBranch !== 'undefined' && activeBranch && activeBranch !== 'All' ? activeBranch : '');
+  if (!br) return '';
+  const rows = rowsAll().filter(r => r.branch === br), fus = fuList().filter(f => f.branch === br), stamp = todayStamp();
+  const names = (typeof counselorList !== 'undefined' ? counselorList : []).filter(c => c.branch === br).map(c => c.name);
+  rows.forEach(r => { const n = String(r.counselor || '').trim(); if (n && names.indexOf(n) === -1) names.push(n); });
+  const per = names.map(n => {
+    const mine = rows.filter(r => norm(r.counselor) === norm(n)), mf = fus.filter(f => norm(f.counselor) === norm(n));
+    const re = new RegExp('\\[' + stamp.replace(/^0/, '0?') + ',[^\\]]*— ' + n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    return { name: n, open: mine.filter(r => OPEN[label(r)]).length, fresh: mine.filter(r => label(r) === 'New').length, hot: mine.filter(r => label(r) === 'Hot').length,
+      due: mf.filter(f => f.state === 'today').length, overdue: mf.filter(f => f.state === 'overdue').length, worked: mine.filter(r => re.test(String(r.remark || ''))).length };
+  });
+  const avg = per.length ? per.reduce((t, p) => t + p.open, 0) / per.length : 0;
+  per.forEach(p => { p.flag = p.open > Math.max(25, avg * 1.5) ? 'over' : p.overdue >= 5 ? 'behind' : ''; });
+  per.sort((a, b) => (b.overdue - a.overdue) || (b.open - a.open));
+  const today = ymd(new Date());
+  const newToday = rows.filter(r => String(r.createdAt || '').slice(0, 10) === today || (Date.parse(r.createdAt || '') && ymd(new Date(r.createdAt)) === today)).length;
+  const unassigned = rows.filter(r => !String(r.counselor || '').trim() && OPEN[label(r)]).length;
+  const fixes = (M.fixes && M.fixes.pending || []).filter(x => x.branch === br);
+  const batches = (M.batches || []).filter(b => b.branch === br);
+  return `<div class="td-card"><div class="td-head"><h3>☀ Today for ${esc(br)}</h3><span class="sx-sub">${newToday} new lead${newToday === 1 ? '' : 's'} today · ${unassigned} open lead${unassigned === 1 ? '' : 's'} not assigned · ${fus.filter(f => f.state === 'overdue').length} follow-ups missed · ${fus.filter(f => f.state === 'today').length} due today</span></div>
+<div class="td-scroll"><table class="td-table"><thead><tr><th>Counsellor</th><th class="num">Open leads</th><th class="num">New (not called)</th><th class="num">Hot</th><th class="num">Due today</th><th class="num">Missed</th><th class="num">Worked today</th><th></th></tr></thead><tbody>
+${per.map(p => `<tr><td><b>${esc(p.name)}</b>${p.flag === 'over' ? '<span class="td-badge over">Overloaded</span>' : p.flag === 'behind' ? '<span class="td-badge behind">Falling behind</span>' : ''}</td><td class="num">${p.open}</td><td class="num">${p.fresh}</td><td class="num">${p.hot}</td><td class="num">${p.due}</td><td class="num" style="${p.overdue ? 'color:var(--red);font-weight:800;' : ''}">${p.overdue}</td><td class="num">${p.worked}</td>
+<td><button class="um-btn" data-td-move="${esc(p.name)}" data-td-branch="${esc(br)}" ${p.open ? '' : 'disabled'}>Move leads…</button></td></tr>`).join('') || '<tr><td colspan="8" class="td-empty">No counsellors in this branch yet.</td></tr>'}
+</tbody></table></div>
+${fixes.length ? `<div class="b2b-sec" style="margin-top:12px;"><h4 style="margin:0 0 6px;">✏️ Corrections waiting (${fixes.length})</h4><div class="td-list">${fixes.map(x => `<div class="td-item"><span class="n"><b>${esc(x.leadName)}</b> · ${esc((M.fixes.fields || {})[x.field] || x.field)}: <s>${esc(x.oldValue || '—')}</s> → <b>${esc(x.newValue)}</b><small>${esc(x.requestedName)}${x.reason ? ' — ' + esc(x.reason) : ''}</small></span><span class="a"><button class="um-btn primary" data-fix-ok="${esc(x.id)}">Approve</button><button class="um-btn" data-fix-no="${esc(x.id)}">Decline</button></span></div>`).join('')}</div></div>` : ''}
+${batches.length ? `<div class="b2b-sec" style="margin-top:12px;"><h4 style="margin:0 0 6px;">↩ Leads to give back</h4><div class="td-list">${batches.map(b => `<div class="td-item"><span class="n"><b>${b.count} lead${b.count === 1 ? '' : 's'}</b> of ${esc(Object.keys(b.from).filter(Boolean).join(', ') || 'unassigned')} → ${esc(Object.keys(b.to).join(', '))}<small>moved ${esc(new Date(b.at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }))} by ${esc(b.by)}</small></span><span class="a"><button class="um-btn" data-give-back="${esc(b.id)}">Give back now</button></span></div>`).join('')}</div></div>` : ''}
+</div>`;
+}
+function loadMgr(force) {
+  if (!(isMgr() || isSA()) || M.busy || (!force && Date.now() - M.at < 300000) || !window._authToken) return;
+  M.busy = true; M.at = Date.now();
+  Promise.all([run('getLeadCorrections').catch(() => null), run('getTempReassignments').catch(() => null)]).then(([a, b]) => { M.busy = false; if (a) M.fixes = a; if (b) M.batches = b.batches || []; D.sig = ''; draw(); });
+}
+function loadCalls() {
+  if (!isCoun() || Date.now() - D.callsAt < 300000 || !window._authToken) return;
+  D.callsAt = Date.now();
+  run('getMyCallsToday').then(c => { D.calls = c; D.sig = ''; draw(); }).catch(() => {});
+}
+
+function draw() {
+  const host = $('todayBoard'); if (!host) return;
+  if (!window._authToken || !rowsAll().length || document.body.classList.contains('tc-staff')) { if (host.innerHTML) host.innerHTML = ''; return; }
+  const fl = fuList();
+  const sig = [rowsAll().length, rowsAll().reduce((t, r) => t + (r.status || '').length + (r.counselor || '').length + (r.remark || '').length, 0), fl.length, fl.filter(f => f.state === 'overdue').length,
+    D.tab, D.calls && D.calls.calls, M.fixes && M.fixes.pending.length, M.batches && M.batches.length, typeof activeBranch !== 'undefined' ? activeBranch : '', new Date().getHours()].join('|');
+  if (sig === D.sig) return;
+  D.sig = sig;
+  host.innerHTML = isCoun() ? myDay() : (isMgr() || isSA()) ? teamBoard() : '';
+}
+setInterval(() => { try { loadCalls(); loadMgr(false); draw(); } catch (e) { console.error('today board', e); } }, 2500);
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-td-tab]'); if (t) { D.tab = t.dataset.tdTab; D.userTab = true; D.sig = ''; draw(); return; }
+  const o = e.target.closest('[data-td-open]'); if (o) { openLead(byKey()[o.dataset.tdOpen]); return; }
+  const mv = e.target.closest('[data-td-move]'); if (mv) { moveForm(mv.dataset.tdBranch, mv.dataset.tdMove); return; }
+  const ok = e.target.closest('[data-fix-ok], [data-fix-no]');
+  if (ok) {
+    const id = ok.dataset.fixOk || ok.dataset.fixNo, yes = !!ok.dataset.fixOk;
+    let note = ''; if (!yes) { note = prompt('Why not? (the counsellor sees this)', '') ; if (note === null) return; }
+    ok.disabled = true;
+    run('decideLeadCorrection', id, yes, note).then(r => {
+      if (yes && r.row) { const i = rowsAll().findIndex(x => x.leadId === r.row.leadId && x.branch === r.row.branch); if (i !== -1) allRows[i] = Object.assign({}, allRows[i], r.row); if (typeof forceRender === 'function') forceRender(); }
+      toast(yes ? 'Corrected on the lead — the counsellor is told' : 'Declined — the counsellor is told'); loadMgr(true);
+    }).catch(err => { ok.disabled = false; toast(errMsg(err), 'error'); });
+    return;
+  }
+  const gb = e.target.closest('[data-give-back]');
+  if (gb) {
+    if (!confirm('Give these leads back to the counsellor they came from? Leads moved again since then stay where they are.')) return;
+    gb.disabled = true;
+    run('giveBackReassignedLeads', gb.dataset.giveBack).then(r => { toast(r.restored + ' lead' + (r.restored === 1 ? '' : 's') + ' given back' + (r.skipped ? ' · ' + r.skipped + ' stayed (moved again)' : '')); loadMgr(true); if (typeof loadData === 'function') loadData(); })
+      .catch(err => { gb.disabled = false; toast(errMsg(err), 'error'); });
+  }
+});
+
+function modal(title, html, width) {
+  let bg = $('tdModalBg');
+  if (!bg) { bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'tdModalBg';
+    bg.innerHTML = '<div class="cmdk-box" id="tdModalBox" role="dialog" aria-modal="true" aria-labelledby="tdModalTitle"><div class="preview-modal-header"><span id="tdModalTitle" style="font-size:14px;font-weight:800;flex:1;"></span><button class="counselor-save-btn" id="tdModalClose">Close</button></div><div class="s10-body" id="tdModalBody"></div></div>';
+    document.body.appendChild(bg); bg.addEventListener('click', e => { if (e.target === bg) closeM(); }); $('tdModalClose').onclick = closeM; }
+  $('tdModalBox').style.maxWidth = (width || 600) + 'px'; $('tdModalTitle').textContent = title; $('tdModalBody').innerHTML = html; bg.classList.add('open');
+  return $('tdModalBody');
+}
+function closeM() { const bg = $('tdModalBg'); if (bg) bg.classList.remove('open'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { const bg = $('tdModalBg'); if (bg && bg.classList.contains('open')) { closeM(); e.stopPropagation(); } } }, true);
+
+function moveForm(branch, from) {
+  const mine = rowsAll().filter(r => r.branch === branch && norm(r.counselor) === norm(from));
+  const others = (typeof counselorList !== 'undefined' ? counselorList : []).filter(c => c.branch === branch && norm(c.name) !== norm(from)).map(c => c.name);
+  const S = { status: { New: true, Hot: true, Warm: true, Cold: false, Junk: false }, pick: {} };
+  mine.forEach(r => { S.pick[r.leadId] = !!S.status[label(r)]; });
+  const body = modal('Move leads of ' + from, `<div class="td-chips" id="mvSt">${['New', 'Hot', 'Warm', 'Cold', 'Junk'].map(s => `<button class="td-chip ${S.status[s] ? 'on' : ''}" data-mv-st="${s}">${s}<span class="n">${mine.filter(r => label(r) === s).length}</span></button>`).join('')}</div>
+<div class="td-list" id="mvList" style="max-height:260px;overflow:auto;"></div>
+<div class="b2b-sec"><h4 style="margin:0 0 6px;">Give them to <span class="sx-sub">(shared out in turn)</span></h4><div class="td-chips">${others.map(n => `<label class="td-chip" style="display:inline-flex;gap:6px;align-items:center;"><input type="checkbox" data-mv-to="${esc(n)}"> ${esc(n)}</label>`).join('') || '<span class="td-empty">No other counsellor in this branch.</span>'}</div>
+<label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-top:6px;"><input type="checkbox" id="mvBack" checked> Give them back later (e.g. leave) — a “Give back now” button appears on your Today board</label>
+<input type="text" id="mvNote" placeholder="Note for the counsellors (optional), e.g. Ravi on leave till Monday" style="width:100%;margin-top:8px;"></div>
+<div id="mvErr" class="fin-alert" style="display:none;margin-top:8px;"></div><div class="sx-modal-actions"><button class="um-btn primary" id="mvGo">Move</button></div>`, 680);
+  const drawL = () => {
+    $('mvList').innerHTML = mine.filter(r => S.status[label(r)]).map(r => `<label class="td-item" style="cursor:pointer;"><input type="checkbox" data-mv-lead="${esc(r.leadId)}" ${S.pick[r.leadId] ? 'checked' : ''}><span class="n"><b>${esc(r.name || '—')}</b> <span class="sx-sub">${esc(label(r))} · ${esc(phoneOf(r))}</span></span></label>`).join('') || '<div class="td-empty">No leads with these statuses.</div>';
+    body.querySelectorAll('[data-mv-lead]').forEach(c => c.onchange = () => { S.pick[c.dataset.mvLead] = c.checked; count(); });
+    count();
+  };
+  const ids = () => mine.filter(r => S.status[label(r)] && S.pick[r.leadId]).map(r => r.leadId);
+  const count = () => { const n = ids().length; $('mvGo').textContent = n ? 'Move ' + n + ' lead' + (n === 1 ? '' : 's') : 'Tick leads to move'; $('mvGo').disabled = !n; };
+  body.querySelectorAll('[data-mv-st]').forEach(b => b.onclick = () => { const s = b.dataset.mvSt; S.status[s] = !S.status[s]; b.classList.toggle('on', S.status[s]); mine.filter(r => label(r) === s).forEach(r => { S.pick[r.leadId] = S.status[s]; }); drawL(); });
+  drawL();
+  $('mvGo').onclick = () => {
+    const to = Array.from(body.querySelectorAll('[data-mv-to]:checked')).map(c => c.dataset.mvTo), list = ids(), err = $('mvErr');
+    err.style.display = 'none';
+    if (!to.length) { err.textContent = 'Tick who gets the leads.'; err.style.display = 'block'; return; }
+    const btn = $('mvGo'); btn.disabled = true; btn.textContent = 'Moving…';
+    run('bulkReassignLeads', branch, list, to, { giveBack: $('mvBack').checked, note: $('mvNote').value.trim() }).then(r => {
+      const m = {}; (r.leads || []).forEach(x => { m[x.leadId] = x.to; });
+      rowsAll().forEach((x, i) => { if (x.branch === branch && m[x.leadId]) allRows[i] = Object.assign({}, x, { counselor: m[x.leadId] }); });
+      if (typeof forceRender === 'function') forceRender();
+      closeM(); toast(r.moved + ' lead' + (r.moved === 1 ? '' : 's') + ' moved — ' + Object.keys(r.perTarget).map(k => k + ' ' + r.perTarget[k]).join(', ') + '. They have been notified.');
+      loadMgr(true); D.sig = ''; draw();
+    }).catch(e => { btn.disabled = false; count(); err.textContent = errMsg(e); err.style.display = 'block'; });
+  };
+}
+
+const OUTCOMES = [['Interested', 'Warm'], ['Very interested', 'Hot'], ['Call back later', null], ['No answer', null], ['Busy', null], ['Switched off / not reachable', null], ['Not interested', 'Cold'], ['Already applied elsewhere', 'Cold'], ['Wrong number', 'Junk']];
+const QUICK = { 'No answer': 1, 'Busy': 1, 'Switched off / not reachable': 1 };
+window.akCallOutcomeHtml = function (r) {
+  if (document.body.classList.contains('tc-staff')) return '';
+  const id = esc(r.leadId), br = esc(r.branch);
+  return `<div class="co-row" data-co-lead="${id}" data-co-branch="${br}"><span class="label">Call result:</span>${OUTCOMES.map(o => `<button class="co-btn" data-co="${esc(o[0])}">${esc(o[0])}</button>`).join('')}</div>
+<div class="co-form" data-co-form="${id}"><input type="text" data-co-note placeholder="What did they say? (optional)"><span data-co-cb style="display:none;"><input type="date" data-co-date> <input type="time" data-co-time></span><button class="note-save-btn" data-co-save>Save</button><button class="um-btn" data-co-cancel>Cancel</button><span class="co-msg" data-co-msg></span></div>`;
+};
+window.akFixLeadBtn = function (r) { return isCoun() ? `<button class="um-btn" data-fix-lead="${esc(r.leadId)}" data-branch="${esc(r.branch)}">✏️ Request correction</button>` : ''; };
+const CO = {};
+function saveOutcome(leadId, branch, outcome) {
+  const form = document.querySelector(`[data-co-form="${CSS.escape(leadId)}"]`);
+  const st = CO[leadId] || {};
+  const note = form ? form.querySelector('[data-co-note]').value.trim() : '';
+  const date = form ? form.querySelector('[data-co-date]').value : '', time = form ? form.querySelector('[data-co-time]').value : '';
+  if (outcome === 'Call back later' && !date) { const m = form && form.querySelector('[data-co-msg]'); if (m) m.textContent = 'Pick the call-back date.'; return; }
+  const idx = rowsAll().findIndex(r => r.leadId === leadId && r.branch === branch), before = idx !== -1 ? allRows[idx] : null;
+  const o = OUTCOMES.find(x => x[0] === outcome);
+  if (before) {
+    const d = new Date(), stamp = '[' + d.getDate() + ' ' + MON[d.getMonth()] + ' ' + d.getFullYear() + ', ' + ((d.getHours() % 12) || 12) + ':' + String(d.getMinutes()).padStart(2, '0') + ' ' + (d.getHours() < 12 ? 'am' : 'pm') + ' — ' + (window._viewerName || 'you') + ']';
+    const text = '📞 ' + outcome + (outcome === 'Call back later' ? ' · call back ' + date + (time ? ' ' + time : '') : '') + (note ? '\n' + note : '');
+    allRows[idx] = Object.assign({}, before, { remark: stamp + '\n' + text + (before.remark ? '\n\n' + before.remark : ''), status: o && o[1] && label(before) !== o[1] ? o[1] : before.status });
+    if (typeof forceRender === 'function') forceRender();
+  }
+  delete CO[leadId];
+  toast('📞 ' + outcome + ' — saving…');
+  run('saveLeadCallOutcome', { branch: branch, leadId: leadId, outcome: outcome, note: note, callBack: outcome === 'Call back later' ? { date: date, time: time } : null }).then(r => {
+    const i = rowsAll().findIndex(x => x.leadId === leadId && x.branch === branch);
+    if (i !== -1 && r.row) allRows[i] = r.row;
+    if (typeof forceRender === 'function') forceRender();
+    if (outcome === 'Call back later' && typeof window.akReloadFollowUps === 'function') window.akReloadFollowUps();
+    D.callsAt = 0; toast('✓ Saved: ' + outcome + (r.status ? ' · status ' + r.status : ''));
+  }).catch(e => {
+    const i = rowsAll().findIndex(x => x.leadId === leadId && x.branch === branch);
+    if (i !== -1 && before) { allRows[i] = before; if (typeof forceRender === 'function') forceRender(); }
+    toast('Call result not saved: ' + errMsg(e), 'error');
+  });
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.co-btn[data-co]');
+  if (b) {
+    e.stopPropagation();
+    const row = b.closest('[data-co-lead]'), leadId = row.dataset.coLead, branch = row.dataset.coBranch, outcome = b.dataset.co;
+    if (QUICK[outcome]) { saveOutcome(leadId, branch, outcome); return; }
+    CO[leadId] = { outcome: outcome };
+    row.querySelectorAll('.co-btn').forEach(x => x.classList.toggle('on', x === b));
+    const form = document.querySelector(`[data-co-form="${CSS.escape(leadId)}"]`); if (!form) return;
+    form.classList.add('on');
+    form.querySelector('[data-co-cb]').style.display = outcome === 'Call back later' ? '' : 'none';
+    if (outcome === 'Call back later' && !form.querySelector('[data-co-date]').value) { const t = new Date(Date.now() + 864e5); form.querySelector('[data-co-date]').value = ymd(t); }
+    form.querySelector('[data-co-save]').textContent = 'Save “' + outcome + '”';
+    form.querySelector('[data-co-note]').focus();
+    return;
+  }
+  const s = e.target.closest('[data-co-save]');
+  if (s) { e.stopPropagation(); const form = s.closest('[data-co-form]'), id = form.dataset.coForm, c = CO[id]; if (!c) return; const row = document.querySelector(`[data-co-lead="${CSS.escape(id)}"]`); saveOutcome(id, row.dataset.coBranch, c.outcome); return; }
+  const x = e.target.closest('[data-co-cancel]');
+  if (x) { e.stopPropagation(); const form = x.closest('[data-co-form]'); delete CO[form.dataset.coForm]; form.classList.remove('on'); const row = document.querySelector(`[data-co-lead="${CSS.escape(form.dataset.coForm)}"]`); if (row) row.querySelectorAll('.co-btn').forEach(y => y.classList.remove('on')); return; }
+  const fx = e.target.closest('[data-fix-lead]');
+  if (fx) { e.stopPropagation(); fixForm(fx.dataset.fixLead, fx.dataset.branch); }
+}, true);
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches && e.target.matches('[data-co-note]')) { e.preventDefault(); const f = e.target.closest('[data-co-form]'); const s = f && f.querySelector('[data-co-save]'); if (s) s.click(); } });
+function fixForm(leadId, branch) {
+  const r = rowsAll().find(x => x.leadId === leadId && x.branch === branch); if (!r) return;
+  const F = [['phone', 'Phone'], ['email', 'Email'], ['name', 'Name'], ['country', 'Country'], ['qualification', 'Qualification'], ['budget', 'Budget'], ['englishTest', 'English test']];
+  const cur = f => f === 'phone' ? phoneOf(r) : String(r[f] || '');
+  const body = modal('✏️ Request a correction · ' + (r.name || ''), `<div class="sx-sub" style="margin-bottom:8px;">Your branch manager approves it and the lead is updated — you'll get a notification.</div>
+<label class="f">What is wrong?</label><select id="fxField" style="width:100%;">${F.map(f => `<option value="${f[0]}">${f[1]}</option>`).join('')}</select>
+<div class="sx-sub" style="margin:6px 0;">Now: <b id="fxNow"></b></div>
+<label class="f">Correct value</label><input type="text" id="fxVal" style="width:100%;">
+<label class="f" style="margin-top:8px;">Why? (optional)</label><input type="text" id="fxWhy" style="width:100%;" placeholder="e.g. student gave a new number on the call">
+<div id="fxErr" class="fin-alert" style="display:none;margin-top:8px;"></div><div class="sx-modal-actions"><button class="um-btn primary" id="fxGo">Send to manager</button></div>`, 520);
+  const show = () => { $('fxNow').textContent = cur($('fxField').value) || '—'; $('fxVal').value = ''; $('fxVal').focus(); };
+  $('fxField').onchange = show; show();
+  $('fxGo').onclick = () => {
+    const btn = $('fxGo'), err = $('fxErr'); err.style.display = 'none'; btn.disabled = true; btn.textContent = 'Sending…';
+    run('requestLeadCorrection', { branch: branch, leadId: leadId, field: $('fxField').value, value: $('fxVal').value.trim(), reason: $('fxWhy').value.trim() })
+      .then(() => { closeM(); toast('Sent to your branch manager — you will be told when it is done'); })
+      .catch(e => { btn.disabled = false; btn.textContent = 'Send to manager'; err.textContent = errMsg(e); err.style.display = 'block'; });
+  };
+}
 })();
 </script>
 
