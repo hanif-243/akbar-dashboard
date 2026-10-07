@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '7 Oct 2026 · v46';
+window.AKBAR_BUILD = '7 Oct 2026 · v47';
 
 (function () {
   try {
@@ -112,7 +112,9 @@ window.AKBAR_BUILD = '7 Oct 2026 · v46';
     var keyOf = function (fn, args) { return fn + '|' + JSON.stringify(args || []); };
 
     var mem = {}, memOrder = [], navAt = 0, NOMEM = { getAuthState: 1, getDashboardData: 1, getStudentQuestionCount: 1, getMetaAdsToday: 1, getFollowUpBoard: 1, getNextCallLead: 1 };
-    var lastNavEl = null, userAt = 0, NAVSEL = '#sidebar .nav-item, .s10-tab, .sx-tab, [data-fin-go], [data-dash-tab]';
+    var lastNavEl = null, userAt = 0, NAVSEL = '#sidebar .nav-item, .s10-tab, .sx-tab, .um-tab, .dash-tab, [data-fin-go], [data-dash-tab], [data-fin-view], [data-fin-tab], [data-hr-view], [data-hr-tab], [data-hr-go], [data-ma-go], [data-ma-view], [data-ma-tab], [data-visa-view], [data-vd-tab], [data-mr-tab], [data-um-tab], [data-sx-tab], [data-sq-tab], [data-sq-view], [data-s10-tab], [data-s10-go], [data-mu-view], [data-mou-view], [data-inv-view], [data-en-view], [data-go-tab], [data-b2b-view], [data-b2b-tab], [data-view], #appTeamBtn, #ceoViewBtn';
+    var lastWrite = 0; try { lastWrite = Number(localStorage.getItem('ak_lastwrite')) || 0; } catch (e) {   }
+    function markWrite() { lastWrite = Date.now(); try { localStorage.setItem('ak_lastwrite', String(lastWrite)); } catch (e) {   } }
     document.addEventListener('click', function (e) { var el = e.target && e.target.closest && e.target.closest(NAVSEL); if (el) { navAt = Date.now(); lastNavEl = el; } }, true);
     ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) { document.addEventListener(ev, function () { userAt = Date.now(); }, { capture: true, passive: true }); });
 
@@ -153,28 +155,74 @@ window.AKBAR_BUILD = '7 Oct 2026 · v46';
       if (hit && Date.now() - hit.at < 180000 && nav) {
         var copy = JSON.parse(JSON.stringify(hit.v));
         if (st.s) setTimeout(function () { st.s(copy, st.u); }, 0);
-        if (Date.now() - hit.at > 15000) callReal({ s: store }, k, args);
+        if (Date.now() - hit.at > 90000) callReal({ s: store }, k, args);
+        pfNote(k, args);
         return;
       }
       var plain = function () { callReal(Object.assign({}, st, { s: function (v, u) { store(v); if (st.s) st.s(v, u); } }), k, args); };
       if (!nav || !keepable) { plain(); return; }
+      pfNote(k, args);
       keepGet(keepKey(k, args), function (rec) {
         if (!rec) { plain(); return; }
-        var servedAt = Date.now(), el = lastNavEl, old = '';
+        var servedAt = Date.now(), el = lastNavEl, old = '', age = Date.now() - rec.at;
         try { old = JSON.stringify(rec.v); } catch (e) { plain(); return; }
         if (st.s) st.s(JSON.parse(old), st.u);
-        chip('⚡ Saved copy from ' + ago(rec.at) + ' · updating…', '', 0);
+        if (age < 120000 && rec.at > lastWrite) { memPut(key, JSON.parse(old)); return; }
+        var noisy = age > 15 * 60000;
+        if (noisy) chip('⚡ Saved copy from ' + ago(rec.at) + ' · updating…', '', 0);
         callReal({ s: function (v) {
           store(v);
           var same = false; try { same = JSON.stringify(v) === old; } catch (e) {   }
-          if (same) { chip('✓ Up to date', '', 1200); return; }
+          if (same) { if (noisy) chip('✓ Up to date', '', 1200); return; }
           var idle = userAt <= servedAt + 60 && !document.querySelector('.cmdk-backdrop.open') && alive(el);
           if (idle) { chip('✓ Updated', '', 1500); reopen(el); }
           else chip('↻ New data ready — tap to show', 'act', 0, function () { reopen(el); });
-        }, f: function () { chip('Couldn’t refresh — showing the saved copy', 'bad', 5000); } }, k, args);
+        }, f: function () { if (noisy) chip('Couldn’t refresh — showing the saved copy', 'bad', 5000); } }, k, args);
       });
     }
     window.akClearModuleMemory = function () { mem = {}; memOrder = []; };
+
+    var PF = 'ak_pf_v1', pfBusy = false, pfAt = 0;
+    function pfRead() { try { return JSON.parse(localStorage.getItem(PF) || '{}') || {}; } catch (e) { return {}; } }
+    function pfNote(k, args) {
+      var t = window._authToken || ''; if (!t || !args || args[0] !== t || NOKEEP.test(k)) return;
+      var a = args.map(function (x) { return x === t ? '#' : x; }), id = k + '|' + JSON.stringify(a);
+      if (id.length > 600) return;
+      var m = pfRead(), e = m[id] || { k: k, a: a, n: 0 };
+      e.n++; e.at = Date.now(); m[id] = e;
+      var ids = Object.keys(m).filter(function (x) { return Date.now() - (m[x].at || 0) < 14 * 864e5; });
+      ids.sort(function (x, y) { return m[y].n - m[x].n; });
+      var keepM = {}; ids.slice(0, 30).forEach(function (x) { keepM[x] = m[x]; });
+      try { localStorage.setItem(PF, JSON.stringify(keepM)); } catch (e2) {   }
+    }
+    function pfRun() {
+      var t = window._authToken || '';
+      if (pfBusy || !t || document.hidden || Date.now() - pfAt < 600000) return;
+      if (pfAt && Date.now() - userAt > 15 * 60000) return;
+      var lo = document.getElementById('loginScreen'); if (lo && lo.style.display !== 'none') return;
+      pfAt = Date.now();
+      var m = pfRead(), list = Object.keys(m).map(function (x) { return m[x]; }).sort(function (a, b) { return b.n - a.n; }).slice(0, 9)
+        .filter(function (e) { var h = mem[keyOf(e.k, e.a.map(function (x) { return x === '#' ? t : x; }))]; return !(h && Date.now() - h.at < 300000); });
+      if (!list.length) return;
+      pfBusy = true;
+      var chunks = []; for (var i = 0; i < list.length; i += 3) chunks.push(list.slice(i, i + 3));
+      var next = function () {
+        if (!chunks.length || (window._authToken || '') !== t || document.hidden) { pfBusy = false; return; }
+        var c = chunks.shift(), started = Date.now(), wrote = lastWrite;
+        var calls = c.map(function (e) { return { fn: e.k, args: e.a.map(function (x) { return x === '#' ? t : x; }) }; });
+        real.withSuccessHandler(function (out) {
+          if (lastWrite === wrote && (window._authToken || '') === t) (out || []).forEach(function (r, j) {
+            if (!r || !('v' in r)) return;
+            try { var cl = calls[j], v = JSON.parse(JSON.stringify(r.v)); memPut(keyOf(cl.fn, cl.args), v); keepPut(keepKey(cl.fn, cl.args), v); } catch (e) {   }
+          });
+          if (Date.now() - started > 15000) { pfBusy = false; return; }
+          setTimeout(next, 1500);
+        }).withFailureHandler(function () { pfBusy = false; }).prefetchRun(t, calls);
+      };
+      next();
+    }
+    setTimeout(function pfLoop() { try { pfRun(); } catch (e) { pfBusy = false; } setTimeout(pfLoop, 60000); }, 12000);
+    window.akPrefetchNow = function () { pfAt = 0; pfRun(); };
     function callReal(st, fn, args) {
       var r = real;
       if (st.s) r = r.withSuccessHandler(st.s);
@@ -208,7 +256,7 @@ window.AKBAR_BUILD = '7 Oct 2026 · v46';
           var args = Array.prototype.slice.call(arguments);
           if (k === 'getDashboardData') { dashCall(st, args); return; }
           if (!BATCH[k] && /^get/.test(k) && !NOMEM[k]) { memCall(st, k, args); return; }
-          if (!BATCH[k]) { if (!/^(get|startSessionTracking|updateSessionHeartbeat)/.test(k)) { pre = {}; mem = {}; memOrder = []; } callReal(st, k, args); return; }
+          if (!BATCH[k]) { if (!/^(get|startSessionTracking|updateSessionHeartbeat|prefetchRun|loginWith|verifyLogin|trustThisDevice)/.test(k)) { pre = {}; mem = {}; memOrder = []; markWrite(); } callReal(st, k, args); return; }
           var hit = pre[keyOf(k, args)];
           if (hit && Date.now() - hit.at < 10000) { hit.wait.push(function (res) { deliver(st, res, function () { callReal(st, k, args); }); }); if (hit.done) hit.flushWaits(); return; }
           queue.push({ st: st, fn: k, args: args });
