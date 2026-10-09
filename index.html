@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '9 Oct 2026 · v54';
+window.AKBAR_BUILD = '9 Oct 2026 · v55';
 
 (function () {
   try {
@@ -16275,6 +16275,18 @@ const p = enIntakeParts(r.intake); if (!p || !p.y) return '';
 const g = EN_PERIODS.find(x => p.m >= x[0] && p.m <= x[1]); return g[2] + ' ' + String(p.y).slice(2);
 }
 
+function enFYStart(tab, intake, date) {
+const t = String(tab || '').toLowerCase(), y2 = (t.match(/(\d{2})\s*$/) || [])[1], ms = [];
+MONTHS.forEach((m, i) => { const at = t.indexOf(m.toLowerCase()); if (at !== -1) ms.push([at, i]); }); ms.sort((a, b) => a[0] - b[0]);
+const p = enIntakeParts(intake);
+if (y2 && ms.length) { const a = ms[0][1], b = ms[ms.length - 1][1], y = 2000 + Number(y2); if (!(a <= 2 && b >= 3) || !(p && p.y)) return a >= 3 ? y : y - 1; }
+if (p && p.y) return p.m >= 3 ? p.y : p.y - 1;
+const d = /^(\d{4})-(\d{2})/.exec(String(date || '')); if (d) return Number(d[2]) >= 4 ? Number(d[1]) : Number(d[1]) - 1;
+return 0;
+}
+function enFYLabel(y) { return y ? 'FY ' + y + '-' + String(y + 1).slice(2) : 'No year'; }
+function enFY(r) { return enFYLabel(enFYStart(enPeriodOf(r), r.intake, r.date)); }
+
 function enBatchTabs(list) {
 const b = {};
 list.forEach(r => { if (/Sheet tab: /.test(String(r.remarks || '')) || String(r.createdBy || '').indexOf('(bulk import)') === -1 || !r.createdAt) return; (b[r.createdAt] = b[r.createdAt] || []).push(r); });
@@ -16289,7 +16301,7 @@ function enPeriodLabel(key) { return key || 'No intake'; }
 function enPeriodSort(key) { const k = String(key || ''), y = Number((k.match(/(\d{2})\s*$/) || [])[1] || 0), mi = MONTHS.findIndex(m => k.toLowerCase().indexOf(m.toLowerCase()) === 0); return y * 100 + (mi < 0 ? 0 : mi); }
 function enFiltered(d, skipPeriod) {
 const f = EN.f, q = norm(f.search);
-return d.enrollments.filter(r => (skipPeriod || !f.period || (f.period === 'none' ? !enPeriodOf(r) : enPeriodOf(r) === f.period)) &&
+return d.enrollments.filter(r => (!f.fy || enFY(r) === f.fy) && (skipPeriod || !f.period || (f.period === 'none' ? !enPeriodOf(r) : enPeriodOf(r) === f.period)) &&
 (!f.intakeM || (enIntakeParts(r.intake) || {}).m === Number(f.intakeM)) && (!f.intakeY || (enIntakeParts(r.intake) || {}).y === Number(f.intakeY)) &&
 (!f.branch || r.branch === f.branch) && (!f.aggregator || r.aggregator === f.aggregator) && (!f.country || norm(r.country) === norm(f.country)) &&
 (!f.university || norm(r.university) === norm(f.university)) && (!f.status || r.status === f.status) && (!f.earning || r.earning === f.earning) && (!f.comm || r.commStatus === f.comm) &&
@@ -16306,6 +16318,7 @@ body().innerHTML = `
 <select id="enfStatus">${opts(d.options.statuses, f.status, 'All statuses')}</select>
 <select id="enfIntakeM" aria-label="Intake month"><option value="">Intake month</option>${MONTHS.map((m, i) => '<option value="' + i + '"' + (String(i) === String(f.intakeM == null ? '' : f.intakeM) ? ' selected' : '') + '>' + m + '</option>').join('')}</select>
 <select id="enfIntakeY" aria-label="Intake year">${opts(Array.from(new Set(d.enrollments.map(r => (enIntakeParts(r.intake) || {}).y).filter(Boolean))).sort((a, b) => b - a).map(String), f.intakeY, 'Intake year')}</select>
+<select id="enfFY" aria-label="Financial year">${opts(Array.from(new Set(d.enrollments.map(enFY))).sort().reverse(), f.fy, 'All financial years')}</select>
 <select id="enfEarn">${opts(['Commission', 'Service charge', 'Both'], f.earning, 'Commission & service')}</select>
 <select id="enfComm">${opts(['Not invoiced', 'Invoiced', 'Partially received', 'Received'], f.comm, 'Any invoice status')}</select>
 <label class="sx-sub" style="margin:0;">From <input type="date" id="enfFrom" value="${esc(f.dateFrom || '')}"></label><label class="sx-sub" style="margin:0;">To <input type="date" id="enfTo" value="${esc(f.dateTo || '')}"></label><button class="link-ghost" id="enfClear">Clear filters</button></div>
@@ -16316,7 +16329,7 @@ ${(() => {
 const old = d.enrollments.filter(r => r.readAsFeeCurrency);
 return old.length ? `<div class="en-old" role="alert"><div><b>${old.length} enrollment${old.length === 1 ? ' still has its' : 's still have their'} commission in the fee currency</b> from the first import (e.g. ${esc(old[0].student)}: ${num(old[0].commCur)} ${esc(old[0].currency)}) — the totals above already convert it with the dashboard rates. Re-import your sheet once to save it properly and add any students that were missed: rows are corrected, not duplicated.</div><button class="um-btn primary" id="enOldFix">⬆ Re-import now</button></div>` : '';
 })()}
-<div id="enAggChips"></div>
+<div id="enFYBox"></div><div id="enAggChips"></div>
 <div class="sx-card" style="padding:6px;margin-bottom:0;"><div class="sx-table-wrap" id="enTable"></div><div class="ea-pager" id="enPager"></div></div>
 <div id="enPeriods"></div>`;
 const paintPeriods = () => {
@@ -16339,6 +16352,7 @@ $('enCards').innerHTML = card4(list.length, 'Total enrollments', '', both || svc
 + card4(inr(comm), 'Total commission', 'sx-good', [svc ? '+ ' + inr(svc) + ' service charge' : '', commRecv ? inr(commRecv) + ' received via invoices' : ''].filter(Boolean).join(' · '))
 + card4(inr(recv), 'Payment received', '')
 + card4(inr(pend), 'Payment pending', pend > 0 ? 'sx-bad' : '', 'commission + service charge − received');
+paintFY();
 const g = {}; list.forEach(r => { const k = r.aggregator || '—'; g[k] = g[k] || { n: 0, c: 0 }; g[k].n++; g[k].c += Number(r.commission) || 0; });
 const top = Object.keys(g).sort((a, b) => g[b].c - g[a].c).slice(0, 8);
 $('enAggChips').innerHTML = top.length ? `<div class="sx-chips" style="margin-bottom:10px;">${top.map(k => `<span class="sx-chip">${esc(k)} · ${g[k].n}<b>${inr(g[k].c)}</b></span>`).join('')}</div>` : '';
@@ -16361,9 +16375,23 @@ $('enTable').querySelectorAll('[data-en-file]').forEach(b => b.onclick = () => {
 $('enTable').querySelectorAll('[data-en-del]').forEach(b => b.onclick = () => { if (!confirm('Delete enrollment #' + b.dataset.enDel + '? It stays in the sheet marked Deleted.')) return; run('deleteEnrollment', +b.dataset.enDel).then(() => { showToast('Deleted', 'success'); window.finReload('enrollments'); window.finInvalidate && window.finInvalidate(['invoices']); }).catch(e => showToast(errMsg(e), 'error')); });
 EN.list = list;
 };
+function paintFY() {
+const keep = f.fy; f.fy = ''; const base = enFiltered(d, true); f.fy = keep;
+const g = {}; base.forEach(r => { const k = enFY(r), x = g[k] = g[k] || { n: 0, c: 0, s: 0, rc: 0, tabs: {} }; x.n++; x.c += Number(r.commission) || 0; x.s += Number(r.serviceCharge) || 0; x.rc += Number(r.received) || 0; x.tabs[enPeriodOf(r) || 'No intake'] = 1; });
+const keys = Object.keys(g).sort().reverse(); if (!keys.length) { $('enFYBox').innerHTML = ''; return; }
+const T = keys.reduce((t, k) => { t.n += g[k].n; t.c += g[k].c; t.s += g[k].s; t.rc += g[k].rc; return t; }, { n: 0, c: 0, s: 0, rc: 0 });
+const pend = x => x.c + x.s - x.rc;
+$('enFYBox').innerHTML = `<details class="sx-card" style="padding:10px 12px;margin-bottom:10px;" ${EN.fyOpen === false ? '' : 'open'} id="enFYDet"><summary style="cursor:pointer;font-weight:700;">📅 By financial year (April – March)${f.fy ? ' · showing ' + esc(f.fy) : ''}</summary>
+<div class="sx-table-wrap" style="margin-top:8px;"><table class="sx-table"><thead><tr><th>Financial year</th><th>Intake tabs</th><th class="num">Students</th><th class="num">Commission</th><th class="num">Service charge</th><th class="num">Received</th><th class="num">Pending</th></tr></thead><tbody>
+${keys.map(k => `<tr data-en-fy="${esc(k)}" style="cursor:pointer;${f.fy === k ? 'background:var(--accent-soft, rgba(217,45,58,.08));' : ''}"><td><b>${esc(k)}</b></td><td class="sx-sub">${esc(Object.keys(g[k].tabs).sort((a, b) => enPeriodSort(a) - enPeriodSort(b)).join(' · '))}</td><td class="num">${g[k].n}</td><td class="num">${inr(g[k].c)}</td><td class="num">${g[k].s ? inr(g[k].s) : '—'}</td><td class="num">${inr(g[k].rc)}</td><td class="num" style="${pend(g[k]) > 0 ? 'color:var(--red);font-weight:700;' : ''}">${inr(pend(g[k]))}</td></tr>`).join('')}
+</tbody><tfoot><tr><td><b>All years</b></td><td></td><td class="num"><b>${T.n}</b></td><td class="num"><b>${inr(T.c)}</b></td><td class="num"><b>${T.s ? inr(T.s) : '—'}</b></td><td class="num"><b>${inr(T.rc)}</b></td><td class="num"><b>${inr(pend(T))}</b></td></tr></tfoot></table></div>
+<div class="sx-sub" style="margin-top:4px;">Click a year to show only it (click again for all years). A tab is counted in the year its months fall in — e.g. Jan - March 26 is FY 2025-26.</div></details>`;
+$('enFYDet').ontoggle = e => { EN.fyOpen = e.target.open; };
+$('enFYBox').querySelectorAll('[data-en-fy]').forEach(tr => tr.onclick = () => { f.fy = f.fy === tr.dataset.enFy ? '' : tr.dataset.enFy; EN.f.period = ''; EN.page = 1; if ($('enfFY')) $('enfFY').value = f.fy || ''; paint(); paintPeriods(); });
+}
 const set = (k, val) => { f[k] = val; EN.page = 1; paint(); };
 let t; $('enQ').oninput = e => { clearTimeout(t); t = setTimeout(() => set('search', e.target.value), 150); };
-[['enfBranch', 'branch'], ['enfAgg', 'aggregator'], ['enfCountry', 'country'], ['enfUni', 'university'], ['enfStatus', 'status'], ['enfEarn', 'earning'], ['enfComm', 'comm'], ['enfFrom', 'dateFrom'], ['enfTo', 'dateTo'], ['enfIntakeM', 'intakeM'], ['enfIntakeY', 'intakeY']].forEach(p => { $(p[0]).onchange = e => { set(p[1], e.target.value); paintPeriods(); }; });
+[['enfBranch', 'branch'], ['enfAgg', 'aggregator'], ['enfCountry', 'country'], ['enfUni', 'university'], ['enfStatus', 'status'], ['enfEarn', 'earning'], ['enfComm', 'comm'], ['enfFrom', 'dateFrom'], ['enfTo', 'dateTo'], ['enfIntakeM', 'intakeM'], ['enfIntakeY', 'intakeY'], ['enfFY', 'fy']].forEach(p => { $(p[0]).onchange = e => { set(p[1], e.target.value); paintPeriods(); }; });
 $('enfClear').onclick = () => { EN.f = {}; EN.page = 1; renderEnrollments(d); };
 $('enAdd').onclick = () => enrollmentForm(d, null);
 $('enBulk').onclick = () => openBulkImport(d);
@@ -16759,8 +16787,53 @@ st.book = book; st.done = st.done || {};
 const count = n => (book.grids[n] || []).filter(r => r && r.some(c => String(c == null ? '' : c).trim() !== '')).length;
 const looksLikeIntake = n => !/ancil|vas|service/i.test(n);
 st.tab = book.names.find(looksLikeIntake) || book.names[0];
+
+const tallyAll = () => {
+const tabs = book.names.filter(looksLikeIntake), plan = [];
+st.claimed = {}; st.update = true; st.saveRatesTouched = true; st.saveRates = false;
+tabs.forEach(t => { st.tab = t; st.map = null; st.rates = {}; st.raw = book.grids[t]; st.rows = []; build(); const all = st.rows || []; all.forEach(r => { if (r.dupSr) st.claimed[r.dupSr] = t; }); const fyS = enFYStart(t, '', ''); plan.push({ tab: t, rows: all.filter(r => !r.issues.length), bad: all.filter(r => r.issues.length), full: fyS > 0 && fyS <= 2024 }); });
+enBatchTabs(d.enrollments);
+const now = {}; d.enrollments.forEach(r => { const k = enPeriodOf(r) || 'No intake'; const x = now[k] = now[k] || { n: 0, c: 0, s: 0, rc: 0 }; x.n++; x.c += Number(r.commission) || 0; x.s += Number(r.serviceCharge) || 0; x.rc += Number(r.received) || 0; });
+const extras = d.enrollments.filter(r => !st.claimed[r.srNo]).map(r => ({ r, on: String(r.createdBy || '').indexOf('(bulk import)') !== -1 }));
+const sum = (rows, f) => rows.reduce((t, r) => t + (Number(f(r)) || 0), 0);
+const tabRow = (x, ix) => { const c = sum(x.rows, r => r.comm), s = sum(x.rows, r => r.p.serviceCharge), rc = x.full ? c + s : sum(x.rows, r => r.p.paymentReceived), nw = now[x.tab] || { n: 0, c: 0, s: 0, rc: 0 }, same = nw.n === x.rows.length && Math.abs(nw.c - c) < 2 && Math.abs(nw.rc - rc) < 2 && Math.abs(nw.s - s) < 2;
+return `<tr><td><b>${esc(x.tab)}</b><div class="sx-sub">${esc(enFYLabel(enFYStart(x.tab, '', '')))}</div></td><td><label class="sx-sub" style="margin:0;display:flex;gap:4px;align-items:center;white-space:nowrap;"><input type="checkbox" data-tlfull="${ix}" ${x.full ? 'checked' : ''}> all received</label></td><td class="num">${x.rows.length}</td><td class="num">${inr(c)}</td><td class="num">${s ? inr(s) : '—'}</td><td class="num">${inr(rc)}</td><td class="num">${inr(c + s - rc)}</td><td class="num">${nw.n}</td><td class="num">${inr(nw.c)}</td><td class="num">${inr(nw.c + nw.s - nw.rc)}</td><td>${same ? '<span style="color:var(--ok);font-weight:700;">✓ tallies</span>' : '<span style="color:var(--warm);font-weight:700;">will be fixed</span>'}</td><td class="sx-sub">${x.rows.filter(r => r.dupSr).length} update · ${x.rows.filter(r => !r.dupSr).length} add${x.bad.length ? ' · <span class="ea-red">' + x.bad.length + ' need a fix</span>' : ''}</td></tr>`; };
+const draw = () => {
+const hide = extras.filter(e => e.on), upd = plan.reduce((t, x) => t + x.rows.filter(r => r.dupSr).length, 0), add = plan.reduce((t, x) => t + x.rows.filter(r => !r.dupSr).length, 0);
+const bad = [].concat(...plan.map(x => x.bad.map(r => ({ tab: x.tab, r }))));
+$('bkPrev').innerHTML = `<div class="bk-box"><b>Workbook vs dashboard</b> <span class="sx-sub" style="display:inline;">sheet = what your Excel tab adds up to (row by row) · dashboard = what the Enrollments tab shows today · “all received” sets received = commission + service for every student in that tab (ticked for FY 2024-25 and older)</span>
+<div class="sx-table-wrap" style="margin-top:8px;"><table class="sx-table"><thead><tr><th>Tab</th><th>Settled?</th><th class="num">Sheet students</th><th class="num">Commission</th><th class="num">Service</th><th class="num">Received</th><th class="num">Pending</th><th class="num">Dashboard students</th><th class="num">Dashboard commission</th><th class="num">Dashboard pending</th><th></th><th>Changes</th></tr></thead><tbody>${plan.map(tabRow).join('')}</tbody></table></div></div>
+${bad.length ? `<div class="bk-box"><b class="ea-red">${bad.length} row${bad.length === 1 ? '' : 's'} can't be imported until fixed in the sheet</b><ul style="margin:6px 0 0 18px;">${bad.map(b => `<li>${esc(b.tab)} · row ${b.r.p._line} ${esc(b.r.p.studentName)} — ${esc(b.r.issues.join(', '))}</li>`).join('')}</ul></div>` : ''}
+<div class="bk-box"><b>${extras.length} dashboard row${extras.length === 1 ? ' is' : 's are'} not in this workbook</b> <span class="sx-sub" style="display:inline;">ticked rows are hidden (kept in the sheet marked Deleted — never erased). Rows from earlier bulk imports are ticked; rows someone added by hand are not.</span>
+${extras.length ? `<div class="sx-table-wrap" style="max-height:260px;overflow:auto;margin-top:8px;"><table class="sx-table"><thead><tr><th><input type="checkbox" id="tlAll" ${hide.length === extras.length ? 'checked' : ''}></th><th>#</th><th>Student</th><th>Branch</th><th>University</th><th>Tab now</th><th class="num">Commission</th><th class="num">Received</th><th>Added by</th></tr></thead><tbody>
+${extras.map((e, i) => `<tr><td><input type="checkbox" data-tl="${i}" ${e.on ? 'checked' : ''}></td><td>${e.r.srNo}</td><td><b>${esc(e.r.student)}</b></td><td>${esc(e.r.branch)}</td><td>${esc(e.r.university || '')}</td><td>${esc(enPeriodOf(e.r) || 'No intake')}</td><td class="num">${inr(e.r.commission)}</td><td class="num">${e.r.received ? inr(e.r.received) : '—'}</td><td class="sx-sub">${esc(e.r.createdBy || '')}</td></tr>`).join('')}</tbody></table></div>` : ''}</div>
+<div class="s10-actions" style="align-items:center;gap:12px;"><span class="sx-sub" style="flex:1;margin:0;">Update ${upd} · add ${add} · hide ${hide.length}</span><button class="um-btn primary" id="tlGo">Make the dashboard match the workbook</button></div><div id="bkResult"></div>`;
+$('bkPrev').querySelectorAll('[data-tl]').forEach(c => c.onchange = () => { extras[+c.dataset.tl].on = c.checked; draw(); });
+$('bkPrev').querySelectorAll('[data-tlfull]').forEach(c => c.onchange = () => { plan[+c.dataset.tlfull].full = c.checked; draw(); });
+const ta = $('tlAll'); if (ta) ta.onchange = e => { extras.forEach(x => { x.on = e.target.checked; }); draw(); };
+$('tlGo').onclick = () => {
+const rows = [].concat(...plan.map(x => x.rows.map(r => { const q = Object.assign({}, r.p, r.dupSr ? { _replaceSr: r.dupSr } : {}); if (x.full) { const earn = Math.round(((Number(r.comm) || 0) + (Number(q.serviceCharge) || 0)) * 100) / 100, was = Number(q.paymentReceived) || 0; if (Math.abs(earn - was) > 0.5) { q.paymentReceived = earn; q.remarks = [q.remarks, 'Fully received (sheet showed ' + inr(was) + ')'].filter(Boolean).join(' · '); } } return q; })));
+const hideSr = extras.filter(e => e.on).map(e => e.r.srNo);
+if (!confirm('Update ' + upd + ', add ' + add + ' and hide ' + hideSr.length + ' enrollments so the dashboard matches this workbook?')) return;
+const btn = $('tlGo'); btn.disabled = true;
+const chunks = []; for (let i = 0; i < rows.length; i += 300) chunks.push(rows.slice(i, i + 300));
+let added = 0, updated = 0, hidden = 0; const errors = [];
+const next = k => { if (k >= chunks.length) return Promise.resolve(); btn.textContent = 'Saving ' + Math.min((k + 1) * 300, rows.length) + ' / ' + rows.length + '…'; return run('bulkAddEnrollments', chunks[k]).then(res => { added += res.added || 0; updated += res.updated || 0; (res.errors || []).forEach(x => errors.push(x)); return next(k + 1); }); };
+next(0).then(() => hideSr.length ? (btn.textContent = 'Hiding ' + hideSr.length + '…', run('hideEnrollments', hideSr, 'Not in the Commission Tracker workbook (tally ' + today() + ')').then(r => { hidden = r.hidden || 0; })) : null).then(() => {
+btn.textContent = 'Done';
+$('bkResult').innerHTML = `<div class="sx-card" style="margin-top:10px;padding:12px;"><b style="color:var(--ok);">✓ ${updated} updated, ${added} added, ${hidden} hidden — every tab now follows your workbook.</b>${errors.length ? `<div class="ea-red" style="margin-top:6px;">${errors.length} skipped:</div><ul style="margin:6px 0 0 18px;font-size:12.5px;">${errors.slice(0, 50).map(x => `<li>Row ${x.line} ${esc(x.student)} — ${esc(x.error)}</li>`).join('')}</ul>` : ''}</div>`;
+showToast('Tallied: ' + updated + ' updated, ' + added + ' added, ' + hidden + ' hidden', 'success');
+tabs.forEach(t => { st.done[t] = true; });
+window.finReload('enrollments'); window.finInvalidate && window.finInvalidate(['invoices', 'commissions']);
+}).catch(e => { btn.disabled = false; btn.textContent = 'Make the dashboard match the workbook'; showToast((added + updated ? (added + updated) + ' saved, then: ' : '') + errMsg(e), 'error'); if (added + updated) window.finReload('enrollments'); });
+};
+};
+st.tab = tabs[0]; st.drawTabs && st.drawTabs(); draw();
+};
 const drawTabs = () => { $('bkTabs').innerHTML = book.names.length < 2 ? `<div class="bk-box"><b>Intake tab</b> <input type="text" id="bkTabName" value="${esc(st.tabName || '')}" placeholder="e.g. Aug - Dec 26" style="width:170px;margin:0 8px;"> <span class="sx-sub" style="display:inline;">optional — puts every row of this file in that tab, like your commission sheet</span></div>` : `<div class="bk-box"><b>Which tab?</b> <span class="sx-sub" style="display:inline;">Your file has ${book.names.length} tabs — import them one by one (✓ = imported now).</span>
-<div class="sx-tabs" style="flex-wrap:wrap;margin-top:6px;">${book.names.map(n => `<button class="sx-tab ${n === st.tab ? 'active' : ''}" data-bk-tab="${esc(n)}">${st.done[n] ? '✓ ' : ''}${esc(n)} <span class="sx-sub" style="display:inline;">${count(n)}</span>${looksLikeIntake(n) ? '' : ' <span class="sx-sub" style="display:inline;">(not enrollments?)</span>'}</button>`).join('')}</div></div>`;
+<div class="sx-tabs" style="flex-wrap:wrap;margin-top:6px;">${book.names.map(n => `<button class="sx-tab ${n === st.tab ? 'active' : ''}" data-bk-tab="${esc(n)}">${st.done[n] ? '✓ ' : ''}${esc(n)} <span class="sx-sub" style="display:inline;">${count(n)}</span>${looksLikeIntake(n) ? '' : ' <span class="sx-sub" style="display:inline;">(not enrollments?)</span>'}</button>`).join('')}</div>
+<div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><button class="um-btn primary" id="bkTallyAll">⚖ Tally whole workbook with the dashboard</button><span class="sx-sub" style="display:inline;">checks every tab at once and makes the dashboard match your sheet</span></div></div>`;
+const tb = $('bkTallyAll'); if (tb) tb.onclick = tallyAll;
 $('bkTabs').querySelectorAll('[data-bk-tab]').forEach(b => b.onclick = () => { st.tab = b.dataset.bkTab; st.map = null; st.rates = {}; st.raw = book.grids[st.tab]; drawTabs(); build(); }); };
 st.drawTabs = drawTabs; drawTabs();
 if ($('bkTabName')) $('bkTabName').oninput = e => { st.tabName = e.target.value.trim(); clearTimeout(st.tnT); st.tnT = setTimeout(build, 300); };
