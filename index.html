@@ -16598,12 +16598,26 @@ $('bkBranch').onchange = e => { st.defBranch = e.target.value; if (st.raw) build
 $('bkDate').onchange = e => { st.defDate = e.target.value; if (st.raw) build(); };
 
 const byName = {}; d.enrollments.forEach(r => { const k = norm(r.student) + '|' + norm(r.branch); (byName[k] = byName[k] || []).push(r); });
-const findDup = p => { const list = byName[norm(p.studentName) + '|' + norm(p.branch)] || []; if (list.length === 1) return list[0].srNo; const u = list.find(r => norm(r.university) === norm(p.university)); return u ? u.srNo : 0; };
+
+st.claimed = st.claimed || {};
+const tabOfRec = r => { const m = /Sheet tab: ([^·|\n]+)/.exec(String(r.remarks || '')); return m ? m[1].trim() : ''; };
+const curTab = () => st.book && st.book.names.length > 1 && st.tab ? st.tab : (st.tabName || '');
+const findDup = (p, used) => {
+const ct = curTab(), list = (byName[norm(p.studentName) + '|' + norm(p.branch)] || []).filter(r => { const t = st.claimed[r.srNo] || tabOfRec(r); return !used[r.srNo] && (!ct || !t || t === ct); });
+const u = list.find(r => norm(r.university) === norm(p.university)) || (list.length === 1 && (!norm(p.university) || !norm(list[0].university)) ? list[0] : null);
+if (u) used[u.srNo] = 1; return u ? u.srNo : 0;
+};
 const detect = grid => {
 for (let i = 0; i < Math.min(grid.length, 20); i++) {
 const m = {}; let hits = 0;
 grid[i].forEach((h, ci) => { const f = fieldFor(h); if (f && m[f] === undefined) { m[f] = ci; hits++; } });
-if (hits >= 2 && m.studentName !== undefined) return { hi: i, map: m };
+if (hits >= 2 && m.studentName !== undefined) {
+if (m.branch === undefined) {
+const brs = BR().map(norm).concat(['cochin', 'kochin', 'ernakulam', 'kozhikode']);
+(grid[i] || []).forEach((h, ci) => { if (m.branch !== undefined || String(h == null ? '' : h).trim()) return; const vals = grid.slice(i + 1, i + 40).map(r => norm((r || [])[ci])).filter(Boolean); if (vals.length >= 3 && vals.filter(v => brs.indexOf(v) !== -1).length >= vals.length * 0.6) m.branch = ci; });
+}
+return { hi: i, map: m };
+}
 }
 return null;
 };
@@ -16627,6 +16641,7 @@ const g = grid[i]; const p = { _line: i + 1 };
 const hm = headerMap(g); if (hm) { segMap = hm; segPaid = (g || []).some(h => /date\s*of\s*(the\s*)?payment/i.test(String(h == null ? '' : h))); continue; }
 BULK_COLS.forEach(c => { if (segMap[c[0]] !== undefined && segMap[c[0]] !== -1) p[c[0]] = g[segMap[c[0]]]; });
 if (!String(p.studentName == null ? '' : p.studentName).trim() || /^total/i.test(String(p.studentName).trim())) continue;
+if (Object.keys(p).every(k => k === '_line' || k === 'studentName' || p[k] == null || String(p[k]).trim() === '')) continue;
 const curHint = curFromText([p.totalFees, p.commissionCur].join(' '));
 NUM_FIELDS.forEach(k => { if (p[k] !== undefined) p[k] = toNum(p[k]); });
 if (!String(p.currency || '').trim() && curHint) p.currency = curHint;
@@ -16639,6 +16654,7 @@ rawRows.push(p);
 Array.from(new Set(rawRows.map(p => p.currency))).filter(c => c !== 'INR').forEach(c => { if (st.rates[c] === undefined) st.rates[c] = sheetRates[c] || d.fxRates[c] || ''; });
 st.fromSheet = Object.keys(sheetRates).length > 0;
 if (st.saveRatesTouched !== true) st.saveRates = Object.keys(st.rates).some(c => Number(st.rates[c]) > 0 && Number(st.rates[c]) !== Number(d.fxRates[c]));
+const used = {};
 st.rows = rawRows.map(p => {
 const issues = [], warnings = [], extra = [];
 p.studentName = String(p.studentName).trim();
@@ -16666,16 +16682,17 @@ const feesInr = (Number(p.totalFees) || 0) * rate;
 let comm, how;
 const sheetInr = blank(p.commissionInr) ? null : Number(p.commissionInr) || 0;
 const conv = !blank(p.commissionCur) ? (Number(p.commissionCur) || 0) * rate : null;
-if (sheetInr !== null) { comm = sheetInr; how = num(p.commissionCur || 0) + ' ' + cur + ' · ₹ from your sheet'; }
+const svcIn = sheetInr !== null && Number(p.serviceCharge) > 0 ? Math.min(Number(p.serviceCharge), sheetInr) : 0;
+if (sheetInr !== null) { comm = sheetInr - svcIn; how = num(p.commissionCur || 0) + ' ' + cur + ' · ₹ from your sheet' + (svcIn ? ' (total ' + inr(sheetInr) + ' less service ' + inr(svcIn) + ')' : ''); }
 else if (conv !== null) { comm = conv; how = num(p.commissionCur) + ' ' + cur + ' × ' + num(rate); }
 else { comm = feesInr * (Number(p.commissionPct) || 0) / 100; how = 'fees × ' + num(p.commissionPct || 0) + '%'; }
 comm = Math.round(comm * 100) / 100;
 p.commissionCur = blank(p.commissionCur) ? '' : Number(p.commissionCur) || 0;
-p.commissionFixed = sheetInr !== null ? sheetInr : '';
+p.commissionFixed = sheetInr !== null ? Math.round((sheetInr - svcIn) * 100) / 100 : '';
 p.fxRateOverride = ownRate || '';
 const sheetDiff = sheetInr !== null && conv !== null && Math.abs(sheetInr - conv) > 1 ? conv : null;
 const earn = comm + (Number(p.serviceCharge) || 0);
-const dupSr = findDup(p);
+const dupSr = findDup(p, used);
 delete p.commissionInr;
 return { p, issues, warnings, dupSr, comm, how, sheetDiff, pending: earn - (Number(p.paymentReceived) || 0), on: !issues.length && (!dupSr || st.update) };
 });
@@ -16727,6 +16744,7 @@ saveRates.then(() => next(0)).then(() => {
 $('bkGo').textContent = 'Import';
 $('bkResult').innerHTML = `<div class="sx-card" style="margin-top:10px;padding:12px;"><b style="color:var(--ok);">✓ ${added} added${updated ? ', ' + updated + ' updated' : ''}.</b>${errors.length ? `<div class="ea-red" style="margin-top:6px;">${errors.length} row${errors.length === 1 ? '' : 's'} skipped:</div><ul style="margin:6px 0 0 18px;font-size:12.5px;">${errors.slice(0, 50).map(x => `<li>Row ${x.line} ${esc(x.student)} — ${esc(x.error)}</li>`).join('')}</ul>` : ''}</div>`;
 showToast(added + ' added' + (updated ? ', ' + updated + ' updated' : '') + (st.tab && st.book && st.book.names.length > 1 ? ' from “' + st.tab + '”' : ''), 'success');
+sel.forEach(x => { if (x._replaceSr) st.claimed[x._replaceSr] = curTab() || '-'; });
 if (st.book && st.tab) { st.done[st.tab] = true; if (st.drawTabs) st.drawTabs(); }
 window.finReload('enrollments'); window.finInvalidate && window.finInvalidate(['invoices', 'commissions']);
 }).catch(e => { $('bkGo').disabled = false; $('bkGo').textContent = 'Import'; showToast((added + updated ? (added + updated) + ' saved, then: ' : '') + errMsg(e), 'error'); if (added + updated) window.finReload('enrollments'); });
