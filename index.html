@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '7 Oct 2026 · v49';
+window.AKBAR_BUILD = '9 Oct 2026 · v50';
 
 (function () {
   try {
@@ -14273,21 +14273,21 @@ function renderFinancials(d) {
 const p = d.pipeline || {}, c = d.commissions || {}, pay = d.payments || {}, r = d.refunds || {}, pl = d.pnl || {}, b = d.budget || {}, s = d.scholarships || {};
 const card = (tab, ic, t, sub) => `<button class="fin-card" data-fin-go="${tab}"><div class="ic">${ic}</div><div class="t">${t}</div><div class="s">${sub}</div></button>`;
 body().innerHTML = `
-<div class="sx-kpis five">${kpi(inr(p.weightedRevenue), 'Pipeline (weighted)', '', 'Expected fee × probability for every lead in the pipeline')}${kpi(inr(c.pendingTotal), 'Commission pending')}${kpi(inr(pay.overdue), 'Payments overdue', pay.overdue ? 'sx-bad' : '')}${kpi(inr(r.atRisk), 'Refund risk', r.atRisk ? 'sx-mid' : '')}${kpi(inr(pl.netProfit), 'Net profit — ' + (pl.month || 'this month'), pl.netProfit < 0 ? 'sx-bad' : 'sx-good')}</div>
+<div class="sx-kpis five">${kpi(inr(p.weightedRevenue), 'Pipeline (weighted)', '', 'Expected fee × probability for every lead in the pipeline')}${kpi(inr((d.enrollments || {}).pending || 0), 'University commission pending', ((d.enrollments || {}).pending || 0) > 0 ? 'sx-bad' : '', 'From Enrollments: commission + service charge − received' + (c.pendingTotal ? ' · counsellor commission pending ' + inr(c.pendingTotal) : ''))}${kpi(inr(pay.overdue), 'Payments overdue', pay.overdue ? 'sx-bad' : '')}${kpi(inr(r.atRisk), 'Refund risk', r.atRisk ? 'sx-mid' : '')}${kpi(inr(pl.netProfit), 'Net profit — ' + (pl.month || 'this month'), pl.netProfit < 0 ? 'sx-bad' : 'sx-good')}</div>
 <div class="fin-cards">
 ${card('revenue-pipeline', '📈', 'Revenue Pipeline', `${p.totalLeads || 0} leads · ${inr(p.thisMonth)} closing this month`)}
-${card('commissions', '💸', 'Commissions', `${inr(c.paidThisMonth)} paid this month · ${inr(c.totalThisYear)} this year`)}
+${card('commissions', '💸', 'Counsellor commissions', `${inr(c.paidThisMonth)} paid this month · ${inr(c.totalThisYear)} this year`)}
 ${card('university-fees', '🎓', 'University Fees', `${(d.fees || {}).rows || 0} fee rows to compare`)}
 ${card('scholarships', '🏅', 'Scholarships', `${s.active || 0} active · ${inr(s.totalValue)} total`)}
 ${card('payments', '🧾', 'Payments', `${pay.overdueCount || 0} overdue · ${inr(pay.dueSoon)} due in 7 days`)}
 ${card('refunds', '↩️', 'Refunds', `${inr(r.atRisk)} at risk`)}
 ${card('pnl', '📊', 'P&L', `${inr(pl.revenue)} revenue · margin ${pct(pl.margin)}`)}
 ${card('budget', '🎯', 'Budget', `${inr(b.actual)} of ${inr(b.budgeted)} spent · ${b.overBudget || 0} over budget`)}
-${d.enrollments ? card('enrollments', '🎓', 'University Enrollments', `${d.enrollments.total} · fees ${inr(d.enrollments.totalFeesINR)} · commission ${inr(d.enrollments.totalCommission)}`) : ''}
+${d.enrollments ? card('enrollments', '🎓', 'University Enrollments', `${d.enrollments.total} · fees ${inr(d.enrollments.totalFeesINR)} · commission ${inr(d.enrollments.totalCommission)} · pending ${inr(d.enrollments.pending)}`) : ''}
 ${d.visa ? `<button class="fin-card" data-fin-visa="1"><div class="ic">🛂</div><div class="t">Visa Services</div><div class="s">${inr(d.visa.incomeThisMonth)} received this month · ${inr(d.visa.incomeThisYear)} ${esc(d.visa.fyLabel)} · ${inr(d.visa.pending)} pending${d.visa.costsThisYear ? ' · costs ' + inr(d.visa.costsThisYear) : ''}</div></button>` : ''}
 ${d.accommodation ? card('accommodation', '🏠', 'Accommodation', `${d.accommodation.total} · rent ${inr(d.accommodation.totalRentINR)} · commission ${inr(d.accommodation.totalCommission)}`) : ''}
 </div>
-<div class="sx-sub" style="margin-top:12px;">Updated ${fmtDate(d.loadedAt)}${d.fromCache ? ' (cached up to 2 min — ↻ Refresh for live)' : ''}. First time? The sheets are created automatically as you add data.</div>`;
+<div class="sx-sub" style="margin-top:12px;">Updated ${fmtDate(d.loadedAt)}${d.fromCache ? ' (saved copy up to 10 min old — ↻ Refresh for live)' : ''}. First time? The sheets are created automatically as you add data.</div>`;
 body().querySelectorAll('[data-fin-go]').forEach(x => x.onclick = () => go(x.dataset.finGo));
 body().querySelectorAll('[data-fin-visa]').forEach(x => x.onclick = () => { if (typeof window.openVisaDesk === 'function') window.openVisaDesk({ tab: 'business' }); });
 }
@@ -16248,9 +16248,20 @@ if ($('commEarned') && window.renderEarnedCommissions) window.renderEarnedCommis
 setTimeout(() => $('enStudent').focus(), 60);
 }
 
-function enFiltered(d) {
+function enIntakeParts(v) {
+const s = String(v == null ? '' : v).trim(); if (!s) return null;
+const mi = MONTHS.findIndex(m => s.toLowerCase().indexOf(m.toLowerCase()) !== -1); if (mi === -1) return null;
+let y = (s.match(/(20\d{2})/) || [])[1]; if (!y) { const t = s.match(/[\s'’\-\/.,](\d{2})\s*$/); if (t) y = '20' + t[1]; }
+return y ? { m: mi, y: Number(y) } : { m: mi, y: 0 };
+}
+const EN_PERIODS = [[0, 2, 'Jan - March'], [3, 6, 'Apr - July'], [7, 11, 'Aug - Dec']];
+function enPeriodOf(r) { const p = enIntakeParts(r.intake); if (!p || !p.y) return ''; const g = EN_PERIODS.find(x => p.m >= x[0] && p.m <= x[1]); return p.y + '-' + EN_PERIODS.indexOf(g); }
+function enPeriodLabel(key) { if (!key) return 'No intake'; const k = key.split('-'); return EN_PERIODS[Number(k[1])][2] + ' ' + String(k[0]).slice(2); }
+function enFiltered(d, skipPeriod) {
 const f = EN.f, q = norm(f.search);
-return d.enrollments.filter(r => (!f.branch || r.branch === f.branch) && (!f.aggregator || r.aggregator === f.aggregator) && (!f.country || norm(r.country) === norm(f.country)) &&
+return d.enrollments.filter(r => (skipPeriod || !f.period || (f.period === 'none' ? !enPeriodOf(r) : enPeriodOf(r) === f.period)) &&
+(!f.intakeM || (enIntakeParts(r.intake) || {}).m === Number(f.intakeM)) && (!f.intakeY || (enIntakeParts(r.intake) || {}).y === Number(f.intakeY)) &&
+(!f.branch || r.branch === f.branch) && (!f.aggregator || r.aggregator === f.aggregator) && (!f.country || norm(r.country) === norm(f.country)) &&
 (!f.university || norm(r.university) === norm(f.university)) && (!f.status || r.status === f.status) && (!f.earning || r.earning === f.earning) && (!f.comm || r.commStatus === f.comm) &&
 (!f.dateFrom || r.date >= f.dateFrom) && (!f.dateTo || r.date <= f.dateTo) &&
 (!q || norm([r.student, r.university, r.course, r.invoice, r.rcNo, r.aggregator, r.agentName].join(' ')).indexOf(q) !== -1));
@@ -16258,11 +16269,14 @@ return d.enrollments.filter(r => (!f.branch || r.branch === f.branch) && (!f.agg
 function renderEnrollments(d) {
 const f = EN.f;
 body().innerHTML = `
+<div class="sx-tabs" id="enPeriods" role="tablist" style="margin-bottom:8px;flex-wrap:wrap;"></div>
 <div class="sx-kpis" id="enCards"></div>
 <div class="sx-filters"><input type="search" id="enQ" placeholder="Search student, university, invoice, RC…" value="${esc(f.search || '')}" style="min-width:200px;">
 <select id="enfBranch">${opts(BR(), f.branch, 'All branches')}</select><select id="enfAgg">${opts(d.options.usedAggregators, f.aggregator, 'All aggregators')}</select>
 <select id="enfCountry">${opts(d.options.countries, f.country, 'All countries')}</select><select id="enfUni">${opts(d.options.universities, f.university, 'All universities')}</select>
 <select id="enfStatus">${opts(d.options.statuses, f.status, 'All statuses')}</select>
+<select id="enfIntakeM" aria-label="Intake month"><option value="">Intake month</option>${MONTHS.map((m, i) => '<option value="' + i + '"' + (String(i) === String(f.intakeM == null ? '' : f.intakeM) ? ' selected' : '') + '>' + m + '</option>').join('')}</select>
+<select id="enfIntakeY" aria-label="Intake year">${opts(Array.from(new Set(d.enrollments.map(r => (enIntakeParts(r.intake) || {}).y).filter(Boolean))).sort((a, b) => b - a).map(String), f.intakeY, 'Intake year')}</select>
 <select id="enfEarn">${opts(['Commission', 'Service charge', 'Both'], f.earning, 'Commission & service')}</select>
 <select id="enfComm">${opts(['Not invoiced', 'Invoiced', 'Partially received', 'Received'], f.comm, 'Any invoice status')}</select>
 <label class="sx-sub" style="margin:0;">From <input type="date" id="enfFrom" value="${esc(f.dateFrom || '')}"></label><label class="sx-sub" style="margin:0;">To <input type="date" id="enfTo" value="${esc(f.dateTo || '')}"></label><button class="link-ghost" id="enfClear">Clear filters</button></div>
@@ -16275,6 +16289,14 @@ return old.length ? `<div class="en-old" role="alert"><div><b>${old.length} enro
 })()}
 <div id="enAggChips"></div>
 <div class="sx-card" style="padding:6px;"><div class="sx-table-wrap" id="enTable"></div><div class="ea-pager" id="enPager"></div></div>`;
+const paintPeriods = () => {
+const base = enFiltered(d, true), g = {};
+base.forEach(r => { const k = enPeriodOf(r) || 'none'; g[k] = g[k] || { n: 0, c: 0 }; g[k].n++; g[k].c += Number(r.commission) || 0; });
+const keys = Object.keys(g).filter(k => k !== 'none').sort((a, b) => b.localeCompare(a)).concat(g.none ? ['none'] : []);
+const tab = (k, label, x) => `<button class="sx-tab ${(EN.f.period || '') === k ? 'active' : ''}" data-en-period="${esc(k)}" role="tab" title="${x ? x.n + ' enrollments · commission ' + inr(x.c) : ''}">${esc(label)}${x ? ` <span class="sx-sub" style="display:inline;">${x.n}</span>` : ''}</button>`;
+$('enPeriods').innerHTML = tab('', 'All intakes', { n: base.length, c: base.reduce((t, r) => t + (Number(r.commission) || 0), 0) }) + keys.map(k => tab(k, k === 'none' ? 'No intake' : enPeriodLabel(k), g[k])).join('');
+$('enPeriods').querySelectorAll('[data-en-period]').forEach(b => b.onclick = () => { EN.f.period = b.dataset.enPeriod; EN.page = 1; paintPeriods(); paint(); });
+};
 const paint = () => {
 const list = enFiltered(d);
 const pages = Math.max(1, Math.ceil(list.length / PER)); if (EN.page > pages) EN.page = pages;
@@ -16311,7 +16333,7 @@ EN.list = list;
 };
 const set = (k, val) => { f[k] = val; EN.page = 1; paint(); };
 let t; $('enQ').oninput = e => { clearTimeout(t); t = setTimeout(() => set('search', e.target.value), 150); };
-[['enfBranch', 'branch'], ['enfAgg', 'aggregator'], ['enfCountry', 'country'], ['enfUni', 'university'], ['enfStatus', 'status'], ['enfEarn', 'earning'], ['enfComm', 'comm'], ['enfFrom', 'dateFrom'], ['enfTo', 'dateTo']].forEach(p => { $(p[0]).onchange = e => set(p[1], e.target.value); });
+[['enfBranch', 'branch'], ['enfAgg', 'aggregator'], ['enfCountry', 'country'], ['enfUni', 'university'], ['enfStatus', 'status'], ['enfEarn', 'earning'], ['enfComm', 'comm'], ['enfFrom', 'dateFrom'], ['enfTo', 'dateTo'], ['enfIntakeM', 'intakeM'], ['enfIntakeY', 'intakeY']].forEach(p => { $(p[0]).onchange = e => { set(p[1], e.target.value); paintPeriods(); }; });
 $('enfClear').onclick = () => { EN.f = {}; EN.page = 1; renderEnrollments(d); };
 $('enAdd').onclick = () => enrollmentForm(d, null);
 $('enBulk').onclick = () => openBulkImport(d);
@@ -16320,6 +16342,7 @@ $('enInvoices').onclick = () => { const tb = document.querySelector('[data-fin-t
 $('enAggs').onclick = () => openAggregators(() => window.finReload('enrollments'));
 $('enRates').onclick = () => { const tb = document.querySelector('[data-fin-tab="fx-rates"]'); if (tb) tb.click(); };
 $('enReport').onchange = e => { const a = e.target.value; e.target.value = ''; if (a) openReport(d, a); };
+paintPeriods();
 $('enCsv').onclick = () => download('Akbar University Enrollments ' + today() + '.csv', [['Sr No', 'Student Name', 'Branch', 'Aggregator', 'Country', 'University', 'Course', 'Intake', 'Status', 'Source', 'Source Amount if Applicable', 'Currency', 'Total Fees', 'Commission %', 'Commission Amount', 'Total Amount (INR)', 'Payment Received', 'Pending Amount', 'Service Charge (INR)', 'Exchange Rate Used', 'Total Fees (INR)', 'Agent Name', 'Earning', 'Invoice Number', 'Commission Status', 'Payment to Third Party', 'Final Amount', 'RC No', 'Date', 'Remarks']]
 .concat((EN.list || []).map(r => [r.srNo, r.student, r.branch, r.aggregator, r.country, r.university, r.course, r.intake, r.status, r.source, r.sourceAmount || '', r.currency, r.totalFees || '', r.pct || '', Math.round(Number(r.commInCur) * 100) / 100, Math.round(Number(r.commission) * 100) / 100, r.received || '', Math.round(Number(r.pending) * 100) / 100, r.serviceCharge || '', r.rateUsed, Math.round(Number(r.feesInr) * 100) / 100, r.agentName || '', r.earning, r.invoice, r.commStatus, r.thirdParty || '', Math.round(Number(r.final) * 100) / 100, r.rcNo, fmtDate(r.date), r.remarks])));
 paint();
@@ -16431,7 +16454,7 @@ $('rvSave').onclick = () => { $('rvSave').disabled = true; run('markInvoiceRecei
 
 const BULK_COLS = [['studentName', 'Student Name', ['studentname', 'student', 'name', 'studentsname', 'nameofstudent', 'nameofthestudent']], ['branch', 'Branch', ['branch', 'office']],
 ['aggregator', 'Aggregator', ['aggregator', 'aggregatorname', 'partner', 'channel']], ['country', 'Country', ['country', 'destination', 'destinationcountry']],
-['university', 'University', ['university', 'universityname', 'uni', 'college', 'institution']], ['course', 'Course', ['course', 'program', 'programme', 'coursename']],
+['university', 'University', ['university', 'universityname', 'uni', 'college', 'institution']], ['course', 'Course', ['course', 'program', 'programme', 'coursename', 'service', 'servicetype']],
 ['intake', 'Intake', ['intake', 'intakemonth', 'intakeyear']], ['status', 'Status', ['status', 'enrollmentstatus', 'enrolmentstatus', 'studentstatus', 'visastatus', 'currentstatus']],
 ['source', 'Source', ['source', 'leadsource', 'reference', 'sourcereference', 'leadfrom']], ['sourceAmount', 'Source Amount (₹)', ['sourceamount', 'sourceamount₹', 'sourceamountifapplicable', 'sourceamountifany', 'sourcefee', 'portalfee', 'agentfee']],
 ['agentName', 'Agent Name', ['agentname', 'agent']], ['currency', 'Currency', ['currency', 'cur', 'feecurrency']],
@@ -16439,12 +16462,12 @@ const BULK_COLS = [['studentName', 'Student Name', ['studentname', 'student', 'n
 ['totalFees', 'Total Fees', ['totalfees', 'fees', 'fee', 'tuitionfee', 'tuitionfees', 'totalfee', 'coursefee', 'coursefees']],
 ['commissionPct', 'Commission %', ['commission%', 'commissionpct', 'commissionpercent', 'commissionpercentage', 'comm%', '%', 'percentage']],
 ['commissionCur', 'Commission (fee currency)', ['commission', 'commissionamount', 'commamount', 'commissionfeecurrency', 'commissioninfeecurrency', 'commissionforeign', 'commissiongbp', 'commissioneur', 'commissionusd', 'commissioncad', 'commissionaud']],
-['commissionInr', 'Commission (₹)', ['commission₹', 'commissioninr', 'commissionrs', 'commissionamount₹', 'commissionamountinr', 'commissioninrupees', 'inrcommission', 'commissionrupees', 'totalcommission₹', 'inr', '₹', 'amountinr', 'inramount', 'totalinr', 'amount₹', 'totalamount₹']],
-['serviceCharge', 'Service Charge (₹)', ['servicecharge', 'servicecharges', 'servicefee', 'servicecharge₹', 'servicechargeinr']],
+['commissionInr', 'Commission (₹)', ['commission₹', 'commissioninr', 'commissionrs', 'commissionamount₹', 'commissionamountinr', 'commissioninrupees', 'inrcommission', 'commissionrupees', 'totalcommission₹', 'inr', '₹', 'amountinr', 'inramount', 'totalinr', 'amount₹', 'totalamount₹', 'totalamount']],
+['serviceCharge', 'Service Charge (₹)', ['servicecharge', 'servicecharges', 'servicefee', 'servicecharge₹', 'servicechargeinr', 'amount', 'serviceamount', 'amount₹']],
 ['paymentReceived', 'Payment Received (₹)', ['paymentreceived', 'paymentrecieved', 'paymentrecieved₹', 'recieved', 'amountrecieved', 'received', 'amountreceived', 'receivedamount', 'paymentreceived₹', 'received₹', 'commissionreceived', 'paid', 'amountpaid']],
 ['paymentToThirdParty', 'Payment to Third Party (₹)', ['paymenttothirdparty', 'thirdparty', 'thirdpartypayment', 'paymenttothirdparty₹', 'agentpayout']],
 ['invoiceNumber', 'Invoice Number', ['invoicenumber', 'invoiceno', 'invoice', 'invno']], ['rcNo', 'RC No', ['rcno', 'rcnoiboss', 'iboss', 'rcnumber']],
-['date', 'Date', ['date', 'enrollmentdate', 'enrolmentdate', 'commissiondate', 'invoicedate']], ['remarks', 'Remarks', ['remarks', 'remark', 'notes', 'note', 'comments']]];
+['date', 'Date', ['date', 'enrollmentdate', 'enrolmentdate', 'commissiondate', 'invoicedate', 'dateofthepayment', 'paymentdate', 'dateofpayment']], ['remarks', 'Remarks', ['remarks', 'remark', 'notes', 'note', 'comments']]];
 const NUM_FIELDS = ['fxRateOverride', 'totalFees', 'commissionPct', 'commissionCur', 'commissionInr', 'serviceCharge', 'sourceAmount', 'paymentReceived', 'paymentToThirdParty'];
 const hkey = h => String(h == null ? '' : h).replace(/\b(rs|inr)\.?(?=[^a-z]|$)/gi, '₹').toLowerCase().replace(/[^a-z0-9%₹]/g, '');
 
@@ -16477,6 +16500,7 @@ const m = /^([A-Za-z]{3,9})[\s\-/.,']*(\d{4}|\d{2})$/.exec(s);
 if (m) { const mi = MONTHS.findIndex(x => m[1].slice(0, 3).toLowerCase() === x.toLowerCase()); if (mi !== -1) return MONTHS[mi] + ' ' + (m[2].length === 2 ? '20' + m[2] : m[2]); }
 const p = parseIntake(s); return p.m && p.y ? p.m + ' ' + p.y : s;
 }
+const curFromText = t => { const s = String(t || '').toUpperCase(); const hit = ['CAD', 'AUD', 'NZD', 'AED', 'SGD', 'GBP', 'EUR', 'USD'].map(x => [x, s.indexOf(x)]).filter(x => x[1] !== -1).sort((a, b) => a[1] - b[1])[0]; if (hit) return hit[0]; if (s.indexOf('£') !== -1) return 'GBP'; if (/EURO|€/.test(s)) return 'EUR'; if (s.indexOf('$') !== -1) return 'USD'; return ''; };
 const toNum = val => { if (typeof val === 'number') return val; const s = String(val == null ? '' : val).replace(/[^0-9.\-]/g, ''); return s === '' || s === '-' || s === '.' ? '' : Number(s); };
 const blank = x => x === '' || x === null || x === undefined;
 
@@ -16511,6 +16535,16 @@ if (/event|fair|seminar|expo/.test(t)) return { source: has('Event'), keep: true
 return { source: has('Other'), keep: true };
 }
 const titleCaseClient = s => String(s || '').toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase()).trim();
+
+function readSheetBook(file) {
+const isCsv = /\.csv$/i.test(file.name);
+if (isCsv) return readSheetFile(file).then(g => ({ names: ['Sheet 1'], grids: { 'Sheet 1': g } }));
+return (typeof loadSheetJS === 'function' ? loadSheetJS() : Promise.reject(new Error('Excel reader unavailable'))).then(X => file.arrayBuffer().then(buf => {
+const wb = X.read(buf, { type: 'array', cellDates: true }), grids = {};
+wb.SheetNames.forEach(n => { grids[n] = X.utils.sheet_to_json(wb.Sheets[n], { header: 1, raw: true, defval: '' }); });
+return { names: wb.SheetNames.slice(), grids: grids };
+}));
+}
 function readSheetFile(file) {
 const isCsv = /\.csv$/i.test(file.name);
 const viaXlsx = () => (typeof loadSheetJS === 'function' ? loadSheetJS() : Promise.reject(new Error('Excel reader unavailable'))).then(X => (isCsv ? file.text() : file.arrayBuffer()).then(buf => {
@@ -16528,7 +16562,7 @@ const b = modal('Bulk import earlier commissions', `
 <b>Commission</b> is read in the fee currency (e.g. £2,101) and converted with the rates below; a <b>Commission (₹)</b> column, if your sheet has one, is used exactly as it is.</div>
 <div class="ea-form">${fld('Excel / CSV file', `<input type="file" id="bkFile" accept=".xlsx,.xls,.csv">`)}${fld('Branch for rows without one', `<select id="bkBranch">${opts(BR(), st.defBranch)}</select>`)}${fld('Date for rows without one', `<input type="date" id="bkDate" value="${esc(st.defDate)}">`)}</div>
 <div style="margin-top:8px;"><button class="link-ghost" id="bkTpl">⬇ Download the template</button></div>
-<div id="bkPrev" style="margin-top:12px;"></div>`, 1180);
+<div id="bkTabs" style="margin-top:10px;"></div><div id="bkPrev" style="margin-top:12px;"></div>`, 1180);
 $('bkTpl').onclick = () => download('Akbar enrollments import template.csv', [BULK_COLS.map(c => c[1]), ['Aisha Khan', 'Kochi', 'IDP', 'UK', 'University of Leeds', 'MSc Data Science', 'Sep 2026', 'Reached UK', 'Walk-in', '', '', 'GBP', '', '24000', '10', '', '', '0', '0', '0', 'AKB/IDP/2026/001', '', '15/09/2026', '']]);
 $('bkBranch').onchange = e => { st.defBranch = e.target.value; if (st.raw) build(); };
 $('bkDate').onchange = e => { st.defDate = e.target.value; if (st.raw) build(); };
@@ -16556,12 +16590,19 @@ const row = grid[i] || [], nm = map.studentName !== undefined ? String(row[map.s
 if (nm && i > st.hi) continue;
 row.forEach((cell, ci) => { const cur = String(cell == null ? '' : cell).trim().toUpperCase(); if (/^[A-Z]{3}$/.test(cur) && cur !== 'INR' && d.options.currencies.indexOf(cur) !== -1) { const v = toNum(row[ci + 1]); if (v > 0 && v < 10000) sheetRates[cur] = v; } });
 }
+let segPaid = false; let segMap = map;
+const headerMap = row => { const m = {}; let hits = 0; (row || []).forEach((h, ci) => { const f = fieldFor(h); if (f && m[f] === undefined) { m[f] = ci; hits++; } }); return hits >= 3 && m.studentName !== undefined ? m : null; };
 for (let i = st.hi + 1; i < grid.length; i++) {
 const g = grid[i]; const p = { _line: i + 1 };
-BULK_COLS.forEach(c => { if (map[c[0]] !== undefined && map[c[0]] !== -1) p[c[0]] = g[map[c[0]]]; });
+const hm = headerMap(g); if (hm) { segMap = hm; segPaid = (g || []).some(h => /date\s*of\s*(the\s*)?payment/i.test(String(h == null ? '' : h))); continue; }
+BULK_COLS.forEach(c => { if (segMap[c[0]] !== undefined && segMap[c[0]] !== -1) p[c[0]] = g[segMap[c[0]]]; });
 if (!String(p.studentName == null ? '' : p.studentName).trim() || /^total/i.test(String(p.studentName).trim())) continue;
+const curHint = curFromText([p.totalFees, p.commissionCur].join(' '));
 NUM_FIELDS.forEach(k => { if (p[k] !== undefined) p[k] = toNum(p[k]); });
+if (!String(p.currency || '').trim() && curHint) p.currency = curHint;
+if (segPaid && blank(p.paymentReceived) && Number(p.serviceCharge) > 0) p.paymentReceived = p.serviceCharge;
 p.currency = String(p.currency || '').trim().toUpperCase().replace('₹', 'INR').replace(/^RS\.?$/, 'INR').replace('£', 'GBP').replace('$', 'USD').replace('€', 'EUR') || 'INR';
+if (d.options.currencies.indexOf(p.currency) === -1) p.currency = curFromText(p.currency) || p.currency;
 rawRows.push(p);
 }
 
@@ -16576,11 +16617,13 @@ const rawDate = p.date; p.date = toYmd(rawDate);
 if (!p.date && st.defDate) { warnings.push(blank(rawDate) || String(rawDate).trim() === '' ? 'no date — uses ' + fmtDate(st.defDate) : 'date “' + String(rawDate).trim().slice(0, 20) + '” not readable — uses ' + fmtDate(st.defDate)); p.date = st.defDate; }
 if (!p.date) issues.push('date missing — pick a default date above');
 if (p.intake !== undefined) p.intake = toIntake(p.intake);
-const givenBranch = String(p.branch == null ? '' : p.branch).trim(), br = BR().find(x => norm(x) === norm(givenBranch)); p.branch = br || st.defBranch;
-if (givenBranch && !br) issues.push('unknown branch “' + givenBranch + '”');
+const BR_ALIAS = { cochin: 'Kochi', kochin: 'Kochi', ernakulam: 'Kochi', kozhikode: 'Calicut', bombay: 'Mumbai', newdelhi: 'Delhi' };
+const givenBranch = String(p.branch == null ? '' : p.branch).trim(), br = BR().find(x => norm(x) === norm(givenBranch)) || BR().find(x => x === BR_ALIAS[norm(givenBranch).replace(/[^a-z]/g, '')]); p.branch = br || st.defBranch;
+if (givenBranch && !br) { warnings.push('branch “' + givenBranch + '” is not a dashboard branch — saved under ' + st.defBranch); extra.push('Branch in sheet: ' + givenBranch); }
 ['aggregator', 'country', 'university', 'course', 'status', 'source', 'agentName', 'invoiceNumber', 'rcNo', 'remarks'].forEach(k => { if (p[k] !== undefined) p[k] = p[k] instanceof Date ? toYmd(p[k]) : String(p[k]).trim(); });
 if (p.status !== undefined) { const ms = mapStatus(p.status, d.options.statuses); if (ms[1]) extra.push('Status: ' + titleCaseClient(p.status)); p.status = ms[0]; }
 if (p.source !== undefined && p.source !== '') { const ms = mapSource(p.source, d.options.sources); if (ms.keep) extra.push('Source: ' + titleCaseClient(p.source)); if (ms.agentName && !p.agentName) p.agentName = ms.agentName; p.source = ms.source; }
+if (st.book && st.book.names.length > 1 && st.tab) extra.push('Sheet tab: ' + st.tab);
 if (extra.length) p.remarks = [p.remarks, extra.join(' · ')].filter(Boolean).join(' · ');
 
 const ownRate = Number(p.fxRateOverride) > 0 ? Number(p.fxRateOverride) : 0, cur = p.currency;
@@ -16650,7 +16693,8 @@ return run('bulkAddEnrollments', chunks[k]).then(res => { added += res.added || 
 saveRates.then(() => next(0)).then(() => {
 $('bkGo').textContent = 'Import';
 $('bkResult').innerHTML = `<div class="sx-card" style="margin-top:10px;padding:12px;"><b style="color:var(--ok);">✓ ${added} added${updated ? ', ' + updated + ' updated' : ''}.</b>${errors.length ? `<div class="ea-red" style="margin-top:6px;">${errors.length} row${errors.length === 1 ? '' : 's'} skipped:</div><ul style="margin:6px 0 0 18px;font-size:12.5px;">${errors.slice(0, 50).map(x => `<li>Row ${x.line} ${esc(x.student)} — ${esc(x.error)}</li>`).join('')}</ul>` : ''}</div>`;
-showToast(added + ' added' + (updated ? ', ' + updated + ' updated' : ''), 'success');
+showToast(added + ' added' + (updated ? ', ' + updated + ' updated' : '') + (st.tab && st.book && st.book.names.length > 1 ? ' from “' + st.tab + '”' : ''), 'success');
+if (st.book && st.tab) { st.done[st.tab] = true; if (st.drawTabs) st.drawTabs(); }
 window.finReload('enrollments'); window.finInvalidate && window.finInvalidate(['invoices', 'commissions']);
 }).catch(e => { $('bkGo').disabled = false; $('bkGo').textContent = 'Import'; showToast((added + updated ? (added + updated) + ' saved, then: ' : '') + errMsg(e), 'error'); if (added + updated) window.finReload('enrollments'); });
 };
@@ -16659,7 +16703,17 @@ $('bkFile').onchange = () => {
 const file = $('bkFile').files[0]; if (!file) return;
 $('bkPrev').innerHTML = '<div class="skeleton" style="height:160px;"></div>';
 st.map = null; st.rates = {};
-readSheetFile(file).then(grid => { st.raw = grid; build(); }).catch(e => { $('bkPrev').innerHTML = `<div class="sx-empty">${esc(errMsg(e))}</div>`; });
+readSheetBook(file).then(book => {
+st.book = book; st.done = st.done || {};
+const count = n => (book.grids[n] || []).filter(r => r && r.some(c => String(c == null ? '' : c).trim() !== '')).length;
+const looksLikeIntake = n => !/ancil|vas|service/i.test(n);
+st.tab = book.names.find(looksLikeIntake) || book.names[0];
+const drawTabs = () => { $('bkTabs').innerHTML = book.names.length < 2 ? '' : `<div class="bk-box"><b>Which tab?</b> <span class="sx-sub" style="display:inline;">Your file has ${book.names.length} tabs — import them one by one (✓ = imported now).</span>
+<div class="sx-tabs" style="flex-wrap:wrap;margin-top:6px;">${book.names.map(n => `<button class="sx-tab ${n === st.tab ? 'active' : ''}" data-bk-tab="${esc(n)}">${st.done[n] ? '✓ ' : ''}${esc(n)} <span class="sx-sub" style="display:inline;">${count(n)}</span>${looksLikeIntake(n) ? '' : ' <span class="sx-sub" style="display:inline;">(not enrollments?)</span>'}</button>`).join('')}</div></div>`;
+$('bkTabs').querySelectorAll('[data-bk-tab]').forEach(b => b.onclick = () => { st.tab = b.dataset.bkTab; st.map = null; st.rates = {}; st.raw = book.grids[st.tab]; drawTabs(); build(); }); };
+st.drawTabs = drawTabs; drawTabs();
+st.raw = book.grids[st.tab]; build();
+}).catch(e => { $('bkPrev').innerHTML = `<div class="sx-empty">${esc(errMsg(e))}</div>`; });
 };
 }
 const CUR_FLAG = { GBP: 'gb', USD: 'us', EUR: 'eu', CAD: 'ca', AUD: 'au', AED: 'ae', NZD: 'nz', SGD: 'sg' };
