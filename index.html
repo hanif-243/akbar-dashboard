@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '9 Oct 2026 · v52';
+window.AKBAR_BUILD = '9 Oct 2026 · v53';
 
 (function () {
   try {
@@ -16264,8 +16264,14 @@ let y = (s.match(/(20\d{2})/) || [])[1]; if (!y) { const t = s.match(/[\s'’\-\
 return y ? { m: mi, y: Number(y) } : { m: mi, y: 0 };
 }
 const EN_PERIODS = [[0, 2, 'Jan - March'], [3, 6, 'Apr - July'], [7, 11, 'Aug - Dec']];
-function enPeriodOf(r) { const p = enIntakeParts(r.intake); if (!p || !p.y) return ''; const g = EN_PERIODS.find(x => p.m >= x[0] && p.m <= x[1]); return p.y + '-' + EN_PERIODS.indexOf(g); }
-function enPeriodLabel(key) { if (!key) return 'No intake'; const k = key.split('-'); return EN_PERIODS[Number(k[1])][2] + ' ' + String(k[0]).slice(2); }
+
+function enPeriodOf(r) {
+const t = /Sheet tab: ([^·|\n]+)/.exec(String(r.remarks || '')); if (t && t[1].trim()) return t[1].trim();
+const p = enIntakeParts(r.intake); if (!p || !p.y) return '';
+const g = EN_PERIODS.find(x => p.m >= x[0] && p.m <= x[1]); return g[2] + ' ' + String(p.y).slice(2);
+}
+function enPeriodLabel(key) { return key || 'No intake'; }
+function enPeriodSort(key) { const k = String(key || ''), y = Number((k.match(/(\d{2})\s*$/) || [])[1] || 0), mi = MONTHS.findIndex(m => k.toLowerCase().indexOf(m.toLowerCase()) === 0); return y * 100 + (mi < 0 ? 0 : mi); }
 function enFiltered(d, skipPeriod) {
 const f = EN.f, q = norm(f.search);
 return d.enrollments.filter(r => (skipPeriod || !f.period || (f.period === 'none' ? !enPeriodOf(r) : enPeriodOf(r) === f.period)) &&
@@ -16301,7 +16307,7 @@ return old.length ? `<div class="en-old" role="alert"><div><b>${old.length} enro
 const paintPeriods = () => {
 const base = enFiltered(d, true), g = {};
 base.forEach(r => { const k = enPeriodOf(r) || 'none'; g[k] = g[k] || { n: 0, c: 0 }; g[k].n++; g[k].c += Number(r.commission) || 0; });
-const keys = Object.keys(g).filter(k => k !== 'none').sort((a, b) => b.localeCompare(a)).concat(g.none ? ['none'] : []);
+const keys = Object.keys(g).filter(k => k !== 'none').sort((a, b) => enPeriodSort(b) - enPeriodSort(a) || a.localeCompare(b)).concat(g.none ? ['none'] : []);
 const allC = base.reduce((t, r) => t + (Number(r.commission) || 0), 0);
 xlTabs($('enPeriods'), [{ key: '', label: 'All intakes', count: base.length, title: 'commission ' + inr(allC) }].concat(keys.map(k => ({ key: k, label: k === 'none' ? 'No intake' : enPeriodLabel(k), count: g[k].n, title: g[k].n + ' enrollments · commission ' + inr(g[k].c) }))),
 EN.f.period || '', k => { EN.f.period = k; EN.page = 1; paintPeriods(); paint(); }, () => enrollmentForm(d, null), 'Add an enrollment');
@@ -16625,7 +16631,9 @@ if (p.commissionPct !== '' && p.commissionPct !== undefined && p.commissionPct >
 const rawDate = p.date; p.date = toYmd(rawDate);
 if (!p.date && st.defDate) { warnings.push(blank(rawDate) || String(rawDate).trim() === '' ? 'no date — uses ' + fmtDate(st.defDate) : 'date “' + String(rawDate).trim().slice(0, 20) + '” not readable — uses ' + fmtDate(st.defDate)); p.date = st.defDate; }
 if (!p.date) issues.push('date missing — pick a default date above');
+const intakeWasDate = typeof p.intake === 'number' || p.intake instanceof Date;
 if (p.intake !== undefined) p.intake = toIntake(p.intake);
+if (intakeWasDate && p.intake) warnings.push('the Intake cell is a date in your sheet — read as “' + p.intake + '”, please check it');
 const BR_ALIAS = { cochin: 'Kochi', kochin: 'Kochi', ernakulam: 'Kochi', kozhikode: 'Calicut', bombay: 'Mumbai', newdelhi: 'Delhi' };
 const givenBranch = String(p.branch == null ? '' : p.branch).trim(), br = BR().find(x => norm(x) === norm(givenBranch)) || BR().find(x => x === BR_ALIAS[norm(givenBranch).replace(/[^a-z]/g, '')]); p.branch = br || st.defBranch;
 if (givenBranch && !br) { warnings.push('branch “' + givenBranch + '” is not a dashboard branch — saved under ' + st.defBranch); extra.push('Branch in sheet: ' + givenBranch); }
@@ -16633,6 +16641,7 @@ if (givenBranch && !br) { warnings.push('branch “' + givenBranch + '” is not
 if (p.status !== undefined) { const ms = mapStatus(p.status, d.options.statuses); if (ms[1]) extra.push('Status: ' + titleCaseClient(p.status)); p.status = ms[0]; }
 if (p.source !== undefined && p.source !== '') { const ms = mapSource(p.source, d.options.sources); if (ms.keep) extra.push('Source: ' + titleCaseClient(p.source)); if (ms.agentName && !p.agentName) p.agentName = ms.agentName; p.source = ms.source; }
 if (st.book && st.book.names.length > 1 && st.tab) extra.push('Sheet tab: ' + st.tab);
+else if (st.tabName) extra.push('Sheet tab: ' + st.tabName);
 if (extra.length) p.remarks = [p.remarks, extra.join(' · ')].filter(Boolean).join(' · ');
 
 const ownRate = Number(p.fxRateOverride) > 0 ? Number(p.fxRateOverride) : 0, cur = p.currency;
@@ -16717,10 +16726,11 @@ st.book = book; st.done = st.done || {};
 const count = n => (book.grids[n] || []).filter(r => r && r.some(c => String(c == null ? '' : c).trim() !== '')).length;
 const looksLikeIntake = n => !/ancil|vas|service/i.test(n);
 st.tab = book.names.find(looksLikeIntake) || book.names[0];
-const drawTabs = () => { $('bkTabs').innerHTML = book.names.length < 2 ? '' : `<div class="bk-box"><b>Which tab?</b> <span class="sx-sub" style="display:inline;">Your file has ${book.names.length} tabs — import them one by one (✓ = imported now).</span>
+const drawTabs = () => { $('bkTabs').innerHTML = book.names.length < 2 ? `<div class="bk-box"><b>Intake tab</b> <input type="text" id="bkTabName" value="${esc(st.tabName || '')}" placeholder="e.g. Aug - Dec 26" style="width:170px;margin:0 8px;"> <span class="sx-sub" style="display:inline;">optional — puts every row of this file in that tab, like your commission sheet</span></div>` : `<div class="bk-box"><b>Which tab?</b> <span class="sx-sub" style="display:inline;">Your file has ${book.names.length} tabs — import them one by one (✓ = imported now).</span>
 <div class="sx-tabs" style="flex-wrap:wrap;margin-top:6px;">${book.names.map(n => `<button class="sx-tab ${n === st.tab ? 'active' : ''}" data-bk-tab="${esc(n)}">${st.done[n] ? '✓ ' : ''}${esc(n)} <span class="sx-sub" style="display:inline;">${count(n)}</span>${looksLikeIntake(n) ? '' : ' <span class="sx-sub" style="display:inline;">(not enrollments?)</span>'}</button>`).join('')}</div></div>`;
 $('bkTabs').querySelectorAll('[data-bk-tab]').forEach(b => b.onclick = () => { st.tab = b.dataset.bkTab; st.map = null; st.rates = {}; st.raw = book.grids[st.tab]; drawTabs(); build(); }); };
 st.drawTabs = drawTabs; drawTabs();
+if ($('bkTabName')) $('bkTabName').oninput = e => { st.tabName = e.target.value.trim(); clearTimeout(st.tnT); st.tnT = setTimeout(build, 300); };
 st.raw = book.grids[st.tab]; build();
 }).catch(e => { $('bkPrev').innerHTML = `<div class="sx-empty">${esc(errMsg(e))}</div>`; });
 };
