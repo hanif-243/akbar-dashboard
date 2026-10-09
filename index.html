@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '9 Oct 2026 · v55';
+window.AKBAR_BUILD = '9 Oct 2026 · v56';
 
 (function () {
   try {
@@ -17271,7 +17271,7 @@ const TABS = [['students', 'Students'], ['branch', '🏢 Branch'], ['visa', 'Vis
 const $ = id => document.getElementById(id);
 const tok = () => window._authToken || '';
 
-const DO = { uploadB2BAgentKyc: 1, setB2BAgentKycStatus: 1, saveB2BAgentFull: 1, saveB2BStudent: 1, deleteB2BStudent: 1, b2bAssignLead: 1, b2bCreateApplication: 1, saveB2BVisaCase: 1, setB2BVisaStage: 1, deleteB2BVisaCase: 1, saveB2BCommission: 1, setB2BVisaDocStatus: 1, uploadB2BVisaDoc: 1, uploadB2BAgentMou: 1, convertB2BContactToAgent: 1, respondAppRequest: 1, sendB2BStudentPortal: 1 };
+const DO = { uploadB2BAgentKyc: 1, setB2BAgentKycStatus: 1, saveB2BAgentFull: 1, saveB2BStudent: 1, deleteB2BStudent: 1, b2bAssignLead: 1, b2bCreateApplication: 1, saveB2BVisaCase: 1, setB2BVisaStage: 1, deleteB2BVisaCase: 1, saveB2BCommission: 1, setB2BVisaDocStatus: 1, uploadB2BVisaDoc: 1, uploadB2BAgentMou: 1, convertB2BContactToAgent: 1, respondAppRequest: 1, sendB2BStudentPortal: 1, deleteB2BAgent: 1, saveB2BGroupBranch: 1, deleteB2BGroupBranch: 1 };
 const run = (fn, ...args) => {
 if (DO[fn]) return promisifyRun('b2bDo', tok(), fn, args).then(o => { if (o && o.desk) { B.data = o.desk; B.fresh = Date.now(); } return o ? o.r : null; });
 if (fn === 'getB2BDesk' && B.fresh && Date.now() - B.fresh < 8000) { B.fresh = 0; return Promise.resolve(B.data); }
@@ -17516,10 +17516,13 @@ const d = B.data; if (!d) return;
 const agents = d.agents.filter(a => a.active !== false || a.id === st.agentId).map(a => [a.id, a.name + (a.company ? ' · ' + a.company : '')]);
 const src0 = isBranchSt(st) || !agents.length ? 'Branch' : 'Agent';
 const staffFor = br => (O().staff || []).filter(s => !br || s.branch === br).map(s => s.name);
+const gb0 = GB().find(g => g.id === st.sourceBranchId) || null;
+const srcBrName = () => { if (!$('b2bStGb')) return val('b2bStSrcBr'); const g = GB().find(x => x.id === val('b2bStGb')); return g ? g.branch : ''; };
 modal(st.id ? 'Edit student · ' + st.id : src0 === 'Branch' ? 'Add branch student' : 'Add agent student', `<div class="b2b-form">
 ${fld('Student name *', `<input type="text" id="b2bStName" value="${esc(st.name)}">`)}${fld('Comes from', `<select id="b2bStSrc">${opts([['Agent', 'A partner agent'], ['Branch', 'Our own branch']], src0)}</select>`)}
 <div class="full" id="b2bStAgWrap">${fld('Shared by agent *', `<select id="b2bStAgent">${opts(agents, st.agentId || B.agent, agents.length ? 'Choose agent…' : 'No agents yet — add one first')}</select>`)}</div>
-<div class="full" id="b2bStBrWrap"><div class="b2b-form">${fld('Which branch *', `<select id="b2bStSrcBr">${opts(O().branches, st.sourceBranch || st.branch || '', 'Choose branch…')}</select>`)}${fld('How did they come? *', `<select id="b2bStBrSrc">${opts(BR_SOURCES(), st.branchSource || 'Branch walk-in')}</select>`)}
+<div class="full" id="b2bStBrWrap"><div class="b2b-form">${GB().length ? `${fld('State *', `<select id="b2bStGbState"></select>`)}${fld('City *', `<select id="b2bStGbCity"></select>`)}
+<div class="full"><label class="f" for="b2bStGb">Which branch *</label><div style="display:flex;gap:8px;"><select id="b2bStGb" style="flex:1;"></select><button class="um-btn" id="b2bStGbAdd" type="button" title="Add a group branch">＋ New</button></div></div>` : fld('Which branch *', `<select id="b2bStSrcBr">${opts(O().branches, st.sourceBranch || st.branch || '', 'Choose branch…')}</select><div class="b2b-note"><button class="link-ghost" id="b2bStGbAdd" type="button">＋ Add Akbar Group branches (state · city · branch)</button></div>`)}${fld('How did they come? *', `<select id="b2bStBrSrc">${opts(BR_SOURCES(), st.branchSource || 'Branch walk-in')}</select>`)}
 <div class="full" id="b2bStEmpWrap">${fld('Employee name *', `<input type="text" id="b2bStEmp" list="b2bStEmpL" value="${esc(st.employeeName || '')}" placeholder="Who referred the student"><datalist id="b2bStEmpL"></datalist>`)}</div></div></div>
 ${fld('Student phone', `<input type="text" id="b2bStPhone" value="${esc(st.phone)}" placeholder="needed to add as a lead">`)}${fld('Student email', `<input type="text" id="b2bStEmail" value="${esc(st.email)}">`)}
 ${fld('Passport no.', `<input type="text" id="b2bStPass" value="${esc(st.passportNo)}">`)}${fld('Our branch (handles the student)', `<select id="b2bStBranch">${opts(O().branches, st.branch, 'Choose branch…')}</select>`)}
@@ -17532,15 +17535,29 @@ const sync = () => {
 const br = val('b2bStSrc') === 'Branch';
 $('b2bStAgWrap').style.display = br ? 'none' : ''; $('b2bStBrWrap').style.display = br ? '' : 'none';
 $('b2bStEmpWrap').style.display = br && val('b2bStBrSrc') === 'Branch employee reference' ? '' : 'none';
-$('b2bStEmpL').innerHTML = staffFor(val('b2bStSrcBr')).map(n => `<option value="${esc(n)}">`).join('');
-if (br && !val('b2bStBranch') && val('b2bStSrcBr')) $('b2bStBranch').value = val('b2bStSrcBr');
+$('b2bStEmpL').innerHTML = staffFor(O().branches.indexOf(srcBrName()) !== -1 ? srcBrName() : '').map(n => `<option value="${esc(n)}">`).join('');
+if (br && !val('b2bStBranch') && O().branches.indexOf(srcBrName()) !== -1) $('b2bStBranch').value = srcBrName();
 };
-['b2bStSrc', 'b2bStBrSrc', 'b2bStSrcBr'].forEach(i => { $(i).onchange = sync; }); sync();
+const gbFill = (keepCity, keepId) => {
+if (!$('b2bStGb')) return;
+const list = GB().filter(g => g.active !== false || g.id === st.sourceBranchId);
+const states = Array.from(new Set(list.map(g => g.state))).sort();
+const s0 = $('b2bStGbState').value || (gb0 ? gb0.state : states.length === 1 ? states[0] : '');
+$('b2bStGbState').innerHTML = opts(states, s0, 'Choose state…');
+const cities = Array.from(new Set(list.filter(g => g.state === val('b2bStGbState')).map(g => g.city))).sort();
+const c0 = keepCity || (gb0 && gb0.state === val('b2bStGbState') ? gb0.city : cities.length === 1 ? cities[0] : '');
+$('b2bStGbCity').innerHTML = opts(cities, c0, val('b2bStGbState') ? 'Choose city…' : 'Choose the state first');
+const brs = list.filter(g => g.state === val('b2bStGbState') && g.city === val('b2bStGbCity')).map(g => [g.id, g.branch + (g.company ? ' · ' + g.company : '')]);
+$('b2bStGb').innerHTML = opts(brs, keepId || (gb0 ? gb0.id : brs.length === 1 ? brs[0][0] : ''), val('b2bStGbCity') ? 'Choose branch…' : 'Choose the city first');
+};
+if ($('b2bStGb')) { gbFill(); $('b2bStGbState').onchange = () => { $('b2bStGbCity').value = ''; gbFill('-'); sync(); }; $('b2bStGbCity').onchange = () => { gbFill($('b2bStGbCity').value); sync(); }; $('b2bStGb').onchange = sync; }
+if ($('b2bStGbAdd')) $('b2bStGbAdd').onclick = () => groupBranchForm({ state: $('b2bStGbState') ? val('b2bStGbState') : '', city: $('b2bStGbCity') ? val('b2bStGbCity') : '' }, id => { const g = GB().find(x => x.id === id); if (!g) return; if (!$('b2bStGb')) { toast('Branch added — open the form again to pick it'); return; } $('b2bStGbState').value = ''; gbFill(); $('b2bStGbState').value = g.state; gbFill(g.city, g.id); sync(); });
+['b2bStSrc', 'b2bStBrSrc', 'b2bStSrcBr'].forEach(i => { if ($(i)) $(i).onchange = sync; }); sync();
 $('b2bStSave').onclick = () => {
 const btn = $('b2bStSave'); busy(btn, true); formErr('b2bStErr');
 const br = val('b2bStSrc') === 'Branch';
-run('saveB2BStudent', { id: st.id || '', name: val('b2bStName'), sourceType: br ? 'Branch' : 'Agent', agentId: br ? '' : val('b2bStAgent'), sourceBranch: br ? val('b2bStSrcBr') : '', branchSource: br ? val('b2bStBrSrc') : '',
-employeeName: br && val('b2bStBrSrc') === 'Branch employee reference' ? val('b2bStEmp') : '', phone: val('b2bStPhone'), email: val('b2bStEmail'), passportNo: val('b2bStPass'), branch: val('b2bStBranch') || (br ? val('b2bStSrcBr') : ''),
+run('saveB2BStudent', { id: st.id || '', name: val('b2bStName'), sourceType: br ? 'Branch' : 'Agent', agentId: br ? '' : val('b2bStAgent'), sourceBranch: br ? srcBrName() : '', sourceBranchId: br && $('b2bStGb') ? val('b2bStGb') : '', branchSource: br ? val('b2bStBrSrc') : '',
+employeeName: br && val('b2bStBrSrc') === 'Branch employee reference' ? val('b2bStEmp') : '', phone: val('b2bStPhone'), email: val('b2bStEmail'), passportNo: val('b2bStPass'), branch: val('b2bStBranch'),
 country: val('b2bStCountry'), course: val('b2bStCourse'), intake: intakeVal('b2bStIntake'), notes: val('b2bStNotes') })
 .then(r => { closeModal(1); toast(st.id ? 'Student saved' : 'Student added — ' + r.id); B.loading = false; run('getB2BDesk').then(d2 => { B.data = d2; render(); if (!st.id) studentView(r.id); }).catch(() => load()); })
 .catch(err => { busy(btn, false); formErr('b2bStErr', err); });
@@ -17819,8 +17836,16 @@ ${kycHtml(a)}
 <div class="b2b-sec"><h4><span>Commission ledger (${comm.filter(c => c.status !== 'Cancelled').length})</span><button class="um-btn" id="b2bAvComm">＋ Commission</button></h4>
 ${comm.length ? `<div class="b2b-list">${comm.map(c => `<div class="b2b-li"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${esc(c.id)}</span><span class="grow"><b>${esc(c.student)}</b> · ${esc(c.university || '—')} ${esc(c.intake || '')}<div class="sx-sub">${inr(c.amount)}${c.paidAmount ? ' · paid ' + inr(c.paidAmount) + (c.paidDate ? ' on ' + esc(fmtDate(c.paidDate)) : '') : ''}${c.paidRef ? ' · ' + esc(c.paidRef) : ''}${c.dueDate && c.status === 'Due' ? ' · due ' + esc(fmtDate(c.dueDate)) : ''}</div></span>${commPill(c.status)}<button class="um-btn" data-b2b-comm-edit="${esc(c.id)}">Edit</button>${c.status === 'Expected' || c.status === 'Due' ? `<button class="um-btn" data-b2b-comm-paid="${esc(c.id)}">✓ Paid</button>` : ''}</div>`).join('')}</div>` : '<div class="sx-sub">No commission lines yet.</div>'}
 ${noComm.length ? `<div class="b2b-note" style="margin-top:8px;">Students with applications but no commission line: ${noComm.slice(0, 12).map(s => `<button class="um-btn" style="padding:2px 8px;font-size:11.5px;margin:2px;" data-b2b-comm-new="${esc(s.id)}">＋ ${esc(s.name)}</button>`).join('')}${noComm.length > 12 ? ' …' : ''}</div>` : ''}</div>
-${errBox('b2bAvErr')}<div class="sx-modal-actions"><button class="um-btn" id="b2bAvEdit" style="margin-right:auto;">✎ Edit agent</button><button class="um-btn" id="b2bAvImport">⇪ Import students</button><button class="um-btn primary" id="b2bAvStmt">📄 Statement</button><button class="um-btn sx-wa" id="b2bAvWa">WhatsApp</button></div>`, 800);
+${errBox('b2bAvErr')}<div class="sx-modal-actions">${O().canDelete ? '<button class="um-btn" id="b2bAvDel" style="color:var(--red);" title="Super Admins only">🗑 Delete agent</button>' : ''}<button class="um-btn" id="b2bAvEdit" style="margin-right:auto;">✎ Edit agent</button><button class="um-btn" id="b2bAvImport">⇪ Import students</button><button class="um-btn primary" id="b2bAvStmt">📄 Statement</button><button class="um-btn sx-wa" id="b2bAvWa">WhatsApp</button></div>`, 800);
 $('b2bAvEdit').onclick = () => agentForm(a);
+if ($('b2bAvDel')) $('b2bAvDel').onclick = () => {
+const open = (B.data.cases || []).filter(c => c.agentId === a.id && c.open).length, due = (x.pending || 0) + (x.commDue || 0);
+const why = prompt('Delete agent ' + a.name + '?\n\n' + studs.length + ' student(s)' + (open ? ', ' + open + ' open visa case(s)' : '') + (due ? ', ' + inr(due) + ' still due' : '') + ' — these stay on the desk; the agent is hidden from lists and can\'t be picked for new students.\n\nReason for deleting:');
+if (why === null) return;
+if (!why.trim()) { formErr('b2bAvErr', 'Type a reason to delete the agent.'); return; }
+const btn = $('b2bAvDel'); busy(btn, true, 'Deleting…');
+run('deleteB2BAgent', a.id, why.trim()).then(() => { toast('Agent deleted — ' + a.name); B.agent = ''; afterAgent(''); }).catch(err => { busy(btn, false); formErr('b2bAvErr', err); });
+};
 $('b2bAvImport').onclick = () => importForm(a.id);
 $('b2bAvStmt').onclick = () => statementView(a.id);
 $('b2bAvWa').onclick = () => waAgent(a.id);
@@ -18414,13 +18439,58 @@ ${!rows.length ? `<div class="sx-card sx-empty">${B.data.students.some(isBranchS
 `<div class="sx-card"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>ID</th><th>Student</th><th>Branch · source</th><th>Country · intake</th><th>Lead</th><th>Applications</th><th>Visa</th><th></th></tr></thead><tbody>
 ${rows.map(st => { const c = latestCase(st); return `<tr class="b2b-row" data-b2b-student="${esc(st.id)}">
 <td style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;">${esc(st.id)}</td><td><b>${esc(st.name)}</b><div class="sx-sub">${esc(st.phone || '')}</div></td>
-<td><b>${esc(st.sourceBranch || st.branch || '—')}</b><div class="sx-sub">${esc(st.branchSource === 'Branch employee reference' ? 'Employee ref: ' + (st.employeeName || '—') : 'Walk-in')}</div></td>
+<td><b>${esc(st.sourceBranch || st.branch || '—')}</b>${st.sourceCity ? `<div class="sx-sub">${esc([st.sourceCity, st.sourceState].filter(Boolean).join(', '))}${st.sourceCompany ? ' · ' + esc(st.sourceCompany) : ''}</div>` : ''}<div class="sx-sub">${esc(st.branchSource === 'Branch employee reference' ? 'Employee ref: ' + (st.employeeName || '—') : 'Walk-in')}</div></td>
 <td>${esc(st.country || '—')}<div class="sx-sub">${esc(st.intake || '')}</div></td>
 <td>${st.lead ? `<span class="b2b-pill ok">${esc(st.lead.status || 'Lead')}</span><div class="sx-sub">${esc(st.lead.counsellor || 'unassigned')}</div>` : `<button class="um-btn" data-b2b-lead="${esc(st.id)}">＋ Lead</button>`}</td>
 <td>${st.applications.length ? `<b>${st.applications.length}</b><div class="sx-sub">${esc(st.applications.map(a => a.university).filter(Boolean).slice(0, 2).join(', '))}</div>` : `<button class="um-btn" data-b2b-app="${esc(st.id)}">＋ Application</button>`}</td>
 <td>${c ? stagePill(c.stage) : `<button class="um-btn" data-b2b-newcase="${esc(st.id)}">＋ Visa</button>`}</td><td><button class="um-btn" data-b2b-student="${esc(st.id)}">Open</button></td></tr>`; }).join('')}
 </tbody></table></div></div>`}`;
 $('b2bAddBranchSt').onclick = () => studentForm({ sourceType: 'Branch' });
+$('b2bBody').insertAdjacentHTML('beforeend', groupBranchesHtml()); wireGroupBranches();
+}
+
+const GB = () => (B.data && B.data.groupBranches) || [];
+function groupBranchesHtml() {
+const list = GB().filter(g => qMatch(g.id, g.state, g.city, g.branch, g.company, g.contactName)), st = {};
+list.forEach(g => { ((st[g.state] = st[g.state] || {})[g.city] = st[g.state][g.city] || []).push(g); });
+const used = id => B.data.students.filter(x => x.sourceBranchId === id).length;
+return `<div class="sx-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><div><h3 style="margin:0;">🏛 Akbar Group branches</h3><div class="sx-sub">${GB().length} branch${GB().length === 1 ? '' : 'es'} in ${Object.keys(GB().reduce((o, g) => (o[g.state] = 1, o), {})).length} state(s) · pick these as “Which branch” when a student comes from our own branch${O().canDelete ? '' : ' · only Super Admins can delete'}</div></div><button class="um-btn primary" id="gbAdd">＋ Group branch</button></div>
+${!list.length ? `<div class="sx-empty" style="margin-top:10px;">${GB().length ? 'No branches match.' : 'No group branches yet — click “＋ Group branch” to add a state, city and branch.'}</div>` :
+`<div class="sx-table-wrap" style="margin-top:10px;"><table class="sx-table"><thead><tr><th>State</th><th>City</th><th>Branch</th><th>Company / vertical</th><th>Contact</th><th class="num">Students</th><th></th></tr></thead><tbody>
+${Object.keys(st).sort().map(sn => Object.keys(st[sn]).sort().map((cn, ci) => st[sn][cn].map((g, gi) => `<tr>
+<td>${ci === 0 && gi === 0 ? '<b>' + esc(sn) + '</b>' : ''}</td><td>${gi === 0 ? esc(cn) : ''}</td><td><b>${esc(g.branch)}</b>${g.active === false ? ' <span class="b2b-pill muted">inactive</span>' : ''}${g.address ? `<div class="sx-sub">${esc(g.address)}</div>` : ''}</td>
+<td>${esc(g.company || '—')}</td><td>${esc(g.contactName || '')}<div class="sx-sub">${esc(g.contactPhone || '')}</div></td><td class="num">${used(g.id)}</td>
+<td><div class="sx-actions"><button class="um-btn" data-gb-edit="${esc(g.id)}">Edit</button>${O().canDelete ? `<button class="comm-del" data-gb-del="${esc(g.id)}">Delete</button>` : ''}</div></td></tr>`).join('')).join('')).join('')}
+</tbody></table></div>`}</div>`;
+}
+function wireGroupBranches() {
+$('gbAdd').onclick = () => groupBranchForm(null);
+document.querySelectorAll('[data-gb-edit]').forEach(b => b.onclick = () => groupBranchForm(GB().find(g => g.id === b.dataset.gbEdit)));
+document.querySelectorAll('[data-gb-del]').forEach(b => b.onclick = () => {
+const g = GB().find(x => x.id === b.dataset.gbDel); if (!g) return;
+if (!confirm('Delete ' + g.branch + ' (' + g.city + ', ' + g.state + ')? Students already linked keep the branch name.')) return;
+b.disabled = true;
+run('deleteB2BGroupBranch', g.id).then(() => reload('Branch deleted')).catch(e => { b.disabled = false; toast(errMsg(e), 'error'); });
+});
+}
+function groupBranchForm(g, after) {
+g = g || {};
+const states = Array.from(new Set(GB().map(x => x.state))).sort(), cities = Array.from(new Set(GB().map(x => x.city))).sort(), cos = Array.from(new Set(GB().map(x => x.company).filter(Boolean))).sort();
+modal(g.id ? 'Edit group branch · ' + g.id : 'Add Akbar Group branch', `<div class="b2b-form">
+${fld('State *', `<input type="text" id="gbState" list="gbStateL" value="${esc(g.state || '')}" placeholder="e.g. Kerala" autocomplete="off"><datalist id="gbStateL">${states.map(x => `<option value="${esc(x)}">`).join('')}</datalist>`)}
+${fld('City *', `<input type="text" id="gbCity" list="gbCityL" value="${esc(g.city || '')}" placeholder="e.g. Kozhikode" autocomplete="off"><datalist id="gbCityL">${cities.map(x => `<option value="${esc(x)}">`).join('')}</datalist>`)}
+${fld('Branch name *', `<input type="text" id="gbBranch" value="${esc(g.branch || '')}" placeholder="e.g. Mavoor Road">`)}
+${fld('Company / vertical', `<input type="text" id="gbCo" list="gbCoL" value="${esc(g.company || '')}" placeholder="e.g. Akbar Travels" autocomplete="off"><datalist id="gbCoL">${cos.map(x => `<option value="${esc(x)}">`).join('')}</datalist>`)}
+${fld('Contact person', `<input type="text" id="gbContact" value="${esc(g.contactName || '')}">`)}${fld('Contact phone', `<input type="text" id="gbPhone" value="${esc(g.contactPhone || '')}">`)}
+${fld('Address', `<input type="text" id="gbAddr" value="${esc(g.address || '')}">`, true)}
+${g.id ? fld('Status', `<select id="gbActive">${opts([['1', 'Active'], ['0', 'Inactive']], g.active === false ? '0' : '1')}</select>`) : ''}</div>
+${errBox('gbErr')}<div class="sx-modal-actions"><button class="um-btn primary" id="gbSave">${g.id ? 'Save branch' : 'Add branch'}</button></div>`, 600, after ? 2 : 1);
+$('gbSave').onclick = () => {
+const btn = $('gbSave'); busy(btn, true); formErr('gbErr');
+run('saveB2BGroupBranch', { id: g.id || '', state: val('gbState'), city: val('gbCity'), branch: val('gbBranch'), company: val('gbCo'), contactName: val('gbContact'), contactPhone: val('gbPhone'), address: val('gbAddr'), active: g.id ? val('gbActive') === '1' : true })
+.then(r => { toast(g.id ? 'Branch saved' : 'Branch added'); B.loading = false; return run('getB2BDesk').then(d2 => { B.data = d2; closeModal(after ? 2 : 1); if (after) after(r.id); else render(); }); })
+.catch(err => { busy(btn, false); formErr('gbErr', err); });
+};
 }
 function kycHtml(a) {
 const docs = KYC_DOCS(), mine = (B.data.kyc || []).filter(k => k.agentId === a.id);
