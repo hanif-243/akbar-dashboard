@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '9 Oct 2026 · v53';
+window.AKBAR_BUILD = '9 Oct 2026 · v54';
 
 (function () {
   try {
@@ -16267,8 +16267,23 @@ const EN_PERIODS = [[0, 2, 'Jan - March'], [3, 6, 'Apr - July'], [7, 11, 'Aug - 
 
 function enPeriodOf(r) {
 const t = /Sheet tab: ([^·|\n]+)/.exec(String(r.remarks || '')); if (t && t[1].trim()) return t[1].trim();
+if (r._batchTab) return r._batchTab;
+return enIntakeTab(r);
+}
+function enIntakeTab(r) {
 const p = enIntakeParts(r.intake); if (!p || !p.y) return '';
 const g = EN_PERIODS.find(x => p.m >= x[0] && p.m <= x[1]); return g[2] + ' ' + String(p.y).slice(2);
+}
+
+function enBatchTabs(list) {
+const b = {};
+list.forEach(r => { if (/Sheet tab: /.test(String(r.remarks || '')) || String(r.createdBy || '').indexOf('(bulk import)') === -1 || !r.createdAt) return; (b[r.createdAt] = b[r.createdAt] || []).push(r); });
+Object.keys(b).forEach(k => {
+const rows = b[k], c = {}; if (rows.length < 5) return;
+rows.forEach(r => { const t = enIntakeTab(r); if (t) c[t] = (c[t] || 0) + 1; });
+const top = Object.keys(c).sort((x, y) => c[y] - c[x])[0];
+if (top && c[top] >= rows.length * 0.75) rows.forEach(r => { r._batchTab = top; });
+});
 }
 function enPeriodLabel(key) { return key || 'No intake'; }
 function enPeriodSort(key) { const k = String(key || ''), y = Number((k.match(/(\d{2})\s*$/) || [])[1] || 0), mi = MONTHS.findIndex(m => k.toLowerCase().indexOf(m.toLowerCase()) === 0); return y * 100 + (mi < 0 ? 0 : mi); }
@@ -16282,7 +16297,7 @@ return d.enrollments.filter(r => (skipPeriod || !f.period || (f.period === 'none
 (!q || norm([r.student, r.university, r.course, r.invoice, r.rcNo, r.aggregator, r.agentName].join(' ')).indexOf(q) !== -1));
 }
 function renderEnrollments(d) {
-const f = EN.f;
+const f = EN.f; enBatchTabs(d.enrollments);
 body().innerHTML = `
 <div class="sx-kpis" id="enCards"></div>
 <div class="sx-filters"><input type="search" id="enQ" placeholder="Search student, university, invoice, RC…" value="${esc(f.search || '')}" style="min-width:200px;">
