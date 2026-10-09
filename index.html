@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '9 Oct 2026 · v50';
+window.AKBAR_BUILD = '9 Oct 2026 · v51';
 
 (function () {
   try {
@@ -4608,6 +4608,10 @@ Akbar Study Abroad</textarea>
 <div class="nav-item" data-fin-view="fx-rates" role="button" tabindex="0" title="Set exchange rates by your own rule">
 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg>
 <span>Exchange Rates</span>
+</div>
+<div class="nav-item" data-fin-view="services" data-role-guard-nav="financial" role="button" tabindex="0" title="Ancillary services and VAS commission">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg>
+<span>Services</span>
 </div>
 <div class="nav-item" data-fin-view="invoices" role="button" tabindex="0" title="Commission invoices — group students, mark received, keep the file">
 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h7M9 17h5"/></svg>
@@ -14285,6 +14289,7 @@ ${card('pnl', '📊', 'P&L', `${inr(pl.revenue)} revenue · margin ${pct(pl.marg
 ${card('budget', '🎯', 'Budget', `${inr(b.actual)} of ${inr(b.budgeted)} spent · ${b.overBudget || 0} over budget`)}
 ${d.enrollments ? card('enrollments', '🎓', 'University Enrollments', `${d.enrollments.total} · fees ${inr(d.enrollments.totalFeesINR)} · commission ${inr(d.enrollments.totalCommission)} · pending ${inr(d.enrollments.pending)}`) : ''}
 ${d.visa ? `<button class="fin-card" data-fin-visa="1"><div class="ic">🛂</div><div class="t">Visa Services</div><div class="s">${inr(d.visa.incomeThisMonth)} received this month · ${inr(d.visa.incomeThisYear)} ${esc(d.visa.fyLabel)} · ${inr(d.visa.pending)} pending${d.visa.costsThisYear ? ' · costs ' + inr(d.visa.costsThisYear) : ''}</div></button>` : ''}
+${d.services ? card('services', '🧾', 'Services (Ancillary & VAS)', `${d.services.total} · received ${inr(d.services.received)} · pending ${inr(d.services.pending)} · our earning ${inr(d.services.earning)}`) : ''}
 ${d.accommodation ? card('accommodation', '🏠', 'Accommodation', `${d.accommodation.total} · rent ${inr(d.accommodation.totalRentINR)} · commission ${inr(d.accommodation.totalCommission)}`) : ''}
 </div>
 <div class="sx-sub" style="margin-top:12px;">Updated ${fmtDate(d.loadedAt)}${d.fromCache ? ' (saved copy up to 10 min old — ↻ Refresh for live)' : ''}. First time? The sheets are created automatically as you add data.</div>`;
@@ -16269,7 +16274,6 @@ return d.enrollments.filter(r => (skipPeriod || !f.period || (f.period === 'none
 function renderEnrollments(d) {
 const f = EN.f;
 body().innerHTML = `
-<div class="sx-tabs" id="enPeriods" role="tablist" style="margin-bottom:8px;flex-wrap:wrap;"></div>
 <div class="sx-kpis" id="enCards"></div>
 <div class="sx-filters"><input type="search" id="enQ" placeholder="Search student, university, invoice, RC…" value="${esc(f.search || '')}" style="min-width:200px;">
 <select id="enfBranch">${opts(BR(), f.branch, 'All branches')}</select><select id="enfAgg">${opts(d.options.usedAggregators, f.aggregator, 'All aggregators')}</select>
@@ -16288,14 +16292,15 @@ const old = d.enrollments.filter(r => r.readAsFeeCurrency);
 return old.length ? `<div class="en-old" role="alert"><div><b>${old.length} enrollment${old.length === 1 ? ' still has its' : 's still have their'} commission in the fee currency</b> from the first import (e.g. ${esc(old[0].student)}: ${num(old[0].commCur)} ${esc(old[0].currency)}) — the totals above already convert it with the dashboard rates. Re-import your sheet once to save it properly and add any students that were missed: rows are corrected, not duplicated.</div><button class="um-btn primary" id="enOldFix">⬆ Re-import now</button></div>` : '';
 })()}
 <div id="enAggChips"></div>
-<div class="sx-card" style="padding:6px;"><div class="sx-table-wrap" id="enTable"></div><div class="ea-pager" id="enPager"></div></div>`;
+<div class="sx-card" style="padding:6px;margin-bottom:0;"><div class="sx-table-wrap" id="enTable"></div><div class="ea-pager" id="enPager"></div></div>
+<div id="enPeriods"></div>`;
 const paintPeriods = () => {
 const base = enFiltered(d, true), g = {};
 base.forEach(r => { const k = enPeriodOf(r) || 'none'; g[k] = g[k] || { n: 0, c: 0 }; g[k].n++; g[k].c += Number(r.commission) || 0; });
 const keys = Object.keys(g).filter(k => k !== 'none').sort((a, b) => b.localeCompare(a)).concat(g.none ? ['none'] : []);
-const tab = (k, label, x) => `<button class="sx-tab ${(EN.f.period || '') === k ? 'active' : ''}" data-en-period="${esc(k)}" role="tab" title="${x ? x.n + ' enrollments · commission ' + inr(x.c) : ''}">${esc(label)}${x ? ` <span class="sx-sub" style="display:inline;">${x.n}</span>` : ''}</button>`;
-$('enPeriods').innerHTML = tab('', 'All intakes', { n: base.length, c: base.reduce((t, r) => t + (Number(r.commission) || 0), 0) }) + keys.map(k => tab(k, k === 'none' ? 'No intake' : enPeriodLabel(k), g[k])).join('');
-$('enPeriods').querySelectorAll('[data-en-period]').forEach(b => b.onclick = () => { EN.f.period = b.dataset.enPeriod; EN.page = 1; paintPeriods(); paint(); });
+const allC = base.reduce((t, r) => t + (Number(r.commission) || 0), 0);
+xlTabs($('enPeriods'), [{ key: '', label: 'All intakes', count: base.length, title: 'commission ' + inr(allC) }].concat(keys.map(k => ({ key: k, label: k === 'none' ? 'No intake' : enPeriodLabel(k), count: g[k].n, title: g[k].n + ' enrollments · commission ' + inr(g[k].c) }))),
+EN.f.period || '', k => { EN.f.period = k; EN.page = 1; paintPeriods(); paint(); }, () => enrollmentForm(d, null), 'Add an enrollment');
 };
 const paint = () => {
 const list = enFiltered(d);
@@ -16927,6 +16932,167 @@ if (e.target.closest('button, a, input, select, textarea, label')) return;
 if (window.getSelection && String(window.getSelection()).trim()) return;
 const ed = tr.querySelector(ROW_EDIT); if (ed) ed.click();
 });
+
+function xlTabs(host, tabs, active, onPick, onAdd, addTitle) {
+if (!host) return;
+host.className = 'xl-tabs';
+host.innerHTML = `<button type="button" class="xl-nav" data-xl-move="-1" aria-label="Scroll tabs left">‹</button><button type="button" class="xl-nav" data-xl-move="1" aria-label="Scroll tabs right">›</button>
+<div class="xl-strip" role="tablist">${tabs.map(t => `<button type="button" role="tab" class="xl-tab ${t.key === active ? 'on' : ''}" data-xl="${esc(t.key)}" title="${esc(t.title || '')}" aria-selected="${t.key === active}">${esc(t.label)}${t.count != null ? `<small>${t.count}</small>` : ''}</button>`).join('')}</div>
+${onAdd ? `<button type="button" class="xl-add" title="${esc(addTitle || 'Add')}" aria-label="${esc(addTitle || 'Add')}">＋</button>` : ''}`;
+const strip = host.querySelector('.xl-strip');
+host.querySelectorAll('[data-xl]').forEach(b => b.onclick = () => onPick(b.dataset.xl));
+host.querySelectorAll('[data-xl-move]').forEach(b => b.onclick = () => strip.scrollBy({ left: Number(b.dataset.xlMove) * 240, behavior: 'smooth' }));
+if (onAdd) host.querySelector('.xl-add').onclick = onAdd;
+const on = strip.querySelector('.xl-tab.on'); if (on) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+window.akXlTabs = xlTabs;
+
+const SV = { f: {}, kind: '' };
+const SVC_CHIP = { 'Paid': 'Paid', 'Partly paid': 'Pending', 'Pending': 'Muted', 'Cancelled': 'Overdue' };
+function svFiltered(d) {
+const f = SV.f, q = norm(f.search);
+return d.rows.filter(r => (!SV.kind || r.kind === SV.kind) && (!f.service || r.service === f.service) && (!f.status || r.status === f.status) && (!f.country || r.country === f.country) &&
+(!f.handledBy || r.handledBy === f.handledBy) && (!f.year || String(r.paidDate || '').slice(0, 4) === f.year) &&
+(!q || norm([r.student, r.service, r.vendor, r.invoice, r.notes, r.country, r.handledBy].join(' ')).indexOf(q) !== -1));
+}
+function renderServices(d) {
+const f = SV.f, o = d.options;
+const years = Array.from(new Set(d.rows.map(r => String(r.paidDate || '').slice(0, 4)).filter(Boolean))).sort().reverse();
+body().innerHTML = `<div class="sx-kpis" id="svCards"></div>
+<div class="sx-filters"><input type="search" id="svQ" placeholder="Search student, service, vendor, invoice…" value="${esc(f.search || '')}" style="min-width:220px;">
+<select id="svService">${opts(o.services, f.service, 'All services')}</select><select id="svStatus">${opts(o.statuses, f.status, 'All payment statuses')}</select>
+<select id="svCountry">${opts(o.countries, f.country, 'All countries')}</select><select id="svHandled">${opts(o.handledBy, f.handledBy, 'Anyone')}</select>
+<select id="svYear">${opts(years, f.year, 'Any year')}</select><button class="link-ghost" id="svClear">Clear filters</button></div>
+<div class="sx-filters"><button class="um-btn primary" id="svAdd">+ Add service</button><button class="um-btn" id="svImport">⬆ Import from Excel</button><button class="um-btn" id="svCsv">⬇ Export CSV</button></div>
+<div class="sx-card" style="padding:6px;margin-bottom:0;"><div class="sx-table-wrap" id="svTable"></div></div>
+<div id="svTabs"></div>`;
+const paint = () => {
+const list = svFiltered(d), sum = k => list.reduce((t, r) => t + (Number(r[k]) || 0), 0);
+$('svCards').innerHTML = kpi(list.length, SV.kind === 'VAS' ? 'VAS services' : SV.kind === 'Ancillary' ? 'Ancillary services' : 'Services') + kpi(inr(sum('received')), 'Amount received', 'sx-good')
++ kpi(inr(sum('pending')), 'Amount pending', sum('pending') > 0 ? 'sx-bad' : '') + kpi(inr(sum('vendorPay')), 'Paid to vendors') + kpi(inr(sum('earning')), 'Our earning', 'sx-good');
+const vas = SV.kind === 'VAS';
+const head = vas ? ['Student', 'Country', 'Service', 'Vendor', 'Status', 'Invoice (iBoss)', 'Total', 'Received', 'Pending', 'TDS', '']
+: ['Student', 'Type', 'Handled by', 'Country', 'Service', 'Intake', 'Current status', 'Payment', 'Vendor', 'Received', 'Paid on', 'Pending', 'Vendor payment', 'Our earning', ''];
+const money = new Set(['Total', 'Received', 'Pending', 'Vendor payment', 'Our earning']);
+$('svTable').innerHTML = `<table class="sx-table"><thead><tr>${head.map(h => `<th class="${money.has(h) ? 'num' : ''}">${esc(h)}</th>`).join('')}</tr></thead><tbody>
+${list.map(r => vas ? `<tr><td><b>${esc(r.student)}</b></td><td>${esc(r.country)}</td><td>${esc(r.service)}</td><td>${esc(r.vendor)}</td><td>${chip(r.status, SVC_CHIP)}</td><td>${esc(r.invoice)}</td>
+<td class="num">${inr(r.total)}</td><td class="num">${inr(r.received)}</td><td class="num ${r.pending > 0 ? 'ea-red' : ''}">${inr(r.pending)}</td><td>${esc(r.tds)}</td><td><button class="um-btn s10-mini" data-sv-edit="${esc(r.id)}">Edit</button></td></tr>`
+: `<tr><td><b>${esc(r.student)}</b>${r.notes ? `<div class="sx-sub" title="${esc(r.notes)}">${esc(String(r.notes).slice(0, 60))}</div>` : ''}</td><td>${esc(r.kind)}</td><td>${esc(r.handledBy)}</td><td>${esc(r.country)}</td><td>${esc(r.service)}</td><td>${esc(r.intake)}</td><td>${esc(r.progress)}</td>
+<td>${chip(r.status, SVC_CHIP)}</td><td>${esc(r.vendor)}</td><td class="num">${inr(r.received)}</td><td>${fmtDate(r.paidDate)}</td><td class="num ${r.pending > 0 ? 'ea-red' : ''}">${inr(r.pending)}</td><td class="num">${r.vendorPay == null ? '—' : inr(r.vendorPay)}</td><td class="num">${r.earning == null ? '—' : inr(r.earning)}</td>
+<td><button class="um-btn s10-mini" data-sv-edit="${esc(r.id)}">Edit</button></td></tr>`).join('') || `<tr><td colspan="${head.length}"><div class="sx-empty">${d.rows.length ? 'No services match.' : 'No services yet — + Add service, or ⬆ Import from Excel (the “Ancilary Services” and “VAS Commission” tabs).'}</div></td></tr>`}</tbody></table>`;
+$('svTable').querySelectorAll('[data-sv-edit]').forEach(b => b.onclick = () => serviceForm(d, d.rows.find(r => r.id === b.dataset.svEdit)));
+const cnt = k => d.rows.filter(r => !k || r.kind === k).length;
+xlTabs($('svTabs'), [{ key: '', label: 'All services', count: cnt('') }, { key: 'Ancillary', label: 'Ancillary Services', count: cnt('Ancillary') }, { key: 'VAS', label: 'VAS Commission', count: cnt('VAS') }],
+SV.kind, k => { SV.kind = k; paint(); }, () => serviceForm(d, { kind: SV.kind || 'Ancillary' }), 'Add a service');
+SV.list = list;
+};
+const set = (k, val) => { f[k] = val; paint(); };
+let t; $('svQ').oninput = e => { clearTimeout(t); t = setTimeout(() => set('search', e.target.value), 150); };
+[['svService', 'service'], ['svStatus', 'status'], ['svCountry', 'country'], ['svHandled', 'handledBy'], ['svYear', 'year']].forEach(p => { $(p[0]).onchange = e => set(p[1], e.target.value); });
+$('svClear').onclick = () => { SV.f = {}; renderServices(d); };
+$('svAdd').onclick = () => serviceForm(d, { kind: SV.kind || 'Ancillary' });
+$('svImport').onclick = () => serviceImport(d);
+$('svCsv').onclick = () => download('Akbar Services ' + today() + '.csv', [['Type', 'Student', 'Branch', 'Handled By', 'Country', 'Service', 'Intake', 'Priority', 'Current Status', 'Payment Status', 'Vendor', 'Invoice', 'Total', 'Received', 'Paid On', 'Pending', 'Vendor Payment', 'TDS', 'Our Earning', 'Notes', 'Sheet Tab']]
+.concat((SV.list || []).map(r => [r.kind, r.student, r.branch, r.handledBy, r.country, r.service, r.intake, r.priority, r.progress, r.status, r.vendor, r.invoice, r.total, r.received, r.paidDate, r.pending, r.vendorPay, r.tds, r.earning, r.notes, r.period])));
+paint();
+}
+function serviceForm(d, x) {
+x = x || {};
+const o = d.options;
+const b = modal(x.id ? 'Edit service · ' + x.student : 'Add a service', `<div class="ea-form">
+${fld('Type', `<select id="svfKind">${opts(o.kinds.map(k => k), x.kind || 'Ancillary')}</select>`)}${fld('Student name *', `<input type="text" id="svfStudent" value="${esc(x.student || '')}">`)}
+${fld('Branch', `<select id="svfBranch">${opts(o.branches, x.branch || '', '—')}</select>`)}${fld('Handled by', `<input type="text" id="svfHandled" list="svfHandledL" value="${esc(x.handledBy || '')}"><datalist id="svfHandledL">${o.handledBy.map(h => `<option value="${esc(h)}">`).join('')}</datalist>`)}
+${fld('Country', `<input type="text" id="svfCountry" value="${esc(x.country || '')}">`)}${fld('Service', `<input type="text" id="svfService" list="svfServiceL" value="${esc(x.service || '')}" placeholder="e.g. Apostille & Translation"><datalist id="svfServiceL">${o.services.map(h => `<option value="${esc(h)}">`).join('')}</datalist>`)}
+${fld('Intake', `<input type="text" id="svfIntake" value="${esc(x.intake || '')}" placeholder="e.g. Sep 2026">`)}${fld('Priority', `<input type="text" id="svfPriority" value="${esc(x.priority || '')}">`)}
+${fld('Current status', `<input type="text" id="svfProgress" value="${esc(x.progress || '')}" placeholder="e.g. Service Delivered">`)}${fld('Payment status', `<select id="svfStatus">${opts(o.statuses, x.status || '', 'Work it out')}</select>`)}
+${fld('Vendor', `<input type="text" id="svfVendor" list="svfVendorL" value="${esc(x.vendor || '')}"><datalist id="svfVendorL">${o.vendors.map(h => `<option value="${esc(h)}">`).join('')}</datalist>`)}${fld('Invoice no (iBoss)', `<input type="text" id="svfInvoice" value="${esc(x.invoice || '')}">`)}
+${fld('Total amount (₹)', money('svfTotal', x.total, 'blank = received + pending'))}${fld('Amount received (₹)', money('svfReceived', x.received))}
+${fld('Date of payment', `<input type="date" id="svfPaid" value="${esc(x.paidDate || '')}">`)}${fld('Amount pending (₹)', money('svfPending', x.pending, 'blank = total − received'))}
+${fld('Vendor payment (₹)', money('svfVendorPay', x.vendorPay))}${fld('Our earning (₹)', money('svfEarning', x.earning, 'blank = received − vendor payment'))}
+${fld('TDS', `<input type="text" id="svfTds" value="${esc(x.tds || '')}">`)}<div></div>
+${fld('Notes', `<textarea id="svfNotes" style="min-height:60px;">${esc(x.notes || '')}</textarea>`, 'style="grid-column:1/-1;"')}</div>
+<div id="svfErr" class="fin-alert" style="display:none;margin-top:8px;"></div><div class="sx-modal-actions">${x.id ? '<button class="um-btn" id="svfDel" style="margin-right:auto;color:var(--red);">Delete</button>' : ''}<button class="um-btn primary" id="svfSave">Save</button></div>`, 760);
+const err = m => { $('svfErr').textContent = m; $('svfErr').style.display = m ? 'block' : 'none'; };
+$('svfSave').onclick = () => {
+const btn = $('svfSave'); btn.disabled = true; err('');
+run('saveService', { id: x.id || '', kind: v('svfKind'), student: v('svfStudent'), branch: v('svfBranch'), handledBy: v('svfHandled'), country: v('svfCountry'), service: v('svfService'), intake: v('svfIntake'),
+priority: v('svfPriority'), progress: v('svfProgress'), status: v('svfStatus'), vendor: v('svfVendor'), invoice: v('svfInvoice'), total: v('svfTotal'), received: v('svfReceived'), paidDate: v('svfPaid'),
+pending: v('svfPending'), vendorPay: v('svfVendorPay'), earning: v('svfEarning'), tds: v('svfTds'), notes: v('svfNotes'), period: x.period || '' })
+.then(() => { close(); showToast('Service saved', 'success'); window.finReload('services'); }).catch(e => { btn.disabled = false; err(errMsg(e)); });
+};
+if (x.id) $('svfDel').onclick = () => { if (!confirm('Delete this service? It stays in the sheet marked Deleted.')) return; run('deleteService', x.id).then(() => { close(); showToast('Deleted', 'success'); window.finReload('services'); }).catch(e => err(errMsg(e))); };
+return b;
+}
+const SVC_COLS = [['student', ['a', 'studentname', 'nameofthestudent', 'nameofstudent', 'studentsname', 'name', 'student', 'clientname']], ['handledBy', ['handledby', 'handled', 'counsellor', 'staff', 'owner']],
+['country', ['selectcountry', 'country', 'destination']], ['service', ['service', 'services', 'servicetype']], ['intake', ['intake']], ['priority', ['prioritycategory', 'priority']],
+['progress', ['currentstatus', 'progress', 'servicestatus']], ['status', ['status', 'paymentstatus']], ['notes', ['commentsnotes', 'comments', 'notes', 'remarks', 'note']],
+['vendor', ['vendorname', 'vendor', 'partner']], ['received', ['amountrecieved', 'amountreceived', 'received', 'paymentreceived', 'paymentrecieved']], ['paidDate', ['dateofthepayment', 'dateofpayment', 'paymentdate', 'date']],
+['pending', ['amountpending', 'pending', 'pendingamount']], ['vendorPay', ['vendorpayment', 'vendorpay', 'paidtovendor']], ['earning', ['asaearning', 'earning', 'ourearning', 'profit']],
+['invoice', ['invoicenumberiboss', 'invoicenumber', 'invoiceno', 'invoice', 'iboss']], ['total', ['totalamount', 'total', 'amount']], ['tds', ['tdsdeducted', 'tds']]];
+const svKey = h => String(h == null ? '' : h).toLowerCase().replace(/[^a-z0-9]/g, '');
+function svDetect(grid) {
+for (let i = 0; i < Math.min(grid.length, 25); i++) {
+const m = {}; let hits = 0;
+(grid[i] || []).forEach((h, ci) => { const k = svKey(h); if (!k) return; const c = SVC_COLS.find(x => x[1].indexOf(k) !== -1); if (c && m[c[0]] === undefined) { m[c[0]] = ci; hits++; } });
+if (hits >= 3 && m.student !== undefined) return { hi: i, map: m };
+}
+return null;
+}
+function serviceImport(d) {
+const st = { book: null, tab: '', rows: [], done: {} };
+const b = modal('Import services from Excel', `<div class="sx-sub" style="margin-bottom:10px;">Choose your commission workbook — the <b>Ancilary Services</b> and <b>VAS Commission</b> tabs are found by their names. Rows already imported (same student, service, payment date and amount) are skipped.</div>
+<input type="file" id="svImFile" accept=".xlsx,.xls,.csv"><div id="svImTabs" style="margin-top:10px;"></div><div id="svImPrev" style="margin-top:10px;"></div>
+<div id="svImErr" class="fin-alert" style="display:none;margin-top:8px;"></div><div class="sx-modal-actions"><button class="um-btn primary" id="svImGo" disabled>Import</button></div>`, 1100);
+const kindOf = name => /vas/i.test(name) ? 'VAS' : 'Ancillary';
+const build = () => {
+const grid = st.book.grids[st.tab] || [], found = svDetect(grid);
+if (!found) { st.rows = []; $('svImPrev').innerHTML = '<div class="sx-empty">No heading row with a student name column found in this tab.</div>'; $('svImGo').disabled = true; return; }
+const kind = kindOf(st.tab), m = found.map, cell = (row, k) => m[k] === undefined ? '' : row[m[k]];
+st.rows = [];
+for (let i = found.hi + 1; i < grid.length; i++) {
+const row = grid[i] || []; let name = String(cell(row, 'student') == null ? '' : cell(row, 'student')).trim();
+if (/^total/i.test(name)) continue;
+if (!name) { const amt = ['received', 'total', 'pending'].some(k => toNum(cell(row, k)) > 0); if (!amt || i <= found.hi + 1) continue; name = 'Name missing (row ' + (i + 1) + ')'; }
+const p = { _line: i + 1, kind: kind, period: st.tab };
+SVC_COLS.forEach(c => { if (m[c[0]] !== undefined) p[c[0]] = row[m[c[0]]]; });
+p.student = name;
+['received', 'pending', 'vendorPay', 'earning', 'total'].forEach(k => { if (p[k] !== undefined) { const z = String(p[k] == null ? '' : p[k]).trim(); p[k] = z === '' || z === '-' ? '' : toNum(p[k]); } });
+if (p.paidDate !== undefined) p.paidDate = toYmd(p.paidDate);
+if (p.intake !== undefined && String(p.intake).trim()) p.intake = toIntake(p.intake);
+if (p.tds !== undefined && typeof p.tds === 'number' && p.tds > 0 && p.tds < 1) p.tds = Math.round(p.tds * 10000) / 100 + '%';
+['handledBy', 'country', 'service', 'priority', 'progress', 'status', 'notes', 'vendor', 'invoice'].forEach(k => { if (p[k] !== undefined) p[k] = String(p[k] == null ? '' : p[k]).trim(); });
+st.rows.push(p);
+}
+const recv = st.rows.reduce((t, r) => t + (Number(r.received) || 0), 0), pend = st.rows.reduce((t, r) => t + (Number(r.pending) || 0), 0);
+const noName = st.rows.filter(r => /^Name missing/.test(r.student)).length;
+$('svImPrev').innerHTML = `${noName ? `<div class="fin-alert warm" style="margin:0 0 8px;">${noName} row${noName === 1 ? ' has' : 's have'} an amount but no student name — imported as “Name missing (row …)”; edit them afterwards.</div>` : ''}<div class="sx-sub" style="margin-bottom:6px;"><b>${st.rows.length}</b> ${esc(kind)} service${st.rows.length === 1 ? '' : 's'} · received ${inr(recv)} · pending ${inr(pend)}</div>
+<div class="sx-table-wrap" style="max-height:320px;overflow:auto;border:1px solid var(--border);border-radius:10px;"><table class="sx-table"><thead><tr><th>Row</th><th>Student</th><th>Country</th><th>Service</th><th>Vendor</th><th>Status</th><th class="num">Received</th><th>Paid on</th><th class="num">Pending</th></tr></thead><tbody>
+${st.rows.map(r => `<tr><td>${r._line}</td><td><b>${esc(r.student)}</b>${r.handledBy ? `<div class="sx-sub">${esc(r.handledBy)}</div>` : ''}</td><td>${esc(r.country || '')}</td><td>${esc(r.service || '')}</td><td>${esc(r.vendor || '')}</td><td>${esc(r.status || '')}</td><td class="num">${r.received === '' || r.received == null ? '—' : inr(r.received)}</td><td>${fmtDate(r.paidDate)}</td><td class="num">${r.pending === '' || r.pending == null ? '—' : inr(r.pending)}</td></tr>`).join('')}</tbody></table></div>`;
+$('svImGo').disabled = !st.rows.length; $('svImGo').textContent = st.rows.length ? 'Import ' + st.rows.length + ' service' + (st.rows.length === 1 ? '' : 's') : 'Import';
+};
+const drawTabs = () => {
+const names = st.book.names, isSvc = n => /ancil|vas|service/i.test(n);
+$('svImTabs').innerHTML = `<div class="sx-tabs" style="flex-wrap:wrap;">${names.filter(isSvc).concat(names.filter(n => !isSvc(n))).map(n => `<button class="sx-tab ${n === st.tab ? 'active' : ''}" data-sv-tab="${esc(n)}">${st.done[n] ? '✓ ' : ''}${esc(n)}${isSvc(n) ? '' : ' <span class="sx-sub" style="display:inline;">(enrollments)</span>'}</button>`).join('')}</div>`;
+$('svImTabs').querySelectorAll('[data-sv-tab]').forEach(x => x.onclick = () => { st.tab = x.dataset.svTab; drawTabs(); build(); });
+};
+$('svImFile').onchange = () => {
+const file = $('svImFile').files[0]; if (!file) return;
+$('svImPrev').innerHTML = '<div class="skeleton" style="height:140px;"></div>';
+readSheetBook(file).then(book => { st.book = book; st.tab = book.names.find(n => /ancil/i.test(n)) || book.names.find(n => /vas|service/i.test(n)) || book.names[0]; drawTabs(); build(); })
+.catch(e => { $('svImPrev').innerHTML = `<div class="sx-empty">${esc(errMsg(e))}</div>`; });
+};
+$('svImGo').onclick = () => {
+const btn = $('svImGo'); btn.disabled = true; btn.textContent = 'Importing…'; $('svImErr').style.display = 'none';
+run('bulkAddServices', st.rows).then(r => {
+st.done[st.tab] = true; drawTabs();
+showToast(r.added + ' added' + (r.skipped ? ' · ' + r.skipped + ' were already there' : '') + ' from “' + st.tab + '”', 'success');
+if (r.errors.length) { $('svImErr').textContent = r.errors.length + ' row(s) not imported: ' + r.errors.slice(0, 5).map(x => 'row ' + x.line + ' ' + x.error).join('; '); $('svImErr').style.display = 'block'; }
+btn.textContent = 'Imported ✓'; window.finReload('services');
+}).catch(e => { btn.disabled = false; btn.textContent = 'Import'; $('svImErr').textContent = errMsg(e); $('svImErr').style.display = 'block'; });
+};
+return b;
+}
+window.finRegisterTab('services', '🧾 Services', () => run('getServices'), renderServices, 'accommodation');
 window.finRegisterTab('mous', '📄 MOUs', () => run('getMOUs'), renderMOUs, 'invoices');
 
 window.eaNewEnrollment = () => run('getEnrollments', {}).then(d => enrollmentForm(d, null)).catch(e => showToast(errMsg(e), 'error'));
@@ -20733,5 +20899,20 @@ window.openOwnView = open;
 })();
 </script>
 
+<style>
+.xl-tabs { position: sticky; bottom: 0; z-index: 6; display: flex; align-items: stretch; background: var(--card); border: 1px solid var(--border); border-top: 2px solid var(--border); border-radius: 0 0 12px 12px; margin: 0 0 14px; box-shadow: 0 -6px 14px rgba(0,0,0,.06); min-height: 42px; }
+.xl-tabs .xl-nav { border: 0; background: none; color: var(--muted); font-size: 18px; padding: 0 9px; cursor: pointer; }
+.xl-tabs .xl-nav:hover { color: var(--ink); }
+.xl-strip { display: flex; flex: 1; overflow-x: auto; scrollbar-width: none; }
+.xl-strip::-webkit-scrollbar { display: none; }
+.xl-tab { border: 0; border-right: 1px solid var(--border); background: none; color: var(--ink); font: inherit; font-size: 13.5px; padding: 9px 18px 11px; white-space: nowrap; cursor: pointer; position: relative; }
+.xl-tab:hover { background: var(--canvas); }
+.xl-tab.on { font-weight: 800; color: var(--ok); background: var(--canvas); }
+.xl-tab.on::after { content: ''; position: absolute; left: 12px; right: 12px; bottom: 5px; height: 3px; border-radius: 3px; background: var(--ok); }
+.xl-tab small { margin-left: 7px; color: var(--muted); font-weight: 600; font-size: 11.5px; }
+.xl-add { border: 0; border-left: 1px solid var(--border); background: none; font-size: 20px; padding: 0 16px; cursor: pointer; color: var(--ink); }
+.xl-add:hover { background: var(--canvas); }
+body:has(#finView .xl-tabs) #fabCommission { bottom: 76px; }
+</style>
 </body>
 </html>
