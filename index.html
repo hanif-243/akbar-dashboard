@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '9 Oct 2026 · v51';
+window.AKBAR_BUILD = '9 Oct 2026 · v52';
 
 (function () {
   try {
@@ -211,7 +211,7 @@ window.AKBAR_BUILD = '9 Oct 2026 · v51';
         var c = chunks.shift(), started = Date.now(), wrote = lastWrite;
         var calls = c.map(function (e) { return { fn: e.k, args: e.a.map(function (x) { return x === '#' ? t : x; }) }; });
         real.withSuccessHandler(function (out) {
-          if (lastWrite === wrote && (window._authToken || '') === t) (out || []).forEach(function (r, j) {
+          if (lastWrite === wrote && (window._authToken || '') === t) (Array.isArray(out) ? out : []).forEach(function (r, j) {
             if (!r || !('v' in r)) return;
             try { var cl = calls[j], v = JSON.parse(JSON.stringify(r.v)); memPut(keyOf(cl.fn, cl.args), v); keepPut(keepKey(cl.fn, cl.args), v); } catch (e) {   }
           });
@@ -11815,7 +11815,7 @@ ${lkLabel ? `<span class="at-chip-lk">${esc(lkLabel)}<button id="atClearLk" titl
 ${slice.map(r => `<tr class="clickable" data-open="${esc(r.id)}">
 <td class="num">${esc(r.id)}</td><td><div class="strong">${esc(r.student)}</div>${r.studentId ? `<div class="muted">${esc(r.studentId)}</div>` : ''}</td>
 <td>${esc(r.branch)}</td><td>${r.exec ? `<button class="at-link" data-exec-open="${esc(r.exec)}">${esc(r.exec)}</button>` : '<span class="muted">—</span>'}</td>
-<td>${esc(r.country || '—')}</td><td>${esc(r.university || '—')}</td><td>${esc(r.intake || '—')}</td>
+<td>${esc(r.country || '—')}</td><td>${esc(r.university || '—')}</td><td>${esc((window.akIntake || (x => x))(r.intake) || '—')}</td>
 <td>${pipePill(r)}${r.status ? `<div class="muted" style="margin-top:3px;">${esc(r.status)}</div>` : ''}</td>
 <td>${esc(r.offerStatus || '—')}</td><td>${esc(r.visaStatus || '—')}</td>
 <td class="num" title="${r.submittedDate ? 'Submitted date' : 'Application date'}">${fmtDate(r.pd)}</td><td>${ageChip(r)}</td></tr>`).join('')}
@@ -11976,23 +11976,27 @@ const sla = pending && pendingDays !== null && pendingDays > 7 ? `<div class="at
 <button class="um-btn danger" id="atEscalate" ${mgr && mgr.phone ? '' : `disabled title="No manager phone set for ${esc(r.branch)} in the Branches sheet"`}>Escalate on WhatsApp</button></div>` : '';
 const box = openModal('atDetailBg', {
 title: esc(r.id) + ' · ' + esc(r.student), subtitle: esc([r.branch, r.country, r.university].filter(Boolean).join(' · ')), width: 760,
-headActions: `<button class="um-btn" id="atDetailVisa" title="Hand this student to the visa team">🛂 Send to visa</button><button class="um-btn" id="atDetailCond" title="The university gave a condition — tell the branch manager and counsellor">⚑ Condition</button><button class="um-btn" id="atDetailReqDocs" title="Ask the counsellor for documents (list by country)">📄 Request docs</button><button class="um-btn" id="atDetailAnother" title="Same student, another university">＋ Another university</button><button class="um-btn" id="atDetailKey" title="Deadlines, offer letter and CAS with expiry reminders">📅 Dates &amp; offer/CAS</button><button class="um-btn" id="atDetailDocs">📎 Documents</button><button class="um-btn primary" id="atDetailEdit">Edit</button>`,
+headActions: `<button class="um-btn" id="atDetailVisa" title="Hand this student to the visa team">🛂 Send to visa</button><button class="um-btn" id="atDetailCond" title="The university gave a condition — tell the branch manager and counsellor">⚑ Condition</button><button class="um-btn" id="atDetailReqDocs" title="Ask the counsellor for documents (list by country)">📄 Request docs</button><button class="um-btn" id="atDetailAnother" title="Same student, another university">＋ Another university</button><button class="um-btn" id="atDetailKey" title="Deadlines, offer letter and CAS with expiry reminders">📅 Dates &amp; offer/CAS</button><button class="um-btn" id="atDetailDocs">📎 Documents</button>${window._isSuperAdmin ? '<button class="um-btn danger" id="atDetailDel" title="Super Admins: delete this application (a full copy is kept)">🗑 Delete</button>' : ''}<button class="um-btn primary" id="atDetailEdit">Edit</button>`,
 body: `${sla}<div class="at-student-apps" id="atStudentApps"><div class="card-section-title">This student's applications</div><div class="skeleton" style="height:40px;"></div></div><div id="atAppReqs"></div><div class="at-2col" style="margin-bottom:0;">
 <div><div class="at-detail-grid">
 ${field('Student', esc(r.student))}${field('Student ID', esc(r.studentId))}
 ${field('Branch', esc(r.branch))}${field('Counsellor', esc(r.counsellor))}
 ${field('Application Executive', esc(r.exec))}${field('Country', esc(r.country))}
 ${field('University', esc(r.university))}${field('Course', esc(r.course))}
-${field('Intake', esc(r.intake))}${field('Stage', pipePill(r))}
+${field('Intake', esc((window.akIntake || (x => x))(r.intake)))}${field('Stage', pipePill(r))}
 ${field('Application Status', esc(r.status))}${field('Offer Status', esc(r.offerStatus))}
 ${field('Visa Status', esc(r.visaStatus))}${field('Application Fee', r.fee ? rupeesSafe(r.fee) : '')}
-${field('Last updated', r.lastUpdated ? esc(new Date(r.lastUpdated).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })) : '')}${field('Created', r.createdAt ? esc(new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })) : '')}
+${field('Last updated', r.lastUpdated ? esc(new Date(r.lastUpdated).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })) : '')}${field('Created', r.createdAt ? esc(new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })) : '')}${field('Submitted by', esc(r.createdBy || (/^B2B ·/.test(r.remarks || '') ? 'B2B team' : '')))}
 ${field('Remarks', esc(r.remarks).replace(/\n/g, '<br>'), true)}
 </div></div>
 <div><div class="card-section-title" style="margin-top:4px;">Timeline</div><div class="app-timeline">${tl}</div></div>
 </div>`
 });
 box.querySelector('#atDetailEdit').onclick = () => openEditApp(r);
+{ const del = box.querySelector('#atDetailDel'); if (del) del.onclick = () => {
+const why = prompt('Delete application ' + r.id + ' — ' + r.student + '?\n\nA full copy is kept in the "Deleted Applications" tab.\nReason:', ''); if (why === null) return;
+if (!why.trim()) { showToast('Give a reason to delete', 'error'); return; }
+del.disabled = true; run('deleteApplication', r.id, why.trim()).then(() => { closeModal('atDetailBg'); showToast('Application ' + r.id + ' deleted — a copy is kept', 'success'); load(); }).catch(e => { del.disabled = false; showToast(errMsg(e), 'error'); }); }; }
 
 box.querySelector('#atDetailAnother').onclick = () => openAppForm(null, { student: r.student, studentId: r.studentId, branch: r.branch, counsellor: r.counsellor, exec: r.exec, country: r.country });
 run('getStudentApplications', r.studentId || '', r.student, r.branch).then(res => {
@@ -17147,11 +17151,11 @@ Object.assign(window, { renderEnrollments, renderAccommodation, openFXRates: ope
 (function () {
 const B = { data: null, tab: 'students', q: '', agent: '', stage: '', teamMode: false, loading: false };
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const TABS = [['students', 'Students'], ['visa', 'Visa cases'], ['agents', 'Agents & dues'], ['database', '📇 Database'], ['broadcast', '📣 Broadcast']];
+const TABS = [['students', 'Students'], ['branch', '🏢 Branch'], ['visa', 'Visa cases'], ['agents', 'Agents & dues'], ['database', '📇 Database'], ['broadcast', '📣 Broadcast']];
 const $ = id => document.getElementById(id);
 const tok = () => window._authToken || '';
 
-const DO = { saveB2BAgentFull: 1, saveB2BStudent: 1, deleteB2BStudent: 1, b2bAssignLead: 1, b2bCreateApplication: 1, saveB2BVisaCase: 1, setB2BVisaStage: 1, deleteB2BVisaCase: 1, saveB2BCommission: 1, setB2BVisaDocStatus: 1, uploadB2BVisaDoc: 1, uploadB2BAgentMou: 1, convertB2BContactToAgent: 1, respondAppRequest: 1, sendB2BStudentPortal: 1 };
+const DO = { uploadB2BAgentKyc: 1, setB2BAgentKycStatus: 1, saveB2BAgentFull: 1, saveB2BStudent: 1, deleteB2BStudent: 1, b2bAssignLead: 1, b2bCreateApplication: 1, saveB2BVisaCase: 1, setB2BVisaStage: 1, deleteB2BVisaCase: 1, saveB2BCommission: 1, setB2BVisaDocStatus: 1, uploadB2BVisaDoc: 1, uploadB2BAgentMou: 1, convertB2BContactToAgent: 1, respondAppRequest: 1, sendB2BStudentPortal: 1 };
 const run = (fn, ...args) => {
 if (DO[fn]) return promisifyRun('b2bDo', tok(), fn, args).then(o => { if (o && o.desk) { B.data = o.desk; B.fresh = Date.now(); } return o ? o.r : null; });
 if (fn === 'getB2BDesk' && B.fresh && Date.now() - B.fresh < 8000) { B.fresh = 0; return Promise.resolve(B.data); }
@@ -17268,18 +17272,18 @@ $('b2bKpis').innerHTML = `<div class="sx-kpis">
 <div class="sx-kpi"><div class="sx-sub">Visa fees pending from agents</div><div style="font-size:24px;font-weight:800;" class="${s.pending ? 'sx-bad' : ''}">${inr(s.pending)}</div><div class="sx-sub">${inr(s.received)} received of ${inr(s.fee)}</div>${s.commDue ? `<div class="sx-sub">Commission due to agents: <b>${inr(s.commDue)}</b></div>` : ''}</div></div>`;
 $('b2bAgentF').innerHTML = opts(d.agents.map(a => [a.id, a.name + (a.company ? ' · ' + a.company : '')]), B.agent, 'All agents');
 $('b2bStageF').innerHTML = opts(O().stages, B.stage, 'Any visa stage');
-$('b2bStageF').style.display = ['students', 'visa'].indexOf(B.tab) === -1 ? 'none' : '';
-$('b2bAgentF').style.display = ['database', 'broadcast'].indexOf(B.tab) === -1 ? '' : 'none';
+$('b2bStageF').style.display = ['students', 'visa', 'branch'].indexOf(B.tab) === -1 ? 'none' : '';
+$('b2bAgentF').style.display = ['database', 'broadcast', 'branch'].indexOf(B.tab) === -1 ? '' : 'none';
 $('b2bSub').textContent = 'Students shared by partner agents · leads · applications · visa cases · agent dues · signed in as ' + d.me.name;
 const stTab = document.querySelector('[data-b2b-tab="students"]'); if (stTab) stTab.innerHTML = 'Students' + (s.openRequests ? ` <span class="b2b-reqn ${s.overdueRequests ? 'late' : ''}">${s.openRequests}</span>` : '');
 const agTab = document.querySelector('[data-b2b-tab="agents"]'); if (agTab) agTab.innerHTML = 'Agents & dues' + (s.mouIssues ? ` <span class="b2b-reqn late" title="Agents without a valid signed MOU">${s.mouIssues}</span>` : '');
-if (B.tab === 'students') renderStudents(); else if (B.tab === 'visa') renderCases(); else if (B.tab === 'database') renderDatabase(); else if (B.tab === 'broadcast') renderBroadcast(); else renderAgents();
+if (B.tab === 'students') renderStudents(); else if (B.tab === 'visa') renderCases(); else if (B.tab === 'branch') renderBranch(); else if (B.tab === 'database') renderDatabase(); else if (B.tab === 'broadcast') renderBroadcast(); else renderAgents();
 }
 const qMatch = (...parts) => !B.q || parts.join(' ').toLowerCase().indexOf(B.q.toLowerCase()) !== -1;
 function latestCase(st) { const cs = st.visaCases.map(caseById).filter(Boolean); return cs.length ? cs[cs.length - 1] : null; }
 
 function renderStudents() {
-const rows = B.data.students.filter(st => (!B.agent || st.agentId === B.agent)
+const rows = B.data.students.filter(st => !isBranchSt(st) && (!B.agent || st.agentId === B.agent)
 && (!B.stage || st.visaCases.some(id => (caseById(id) || {}).stage === B.stage))
 && qMatch(st.id, st.name, st.phone, st.email, st.passportNo, st.agentName, st.country, st.course, st.applications.map(a => a.university).join(' ')))
 .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
@@ -17322,16 +17326,16 @@ const rows = B.data.byAgent.filter(a => (!B.agent || a.id === B.agent) && qMatch
 .sort((a, b) => (b.pending + (b.commDue || 0)) - (a.pending + (a.commDue || 0)) || a.name.localeCompare(b.name));
 const t = rows.reduce((o, a) => { o.fee += a.fee; o.received += a.received; o.pending += a.pending; o.commDue += a.commDue || 0; o.commPaid += a.commPaid || 0; o.commExpected += a.commExpected || 0; return o; }, { fee: 0, received: 0, pending: 0, commDue: 0, commPaid: 0, commExpected: 0 });
 $('b2bBody').innerHTML = !rows.length ? `<div class="sx-card sx-empty">No agents yet — click “+ Agent”.</div>` :
-`<div class="sx-card"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Agent</th><th>MOU</th><th>Commission terms</th><th class="num">Students</th><th class="num">Visa cases</th><th class="num">Approved</th><th class="num">Visa fees pending</th><th class="num">Commission due</th><th></th></tr></thead><tbody>
+`<div class="sx-card"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Agent</th><th>MOU</th><th>KYC</th><th>Commission terms</th><th class="num">Students</th><th class="num">Visa cases</th><th class="num">Approved</th><th class="num">Visa fees pending</th><th class="num">Commission due</th><th></th></tr></thead><tbody>
 ${rows.map(a => { const ag = agentById(a.id) || {}; return `<tr class="b2b-row" data-b2b-agent-open="${esc(a.id)}">
 <td><b>${esc(a.name)}</b>${ag.active === false ? ' <span class="b2b-pill muted">inactive</span>' : ''}<div class="sx-sub">${esc([a.company, ag.city, a.phone].filter(Boolean).join(' · '))}</div></td>
-<td>${mouPill(ag.mou)}${ag.mouExpiry ? `<div class="sx-sub">until ${esc(fmtDate(ag.mouExpiry))}</div>` : ''}</td>
+<td>${mouPill(ag.mou)}${ag.mouExpiry ? `<div class="sx-sub">until ${esc(fmtDate(ag.mouExpiry))}</div>` : ''}</td><td>${kycPill(ag)}</td>
 <td style="font-size:12.5px;">${esc(commTerms(ag))}</td>
 <td class="num">${a.students}</td><td class="num">${a.cases}${a.open ? `<div class="sx-sub">${a.open} open</div>` : ''}</td><td class="num">${a.approved}</td>
 <td class="num ${a.pending ? 'b2b-due' : ''}">${inr(a.pending)}<div class="sx-sub">of ${inr(a.fee)}</div></td>
 <td class="num">${inr(a.commDue)}${a.commExpected ? `<div class="sx-sub">${inr(a.commExpected)} expected</div>` : ''}</td>
 <td><div class="sx-actions"><button class="um-btn" data-b2b-agent-open="${esc(a.id)}">Open</button><button class="um-btn" data-b2b-stmt="${esc(a.id)}" title="Statement for this agent — PDF / email / WhatsApp">📄 Statement</button><button class="um-btn sx-wa" data-b2b-wa-agent="${esc(a.id)}" title="WhatsApp the agent a status summary">WhatsApp</button></div></td></tr>`; }).join('')}
-<tr><td colspan="6"><b>Total</b></td><td class="num b2b-due"><b>${inr(t.pending)}</b><div class="sx-sub">of ${inr(t.fee)}</div></td><td class="num"><b>${inr(t.commDue)}</b><div class="sx-sub">${inr(t.commPaid)} paid</div></td><td></td></tr>
+<tr><td colspan="7"><b>Total</b></td><td class="num b2b-due"><b>${inr(t.pending)}</b><div class="sx-sub">of ${inr(t.fee)}</div></td><td class="num"><b>${inr(t.commDue)}</b><div class="sx-sub">${inr(t.commPaid)} paid</div></td><td></td></tr>
 </tbody></table></div></div>`;
 }
 
@@ -17393,20 +17397,35 @@ commType: val('b2bAgCommType'), commRate: val('b2bAgCommType') === 'No commissio
 function studentForm(st) {
 st = st || {};
 const d = B.data; if (!d) return;
-if (!d.agents.length) { agentForm(null); toast('Add the partner agent first, then the student.', 'error'); return; }
 const agents = d.agents.filter(a => a.active !== false || a.id === st.agentId).map(a => [a.id, a.name + (a.company ? ' · ' + a.company : '')]);
-modal(st.id ? 'Edit student · ' + st.id : 'Add agent student', `<div class="b2b-form">
-${fld('Student name *', `<input type="text" id="b2bStName" value="${esc(st.name)}">`)}${fld('Shared by agent *', `<select id="b2bStAgent">${opts(agents, st.agentId || B.agent, 'Choose agent…')}</select>`)}
+const src0 = isBranchSt(st) || !agents.length ? 'Branch' : 'Agent';
+const staffFor = br => (O().staff || []).filter(s => !br || s.branch === br).map(s => s.name);
+modal(st.id ? 'Edit student · ' + st.id : src0 === 'Branch' ? 'Add branch student' : 'Add agent student', `<div class="b2b-form">
+${fld('Student name *', `<input type="text" id="b2bStName" value="${esc(st.name)}">`)}${fld('Comes from', `<select id="b2bStSrc">${opts([['Agent', 'A partner agent'], ['Branch', 'Our own branch']], src0)}</select>`)}
+<div class="full" id="b2bStAgWrap">${fld('Shared by agent *', `<select id="b2bStAgent">${opts(agents, st.agentId || B.agent, agents.length ? 'Choose agent…' : 'No agents yet — add one first')}</select>`)}</div>
+<div class="full" id="b2bStBrWrap"><div class="b2b-form">${fld('Which branch *', `<select id="b2bStSrcBr">${opts(O().branches, st.sourceBranch || st.branch || '', 'Choose branch…')}</select>`)}${fld('How did they come? *', `<select id="b2bStBrSrc">${opts(BR_SOURCES(), st.branchSource || 'Branch walk-in')}</select>`)}
+<div class="full" id="b2bStEmpWrap">${fld('Employee name *', `<input type="text" id="b2bStEmp" list="b2bStEmpL" value="${esc(st.employeeName || '')}" placeholder="Who referred the student"><datalist id="b2bStEmpL"></datalist>`)}</div></div></div>
 ${fld('Student phone', `<input type="text" id="b2bStPhone" value="${esc(st.phone)}" placeholder="needed to add as a lead">`)}${fld('Student email', `<input type="text" id="b2bStEmail" value="${esc(st.email)}">`)}
-${fld('Passport no.', `<input type="text" id="b2bStPass" value="${esc(st.passportNo)}">`)}${fld('Our branch', `<select id="b2bStBranch">${opts(O().branches, st.branch, 'Choose branch…')}</select>`)}
+${fld('Passport no.', `<input type="text" id="b2bStPass" value="${esc(st.passportNo)}">`)}${fld('Our branch (handles the student)', `<select id="b2bStBranch">${opts(O().branches, st.branch, 'Choose branch…')}</select>`)}
 ${fld('Country', `<input type="text" id="b2bStCountry" value="${esc(st.country)}" list="b2bDlCountry" autocomplete="off">`)}${fld('Course interest', `<input type="text" id="b2bStCourse" value="${esc(st.course)}">`)}
 ${fld('Intake', intakeField('b2bStIntake', st.intake))}<div></div>
 ${fld('Notes', `<textarea id="b2bStNotes" style="min-height:70px;">${esc(st.notes)}</textarea>`, true)}</div>
 <datalist id="b2bDlCountry">${['United Kingdom', 'Ireland', 'Canada', 'United States', 'Australia', 'New Zealand', 'Germany', 'France', 'Netherlands', 'UAE', 'Singapore', 'Malta'].map(c => `<option value="${c}">`).join('')}</datalist>
 ${errBox('b2bStErr')}<div class="sx-modal-actions">${st.id ? '<button class="um-btn" id="b2bStDel" style="margin-right:auto;color:var(--red);">Remove student</button>' : ''}<button class="um-btn primary" id="b2bStSave">${st.id ? 'Save changes' : 'Add student'}</button></div>`, 640);
+const sync = () => {
+const br = val('b2bStSrc') === 'Branch';
+$('b2bStAgWrap').style.display = br ? 'none' : ''; $('b2bStBrWrap').style.display = br ? '' : 'none';
+$('b2bStEmpWrap').style.display = br && val('b2bStBrSrc') === 'Branch employee reference' ? '' : 'none';
+$('b2bStEmpL').innerHTML = staffFor(val('b2bStSrcBr')).map(n => `<option value="${esc(n)}">`).join('');
+if (br && !val('b2bStBranch') && val('b2bStSrcBr')) $('b2bStBranch').value = val('b2bStSrcBr');
+};
+['b2bStSrc', 'b2bStBrSrc', 'b2bStSrcBr'].forEach(i => { $(i).onchange = sync; }); sync();
 $('b2bStSave').onclick = () => {
 const btn = $('b2bStSave'); busy(btn, true); formErr('b2bStErr');
-run('saveB2BStudent', { id: st.id || '', name: val('b2bStName'), agentId: val('b2bStAgent'), phone: val('b2bStPhone'), email: val('b2bStEmail'), passportNo: val('b2bStPass'), branch: val('b2bStBranch'), country: val('b2bStCountry'), course: val('b2bStCourse'), intake: intakeVal('b2bStIntake'), notes: val('b2bStNotes') })
+const br = val('b2bStSrc') === 'Branch';
+run('saveB2BStudent', { id: st.id || '', name: val('b2bStName'), sourceType: br ? 'Branch' : 'Agent', agentId: br ? '' : val('b2bStAgent'), sourceBranch: br ? val('b2bStSrcBr') : '', branchSource: br ? val('b2bStBrSrc') : '',
+employeeName: br && val('b2bStBrSrc') === 'Branch employee reference' ? val('b2bStEmp') : '', phone: val('b2bStPhone'), email: val('b2bStEmail'), passportNo: val('b2bStPass'), branch: val('b2bStBranch') || (br ? val('b2bStSrcBr') : ''),
+country: val('b2bStCountry'), course: val('b2bStCourse'), intake: intakeVal('b2bStIntake'), notes: val('b2bStNotes') })
 .then(r => { closeModal(1); toast(st.id ? 'Student saved' : 'Student added — ' + r.id); B.loading = false; run('getB2BDesk').then(d2 => { B.data = d2; render(); if (!st.id) studentView(r.id); }).catch(() => load()); })
 .catch(err => { busy(btn, false); formErr('b2bStErr', err); });
 };
@@ -17421,9 +17440,9 @@ const st = studentById(id); if (!st) return;
 const ag = agentById(st.agentId) || {};
 const cases = st.visaCases.map(caseById).filter(Boolean);
 modal(st.name + ' · ' + st.id, `<div class="b2b-info">
-<div><small>Agent</small>${esc(st.agentName)}${ag.phone ? `<div class="sx-sub">${esc(ag.phone)}</div>` : ''}</div><div><small>Phone</small>${esc(st.phone || '—')}</div><div><small>Email</small>${esc(st.email || '—')}</div>
+<div><small>${isBranchSt(st) ? 'Source' : 'Agent'}</small>${esc(srcLabel(st))}${!isBranchSt(st) && ag.phone ? `<div class="sx-sub">${esc(ag.phone)}</div>` : ''}</div><div><small>Phone</small>${esc(st.phone || '—')}</div><div><small>Email</small>${esc(st.email || '—')}</div>
 <div><small>Passport</small>${esc(st.passportNo || '—')}</div><div><small>Country · intake</small>${esc(st.country || '—')} ${esc(st.intake || '')}</div><div><small>Course</small>${esc(st.course || '—')}</div>
-<div><small>Branch</small>${esc(st.branch || '—')}</div><div><small>Added</small>${esc(fmtStamp(st.createdAt))} · ${esc(st.createdBy || '')}</div><div><small>Agent MOU · commission</small>${mouPill(ag.mou)} <span class="sx-sub">${esc(commTerms(ag))}</span></div>${st.notes ? `<div><small>Notes</small>${esc(st.notes)}</div>` : ''}</div>
+<div><small>Branch</small>${esc(st.branch || '—')}</div><div><small>Added</small>${esc(fmtStamp(st.createdAt))} · ${esc(st.createdBy || '')}</div>${isBranchSt(st) ? '' : `<div><small>Agent MOU · commission</small>${mouPill(ag.mou)} <span class="sx-sub">${esc(commTerms(ag))}</span></div>`}${st.notes ? `<div><small>Notes</small>${esc(st.notes)}</div>` : ''}</div>
 <div class="b2b-sec"><h4><span>1 · Lead for a counsellor</span><button class="um-btn" id="b2bSvLead">${st.lead ? 'Re-assign' : '＋ Add as lead'}</button></h4>
 ${st.lead ? `<div class="b2b-li"><span class="grow">In <b>${esc(st.lead.branch)}</b> leads · counsellor <b>${esc(st.lead.counsellor || 'unassigned')}</b></span><span class="b2b-pill ok">${esc(st.lead.status || 'Lead')}</span></div>` : '<div class="sx-sub">Not in the leads list yet. Adding puts them in the branch lead list with Source “Agent: ' + esc(st.agentName) + '”.</div>'}</div>
 <div class="b2b-sec"><h4><span>2 · University applications (${st.applications.length})</span><button class="um-btn" id="b2bSvApp">＋ Application</button></h4>
@@ -17442,6 +17461,7 @@ $('b2bSvCase').onclick = () => caseForm(null, st.id);
 $('b2bSvEdit').onclick = () => studentForm(st);
 $('b2bSvWa').onclick = () => waStudent(st.id);
 $('b2bSvAgent').onclick = () => agentView(st.agentId);
+if (isBranchSt(st)) { ['b2bSvAgent', 'b2bSvWa'].forEach(i => { const e = $(i); if (e) e.style.display = 'none'; }); const c = $('b2bSvComm'); if (c && c.closest('.b2b-sec')) c.closest('.b2b-sec').style.display = 'none'; }
 $('b2bSvComm').onclick = () => commForm(null, { agentId: st.agentId, studentId: st.id, _back: st.id });
 document.querySelectorAll('[data-b2b-sv-comm]').forEach(b => b.onclick = () => commForm(commById(b.dataset.b2bSvComm), { _back: st.id }));
 document.querySelectorAll('[data-b2b-req]').forEach(b => b.onclick = () => reqView(st.id, b.dataset.b2bReq));
@@ -17673,6 +17693,7 @@ modal('🤝 ' + a.name + (a.company ? ' · ' + a.company : ''), `<div class="b2b
 <div class="b2b-li"><span class="grow">${mouPill(m)} ${a.mouSigned ? ' · signed ' + esc(fmtDate(a.mouSigned)) : ''}${a.mouExpiry ? ' · valid until <b class="' + (m.status === 'Expired' || m.expiring ? 'b2b-due' : '') + '">' + esc(fmtDate(a.mouExpiry)) + '</b>' : ''}${a.mouFileName ? `<div class="sx-sub">📎 ${esc(a.mouFileName)}</div>` : ''}</span></div>
 ${warn ? `<div class="fin-alert warm" style="margin:8px 0 0;">${esc(warn)}</div>` : ''}
 <div class="b2b-li" style="margin-top:8px;"><input type="file" id="b2bAvMouFile" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx" class="grow" aria-label="MOU file"><button class="um-btn primary" id="b2bAvMouUp">${a.mouFileId ? 'Replace MOU file' : 'Upload signed MOU'}</button></div></div>
+${kycHtml(a)}
 <div class="b2b-sec"><h4><span>Commission terms</span></h4><div class="b2b-li"><span class="grow"><b>${esc(commTerms(a))}</b>${a.commTerms ? `<div class="sx-sub">${esc(a.commTerms)}</div>` : ''}</span></div></div>
 <div class="b2b-sec"><h4><span>Numbers</span></h4><div class="b2b-info">
 <div><small>Students shared</small><b>${studs.length}</b></div><div><small>Visa cases</small><b>${x.cases || 0}</b>${x.open ? ' · ' + x.open + ' open' : ''}</div><div><small>Visas approved</small><b class="sx-good">${x.approved || 0}</b></div>
@@ -17688,6 +17709,7 @@ $('b2bAvImport').onclick = () => importForm(a.id);
 $('b2bAvStmt').onclick = () => statementView(a.id);
 $('b2bAvWa').onclick = () => waAgent(a.id);
 $('b2bAvComm').onclick = () => commForm(null, { agentId: a.id });
+wireKyc(a);
 document.querySelectorAll('[data-b2b-comm-edit]').forEach(b => b.onclick = () => commForm(commById(b.dataset.b2bCommEdit), {}));
 document.querySelectorAll('[data-b2b-comm-paid]').forEach(b => b.onclick = () => commForm(commById(b.dataset.b2bCommPaid), { status: 'Paid' }));
 document.querySelectorAll('[data-b2b-comm-new]').forEach(b => b.onclick = () => commForm(null, { agentId: a.id, studentId: b.dataset.b2bCommNew }));
@@ -18258,6 +18280,54 @@ if ($('b2bPtMail')) $('b2bPtMail').onclick = () => { if (!confirm('Email the por
 $('b2bPtNew').onclick = () => { if (!confirm('Make a new link? The old link stops working.')) return; box.innerHTML = '<div class="skeleton" style="height:160px;"></div>'; show({ forceNew: true }, 'New link made — send it to the student.'); };
 }).catch(e => { box.innerHTML = `<div class="fin-alert">${esc(errMsg(e))}</div>`; });
 show({});
+}
+
+const KYC_DOCS = () => O().kycDocs || ['PAN Card', 'GST Certificate', 'Company Registration', 'Cancelled Cheque', 'Aadhaar Card'];
+const BR_SOURCES = () => O().branchSources || ['Branch walk-in', 'Branch employee reference'];
+const isBranchSt = st => st && st.sourceType === 'Branch';
+const srcLabel = st => isBranchSt(st) ? (st.branchSource === 'Branch employee reference' ? 'Employee ref: ' + (st.employeeName || '—') : 'Branch walk-in') + ' · ' + (st.sourceBranch || st.branch || '') : (st.agentName || '');
+const kycPill = a => { const n = KYC_DOCS().length, v = a.kycDone || 0, h = a.kycHave || 0; return `<span class="b2b-pill ${v === n ? 'ok' : h ? 'warm' : 'muted'}" title="${h} uploaded · ${v} verified">${v}/${n}</span>`; };
+function renderBranch() {
+const rows = B.data.students.filter(st => isBranchSt(st) && (!B.stage || st.visaCases.some(id => (caseById(id) || {}).stage === B.stage))
+&& qMatch(st.id, st.name, st.phone, st.email, st.passportNo, st.sourceBranch, st.branchSource, st.employeeName, st.country, st.course, st.applications.map(a => a.university).join(' ')))
+.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+const by = {}; rows.forEach(st => { const k = st.sourceBranch || st.branch || '—'; by[k] = by[k] || { n: 0, w: 0, e: 0 }; by[k].n++; if (st.branchSource === 'Branch employee reference') by[k].e++; else by[k].w++; });
+$('b2bBody').innerHTML = `<div class="sx-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><div><h3 style="margin:0;">🏢 From our branches</h3><div class="sx-sub">Applications and visa work our own branches send in — walk-ins and employee references.</div></div><button class="um-btn primary" id="b2bAddBranchSt">＋ Branch student</button></div>
+${Object.keys(by).length ? `<div class="sx-chips" style="margin-top:10px;">${Object.keys(by).sort().map(k => `<span class="sx-chip">${esc(k)} · ${by[k].n}<b>${by[k].w} walk-in · ${by[k].e} employee ref</b></span>`).join('')}</div>` : ''}</div>
+${!rows.length ? `<div class="sx-card sx-empty">${B.data.students.some(isBranchSt) ? 'No branch students match.' : 'No branch students yet — click “＋ Branch student”.'}</div>` :
+`<div class="sx-card"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>ID</th><th>Student</th><th>Branch · source</th><th>Country · intake</th><th>Lead</th><th>Applications</th><th>Visa</th><th></th></tr></thead><tbody>
+${rows.map(st => { const c = latestCase(st); return `<tr class="b2b-row" data-b2b-student="${esc(st.id)}">
+<td style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;">${esc(st.id)}</td><td><b>${esc(st.name)}</b><div class="sx-sub">${esc(st.phone || '')}</div></td>
+<td><b>${esc(st.sourceBranch || st.branch || '—')}</b><div class="sx-sub">${esc(st.branchSource === 'Branch employee reference' ? 'Employee ref: ' + (st.employeeName || '—') : 'Walk-in')}</div></td>
+<td>${esc(st.country || '—')}<div class="sx-sub">${esc(st.intake || '')}</div></td>
+<td>${st.lead ? `<span class="b2b-pill ok">${esc(st.lead.status || 'Lead')}</span><div class="sx-sub">${esc(st.lead.counsellor || 'unassigned')}</div>` : `<button class="um-btn" data-b2b-lead="${esc(st.id)}">＋ Lead</button>`}</td>
+<td>${st.applications.length ? `<b>${st.applications.length}</b><div class="sx-sub">${esc(st.applications.map(a => a.university).filter(Boolean).slice(0, 2).join(', '))}</div>` : `<button class="um-btn" data-b2b-app="${esc(st.id)}">＋ Application</button>`}</td>
+<td>${c ? stagePill(c.stage) : `<button class="um-btn" data-b2b-newcase="${esc(st.id)}">＋ Visa</button>`}</td><td><button class="um-btn" data-b2b-student="${esc(st.id)}">Open</button></td></tr>`; }).join('')}
+</tbody></table></div></div>`}`;
+$('b2bAddBranchSt').onclick = () => studentForm({ sourceType: 'Branch' });
+}
+function kycHtml(a) {
+const docs = KYC_DOCS(), mine = (B.data.kyc || []).filter(k => k.agentId === a.id);
+return `<div class="b2b-sec"><h4><span>KYC · ${a.kycDone || 0} of ${docs.length} verified</span></h4><div class="b2b-list">${docs.map(t => { const k = mine.find(x => x.docType === t);
+return `<div class="b2b-li"><span class="grow"><b>${esc(t)}</b>${k ? `<div class="sx-sub">${k.number ? esc(k.number) + ' · ' : ''}${esc(k.fileName)} · ${esc(k.uploadedBy)} · ${esc(fmtStamp(k.uploadedAt))}</div>` : ''}</span>
+${k ? `<span class="b2b-pill ${k.status === 'Verified' ? 'ok' : k.status === 'Rejected' ? 'bad' : 'warm'}">${esc(k.status)}</span><button class="um-btn" data-kyc-view="${esc(k.id)}">View</button>${k.status !== 'Verified' ? `<button class="um-btn" data-kyc-st="Verified" data-id="${esc(k.id)}">✓ Verify</button>` : ''}${k.status !== 'Rejected' ? `<button class="um-btn" data-kyc-st="Rejected" data-id="${esc(k.id)}">✗ Reject</button>` : ''}` : '<span class="b2b-pill muted">Missing</span>'}</div>`; }).join('')}</div>
+<div class="b2b-li" style="margin-top:8px;"><select id="kycType" class="b2b-stage" aria-label="KYC document">${opts(docs, docs.find(t => !mine.some(x => x.docType === t && x.status !== 'Rejected')) || docs[0])}</select><input type="text" id="kycNo" placeholder="Number (PAN / GST / Aadhaar)" style="width:210px;"><input type="file" id="kycFile" accept=".pdf,.jpg,.jpeg,.png,.webp" class="grow" aria-label="KYC file"><button class="um-btn primary" id="kycUp">Upload</button></div>
+<div class="b2b-note">PDF or photo, up to 10 MB · kept in a private Drive folder · for Aadhaar only the last 4 digits are kept.</div></div>`;
+}
+function wireKyc(a) {
+document.querySelectorAll('[data-kyc-view]').forEach(b => b.onclick = () => { const k = (B.data.kyc || []).find(x => x.id === b.dataset.kycView); viewFile('KYC · ' + (k ? k.docType : '') + ' · ' + a.name, run('getB2BAgentKycFile', b.dataset.kycView)); });
+document.querySelectorAll('[data-kyc-st]').forEach(b => b.onclick = () => { b.disabled = true; run('setB2BAgentKycStatus', b.dataset.id, b.dataset.kycSt).then(() => { toast(b.dataset.kycSt === 'Verified' ? 'Verified' : 'Marked rejected'); afterAgent(a.id); }).catch(e => { b.disabled = false; toast(errMsg(e), 'error'); }); });
+const up = $('kycUp'); if (!up) return;
+up.onclick = () => {
+const f = $('kycFile').files[0];
+if (!f) { toast('Choose the file first', 'error'); return; }
+if (f.size > 10 * 1024 * 1024) { toast('The file is larger than 10 MB', 'error'); return; }
+busy(up, true, 'Uploading…');
+const rd = new FileReader();
+rd.onload = () => run('uploadB2BAgentKyc', a.id, val('kycType'), { name: f.name, mimeType: f.type || '', base64: String(rd.result).split(',')[1] || '' }, val('kycNo'))
+.then(() => { toast(val('kycType') + ' uploaded'); afterAgent(a.id); }).catch(e => { busy(up, false); toast(errMsg(e), 'error'); });
+rd.readAsDataURL(f);
+};
 }
 
 window.openB2BDesk = openB2BDesk;
@@ -20914,5 +20984,20 @@ window.openOwnView = open;
 .xl-add:hover { background: var(--canvas); }
 body:has(#finView .xl-tabs) #fabCommission { bottom: 76px; }
 </style>
+
+<style>
+.at-mhead { flex-wrap: wrap; row-gap: 12px; }
+.at-mhead > div:first-child { order: 1; flex: 1 1 calc(100% - 50px) !important; }
+.at-mhead [data-close] { order: 2; }
+.at-mhead > .um-btn { order: 3; flex: 0 0 auto; white-space: nowrap; padding: 7px 12px; font-size: 12.5px; }
+</style>
+<script>
+window.akIntake = function (v) {
+  var s = String(v == null ? '' : v).trim(), M = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var a = /^[A-Z][a-z]{2} ([A-Z][a-z]{2}) \d{1,2} (\d{4})/.exec(s); if (a) return a[1] + ' ' + a[2];
+  var b = /^(\d{4})-(\d{2})-\d{2}/.exec(s); if (b && +b[2] >= 1 && +b[2] <= 12) return M[+b[2] - 1] + ' ' + b[1];
+  return s;
+};
+</script>
 </body>
 </html>
