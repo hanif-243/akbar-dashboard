@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '7 Oct 2026 · v48';
+window.AKBAR_BUILD = '7 Oct 2026 · v49';
 
 (function () {
   try {
@@ -112,7 +112,7 @@ window.AKBAR_BUILD = '7 Oct 2026 · v48';
     var keyOf = function (fn, args) { return fn + '|' + JSON.stringify(args || []); };
 
     var mem = {}, memOrder = [], navAt = 0, NOMEM = { getAuthState: 1, getDashboardData: 1, getStudentQuestionCount: 1, getMetaAdsToday: 1, getFollowUpBoard: 1, getNextCallLead: 1 };
-    var lastNavEl = null, userAt = 0, NAVSEL = '#sidebar .nav-item, .s10-tab, .sx-tab, .um-tab, .dash-tab, [data-fin-go], [data-dash-tab], [data-fin-view], [data-fin-tab], [data-hr-view], [data-hr-tab], [data-hr-go], [data-ma-go], [data-ma-view], [data-ma-tab], [data-visa-view], [data-vd-tab], [data-mr-tab], [data-um-tab], [data-sx-tab], [data-sq-tab], [data-sq-view], [data-s10-tab], [data-s10-go], [data-mu-view], [data-mou-view], [data-inv-view], [data-en-view], [data-go-tab], [data-b2b-view], [data-b2b-tab], [data-view], #appTeamBtn, #ceoViewBtn';
+    var lastNavEl = null, userAt = 0, NAVSEL = '#sidebar .nav-item, .s10-tab, .sx-tab, .um-tab, .dash-tab, [data-fin-go], [data-dash-tab], [data-fin-view], [data-fin-tab], [data-hr-view], [data-hr-tab], [data-hr-go], [data-ma-go], [data-ma-view], [data-ma-tab], [data-visa-view], [data-vd-tab], [data-mr-tab], [data-um-tab], [data-sx-tab], [data-sq-tab], [data-sq-view], [data-s10-tab], [data-s10-go], [data-mu-view], [data-mou-view], [data-inv-view], [data-en-view], [data-go-tab], [data-b2b-view], [data-b2b-tab], [data-view], [data-own-view], #appTeamBtn, #ceoViewBtn';
     var lastWrite = 0; try { lastWrite = Number(localStorage.getItem('ak_lastwrite')) || 0; } catch (e) {   }
     function markWrite() { lastWrite = Date.now(); try { localStorage.setItem('ak_lastwrite', String(lastWrite)); } catch (e) {   } }
     document.addEventListener('click', function (e) { var el = e.target && e.target.closest && e.target.closest(NAVSEL); if (el) { navAt = Date.now(); lastNavEl = el; } }, true);
@@ -256,7 +256,7 @@ window.AKBAR_BUILD = '7 Oct 2026 · v48';
           var args = Array.prototype.slice.call(arguments);
           if (k === 'getDashboardData') { dashCall(st, args); return; }
           if (!BATCH[k] && /^get/.test(k) && !NOMEM[k]) { memCall(st, k, args); return; }
-          if (!BATCH[k]) { if (!/^(get|startSessionTracking|updateSessionHeartbeat|prefetchRun|loginWith|verifyLogin|trustThisDevice)/.test(k)) { pre = {}; mem = {}; memOrder = []; markWrite(); } callReal(st, k, args); return; }
+          if (!BATCH[k]) { if (!/^(get|startSessionTracking|updateSessionHeartbeat|prefetchRun|loginWith|verifyLogin|trustThisDevice)/.test(k)) { pre = {}; mem = {}; memOrder = []; markWrite(); } callReal(st.s ? Object.assign({}, st, { s: function (v, u) { try { if (v && v.__notice && typeof window.akStudentNotice === 'function') window.akStudentNotice(v.__notice); } catch (e) {   } st.s(v, u); } }) : st, k, args); return; }
           var hit = pre[keyOf(k, args)];
           if (hit && Date.now() - hit.at < 10000) { hit.wait.push(function (res) { deliver(st, res, function () { callReal(st, k, args); }); }); if (hit.done) hit.flushWaits(); return; }
           queue.push({ st: st, fn: k, args: args });
@@ -4447,6 +4447,34 @@ Akbar Study Abroad</textarea>
 </div>
 </div>
 <div class="nav-group-divider"></div>
+<div class="nav-group own-group" data-group="owners">
+<div class="nav-label">Owners</div>
+<div class="nav-item own-sa" data-own-view="health" role="button" tabindex="0" title="Leads, follow-ups, applications, visa and money on one screen">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+<span>Business health</span>
+</div>
+<div class="nav-item own-mgr" data-own-view="leaderboard" role="button" tabindex="0" title="Counsellors and branches by their results">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+<span>Leaderboard</span>
+</div>
+<div class="nav-item own-mgr" data-own-view="quality" role="button" tabindex="0" title="Remarks that say nothing, follow-ups always pushed to tomorrow">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+<span>Remark quality</span>
+</div>
+<div class="nav-item own-sa" data-own-view="audit" role="button" tabindex="0" title="Every important change, kept for good">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+<span>Audit log</span>
+</div>
+<div class="nav-item own-sa" data-own-view="backup" role="button" tabindex="0" title="Copies of every sheet — nightly and on a button">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+<span>Backups</span>
+</div>
+<div class="nav-item own-sa" data-own-view="alerts" role="button" tabindex="0" title="Phone alerts for branch managers through Google Chat">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+<span>Phone alerts</span>
+</div>
+</div>
+<div class="nav-group-divider own-group"></div>
 <div class="nav-group" data-group="applications">
 <div class="nav-label">Applications</div>
 <div class="nav-item" data-view="app-dashboard" role="button" tabindex="0" title="Applications dashboard">
@@ -4464,6 +4492,10 @@ Akbar Study Abroad</textarea>
 <div class="nav-item" data-view="app-insights" role="button" tabindex="0" title="Forecast, turnaround, conversion and intakes">
 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>
 <span>App Insights</span>
+</div>
+<div class="nav-item " data-own-view="deadlines" role="button" tabindex="0" title="University deadlines, deposits, CAS and offer expiry — with reminders">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+<span>Deadlines</span>
 </div>
 </div>
 
@@ -4528,6 +4560,10 @@ Akbar Study Abroad</textarea>
 <div class="nav-item" data-fin-view="financials" role="button" tabindex="0" title="Financial overview">
 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>
 <span>Financials</span>
+</div>
+<div class="nav-item " data-own-view="cps" role="button" tabindex="0" title="Ad spend → leads → applications → enrolled → fees received">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+<span>Cost per student</span>
 </div>
 <div class="nav-item" data-fin-view="revenue-pipeline" role="button" tabindex="0" title="Expected revenue from leads">
 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
@@ -11936,7 +11972,7 @@ const sla = pending && pendingDays !== null && pendingDays > 7 ? `<div class="at
 <button class="um-btn danger" id="atEscalate" ${mgr && mgr.phone ? '' : `disabled title="No manager phone set for ${esc(r.branch)} in the Branches sheet"`}>Escalate on WhatsApp</button></div>` : '';
 const box = openModal('atDetailBg', {
 title: esc(r.id) + ' · ' + esc(r.student), subtitle: esc([r.branch, r.country, r.university].filter(Boolean).join(' · ')), width: 760,
-headActions: `<button class="um-btn" id="atDetailVisa" title="Hand this student to the visa team">🛂 Send to visa</button><button class="um-btn" id="atDetailCond" title="The university gave a condition — tell the branch manager and counsellor">⚑ Condition</button><button class="um-btn" id="atDetailReqDocs" title="Ask the counsellor for documents (list by country)">📄 Request docs</button><button class="um-btn" id="atDetailAnother" title="Same student, another university">＋ Another university</button><button class="um-btn" id="atDetailDocs">📎 Documents</button><button class="um-btn primary" id="atDetailEdit">Edit</button>`,
+headActions: `<button class="um-btn" id="atDetailVisa" title="Hand this student to the visa team">🛂 Send to visa</button><button class="um-btn" id="atDetailCond" title="The university gave a condition — tell the branch manager and counsellor">⚑ Condition</button><button class="um-btn" id="atDetailReqDocs" title="Ask the counsellor for documents (list by country)">📄 Request docs</button><button class="um-btn" id="atDetailAnother" title="Same student, another university">＋ Another university</button><button class="um-btn" id="atDetailKey" title="Deadlines, offer letter and CAS with expiry reminders">📅 Dates &amp; offer/CAS</button><button class="um-btn" id="atDetailDocs">📎 Documents</button><button class="um-btn primary" id="atDetailEdit">Edit</button>`,
 body: `${sla}<div class="at-student-apps" id="atStudentApps"><div class="card-section-title">This student's applications</div><div class="skeleton" style="height:40px;"></div></div><div id="atAppReqs"></div><div class="at-2col" style="margin-bottom:0;">
 <div><div class="at-detail-grid">
 ${field('Student', esc(r.student))}${field('Student ID', esc(r.studentId))}
@@ -11964,6 +12000,7 @@ run('getStudentApplications', r.studentId || '', r.student, r.branch).then(res =
   host.querySelector('#atSaAdd').onclick = () => box.querySelector('#atDetailAnother').click();
 }).catch(() => { const host = box.querySelector('#atStudentApps'); if (host) host.innerHTML = ''; });
 box.querySelector('#atDetailDocs').onclick = () => openStudentDocsModal(r.id);
+{ const kd = box.querySelector('#atDetailKey'); if (kd) kd.onclick = () => { if (typeof window.akKeyDates === 'function') window.akKeyDates(r.id); }; }
 box.querySelector('#atDetailCond').onclick = () => openRaiseRequest(r, 'Condition');
 box.querySelector('#atDetailVisa').onclick = () => {
 const vb = openModal('atVisaBg', { title: '🛂 Send to the visa team', subtitle: esc(r.id + ' · ' + r.student + (r.university ? ' · ' + r.university : '')), width: 520,
@@ -20183,7 +20220,7 @@ function teamBoard() {
   const unassigned = rows.filter(r => !String(r.counselor || '').trim() && OPEN[label(r)]).length;
   const fixes = (M.fixes && M.fixes.pending || []).filter(x => x.branch === br);
   const batches = (M.batches || []).filter(b => b.branch === br);
-  return `<div class="td-card"><div class="td-head"><h3>☀ Today for ${esc(br)}</h3><span class="sx-sub">${newToday} new lead${newToday === 1 ? '' : 's'} today · ${unassigned} open lead${unassigned === 1 ? '' : 's'} not assigned · ${fus.filter(f => f.state === 'overdue').length} follow-ups missed · ${fus.filter(f => f.state === 'today').length} due today</span></div>
+  return `<div class="td-card"><div class="td-head"><h3>☀ Today for ${esc(br)}</h3><button class="um-btn" data-td-quality="${esc(br)}">🔍 Remark quality</button><span class="sx-sub">${newToday} new lead${newToday === 1 ? '' : 's'} today · ${unassigned} open lead${unassigned === 1 ? '' : 's'} not assigned · ${fus.filter(f => f.state === 'overdue').length} follow-ups missed · ${fus.filter(f => f.state === 'today').length} due today</span></div>
 <div class="td-scroll"><table class="td-table"><thead><tr><th>Counsellor</th><th class="num">Open leads</th><th class="num">New (not called)</th><th class="num">Hot</th><th class="num">Due today</th><th class="num">Missed</th><th class="num">Worked today</th><th></th></tr></thead><tbody>
 ${per.map(p => `<tr><td><b>${esc(p.name)}</b>${p.flag === 'over' ? '<span class="td-badge over">Overloaded</span>' : p.flag === 'behind' ? '<span class="td-badge behind">Falling behind</span>' : ''}</td><td class="num">${p.open}</td><td class="num">${p.fresh}</td><td class="num">${p.hot}</td><td class="num">${p.due}</td><td class="num" style="${p.overdue ? 'color:var(--red);font-weight:800;' : ''}">${p.overdue}</td><td class="num">${p.worked}</td>
 <td><button class="um-btn" data-td-move="${esc(p.name)}" data-td-branch="${esc(br)}" ${p.open ? '' : 'disabled'}>Move leads…</button></td></tr>`).join('') || '<tr><td colspan="8" class="td-empty">No counsellors in this branch yet.</td></tr>'}
@@ -20365,6 +20402,280 @@ function fixForm(leadId, branch) {
       .catch(e => { btn.disabled = false; btn.textContent = 'Send to manager'; err.textContent = errMsg(e); err.style.display = 'block'; });
   };
 }
+})();
+</script>
+
+<style>
+#ownView { min-height: 100vh; background: var(--canvas); }
+.own-sa, .own-mgr, .own-group { display: none !important; }
+body.ak-sa .own-sa, body.ak-sa .own-mgr, body.ak-mgr .own-mgr { display: flex !important; }
+body.ak-sa .own-group, body.ak-mgr .own-group { display: block !important; }
+.ow-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.ow-kpi { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+.ow-kpi .l { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+.ow-kpi .v { font-size: 24px; font-weight: 800; margin-top: 2px; }
+.ow-kpi .s { font-size: 12px; color: var(--muted); }
+.ow-kpi.bad .v { color: var(--red); } .ow-kpi.good .v { color: var(--ok); }
+.ow-sec { margin: 6px 0 10px; font-size: 13px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.ow-medal { font-size: 18px; }
+.ow-cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.ow-cal .h { font-size: 11px; font-weight: 800; color: var(--muted); text-align: center; padding: 4px 0; }
+.ow-cal .d { min-height: 86px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 4px 5px; font-size: 11px; overflow: hidden; }
+.ow-cal .d.out { opacity: .45; } .ow-cal .d.today { border-color: var(--red); box-shadow: 0 0 0 1px var(--red); }
+.ow-cal .d b { display: block; font-size: 12px; margin-bottom: 2px; }
+.ow-ev { display: block; border-radius: 5px; padding: 1px 4px; margin-top: 2px; background: rgba(62,107,214,.12); color: #3E6BD6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; border: 0; width: 100%; text-align: left; font: inherit; font-size: 11px; }
+.ow-ev.late { background: var(--red-dim); color: var(--red); } .ow-ev.done { background: var(--canvas); color: var(--muted); text-decoration: line-through; }
+#ownModalBg { z-index: 20700; }
+#akNoticeBar { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 21500; background: var(--card); color: var(--ink); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 12px 30px rgba(0,0,0,.2); padding: 12px 14px; max-width: min(560px, calc(100vw - 32px)); font-size: 13px; }
+#akNoticeBar .t { font-weight: 800; margin-bottom: 4px; }
+#akNoticeBar .a { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+@media (max-width: 700px) { .ow-cal .d { min-height: 60px; } }
+</style>
+<script>
+(function () {
+const $ = id => document.getElementById(id);
+const esc = v => escapeHtml(v == null ? '' : String(v));
+const run = (fn, ...args) => promisifyRun(fn, window._authToken || '', ...args);
+const errMsg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
+const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t || 'success'); };
+const num = n => n == null ? '—' : Number(n).toLocaleString('en-IN');
+const inr = n => n == null ? '—' : '₹' + Math.round(Number(n) || 0).toLocaleString('en-IN');
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const fd = ymd => { const p = String(ymd || '').slice(0, 10).split('-'); return p.length < 3 ? '' : Number(p[2]) + ' ' + MON[Number(p[1]) - 1] + ' ' + p[0]; };
+const fst = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }); };
+const ymdL = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const OTHER = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'b2bDbView', 'archView'];
+const V = { view: '', data: {}, month: '', audit: { page: 0, f: {} }, cps: {}, quality: { days: 14, branch: '' }, dl: { month: '' } };
+setInterval(() => { const mgr = typeof viewerBranch !== 'undefined' && !!viewerBranch && !(typeof viewerCounselor !== 'undefined' && viewerCounselor) && !document.body.classList.contains('tc-staff'); document.body.classList.toggle('ak-mgr', mgr); }, 2000);
+
+const TITLES = { health: ['📊 Business health', 'Leads, follow-ups, applications, visa and money — one screen'], leaderboard: ['🏆 Leaderboard', 'Counsellors and branches by their results this month'],
+  cps: ['💸 Ad spend → enrolment → fees', 'True cost per student, from the ads to the money received'], audit: ['🧾 Audit log', 'Every important change — nothing is thrown away'],
+  backup: ['💾 Backups', 'Copies of every sheet in a private Drive folder'], alerts: ['📱 Phone alerts', 'Messages to the branch managers’ phones through Google Chat'],
+  deadlines: ['📅 Deadlines', 'University deadlines, deposits, CAS, offer expiry — with reminders'], quality: ['🔍 Remark quality', 'Remarks that say nothing, follow-ups always pushed to tomorrow'] };
+function open(view) {
+  V.view = view;
+  const app = document.querySelector('.app'); if (app) app.style.display = 'none';
+  OTHER.forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
+  if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
+  let root = $('ownView'); if (!root) { root = document.createElement('div'); root.id = 'ownView'; document.body.appendChild(root); }
+  root.style.display = 'block';
+  const t = TITLES[view] || ['', ''];
+  root.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-title">${t[0]}</h1><div class="sx-sub">${t[1]}</div></div><div style="display:flex;gap:8px;"><button class="um-btn" id="owRefresh">↻ Refresh</button><button class="um-btn" id="owBack">← Back to dashboard</button></div></div><div id="owBody"><div class="sx-card"><div class="skeleton" style="height:220px;"></div></div></div></div>`;
+  $('owBack').onclick = close; $('owRefresh').onclick = () => load(true);
+  window.scrollTo(0, 0);
+  load(false);
+}
+function close() { const root = $('ownView'); if (root) { root.style.display = 'none'; root.innerHTML = ''; } const app = document.querySelector('.app'); if (app) app.style.display = ''; V.view = ''; }
+const body = () => $('owBody');
+const fail = e => { const b = body(); if (b) b.innerHTML = `<div class="sx-card sx-empty">${esc(errMsg(e))}</div>`; };
+function load(force) {
+  const v = V.view;
+  if (v === 'health') run('getBusinessHealth').then(d => { if (V.view === v) drawHealth(d); }).catch(fail);
+  else if (v === 'leaderboard') run('getLeaderboard', V.month || '').then(d => { if (V.view === v) drawBoard(d); }).catch(fail);
+  else if (v === 'cps') run('getCostPerStudent', V.cps.from || '', V.cps.to || '').then(d => { if (V.view === v) drawCps(d); }).catch(fail);
+  else if (v === 'audit') run('getAuditLog', Object.assign({ page: V.audit.page }, V.audit.f)).then(d => { if (V.view === v) drawAudit(d); }).catch(fail);
+  else if (v === 'backup') run('getBackupStatus').then(d => { if (V.view === v) drawBackup(d); }).catch(fail);
+  else if (v === 'alerts') run('getAlertSettings').then(d => { if (V.view === v) drawAlerts(d); }).catch(fail);
+  else if (v === 'deadlines') { const r = dlRange(); run('getAppDeadlines', r[0], r[1]).then(d => { if (V.view === v) drawDeadlines(d); }).catch(fail); }
+  else if (v === 'quality') run('getRemarkQuality', V.quality.branch || (typeof activeBranch !== 'undefined' && activeBranch !== 'All' ? activeBranch : ''), V.quality.days).then(d => { if (V.view === v) drawQuality(d); }).catch(fail);
+}
+const kpi = (l, v, s, cls) => `<div class="ow-kpi ${cls || ''}"><div class="l">${esc(l)}</div><div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ''}</div>`;
+
+function drawHealth(d) {
+  const L = d.leads, wk = L.prevWeek ? Math.round((L.week - L.prevWeek) / L.prevWeek * 100) : null;
+  let h = `<div class="ow-sec">Leads</div><div class="ow-kpis">${kpi('Leads today', num(L.today), 'yesterday ' + num(L.yesterday))}${kpi('Last 7 days', num(L.week), wk == null ? '' : (wk >= 0 ? '▲ ' : '▼ ') + Math.abs(wk) + '% vs the week before', wk != null && wk < 0 ? 'bad' : '')}
+${kpi('Waiting over an hour', num(L.waiting), 'new leads nobody has called', L.waiting ? 'bad' : 'good')}${kpi('Open leads not assigned', num(L.unassigned), '', L.unassigned ? 'bad' : '')}${kpi('Hot leads', num(L.hot), '')}</div>
+<div class="ow-sec">Work</div><div class="ow-kpis">${kpi('Follow-ups missed', num(d.followUps.missed), num(d.followUps.dueToday) + ' due today', d.followUps.missed ? 'bad' : 'good')}${kpi('Calls today', num(d.calls.today), '')}
+${kpi('Applications stuck', num(d.applications.stuck), 'of ' + num(d.applications.openTotal) + ' open', d.applications.stuck ? 'bad' : 'good')}${kpi('Requests overdue', num(d.applications.requestsOverdue), num(d.applications.requestsOpen) + ' open', d.applications.requestsOverdue ? 'bad' : '')}
+${kpi('Visa cases stuck', num(d.visa.stuck), num(d.visa.open) + ' open', d.visa.stuck ? 'bad' : '')}${kpi('This month', num(d.month.enrolled) + ' enrolled', num(d.month.applications) + ' applications · ' + num(d.month.visas) + ' visas', 'good')}</div>`;
+  if (d.money) { const m = d.money;
+    h += `<div class="ow-sec">Money pending <span class="sx-sub">(only Hanif, Haris and Nikhil see this)</span></div><div class="ow-kpis">${kpi('Student payments due', inr(m.studentPending), inr(m.studentOverdue) + ' overdue (' + m.overdueCount + ')', m.studentOverdue ? 'bad' : '')}
+${kpi('University commission pending', inr(m.universityPending), '')}${kpi('Visa service fees pending', inr(m.visaFeesPending), 'our students')}${kpi('Agents owe us (visa fees)', inr(m.agentFeesPending), '')}${kpi('We owe agents (commission)', inr(m.agentCommissionDue), '')}</div>`; }
+  h += `<div class="sx-card"><h3>By branch</h3><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Branch</th><th class="num">Today</th><th class="num">7 days</th><th class="num">Waiting 1h+</th><th class="num">Not assigned</th><th class="num">Missed follow-ups</th><th class="num">Due today</th><th class="num">Calls today</th><th class="num">Apps stuck</th></tr></thead><tbody>
+${d.branches.map(b => `<tr><td><b>${esc(b.branch)}</b></td><td class="num">${b.today}</td><td class="num">${b.week}</td><td class="num ${b.waiting ? 'sx-bad' : ''}">${b.waiting}</td><td class="num ${b.unassigned ? 'sx-bad' : ''}">${b.unassigned}</td><td class="num ${b.missed ? 'sx-bad' : ''}">${b.missed}</td><td class="num">${b.dueToday}</td><td class="num">${b.callsToday}</td><td class="num">${b.appsStuck}</td></tr>`).join('')}</tbody></table></div></div>`;
+  if (d.applications.stuckList.length) h += `<div class="sx-card"><h3>Applications stuck</h3><div class="sx-sub" style="margin-bottom:6px;">Not submitted after 14 days, or submitted with no offer after 45 days.</div><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Student</th><th>University</th><th>Branch</th><th>Executive</th><th>Status</th><th class="num">Days</th></tr></thead><tbody>
+${d.applications.stuckList.map(r => `<tr><td><b>${esc(r.student)}</b><div class="sx-sub">${esc(r.id)}</div></td><td>${esc(r.university || '—')}</td><td>${esc(r.branch)}</td><td>${esc(r.exec || '—')}</td><td>${esc(r.status || '—')}</td><td class="num sx-bad">${r.days}</td></tr>`).join('')}</tbody></table></div></div>`;
+  h += `<div class="sx-sub">As of ${esc(fst(d.asOf))}</div>`;
+  body().innerHTML = h;
+}
+
+function drawBoard(d) {
+  V.month = d.month;
+  const months = []; const t = new Date(); for (let i = 0; i < 12; i++) { const m = new Date(t.getFullYear(), t.getMonth() - i, 1); months.push([ymdL(m).slice(0, 7), MON[m.getMonth()] + ' ' + m.getFullYear()]); }
+  const medal = i => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1);
+  body().innerHTML = `<div class="sx-filters" style="margin:0 0 10px;"><select id="lbMonth" aria-label="Month">${months.map(m => `<option value="${m[0]}" ${m[0] === d.month ? 'selected' : ''}>${m[1]}</option>`).join('')}</select><span class="sx-sub">${esc(d.scoring)}</span></div>
+<div class="sx-card"><h3>Counsellors</h3><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th></th><th>Counsellor</th><th class="num">Score</th><th class="num">Leads</th><th class="num">Contacted</th><th class="num">Hot</th><th class="num">Applications</th><th class="num">Offers</th><th class="num">Visas</th><th class="num">Enrolled</th><th class="num">Calls</th><th class="num">Missed FU</th></tr></thead><tbody>
+${d.counsellors.map((p, i) => `<tr><td class="ow-medal">${medal(i)}</td><td><b>${esc(p.name)}</b><div class="sx-sub">${esc(p.branch)}</div></td><td class="num"><b>${p.score}</b></td><td class="num">${p.assigned}</td><td class="num">${p.contactRate == null ? '—' : p.contactRate + '%'}</td><td class="num">${p.hot}</td><td class="num">${p.apps}</td><td class="num">${p.offers}</td><td class="num">${p.visas}</td><td class="num"><b>${p.enrolled}</b></td><td class="num">${p.calls}${p.talkMin ? `<div class="sx-sub">${p.talkMin} min</div>` : ''}</td><td class="num ${p.missed ? 'sx-bad' : ''}">${p.missed}</td></tr>`).join('') || '<tr><td colspan="12" class="sx-empty">No counsellor activity this month.</td></tr>'}</tbody></table></div></div>
+<div class="sx-card"><h3>Branches &amp; branch managers</h3><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th></th><th>Branch</th><th>Manager</th><th class="num">Score</th><th class="num">Leads</th><th class="num">Contacted</th><th class="num">Applications</th><th class="num">Visas</th><th class="num">Enrolled</th><th class="num">Missed FU</th></tr></thead><tbody>
+${d.branches.map((b, i) => `<tr><td class="ow-medal">${medal(i)}</td><td><b>${esc(b.branch)}</b><div class="sx-sub">${b.counsellors} counsellors</div></td><td>${esc(b.manager)}</td><td class="num"><b>${b.score}</b></td><td class="num">${b.assigned}</td><td class="num">${b.contactRate == null ? '—' : b.contactRate + '%'}</td><td class="num">${b.apps}</td><td class="num">${b.visas}</td><td class="num"><b>${b.enrolled}</b></td><td class="num ${b.missed ? 'sx-bad' : ''}">${b.missed}</td></tr>`).join('')}</tbody></table></div></div>`;
+  $('lbMonth').onchange = e => { V.month = e.target.value; body().innerHTML = '<div class="sx-card"><div class="skeleton" style="height:200px;"></div></div>'; load(true); };
+}
+
+function drawCps(d) {
+  V.cps.from = d.from; V.cps.to = d.to;
+  const t = d.total;
+  const row = (o, name) => `<tr><td><b>${esc(name)}</b></td><td class="num">${inr(o.spend)}</td><td class="num">${num(o.leads)}</td><td class="num">${inr(o.cpl)}</td><td class="num">${num(o.apps)}</td><td class="num">${inr(o.costPerApp)}</td><td class="num">${num(o.enrolled)}</td><td class="num"><b>${inr(o.costPerStudent)}</b></td><td class="num">${inr(o.revenue)}</td><td class="num ${o.roi != null && o.roi < 1 ? 'sx-bad' : 'sx-good'}">${o.roi == null ? '—' : o.roi + '×'}</td></tr>`;
+  const head = '<thead><tr><th></th><th class="num">Ad spend</th><th class="num">Leads</th><th class="num">Cost / lead</th><th class="num">Applications</th><th class="num">Cost / application</th><th class="num">Enrolled</th><th class="num">Cost / student</th><th class="num">Fees received</th><th class="num">Return</th></tr></thead>';
+  body().innerHTML = `<div class="sx-filters" style="margin:0 0 10px;"><label class="sx-sub">From <input type="date" id="cpFrom" value="${esc(d.from)}"></label><label class="sx-sub">To <input type="date" id="cpTo" value="${esc(d.to)}"></label>${[['This month', 0], ['Last 3 months', 3], ['Last 6 months', 6], ['This year', 12]].map(q => `<button class="um-btn" data-cp-q="${q[1]}">${q[0]}</button>`).join('')}</div>
+<div class="ow-kpis">${kpi('Ad spend', inr(t.spend), esc(d.spendSource))}${kpi('Leads', num(t.leads), 'cost per lead ' + inr(t.cpl))}${kpi('Enrolled', num(t.enrolled), num(t.apps) + ' applications · ' + num(t.visas) + ' visas')}${kpi('True cost per student', inr(t.costPerStudent), 'ad spend ÷ enrolled', 'bad')}${kpi('Fees received', inr(t.revenue), 'return ' + (t.roi == null ? '—' : t.roi + '× the spend'), t.roi != null && t.roi >= 1 ? 'good' : '')}</div>
+<div class="sx-card"><h3>By branch</h3><div class="sx-table-wrap"><table class="sx-table">${head}<tbody>${d.branches.map(o => row(o, o.branch)).join('')}${row(t, 'All branches')}</tbody></table></div></div>
+<div class="sx-card"><h3>By campaign</h3><div class="sx-table-wrap"><table class="sx-table">${head}<tbody>${d.campaigns.map(o => row(o, o.campaign + ' · ' + o.branch)).join('') || '<tr><td colspan="10" class="sx-empty">No campaigns in this period.</td></tr>'}</tbody></table></div></div>
+<div class="sx-sub">${esc(d.note)}</div>`;
+  const go = () => { V.cps.from = $('cpFrom').value; V.cps.to = $('cpTo').value; body().innerHTML = '<div class="sx-card"><div class="skeleton" style="height:200px;"></div></div>'; load(true); };
+  $('cpFrom').onchange = go; $('cpTo').onchange = go;
+  document.querySelectorAll('[data-cp-q]').forEach(b => b.onclick = () => { const n = Number(b.dataset.cpQ), t0 = new Date(); const s = n === 0 ? new Date(t0.getFullYear(), t0.getMonth(), 1) : n === 12 ? new Date(t0.getFullYear(), 0, 1) : new Date(t0.getFullYear(), t0.getMonth() - n + 1, 1); $('cpFrom').value = ymdL(s); $('cpTo').value = ymdL(t0); go(); });
+}
+
+function drawAudit(d) {
+  const f = V.audit.f;
+  body().innerHTML = `<div class="sx-filters" style="margin:0 0 10px;"><input type="search" id="auQ" placeholder="Search who, what, details…" value="${esc(f.q || '')}" style="min-width:220px;"><select id="auAct" aria-label="Action">${'<option value="">Any action</option>' + d.actions.map(a => `<option ${a === f.action ? 'selected' : ''}>${esc(a)}</option>`).join('')}</select>
+<select id="auWho" aria-label="Person"><option value="">Anyone</option>${d.actors.map(a => `<option ${a === f.actor ? 'selected' : ''}>${esc(a)}</option>`).join('')}</select><label class="sx-sub">From <input type="date" id="auFrom" value="${esc(f.from || '')}"></label><label class="sx-sub">To <input type="date" id="auTo" value="${esc(f.to || '')}"></label></div>
+<div class="sx-sub" style="margin-bottom:6px;">${num(d.total)} entries match · ${num(d.stored)} kept in total</div>
+<div class="sx-card"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>When</th><th>Who</th><th>What</th><th>On</th><th>Details</th></tr></thead><tbody>
+${d.rows.map(r => `<tr><td style="white-space:nowrap;">${esc(fst(r.at))}</td><td>${esc(r.actor.replace(/\s*<.*$/, ''))}</td><td><b>${esc(r.action)}</b></td><td>${esc(r.target)}</td><td style="font-size:12px;max-width:420px;">${esc(r.details)}</td></tr>`).join('') || '<tr><td colspan="5" class="sx-empty">Nothing matches.</td></tr>'}</tbody></table></div>
+<div class="sx-actions" style="margin-top:8px;justify-content:space-between;"><button class="um-btn" id="auPrev" ${d.page ? '' : 'disabled'}>← Newer</button><span class="sx-sub">Page ${d.page + 1} of ${Math.max(1, d.pages)}</span><button class="um-btn" id="auNext" ${d.page + 1 < d.pages ? '' : 'disabled'}>Older →</button></div></div>`;
+  const apply = () => { V.audit.page = 0; V.audit.f = { q: $('auQ').value.trim(), action: $('auAct').value, actor: $('auWho').value, from: $('auFrom').value, to: $('auTo').value }; load(true); };
+  let t = null; $('auQ').oninput = () => { clearTimeout(t); t = setTimeout(apply, 400); };
+  ['auAct', 'auWho', 'auFrom', 'auTo'].forEach(i => { $(i).onchange = apply; });
+  $('auPrev').onclick = () => { V.audit.page--; load(true); }; $('auNext').onclick = () => { V.audit.page++; load(true); };
+}
+
+function drawBackup(d) {
+  body().innerHTML = `<div class="sx-card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><button class="um-btn primary" id="bkNow" ${d.running ? 'disabled' : ''}>${d.running ? '⏳ Backup running…' : '💾 Back up now'}</button>
+<label style="display:flex;gap:8px;align-items:center;font-size:13px;"><input type="checkbox" id="bkNightly" ${d.nightly ? 'checked' : ''}> Nightly backup at 2 AM</label>${d.folderUrl ? `<a class="um-btn" href="${esc(d.folderUrl)}" target="_blank" rel="noopener">📂 Open backup folder</a>` : ''}</div>
+<div class="sx-sub" style="margin-top:8px;">Copies the main spreadsheet and every branch spreadsheet into a dated folder in your Drive. Nightly copies are kept ${d.keepDays} days (plus the copy of the 1st of every month, kept for good). To restore, open the copy and copy the tab back — ask me if you need help.</div></div>
+<div class="sx-card"><h3>History</h3><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>When</th><th>Kind</th><th>By</th><th class="num">Files</th><th>Status</th><th></th></tr></thead><tbody>
+${d.log.map(b => `<tr><td>${esc(fst(b.at))}</td><td>${esc(b.kind)}</td><td>${esc(b.by)}</td><td class="num">${b.files}</td><td><span class="b2b-pill ${b.status === 'Done' ? 'ok' : 'bad'}">${esc(b.status)}</span>${b.notes ? `<div class="sx-sub">${esc(b.notes)}</div>` : ''}</td><td>${b.folderUrl ? `<a class="um-btn" href="${esc(b.folderUrl)}" target="_blank" rel="noopener">Open</a>` : ''}</td></tr>`).join('') || '<tr><td colspan="6" class="sx-empty">No backups yet.</td></tr>'}</tbody></table></div></div>`;
+  $('bkNow').onclick = () => { $('bkNow').disabled = true; run('startBackupNow').then(() => { toast('Backup started — it takes a minute or two. Refresh to see it.'); setTimeout(() => { if (V.view === 'backup') load(true); }, 60000); }).catch(e => { $('bkNow').disabled = false; toast(errMsg(e), 'error'); }); };
+  $('bkNightly').onchange = e => run('setNightlyBackup', e.target.checked).then(r => toast(r.nightly ? 'Nightly backup on — every night at 2 AM' : 'Nightly backup off')).catch(err => { e.target.checked = !e.target.checked; toast(errMsg(err), 'error'); });
+}
+
+function drawAlerts(d) {
+  body().innerHTML = `<div class="sx-card"><h3>How it works</h3><div class="sx-sub">Each branch manager installs the <b>Google Chat</b> app on their phone. Make one Chat space per branch (and one for the owners) and paste each space's webhook link below. They then get phone notifications for:</div>
+<ul style="font-size:13px;line-height:1.7;margin:8px 0 0;"><li>9:30 AM: yesterday's new leads, follow-ups due and missed (who is behind), corrections waiting</li><li>Every hour (9 AM–8 PM): new leads waiting over an hour with nobody calling</li><li>Interested leads handed over by telecallers, correction requests, application deadlines today / tomorrow</li><li>Owners' space: one morning summary of every branch</li></ul>
+<div class="b2b-note">${esc(d.help)}</div></div>
+<div class="sx-card"><h3>Spaces</h3>${d.spaces.map(s => `<div class="b2b-li" style="margin-bottom:6px;"><b style="min-width:110px;">${esc(s.name)}</b><input type="text" class="grow" data-hook="${esc(s.name)}" placeholder="${s.set ? '✓ connected — paste a new link to change it' : 'Paste the webhook link (https:\x2F\x2Fchat.googleapis.com\x2Fv1\x2Fspaces\x2F…)'}"><button class="um-btn" data-hook-test="${esc(s.name)}" ${s.set ? '' : 'disabled'}>Send test</button>${s.set ? `<button class="um-btn" data-hook-clear="${esc(s.name)}">Disconnect</button>` : ''}</div>`).join('')}
+<label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-top:8px;"><input type="checkbox" id="alOn" ${d.on ? 'checked' : ''}> Send the morning and hourly alerts</label>
+<div class="sx-modal-actions"><button class="um-btn primary" id="alSave">Save</button></div></div>`;
+  const clear = {};
+  document.querySelectorAll('[data-hook-clear]').forEach(b => b.onclick = () => { clear[b.dataset.hookClear] = true; b.textContent = 'Will disconnect on Save'; b.disabled = true; });
+  document.querySelectorAll('[data-hook-test]').forEach(b => b.onclick = () => { b.disabled = true; run('testAlert', b.dataset.hookTest).then(() => { b.disabled = false; toast('Test sent to ' + b.dataset.hookTest + ' — check the phone'); }).catch(e => { b.disabled = false; toast(errMsg(e), 'error'); }); });
+  $('alSave').onclick = () => {
+    const hooks = {}; d.spaces.forEach(s => { const v = document.querySelector(`[data-hook="${CSS.escape(s.name)}"]`).value.trim(); hooks[s.name] = clear[s.name] ? '' : v || (s.set ? '*' : ''); });
+    const btn = $('alSave'); btn.disabled = true; btn.textContent = 'Saving…';
+    run('saveAlertSettings', hooks, $('alOn').checked).then(d2 => { toast('Saved'); drawAlerts(d2); }).catch(e => { btn.disabled = false; btn.textContent = 'Save'; toast(errMsg(e), 'error'); });
+  };
+}
+
+function dlRange() { const m = V.dl.month || ymdL(new Date()).slice(0, 7); const first = new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 1, 1); const s = new Date(first); s.setDate(1 - ((first.getDay() + 6) % 7)); const e = new Date(s); e.setDate(s.getDate() + 41); return [ymdL(s), ymdL(e), m, first]; }
+function drawDeadlines(d) {
+  V.data.dl = d;
+  const r = dlRange(), m = r[2], first = r[3], start = new Date(r[0] + 'T00:00:00');
+  const by = {}; d.rows.forEach(x => { (by[x.date] = by[x.date] || []).push(x); });
+  const late = d.rows.filter(x => !x.done && x.date < d.today), soon = d.rows.filter(x => !x.done && x.date >= d.today).slice(0, 40);
+  let cal = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(x => `<div class="h">${x}</div>`).join('');
+  for (let i = 0; i < 42; i++) { const dt = new Date(start); dt.setDate(start.getDate() + i); const k = ymdL(dt), ev = by[k] || [];
+    cal += `<div class="d ${dt.getMonth() !== first.getMonth() ? 'out' : ''} ${k === d.today ? 'today' : ''}"><b>${dt.getDate()}</b>${ev.slice(0, 4).map(x => `<button class="ow-ev ${x.done ? 'done' : x.date < d.today ? 'late' : ''}" data-dl="${esc(x.id)}" title="${esc(x.type + ' — ' + x.student + ' · ' + (x.university || ''))}">${esc(x.type.split(' ')[0])} · ${esc(x.student)}</button>`).join('')}${ev.length > 4 ? `<span class="sx-sub">+${ev.length - 4}</span>` : ''}</div>`; }
+  const item = x => `<div class="b2b-li"><span class="grow"><b>${esc(x.type)}</b> · ${esc(x.student)} <span class="sx-sub">${esc(x.university || '')} · ${esc(x.executive || '')}</span>${x.notes ? `<div class="sx-sub">${esc(x.notes)}</div>` : ''}</span><span class="b2b-pill ${x.date < d.today ? 'bad' : x.days <= 3 ? 'warm' : ''}">${esc(fd(x.date))}${x.date >= d.today ? ' · ' + (x.days === 0 ? 'today' : 'in ' + x.days + 'd') : ''}</span><button class="um-btn" data-dl-done="${esc(x.id)}">✓ Done</button><button class="um-btn" data-dl="${esc(x.id)}">Edit</button></div>`;
+  body().innerHTML = `<div class="ow-kpis">${kpi('Overdue', num(d.summary.overdue), 'not marked done', d.summary.overdue ? 'bad' : 'good')}${kpi('Next 7 days', num(d.summary.week), '')}</div>
+<div class="sx-card"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;"><button class="um-btn" id="dlPrev">←</button><h3 style="margin:0;min-width:140px;text-align:center;">${MON[first.getMonth()]} ${first.getFullYear()}</h3><button class="um-btn" id="dlNext">→</button><button class="um-btn" id="dlToday">Today</button><span style="flex:1"></span><button class="um-btn primary" id="dlAdd">＋ Add deadline</button></div><div class="ow-cal">${cal}</div></div>
+${late.length ? `<div class="sx-card"><h3 class="sx-bad">Overdue</h3><div class="b2b-list">${late.map(item).join('')}</div></div>` : ''}
+<div class="sx-card"><h3>Coming up</h3><div class="b2b-list">${soon.map(item).join('') || '<div class="sx-sub">Nothing coming up.</div>'}</div><div class="b2b-note">Reminders go to the executive and counsellor 7, 3 and 1 days before and on the day (bell + email), and to the branch's phone alerts.</div></div>`;
+  const nav = n => { const x = new Date(first); x.setMonth(x.getMonth() + n); V.dl.month = ymdL(x).slice(0, 7); load(true); };
+  $('dlPrev').onclick = () => nav(-1); $('dlNext').onclick = () => nav(1); $('dlToday').onclick = () => { V.dl.month = ''; load(true); };
+  $('dlAdd').onclick = () => dlForm(null, d);
+  body().querySelectorAll('[data-dl]').forEach(b => b.onclick = () => dlForm(d.rows.find(x => x.id === b.dataset.dl), d));
+  body().querySelectorAll('[data-dl-done]').forEach(b => b.onclick = () => { b.disabled = true; run('saveAppDeadline', { id: b.dataset.dlDone, done: true }).then(() => { toast('Marked done'); load(true); }).catch(e => { b.disabled = false; toast(errMsg(e), 'error'); }); });
+}
+function dlForm(x, d, appFixed, after) {
+  x = x || {};
+  const apps = d.apps || [];
+  const bodyM = modal(x.id ? 'Deadline · ' + x.student : '＋ Add deadline', `${appFixed || x.id ? `<div class="sx-sub" style="margin-bottom:8px;"><b>${esc(x.student || appFixed.student)}</b> · ${esc(x.university || appFixed.university || '')} · ${esc(x.appId || appFixed.id)}</div>` : `<label class="f">Application *</label><input type="text" id="dlAppQ" list="dlAppList" placeholder="Type the student or university" style="width:100%;"><datalist id="dlAppList">${apps.map(a => `<option value="${esc(a.id + ' · ' + a.student + ' · ' + (a.university || ''))}">`).join('')}</datalist>`}
+<div class="b2b-form" style="margin-top:8px;"><div><label class="f">Type *</label><select id="dlType">${(d.types || []).map(t => `<option ${t === x.type ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></div><div><label class="f">Date *</label><input type="date" id="dlDate" value="${esc(x.date || '')}"></div>
+<div class="full"><label class="f">Notes</label><input type="text" id="dlNotes" value="${esc(x.notes || '')}" placeholder="e.g. deposit £2,000 · CAS no." style="width:100%;"></div></div>
+<div id="dlErr" class="fin-alert" style="display:none;margin-top:8px;"></div><div class="sx-modal-actions">${x.id ? '<button class="um-btn" id="dlDel" style="margin-right:auto;color:var(--red);">Remove</button>' + (x.done ? '<button class="um-btn" id="dlUndo">Not done</button>' : '') : ''}<button class="um-btn primary" id="dlSave">Save</button></div>`, 560);
+  const err = m => { $('dlErr').textContent = m; $('dlErr').style.display = m ? 'block' : 'none'; };
+  const done = msg => { closeModal(); toast(msg); if (after) after(); else load(true); };
+  $('dlSave').onclick = () => {
+    let appId = x.appId || (appFixed && appFixed.id) || '';
+    if (!appId) { const v = $('dlAppQ').value.split(' · ')[0].trim(); const a = apps.find(z => z.id === v); if (!a) { err('Choose the application from the list.'); return; } appId = a.id; }
+    const btn = $('dlSave'); btn.disabled = true; err('');
+    run('saveAppDeadline', { id: x.id || '', appId: appId, type: $('dlType').value, date: $('dlDate').value, notes: $('dlNotes').value.trim() }).then(() => done('Deadline saved')).catch(e => { btn.disabled = false; err(errMsg(e)); });
+  };
+  if (x.id) {
+    $('dlDel').onclick = () => { if (!confirm('Remove this deadline?')) return; run('saveAppDeadline', { id: x.id, remove: true }).then(() => done('Removed')).catch(e => err(errMsg(e))); };
+    if ($('dlUndo')) $('dlUndo').onclick = () => run('saveAppDeadline', { id: x.id, done: false }).then(() => done('Reopened')).catch(e => err(errMsg(e)));
+  }
+}
+
+window.akKeyDates = function (appId) {
+  const b = modal('📅 Dates, offer letter & CAS', '<div class="skeleton" style="height:200px;"></div>', 720);
+  const draw = () => run('getAppKeyDates', appId).then(d => {
+    b.innerHTML = `<div class="sx-sub" style="margin-bottom:8px;"><b>${esc(d.app.student)}</b> · ${esc(d.app.university || '')} · ${esc(d.app.id)}</div>
+<div class="b2b-sec" style="border-top:0;margin-top:0;"><h4><span>Dates</span><button class="um-btn" id="kdAdd">＋ Add date</button></h4>${d.rows.map(x => `<div class="b2b-li"><span class="grow"><b>${esc(x.type)}</b>${x.notes ? ' · <span class="sx-sub">' + esc(x.notes) + '</span>' : ''}</span><span class="b2b-pill ${x.done ? 'ok' : x.date < d.today ? 'bad' : x.days <= 3 ? 'warm' : ''}">${esc(fd(x.date))}${x.done ? ' · done' : ''}</span><button class="um-btn" data-kd="${esc(x.id)}">Edit</button></div>`).join('') || '<div class="sx-sub">No dates yet.</div>'}</div>
+${['Offer letter', 'CAS'].map(k => `<div class="b2b-sec"><h4><span>${k === 'CAS' ? '🎫 CAS / CoE / I-20' : '🎓 Offer letter'}</span></h4>
+${d.files.filter(f => k === 'CAS' ? /cas|coe|i-20/i.test(f.type) : /offer/i.test(f.type)).map(f => `<div class="b2b-li"><span class="grow">📎 ${esc(f.name)} <span class="sx-sub">${esc(f.by)} · ${esc(fst(f.at))}</span></span><span class="b2b-pill ${f.status === 'Verified' ? 'ok' : ''}">${esc(f.status)}</span></div>`).join('')}
+<div class="b2b-li" style="margin-top:6px;"><input type="file" data-kf="${k}" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" class="grow" aria-label="${k} file"><label class="sx-sub">Expires <input type="date" data-ke="${k}"></label>${k === 'CAS' ? '<input type="text" data-kn="CAS" placeholder="CAS number" style="width:150px;">' : ''}<button class="um-btn primary" data-ks="${k}">Save</button></div></div>`).join('')}
+<div class="b2b-note">The expiry date becomes a deadline with reminders 7, 3 and 1 days before.</div>`;
+    $('kdAdd').onclick = () => dlForm(null, { types: d.types }, d.app, draw);
+    b.querySelectorAll('[data-kd]').forEach(x => x.onclick = () => dlForm(d.rows.find(r => r.id === x.dataset.kd), { types: d.types }, d.app, draw));
+    b.querySelectorAll('[data-ks]').forEach(btn => btn.onclick = () => {
+      const k = btn.dataset.ks, fEl = b.querySelector(`[data-kf="${k}"]`), f = fEl.files[0], exp = b.querySelector(`[data-ke="${k}"]`).value, no = k === 'CAS' ? b.querySelector('[data-kn="CAS"]').value.trim() : '';
+      if (!f && !exp) { toast('Add the file or the expiry date', 'error'); return; }
+      if (f && f.size > 10 * 1024 * 1024) { toast('The file is larger than 10 MB', 'error'); return; }
+      btn.disabled = true; btn.textContent = 'Saving…';
+      const send = file => run('saveOfferOrCas', appId, k, file, exp, no).then(() => { toast(k + ' saved'); draw(); }).catch(e => { btn.disabled = false; btn.textContent = 'Save'; toast(errMsg(e), 'error'); });
+      if (!f) { send(null); return; }
+      const rd = new FileReader(); rd.onload = () => send({ name: f.name, mimeType: f.type || '', base64: String(rd.result).split(',')[1] || '' }); rd.readAsDataURL(f);
+    });
+  }).catch(e => { b.innerHTML = `<div class="sx-empty">${esc(errMsg(e))}</div>`; });
+  draw();
+};
+
+function drawQuality(d) {
+  V.quality.branch = d.branch;
+  const brs = window._isSuperAdmin && typeof counselorList !== 'undefined' ? Array.from(new Set(counselorList.map(c => c.branch))).filter(Boolean) : [d.branch];
+  body().innerHTML = `<div class="sx-filters" style="margin:0 0 10px;">${brs.length > 1 ? `<select id="qBr">${brs.map(b => `<option ${b === d.branch ? 'selected' : ''}>${esc(b)}</option>`).join('')}</select>` : ''}<select id="qDays">${[7, 14, 30].map(n => `<option value="${n}" ${n === d.days ? 'selected' : ''}>Last ${n} days</option>`).join('')}</select></div>
+<div class="sx-card"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Counsellor</th><th class="num">Quality</th><th class="num">Remarks</th><th class="num">Say nothing</th><th class="num">Too short</th><th class="num">Same as before</th><th class="num">Always “tomorrow”</th><th class="num">Status, no remark</th></tr></thead><tbody>
+${d.rows.map(r => `<tr><td><b>${esc(r.name)}</b></td><td class="num"><b class="${r.score != null && r.score < 70 ? 'sx-bad' : 'sx-good'}">${r.score == null ? '—' : r.score + '%'}</b></td><td class="num">${r.remarks}</td><td class="num ${r.empty ? 'sx-bad' : ''}">${r.empty}</td><td class="num">${r.short}</td><td class="num">${r.repeated}</td><td class="num ${r.pushed ? 'sx-bad' : ''}">${r.pushed}</td><td class="num">${r.silentStatus}</td></tr>`).join('')}</tbody></table></div></div>
+${d.rows.filter(r => r.examples.length).map(r => `<div class="sx-card"><h3>${esc(r.name)} — examples</h3><div class="b2b-list">${r.examples.map(x => `<div class="b2b-li"><span class="b2b-pill bad">${esc(x.why)}</span><span class="grow"><b>${esc(x.lead || '')}</b> — “${esc(x.text)}”</span><span class="sx-sub">${esc(fst(x.at))}</span></div>`).join('')}</div></div>`).join('')}
+<div class="sx-sub">${esc(d.rules)}</div>`;
+  if ($('qBr')) $('qBr').onchange = e => { V.quality.branch = e.target.value; load(true); };
+  $('qDays').onchange = e => { V.quality.days = Number(e.target.value); load(true); };
+}
+
+function modal(title, html, width) {
+  let bg = $('ownModalBg');
+  if (!bg) { bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'ownModalBg';
+    bg.innerHTML = '<div class="cmdk-box" id="ownModalBox" role="dialog" aria-modal="true" aria-labelledby="ownModalTitle"><div class="preview-modal-header"><span id="ownModalTitle" style="font-size:14px;font-weight:800;flex:1;"></span><button class="counselor-save-btn" id="ownModalClose">Close</button></div><div class="s10-body" id="ownModalBody"></div></div>';
+    document.body.appendChild(bg); bg.addEventListener('click', e => { if (e.target === bg) closeModal(); }); $('ownModalClose').onclick = closeModal; }
+  $('ownModalBox').style.maxWidth = (width || 600) + 'px'; $('ownModalTitle').textContent = title; $('ownModalBody').innerHTML = html; bg.classList.add('open');
+  return $('ownModalBody');
+}
+function closeModal() { const bg = $('ownModalBg'); if (bg) bg.classList.remove('open'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { const bg = $('ownModalBg'); if (bg && bg.classList.contains('open')) { closeModal(); e.stopPropagation(); } } }, true);
+
+window.akStudentNotice = function (n) {
+  if (!n || !n.message) return;
+  let el = $('akNoticeBar'); if (!el) { el = document.createElement('div'); el.id = 'akNoticeBar'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+  el.innerHTML = `<div class="t">📣 Tell ${esc(n.student || 'the student')}?</div><div class="sx-sub">${n.emailed ? '✉ Emailed to the student · ' : ''}Shown in their portal under Updates.</div>
+<div class="a">${n.waLink ? '<button class="um-btn sx-wa" id="akNoWa">WhatsApp the student</button>' : ''}<button class="um-btn" id="akNoCopy">Copy message</button><button class="um-btn" id="akNoClose">Close</button></div>`;
+  el.style.display = 'block';
+  if ($('akNoWa')) $('akNoWa').onclick = () => { window.open(n.waLink, '_blank'); el.style.display = 'none'; };
+  $('akNoCopy').onclick = () => { try { navigator.clipboard.writeText(n.message).then(() => toast('Copied')); } catch (e) { toast('Copy failed', 'error'); } };
+  $('akNoClose').onclick = () => { el.style.display = 'none'; };
+  clearTimeout(window._akNoT); window._akNoT = setTimeout(() => { el.style.display = 'none'; }, 45000);
+};
+
+document.addEventListener('click', e => {
+  const it = e.target.closest('[data-own-view]');
+  if (it) { e.preventDefault(); open(it.dataset.ownView); return; }
+  const q = e.target.closest('[data-td-quality]'); if (q) { V.quality.branch = q.dataset.tdQuality; open('quality'); }
+});
+document.addEventListener('keydown', e => { const it = e.target.closest && e.target.closest('[data-own-view]'); if (it && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(it.dataset.ownView); } });
+const sb = document.getElementById('sidebar');
+if (sb) sb.addEventListener('click', e => { const it = e.target.closest('.nav-item, .lead-set-item'); if (it && !it.hasAttribute('data-own-view') && $('ownView') && $('ownView').style.display === 'block') close(); }, true);
+window.openOwnView = open;
 })();
 </script>
 
