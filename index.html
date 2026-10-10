@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '9 Oct 2026 · v56';
+window.AKBAR_BUILD = '9 Oct 2026 · v57';
 
 (function () {
   try {
@@ -5119,7 +5119,7 @@ return;
 const counts = { All: allRows.length };
 BRANCHES.forEach(b => counts[b] = allRows.filter(r => r.branch === b).length);
 
-const items = [{ name: 'All', label: 'All Leads' }, ...BRANCHES.map(b => ({ name: b, label: b }))];
+const items = [{ name: 'All', label: 'All Leads' }, ...BRANCHES.slice().sort((a, b) => String(a).localeCompare(String(b))).map(b => ({ name: b, label: b }))];
 document.getElementById('navItems').innerHTML = items.map(item => `
 <div class="nav-item ${activeBranch === item.name ? 'active' : ''}" data-branch="${item.name}">
 ${item.name !== 'All' ? `<span class="nav-dot" style="background:${branchColor(item.name)};--dot:${branchColor(item.name)}"></span>` : `<span class="nav-dot" style="background:#8891AC;--dot:#8891AC"></span>`}
@@ -15331,6 +15331,11 @@ Object.assign(window, { openHRView, closeHRView, renderTeamHub, renderAttendance
 #sidebar .ak-sub-list .nav-item:hover::before, #sidebar .ak-sub-list .nav-item.ak-cur::before { background: var(--sb-ember); box-shadow: 0 0 0 3px rgba(242,47,61,0.18), 0 0 10px rgba(242,47,61,0.7); }
 #sidebar .ak-sub-list .nav-item.ak-cur { color: #fff !important; background: var(--sb-hover) !important; }
 
+#sidebar .nav-group[data-group="owners"] > .nav-label.ak-sec { display: flex !important; }
+#sidebar .nav-item.ak-row { height: 38px !important; font-size: 13.5px; }
+#sidebar .nav-item.ak-row:hover .ak-ico { color: #fff; }
+#sidebar .nav-item.ak-row .ak-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
 #sidebar .ak-solo > .nav-label { display: none !important; }
 #sidebar .ak-solo .nav-item { height: 38px !important; font-size: 13.5px; margin: 0 0 2px !important; }
 #sidebar .ak-solo .nav-item svg.nav-icon { display: none !important; }
@@ -15436,6 +15441,37 @@ function counts() {
   });
 }
 counts(); setInterval(counts, 3000);
+
+const byName = (a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' });
+const txt = el => (el.querySelector('.ak-name') || el.querySelector('span:not(.ak-ico):not(.count)') || el).textContent.trim();
+
+const own = sidebar.querySelector('.nav-group[data-group="owners"]');
+if (own) {
+  const lbl = own.querySelector(':scope > .nav-label'); if (lbl) lbl.classList.add('ak-sec');
+  const rows = Array.from(own.querySelectorAll(':scope > .nav-item'));
+  rows.forEach(it => {
+    it.classList.add('ak-row');
+    const svg = it.querySelector('svg.nav-icon');
+    if (svg && !it.querySelector('.ak-ico')) { svg.classList.remove('nav-icon'); const t = document.createElement('span'); t.className = 'ak-ico'; t.setAttribute('aria-hidden', 'true'); svg.replaceWith(t); t.appendChild(svg); }
+    const sp = it.querySelector(':scope > span:not(.ak-ico)'); if (sp) sp.classList.add('ak-name');
+  });
+  rows.sort((a, b) => byName(txt(a), txt(b))).forEach(it => own.appendChild(it));
+}
+
+const wsLabel = sidebar.querySelector('.ak-sec:not(.nav-label)');
+const mods = ['applications', 'b2b', 'visa', 'student-experience', 'automation', 'financials', 'marketing', 'team'].map(k => sidebar.querySelector('.nav-group[data-group="' + k + '"]')).filter(Boolean);
+if (wsLabel && mods.length) {
+  const nameOf = g => { const n = g.querySelector('.ak-name'); return (n ? n.textContent : g.dataset.group).trim(); };
+  let at = wsLabel;
+  mods.sort((a, b) => byName(nameOf(a), nameOf(b))).forEach(g => { at.after(g); at = g; });
+}
+
+groups.forEach(g => {
+  const list = g.querySelector('.ak-sub-list'); if (!list) return;
+  const pages = Array.from(list.children).filter(x => x.classList.contains('nav-item'));
+  if (pages.length < 3) return;
+  pages.slice(1).sort((a, b) => byName(txt(a), txt(b))).forEach(it => list.appendChild(it));
+});
 })();
 </script>
 
