@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '9 Oct 2026 · v57';
+window.AKBAR_BUILD = '10 Oct 2026 · v58';
 
 (function () {
   try {
@@ -111,7 +111,7 @@ window.AKBAR_BUILD = '9 Oct 2026 · v57';
     }
     var keyOf = function (fn, args) { return fn + '|' + JSON.stringify(args || []); };
 
-    var mem = {}, memOrder = [], navAt = 0, NOMEM = { getAuthState: 1, getDashboardData: 1, getStudentQuestionCount: 1, getMetaAdsToday: 1, getFollowUpBoard: 1, getNextCallLead: 1 };
+    var mem = {}, memOrder = [], navAt = 0, NOMEM = { getAuthState: 1, getDashboardData: 1, getStudentQuestionCount: 1, getMetaAdsToday: 1, getFollowUpBoard: 1, getNextCallLead: 1, getChatState: 1, getChatMessages: 1, getServerBuild: 1 };
     var lastNavEl = null, userAt = 0, NAVSEL = '#sidebar .nav-item, .s10-tab, .sx-tab, .um-tab, .dash-tab, [data-fin-go], [data-dash-tab], [data-fin-view], [data-fin-tab], [data-hr-view], [data-hr-tab], [data-hr-go], [data-ma-go], [data-ma-view], [data-ma-tab], [data-visa-view], [data-vd-tab], [data-mr-tab], [data-um-tab], [data-sx-tab], [data-sq-tab], [data-sq-view], [data-s10-tab], [data-s10-go], [data-mu-view], [data-mou-view], [data-inv-view], [data-en-view], [data-go-tab], [data-b2b-view], [data-b2b-tab], [data-view], [data-own-view], #appTeamBtn, #ceoViewBtn';
     var lastWrite = 0; try { lastWrite = Number(localStorage.getItem('ak_lastwrite')) || 0; } catch (e) {   }
     function markWrite() { lastWrite = Date.now(); try { localStorage.setItem('ak_lastwrite', String(lastWrite)); } catch (e) {   } }
@@ -6763,7 +6763,7 @@ function openMissedPopup(person) {
   const when = x => { const d = new Date(x.dueAt); return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) + (x.time ? ', ' + d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : ''); };
   document.getElementById('missedFuTitle').textContent = '⏰ ' + rows.length + ' missed follow-up' + (rows.length === 1 ? '' : 's') + (person ? ' — ' + person : '');
   document.getElementById('missedFuBody').innerHTML = (rows.length ? Object.keys(groups).sort((a, b) => groups[b].length - groups[a].length).map(name => '<div class="mfu-group"><div class="mfu-person"><b>' + escapeHtml(name) + '</b><span>' + groups[name].length + ' missed</span></div>' +
-    groups[name].map(x => '<div class="mfu-row"><div class="mfu-main"><b>' + escapeHtml(x.leadName || x.leadId) + '</b><span>' + escapeHtml([x.type, x.branch].filter(Boolean).join(' · ')) + (x.notes ? ' — ' + escapeHtml(x.notes.slice(0, 80)) : '') + '</span></div><div class="mfu-due"><b>' + escapeHtml(when(x)) + '</b><span>' + ago(x.overdueHours) + '</span></div><button class="um-btn" data-missed-lead="' + escapeHtml(x.leadId) + '" data-missed-branch="' + escapeHtml(x.branch) + '">Open lead</button></div>').join('') + '</div>').join('')
+    groups[name].map(x => '<div class="mfu-row"><div class="mfu-main"><b>' + escapeHtml(x.leadName || x.leadId) + '</b><span>' + escapeHtml([x.type, x.branch].filter(Boolean).join(' · ')) + (x.notes ? ' — ' + escapeHtml(x.notes.slice(0, 80)) : '') + '</span></div><div class="mfu-due"><b>' + escapeHtml(when(x)) + '</b><span>' + ago(x.overdueHours) + '</span></div><button class="um-btn" data-missed-lead="' + escapeHtml(x.leadId) + '" data-missed-branch="' + escapeHtml(x.branch) + '">Open lead</button><span class="mfu-acts"><button class="um-btn" data-mfu-act="done" data-fu="' + escapeHtml(x.followUpId) + '" title="Mark this follow-up done">✓ Done</button><button class="um-btn" data-mfu-act="tomorrow" data-fu="' + escapeHtml(x.followUpId) + '" title="Move it to tomorrow, same time">→ Tomorrow</button><button class="um-btn" data-mfu-act="cancel" data-fu="' + escapeHtml(x.followUpId) + '" title="Cancel it (kept in the sheet)">✕ Cancel</button></span></div>').join('') + '</div>').join('')
     : '<div class="sx-empty">No missed follow-ups. 🎉</div>') +
     (m.total > m.missed.length ? '<div class="sx-sub" style="margin-top:8px;">Showing the oldest ' + m.missed.length + ' of ' + m.total + '.</div>' : '') +
     '<div class="s10-actions"><button class="um-btn" id="missedFuSnooze">Remind me in 1 hour</button></div>';
@@ -21221,5 +21221,235 @@ window.akIntake = function (v) {
   return s;
 };
 </script>
+
+<style>
+#akChatBtn { position: fixed; right: 24px; bottom: 24px; z-index: 95; width: 54px; height: 54px; border-radius: 50%; border: 0; cursor: pointer; display: none; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #f22f3d, #b8121f); color: #fff; box-shadow: 0 10px 28px -8px rgba(242,47,61,.65), 0 2px 6px rgba(0,0,0,.18); transition: transform .15s ease; }
+#akChatBtn:hover { transform: translateY(-2px); }
+#akChatBtn svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#akChatBtn .n { position: absolute; top: -3px; right: -3px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: #111; color: #fff; font: 700 11px/20px 'IBM Plex Mono', monospace; box-shadow: 0 0 0 2px #fff; }
+body.ak-chat-on #akChatBtn { display: flex; }
+body.fin-ok #akChatBtn { bottom: 92px; }
+body:has(#finView .xl-tabs) #akChatBtn { bottom: 150px; }
+#akChat { position: fixed; top: 0; right: 0; bottom: 0; width: 400px; max-width: 100vw; z-index: 1200; background: var(--card, #fff); color: var(--ink, #14161f); border-left: 1px solid var(--border, #e4e7ee);
+  box-shadow: -18px 0 40px -18px rgba(0,0,0,.35); display: flex; flex-direction: column; transform: translateX(105%); transition: transform .25s cubic-bezier(.22,1,.36,1); }
+#akChat.open { transform: none; }
+#akChat .ch-head { display: flex; align-items: center; gap: 8px; padding: 14px 14px 12px; border-bottom: 1px solid var(--border, #e4e7ee); }
+#akChat .ch-head h3 { margin: 0; font-size: 16px; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#akChat .ch-head small { display: block; font-size: 11.5px; color: var(--muted, #667085); font-weight: 500; }
+#akChat .ch-ib { border: 0; background: none; cursor: pointer; font-size: 18px; color: var(--muted, #667085); width: 32px; height: 32px; border-radius: 8px; }
+#akChat .ch-ib:hover { background: var(--canvas, #f6f7fb); color: var(--ink, #14161f); }
+#akChat .ch-body { flex: 1; overflow-y: auto; }
+#akChat .ch-sec { padding: 12px 14px 4px; font: 600 10px/1 'IBM Plex Mono', monospace; letter-spacing: .16em; text-transform: uppercase; color: var(--muted, #667085); }
+#akChat .ch-row { display: flex; align-items: center; gap: 10px; padding: 9px 14px; cursor: pointer; border: 0; background: none; width: 100%; text-align: left; font: inherit; color: inherit; }
+#akChat .ch-row:hover, #akChat .ch-row:focus-visible { background: var(--canvas, #f6f7fb); outline: none; }
+#akChat .ch-av { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px; color: #fff; background: #8891AC; }
+#akChat .ch-av.g { border-radius: 10px; background: linear-gradient(160deg, #f22f3d, #b8121f); }
+#akChat .ch-mid { flex: 1; min-width: 0; }
+#akChat .ch-mid b { display: block; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#akChat .ch-mid span { display: block; font-size: 12px; color: var(--muted, #667085); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+#akChat .ch-side { text-align: right; font-size: 11px; color: var(--muted, #667085); }
+#akChat .ch-un { display: inline-block; margin-top: 3px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--red, #e5383b); color: #fff; font: 700 10.5px/18px 'IBM Plex Mono', monospace; text-align: center; }
+#akChat .ch-search { margin: 10px 14px 0; width: calc(100% - 28px); padding: 8px 10px; border: 1px solid var(--border, #e4e7ee); border-radius: 9px; font: inherit; font-size: 13px; background: var(--card, #fff); color: inherit; }
+#akChat .ch-msgs { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+#akChat .ch-day { align-self: center; font-size: 11px; color: var(--muted, #667085); background: var(--canvas, #f6f7fb); padding: 3px 10px; border-radius: 10px; margin: 6px 0; }
+#akChat .ch-m { max-width: 82%; align-self: flex-start; background: var(--canvas, #f1f2f6); border-radius: 4px 14px 14px 14px; padding: 7px 11px 6px; font-size: 13.5px; line-height: 1.45; position: relative; word-wrap: break-word; white-space: pre-wrap; }
+#akChat .ch-m.me { align-self: flex-end; background: color-mix(in srgb, #f22f3d 16%, var(--card, #fff)); border-radius: 14px 4px 14px 14px; }
+#akChat .ch-m .who { display: block; font-size: 11.5px; font-weight: 700; color: #e0303c; margin-bottom: 1px; }
+#akChat .ch-m .t { display: block; text-align: right; font-size: 10.5px; color: var(--muted, #667085); margin-top: 2px; }
+#akChat .ch-m.del { font-style: italic; color: var(--muted, #667085); }
+#akChat .ch-m .x { position: absolute; top: 2px; right: 4px; border: 0; background: none; cursor: pointer; color: var(--muted, #667085); font-size: 12px; opacity: 0; }
+#akChat .ch-m:hover .x { opacity: 1; }
+#akChat .ch-lead { display: flex; align-items: center; gap: 8px; margin-top: 4px; padding: 7px 9px; border-radius: 9px; background: var(--card, #fff); border: 1px solid var(--border, #e4e7ee); cursor: pointer; font-size: 12.5px; white-space: normal; }
+#akChat .ch-lead:hover { border-color: #f22f3d; }
+#akChat .ch-foot { border-top: 1px solid var(--border, #e4e7ee); padding: 10px 12px 12px; }
+#akChat .ch-att { display: flex; align-items: center; gap: 6px; font-size: 12px; margin-bottom: 6px; }
+#akChat .ch-comp { display: flex; gap: 8px; align-items: flex-end; }
+#akChat .ch-comp textarea { flex: 1; resize: none; min-height: 40px; max-height: 120px; padding: 9px 11px; border: 1px solid var(--border, #e4e7ee); border-radius: 12px; font: inherit; font-size: 13.5px; background: var(--card, #fff); color: inherit; }
+#akChat .ch-send { border: 0; border-radius: 12px; height: 40px; padding: 0 14px; background: #f22f3d; color: #fff; font-weight: 700; cursor: pointer; }
+#akChat .ch-send:disabled { opacity: .5; cursor: default; }
+#akChat .ch-ro { font-size: 12.5px; color: var(--muted, #667085); text-align: center; padding: 6px; }
+#akChat .ch-pick { max-height: 220px; overflow-y: auto; border: 1px solid var(--border, #e4e7ee); border-radius: 10px; margin-bottom: 8px; }
+#akChat .ch-empty { padding: 30px 20px; text-align: center; color: var(--muted, #667085); font-size: 13px; }
+@media (max-width: 600px) { #akChat { width: 100vw; } #akChatBtn { right: 16px; bottom: 16px; } }
+.mfu-acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.mfu-acts .um-btn { padding: 5px 10px; font-size: 12px; }
+#akServerOld { position: fixed; left: 50%; top: 10px; transform: translateX(-50%); z-index: 1100; max-width: min(720px, calc(100vw - 32px)); background: #7a0b14; color: #fff; padding: 10px 14px; border-radius: 12px; font-size: 13px; box-shadow: 0 10px 30px -10px rgba(0,0,0,.5); display: flex; gap: 10px; align-items: center; }
+#akServerOld button { border: 0; background: rgba(255,255,255,.18); color: #fff; border-radius: 8px; padding: 4px 10px; cursor: pointer; }
+</style>
+<button id="akChatBtn" type="button" aria-label="Team chat" title="Team chat"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="n" id="akChatN" hidden></span></button>
+<aside id="akChat" aria-label="Team chat" aria-hidden="true"></aside>
+<script>
+(function () {
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const tok = () => window._authToken || (function () { try { return localStorage.getItem('lo_token') || ''; } catch (e) { return ''; } })();
+const call = (fn, ...a) => new Promise((ok, no) => google.script.run.withSuccessHandler(ok).withFailureHandler(no)[fn](tok(), ...a));
+const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t || 'success'); };
+const errText = e => String((e && e.message) || e || 'Something went wrong').replace(/^Error:\s*/, '');
+const C = { state: null, ver: '', open: false, view: 'list', ch: null, msgs: [], more: false, lead: null, q: '', timer: null, busy: false };
+const initials = n => String(n || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+const hue = s => { let h = 0; String(s).split('').forEach(c => { h = (h * 31 + c.charCodeAt(0)) % 360; }); return 'hsl(' + h + ',45%,48%)'; };
+const tm = iso => { if (!iso) return ''; const d = new Date(iso), now = new Date(); const same = d.toDateString() === now.toDateString(); return same ? d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }); };
+const dayOf = iso => { const d = new Date(iso), now = new Date(), y = new Date(now.getTime() - 864e5); return d.toDateString() === now.toDateString() ? 'Today' : d.toDateString() === y.toDateString() ? 'Yesterday' : d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }); };
+
+function badge() {
+  const n = C.state ? C.state.unread : 0, el = $('akChatN');
+  el.hidden = !n; el.textContent = n > 99 ? '99+' : n;
+  $('akChatBtn').title = n ? 'Team chat — ' + n + ' unread' : 'Team chat';
+}
+function poll(force) {
+  if (!tok() || C.busy) return Promise.resolve();
+  if (document.hidden && !force) return Promise.resolve();
+  C.busy = true;
+  return call('getChatState', force ? '' : C.ver).then(s => {
+    C.busy = false;
+    document.body.classList.add('ak-chat-on');
+    if (s.same) return;
+    const changed = C.ver && C.ver !== s.ver;
+    C.ver = s.ver; C.state = s; badge();
+    if (C.open && C.view === 'list') drawList();
+    if (C.open && C.view === 'chat' && C.ch && changed) loadChat(C.ch.id, true);
+  }).catch(() => { C.busy = false; });
+}
+function schedule() { clearTimeout(C.timer); C.timer = setTimeout(() => poll().then(schedule), C.open ? 12000 : 30000); }
+
+function openPanel() { C.open = true; $('akChat').classList.add('open'); $('akChat').setAttribute('aria-hidden', 'false'); C.view = 'list'; drawList(); poll(true); schedule(); }
+function closePanel() { C.open = false; $('akChat').classList.remove('open'); $('akChat').setAttribute('aria-hidden', 'true'); schedule(); }
+
+function drawList() {
+  const s = C.state, root = $('akChat');
+  if (!s) { root.innerHTML = '<div class="ch-head"><h3>💬 Team chat</h3><button class="ch-ib" data-ch-close aria-label="Close">✕</button></div><div class="ch-empty">Loading…</div>'; return; }
+  const q = C.q.toLowerCase(), m = x => !q || String(x).toLowerCase().indexOf(q) !== -1;
+  const groups = s.channels.filter(c => c.kind === 'group' && m(c.name)), dms = s.channels.filter(c => c.kind === 'dm' && m(c.name));
+  const talked = {}; dms.forEach(c => { talked[c.id] = 1; });
+  const others = s.people.filter(p => !talked[p.dm] && m(p.name + ' ' + p.branch + ' ' + p.role));
+  const row = c => '<button class="ch-row" data-ch-open="' + esc(c.id) + '"><span class="ch-av' + (c.kind === 'group' ? ' g' : '') + '" style="' + (c.kind === 'dm' ? 'background:' + hue(c.name) : '') + '">' + (c.kind === 'group' ? (c.id === 'all' ? '📣' : c.id === 'mgr' ? '★' : c.id === 'hq' ? 'HQ' : esc(initials(c.name))) : esc(initials(c.name))) + '</span>' +
+    '<span class="ch-mid"><b>' + esc(c.name) + '</b><span>' + (c.last ? esc((c.last.mine ? 'You' : c.last.fromName.split(' ')[0]) + ': ' + c.last.text) : esc(c.kind === 'dm' ? [c.withRole, c.withBranch].filter(Boolean).join(' · ') : c.canPost ? 'No messages yet' : 'Announcements from managers')) + '</span></span>' +
+    '<span class="ch-side">' + (c.last ? esc(tm(c.last.at)) : '') + (c.unread ? '<br><span class="ch-un">' + c.unread + '</span>' : '') + '</span></button>';
+  root.innerHTML = '<div class="ch-head"><h3>💬 Team chat<small>' + esc(s.me.name) + (s.me.branch ? ' · ' + esc(s.me.branch) : '') + '</small></h3><button class="ch-ib" data-ch-close aria-label="Close">✕</button></div>' +
+    '<input class="ch-search" id="akChatQ" type="search" placeholder="Search chats and people…" value="' + esc(C.q) + '" aria-label="Search chats and people">' +
+    '<div class="ch-body">' + (groups.length ? '<div class="ch-sec">Groups</div>' + groups.map(row).join('') : '') +
+    (dms.length ? '<div class="ch-sec">Direct messages</div>' + dms.map(row).join('') : '') +
+    (others.length ? '<div class="ch-sec">Start a chat</div>' + others.map(p => '<button class="ch-row" data-ch-open="' + esc(p.dm) + '"><span class="ch-av" style="background:' + hue(p.name) + '">' + esc(initials(p.name)) + '</span><span class="ch-mid"><b>' + esc(p.name) + '</b><span>' + esc([p.role, p.branch || 'Head office'].join(' · ')) + '</span></span></button>').join('') : '') +
+    (!groups.length && !dms.length && !others.length ? '<div class="ch-empty">Nothing matches “' + esc(C.q) + '”.</div>' : '') + '</div>';
+  const qi = $('akChatQ'); qi.oninput = () => { C.q = qi.value; const pos = qi.selectionStart; drawList(); const n = $('akChatQ'); n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {   } };
+}
+function loadChat(id, quiet) {
+  if (!quiet) { C.view = 'chat'; C.ch = { id: id, name: (C.state && (C.state.channels.find(c => c.id === id) || C.state.people.find(p => p.dm === id) || {}).name) || 'Chat' }; C.msgs = []; C.lead = null; drawChat(true); }
+  return call('getChatMessages', id).then(r => {
+    if (!C.ch || C.ch.id !== id) return;
+    C.ch = r.channel; C.msgs = r.messages; C.more = r.more; drawChat(false);
+    if (C.state) { const c = C.state.channels.find(x => x.id === id); if (c && c.unread) { C.state.unread -= c.unread; c.unread = 0; badge(); } }
+  }).catch(e => { if (!quiet) { toast(errText(e), 'error'); C.view = 'list'; drawList(); } });
+}
+function msgsHtml() {
+  let lastDay = '';
+  return (C.more ? '<button class="ch-row" style="justify-content:center;color:var(--muted,#667085);font-size:12px;" data-ch-more>Show earlier messages</button>' : '') +
+    (C.msgs.length ? C.msgs.map(m => {
+      const d = dayOf(m.at), sep = d !== lastDay ? '<div class="ch-day">' + esc(d) + '</div>' : ''; lastDay = d;
+      const canDel = !m.deleted && (m.mine || (C.state && C.state.me.role === 'Super Admin'));
+      return sep + '<div class="ch-m' + (m.mine ? ' me' : '') + (m.deleted ? ' del' : '') + '">' + (!m.mine && C.ch.kind === 'group' ? '<span class="who">' + esc(m.fromName) + '</span>' : '') +
+        (m.deleted ? 'message removed' : esc(m.text)) +
+        (m.lead ? '<div class="ch-lead" data-ch-lead="' + esc(m.lead.id) + '" data-ch-branch="' + esc(m.lead.branch) + '" title="Open this lead">📎 <b>' + esc(m.lead.name || m.lead.id) + '</b><span style="color:var(--muted,#667085);">' + esc(m.lead.branch) + ' · ' + esc(m.lead.id) + '</span></div>' : '') +
+        '<span class="t">' + esc(new Date(m.at).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })) + '</span>' +
+        (canDel ? '<button class="x" data-ch-del="' + esc(m.id) + '" title="Remove message" aria-label="Remove message">✕</button>' : '') + '</div>';
+    }).join('') : '<div class="ch-empty">No messages yet — say hello 👋</div>');
+}
+function drawChat(loading) {
+  const ch = C.ch, root = $('akChat'), draft = $('akChatTxt') ? $('akChatTxt').value : '';
+  const sub = ch.kind === 'dm' ? [ch.withRole, ch.withBranch].filter(Boolean).join(' · ') : ch.id === 'all' ? 'Everyone on the dashboard' : ch.id === 'mgr' ? 'Branch managers + Super Admins' : ch.id === 'hq' ? 'Head office team + Super Admins' : 'Branch team + Super Admins';
+  const canLead = typeof allRows !== 'undefined' && Array.isArray(allRows) && allRows.length;
+  root.innerHTML = '<div class="ch-head"><button class="ch-ib" data-ch-back aria-label="Back to chats">←</button><h3>' + esc(ch.name) + '<small>' + esc(sub || '') + '</small></h3><button class="ch-ib" data-ch-close aria-label="Close">✕</button></div>' +
+    '<div class="ch-body" id="akChatBody"><div class="ch-msgs">' + (loading ? '<div class="ch-empty">Loading…</div>' : msgsHtml()) + '</div></div>' +
+    '<div class="ch-foot">' + (ch.canPost === false ? '<div class="ch-ro">Only Super Admins and branch managers post here.</div>' :
+      '<div id="akChatPick"></div>' + (C.lead ? '<div class="ch-att">📎 <b>' + esc(C.lead.name) + '</b> · ' + esc(C.lead.branch) + ' <button class="ch-ib" style="width:24px;height:24px;font-size:13px;" data-ch-unlead aria-label="Remove lead">✕</button></div>' : '') +
+      '<div class="ch-comp">' + (canLead ? '<button class="ch-ib" data-ch-attach title="Attach a lead" aria-label="Attach a lead">📎</button>' : '') + '<textarea id="akChatTxt" rows="1" maxlength="1000" placeholder="Message ' + esc(ch.name) + '…" aria-label="Message"></textarea><button class="ch-send" id="akChatSend">Send</button></div>') + '</div>';
+  const t = $('akChatTxt'); if (t) { t.value = draft; t.oninput = () => { t.style.height = 'auto'; t.style.height = Math.min(120, t.scrollHeight) + 'px'; }; t.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }; if (!loading) t.focus(); }
+  const b = $('akChatBody'); if (b) b.scrollTop = b.scrollHeight;
+}
+function send() {
+  const t = $('akChatTxt'), btn = $('akChatSend'); if (!t || !C.ch) return;
+  const text = t.value.trim(); if (!text && !C.lead) return;
+  btn.disabled = true;
+  const lead = C.lead, chId = C.ch.id;
+  call('sendChatMessage', { channel: chId, text: text, lead: lead }).then(r => {
+    btn.disabled = false; t.value = ''; C.lead = null; C.ver = r.ver;
+    if (C.ch && C.ch.id === chId) { C.msgs.push(r.message); drawChat(false); }
+    poll(true);
+  }).catch(e => { btn.disabled = false; toast(errText(e), 'error'); });
+}
+function pickLead() {
+  const box = $('akChatPick'); if (!box) return;
+  if (box.innerHTML) { box.innerHTML = ''; return; }
+  box.innerHTML = '<input class="ch-search" style="margin:0 0 6px;width:100%;" id="akChatLeadQ" placeholder="Search a lead by name, phone or ID…" aria-label="Search a lead"><div class="ch-pick" id="akChatLeadL"></div>';
+  const draw = () => {
+    const q = $('akChatLeadQ').value.trim().toLowerCase();
+    const list = (allRows || []).filter(r => !q || [r.name, r.phone, r.leadId].join(' ').toLowerCase().indexOf(q) !== -1).slice(0, 30);
+    $('akChatLeadL').innerHTML = list.map(r => '<button class="ch-row" data-ch-pick="' + esc(r.leadId) + '"><span class="ch-mid"><b>' + esc(r.name || r.leadId) + '</b><span>' + esc([r.branch, r.status, r.leadId].filter(Boolean).join(' · ')) + '</span></span></button>').join('') || '<div class="ch-empty" style="padding:14px;">No leads match.</div>';
+  };
+  $('akChatLeadQ').oninput = draw; draw(); $('akChatLeadQ').focus();
+}
+function openLead(id) {
+  if (typeof findRowByLeadId !== 'function' || !findRowByLeadId(id)) { toast('That lead is not in your current view — it may be in Bulk / telecaller leads or another branch.', 'error'); return; }
+  closePanel();
+  ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'visaView', 'b2bView', 'ownView'].forEach(v => { const el = $(v); if (el && el.style.display === 'block') el.style.display = 'none'; });
+  const app = document.querySelector('.app'); if (app) app.style.display = '';
+  expandedLeadIds.clear(); expandedLeadIds.add(id); forceRender();
+  setTimeout(() => { const r = document.querySelector('[data-lead-id="' + CSS.escape(id) + '"]'); if (r && r.scrollIntoView) r.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 300);
+}
+
+document.addEventListener('click', e => {
+  if (e.target.closest('#akChatBtn')) { if (C.open) closePanel(); else openPanel(); return; }
+  const root = e.target.closest('#akChat'); if (!root) return;
+  const t = e.target;
+  if (t.closest('[data-ch-close]')) { closePanel(); return; }
+  if (t.closest('[data-ch-back]')) { C.view = 'list'; C.ch = null; drawList(); poll(true); return; }
+  const o = t.closest('[data-ch-open]'); if (o) { loadChat(o.dataset.chOpen); return; }
+  if (t.closest('#akChatSend')) { send(); return; }
+  if (t.closest('[data-ch-attach]')) { pickLead(); return; }
+  if (t.closest('[data-ch-unlead]')) { C.lead = null; drawChat(false); return; }
+  const pk = t.closest('[data-ch-pick]'); if (pk) { const r = findRowByLeadId(pk.dataset.chPick) || {}; C.lead = { id: pk.dataset.chPick, name: r.name || pk.dataset.chPick, branch: r.branch || '' }; drawChat(false); return; }
+  const ld = t.closest('[data-ch-lead]'); if (ld) { openLead(ld.dataset.chLead); return; }
+  if (t.closest('[data-ch-more]')) { const first = C.msgs[0]; if (!first) return; call('getChatMessages', C.ch.id, first.id).then(r => { C.msgs = r.messages.concat(C.msgs); C.more = r.more; const b = $('akChatBody'), h = b.scrollHeight; drawChat(false); const b2 = $('akChatBody'); b2.scrollTop = b2.scrollHeight - h; }).catch(err => toast(errText(err), 'error')); return; }
+  const d = t.closest('[data-ch-del]'); if (d) { if (!confirm('Remove this message? It shows as “message removed” for everyone.')) return; call('deleteChatMessage', d.dataset.chDel).then(() => { const m = C.msgs.find(x => x.id === d.dataset.chDel); if (m) { m.deleted = true; m.text = ''; m.lead = null; } drawChat(false); poll(true); }).catch(err => toast(errText(err), 'error')); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && C.open) { closePanel(); } });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
+
+(function boot() { if (!tok()) { setTimeout(boot, 2000); return; } poll(true).then(schedule); })();
+window.akOpenChat = (channel) => { openPanel(); if (channel) loadChat(channel); };
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-mfu-act]'); if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  const id = b.dataset.fu, act = b.dataset.mfuAct;
+  let data;
+  if (act === 'done') data = { status: 'Completed' };
+  else if (act === 'cancel') { if (!confirm('Cancel this follow-up? It stays in the sheet marked Cancelled.')) return; data = { status: 'Cancelled' }; }
+  else { const d = new Date(Date.now() + 864e5 + 330 * 60000); data = { date: d.toISOString().slice(0, 10) }; }
+  const row = b.closest('.mfu-row'); row.querySelectorAll('button').forEach(x => { x.disabled = true; });
+  call('updateFollowUp', id, data).then(() => {
+    toast(act === 'done' ? 'Marked done' : act === 'cancel' ? 'Follow-up cancelled' : 'Moved to tomorrow');
+    row.style.opacity = '.35'; row.style.textDecoration = 'line-through';
+    if (window._missedFU) { window._missedFU.missed = window._missedFU.missed.filter(x => x.followUpId !== id); window._missedFU.total = Math.max(0, window._missedFU.total - 1); }
+    if (typeof loadMissedFollowUps === 'function') setTimeout(() => loadMissedFollowUps(false), 800);
+  }).catch(err => { row.querySelectorAll('button').forEach(x => { x.disabled = false; }); toast(errText(err), 'error'); });
+}, true);
+
+(function check() {
+  if (!tok() || !window._isSuperAdmin) { setTimeout(check, 4000); return; }
+  const page = String(window.AKBAR_BUILD || '').replace(/^.*·\s*/, '').trim();
+  call('getServerBuild').then(r => {
+    if (!r || !r.build || r.build === page) return;
+    const n = x => Number(String(x).replace(/\D/g, '')) || 0;
+    if (n(r.build) >= n(page)) return;
+    showOld('Apps Script is still on ' + r.build + ' but this page is ' + page + '. Paste the new Code.gs, then Deploy → Manage deployments → ✏️ → New version — otherwise new buttons will fail.');
+  }).catch(e => { if (/Not allowed|is not a function|getServerBuild/i.test(errText(e))) showOld('Apps Script is older than this page (' + page + '). Paste the new Code.gs, then Deploy → Manage deployments → ✏️ → New version — otherwise new buttons will fail.'); });
+  function showOld(msg) { if ($('akServerOld')) return; const d = document.createElement('div'); d.id = 'akServerOld'; d.setAttribute('role', 'alert'); d.innerHTML = '<span>⚠️ ' + esc(msg) + '</span><button type="button">Hide</button>'; d.querySelector('button').onclick = () => d.remove(); document.body.appendChild(d); }
+})();
+})();
+</script>
+
 </body>
 </html>
