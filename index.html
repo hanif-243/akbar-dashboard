@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '10 Oct 2026 · v58';
+window.AKBAR_BUILD = '10 Oct 2026 · v59';
 
 (function () {
   try {
@@ -16796,7 +16796,7 @@ $('bkGo').onclick = () => {
 const sel = st.rows.filter(r => r.on).map(r => Object.assign({}, r.p, r.dupSr && st.update ? { _replaceSr: r.dupSr } : {}));
 if (!sel.length) return;
 $('bkGo').disabled = true;
-const chunks = []; for (let i = 0; i < sel.length; i += 300) chunks.push(sel.slice(i, i + 300));
+const chunks = []; for (let i = 0; i < sel.length; i += 60) chunks.push(sel.slice(i, i + 60));
 let added = 0, updated = 0; const errors = [];
 const saveRates = st.saveRates && Object.keys(st.rates).length ? run('saveFXRates', st.rates, null).then(() => { window.finInvalidate && window.finInvalidate(['fx-rates']); }) : Promise.resolve();
 const next = k => {
@@ -16848,11 +16848,14 @@ $('bkPrev').querySelectorAll('[data-tl]').forEach(c => c.onchange = () => { extr
 $('bkPrev').querySelectorAll('[data-tlfull]').forEach(c => c.onchange = () => { plan[+c.dataset.tlfull].full = c.checked; draw(); });
 const ta = $('tlAll'); if (ta) ta.onchange = e => { extras.forEach(x => { x.on = e.target.checked; }); draw(); };
 $('tlGo').onclick = () => {
-const rows = [].concat(...plan.map(x => x.rows.map(r => { const q = Object.assign({}, r.p, r.dupSr ? { _replaceSr: r.dupSr } : {}); if (x.full) { const earn = Math.round(((Number(r.comm) || 0) + (Number(q.serviceCharge) || 0)) * 100) / 100, was = Number(q.paymentReceived) || 0; if (Math.abs(earn - was) > 0.5) { q.paymentReceived = earn; q.remarks = [q.remarks, 'Fully received (sheet showed ' + inr(was) + ')'].filter(Boolean).join(' · '); } } return q; })));
+const exBy = {}; d.enrollments.forEach(e => { exBy[e.srNo] = e; });
+const same = (q, r, tab) => { const e = exBy[r.dupSr]; if (!e) return false; const n = v => Number(v) || 0; return Math.abs(n(e.commission) - n(r.comm)) < 1 && Math.abs(n(e.serviceCharge) - n(q.serviceCharge)) < 1 && Math.abs(n(e.received) - n(q.paymentReceived)) < 1 && tabOfRec(e) === tab && e.branch === q.branch && String(e.intake || '') === String(q.intake || '') && String(e.status || '') === String(q.status || ''); };
+const rows = [].concat(...plan.map(x => x.rows.map(r => { const q = Object.assign({}, r.p, r.dupSr ? { _replaceSr: r.dupSr } : {}); if (x.full) { const earn = Math.round(((Number(r.comm) || 0) + (Number(q.serviceCharge) || 0)) * 100) / 100, was = Number(q.paymentReceived) || 0; if (Math.abs(earn - was) > 0.5) { q.paymentReceived = earn; q.remarks = [q.remarks, 'Fully received (sheet showed ' + inr(was) + ')'].filter(Boolean).join(' · '); } } return r.dupSr && same(q, r, x.tab) ? null : q; }))).filter(Boolean);
 const hideSr = extras.filter(e => e.on).map(e => e.r.srNo);
-if (!confirm('Update ' + upd + ', add ' + add + ' and hide ' + hideSr.length + ' enrollments so the dashboard matches this workbook?')) return;
+if (!rows.length && !hideSr.length) { showToast('Everything already matches your workbook ✓', 'success'); return; }
+if (!confirm('Update ' + rows.filter(q => q._replaceSr).length + ' (the other ' + (upd - rows.filter(q => q._replaceSr).length) + ' already match), add ' + add + ' and hide ' + hideSr.length + ' enrollments so the dashboard matches this workbook?')) return;
 const btn = $('tlGo'); btn.disabled = true;
-const chunks = []; for (let i = 0; i < rows.length; i += 300) chunks.push(rows.slice(i, i + 300));
+const chunks = []; for (let i = 0; i < rows.length; i += 40) chunks.push(rows.slice(i, i + 40));
 let added = 0, updated = 0, hidden = 0; const errors = [];
 const next = k => { if (k >= chunks.length) return Promise.resolve(); btn.textContent = 'Saving ' + Math.min((k + 1) * 300, rows.length) + ' / ' + rows.length + '…'; return run('bulkAddEnrollments', chunks[k]).then(res => { added += res.added || 0; updated += res.updated || 0; (res.errors || []).forEach(x => errors.push(x)); return next(k + 1); }); };
 next(0).then(() => hideSr.length ? (btn.textContent = 'Hiding ' + hideSr.length + '…', run('hideEnrollments', hideSr, 'Not in the Commission Tracker workbook (tally ' + today() + ')').then(r => { hidden = r.hidden || 0; })) : null).then(() => {
