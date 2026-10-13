@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '10 Oct 2026 · v59';
+window.AKBAR_BUILD = '13 Oct 2026 · v60';
 
 (function () {
   try {
@@ -12163,8 +12163,8 @@ ${f('Student ID', `<input data-k="studentId" value="${esc(v('studentId'))}" plac
 ${f('Application ID', edit ? `<input value="${esc(rec.id)}" disabled>` : `<input data-k="id" placeholder="Leave blank to auto-generate" autocomplete="off">`)}
 ${f('Branch *', u.canPickBranch ? `<select data-k="branch" id="atFormBranch">${opt(o.branch, branchVal, 'Select branch')}</select>` : `<select disabled><option>${esc(u.branch)}</option></select>`)}
 ${f('Counsellor', `<select data-k="counsellor" id="atFormCounsellor" ${u.role === 'Counselor' ? 'disabled' : ''}></select>`)}
-${f('Application Executive', u.isExec ? `<input value="${esc(u.name)}" disabled>` : `<input data-k="exec" value="${esc(v('exec'))}" list="atDlExec" autocomplete="off" placeholder="Select or type">`)}
-${f('Country', `<select data-k="country">${opt(countries, v('country'), 'Select country')}</select>`)}
+${f('Application Executive', u.isExec ? `<input value="${esc(u.name)}" disabled>` : `<select data-k="exec">${opt(o.executive || [], v('exec') || ((o.executive || []).length === 1 ? o.executive[0] : ''), 'Select executive')}</select>`)}
+${f('Country', `<select data-k="country" onchange="var t=this.nextElementSibling;t.style.display=this.value==='__other'?'':'none';if(this.value==='__other')t.focus();">${opt(countries, v('country'), 'Select country')}<option value="__other">Other (type it)…</option></select><input data-other-country placeholder="Type the country" style="display:none;margin-top:6px;" oninput="var s=this.previousElementSibling;var o=s.querySelector('[data-typed]');if(!o){o=document.createElement('option');o.setAttribute('data-typed','1');s.insertBefore(o,s.lastElementChild);}o.value=o.textContent=this.value.trim();if(this.value.trim())s.value=o.value;">`)}
 ${f('University', `<input data-k="university" value="${esc(v('university'))}" list="atDlUni" autocomplete="off">`)}
 ${f('Course', `<input data-k="course" value="${esc(v('course'))}" autocomplete="off">`)}
 ${f('Intake', `<div class="pair"><select id="atIntakeM" aria-label="Intake month"><option value="">Month</option>${MONTHS.map(m => `<option ${m === it.m ? 'selected' : ''}>${m}</option>`).join('')}</select><select id="atIntakeY" aria-label="Intake year"><option value="">Year</option>${years.map(y => `<option ${y === it.y ? 'selected' : ''}>${y}</option>`).join('')}</select></div>`)}
