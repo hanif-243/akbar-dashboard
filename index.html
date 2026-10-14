@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '14 Oct 2026 · v64';
+window.AKBAR_BUILD = '14 Oct 2026 · v65';
 
 (function () {
   try {
@@ -21491,7 +21491,7 @@ const BASE = /github\.io$/.test(location.hostname) ? location.origin + location.
 const linkNow = p => BASE + '?p=' + encodeURIComponent(p.slug);
 const linkFast = p => BASE + p.slug + '/';
 const UTM = 'utm_source=facebook&utm_campaign={{campaign.name}}&utm_term={{adset.name}}&utm_content={{ad.name}}';
-const FIELD_LABEL = { email: 'Email', country: 'Country of interest', intake: 'Intake', education: 'Highest education', budget: 'Budget', test: 'English test', city: 'City' };
+const FIELD_LABEL = { level: 'Study level (Bachelor’s / Master’s / MBA)', email: 'Email', country: 'Country of interest', intake: 'Intake', education: 'Highest education', budget: 'Budget', test: 'English test', city: 'City' };
 const L = { data: null };
 const VIEWS = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'visaView', 'b2bView', 'ownView', 'maView'];
 
@@ -21548,7 +21548,7 @@ ${p.status !== 'Live' ? '<div class="fin-alert warm" style="margin-top:12px;">Th
   bg.addEventListener('click', e => { if (e.target === bg || e.target.closest('[data-x]')) shut(); const c = e.target.closest('[data-copy]'); if (c) { navigator.clipboard.writeText($(c.dataset.copy).textContent).then(() => toast('Copied')).catch(() => toast('Select the link and copy it', 'error')); } });
 }
 function editor(p) {
-  const d = L.data; p = p || { status: 'Draft', branchMode: 'fixed', fields: 'email,country,intake', color: '#F22F3D', ctaText: 'Get my free counselling' };
+  const d = L.data; p = p || { status: 'Draft', branchMode: 'fixed', fields: 'country,level,intake', color: '#F22F3D', ctaText: 'Get my free counselling' };
   const brs = d.branches.map(b => b.name), chosen = String(p.branches || '').split(',').map(x => x.trim());
   const fields = String(p.fields || '').split(',');
   const bg = document.createElement('div'); bg.className = 'cmdk-backdrop open';
@@ -21571,10 +21571,11 @@ function editor(p) {
 <div class="full"><label class="f" for="lpImg">Main photo link (optional)</label><input type="text" id="lpImg" value="${esc(p.heroImage || '')}" placeholder="https:\x2F\x2F… — blank shows a built-in illustration"><\x2Fdiv>
 <div class="full"><label class="f" for="lpPhotos">More photos (optional, one link per line, up to 4)<\x2Flabel><textarea id="lpPhotos" placeholder="https:\x2F\x2F…&#10;https:\x2F\x2F…">${esc(p.photos || '')}</textarea><div class="note">Shown as a "Your life as a student abroad" strip. Use your own photos or free ones from unsplash.com (right-click a photo → Copy image address).</div></div>
 <div class="lp-sec">Form</div>
-<div class="full"><label class="f">Ask for (name + WhatsApp are always asked)</label><div class="lp-checks">${d.fields.map(f => `<label><input type="checkbox" data-lp-f="${f}" ${fields.indexOf(f) !== -1 ? 'checked' : ''}> ${esc(FIELD_LABEL[f] || f)}</label>`).join('')}</div><div class="note">Fewer questions = more leads. Name + WhatsApp + 2–3 questions works best.</div></div>
+<div class="full"><label class="f">Ask for (name + WhatsApp are always asked)</label><div class="lp-checks">${d.fields.map(f => `<label><input type="checkbox" data-lp-f="${f}" ${fields.indexOf(f) !== -1 ? 'checked' : ''}> ${esc(FIELD_LABEL[f] || f)}</label>`).join('')}</div><div class="note">The form is a 3-step quiz: ① country (tap a flag) → ② the other ticked questions as tap-buttons → ③ name + WhatsApp. Easy taps first, phone last = more leads. 2–3 questions works best.</div></div>
 <div class="lp-sec">Trust (optional — use only real numbers and real students)</div>
 <div><label class="f" for="lpStats">Numbers (one per line: value | label)</label><textarea id="lpStats" placeholder="2,500+ | students sent abroad&#10;4 | branches in India">${esc(p.stats || '')}</textarea></div>
 <div><label class="f" for="lpTest">Student quotes (one per line: Name | quote)</label><textarea id="lpTest" placeholder="Anu, Kochi | Got my UK visa in 3 weeks…">${esc(p.testimonials || '')}</textarea></div>
+<div class="full"><label class="f" for="lpFaq">FAQ (optional, one per line: question | answer)</label><textarea id="lpFaq" placeholder="Do I need IELTS? | Some UK universities accept other proof of English — your counsellor will check your options.&#10;How much does it cost? | …">${esc(p.faq || '')}</textarea><div class="note">Answers the doubts that stop people filling the form. Write only what is true for Akbar Study Abroad.</div></div>
 <div class="lp-sec">After the form</div>
 <div><label class="f" for="lpWa">WhatsApp number for "Chat with us"</label><input type="text" id="lpWa" value="${esc(p.whatsapp || '')}" placeholder="919876543210 (blank = branch manager)"></div>
 <div><label class="f" for="lpColor">Colour</label><input type="color" id="lpColor" value="${esc(p.color || '#F22F3D')}" style="width:60px;height:36px;border:0;background:none;"></div>
@@ -21598,7 +21599,7 @@ function editor(p) {
     const payload = { id: p.id || '', title: val('lpTitle'), slug: slugify(val('lpSlug')), status: val('lpStatus'), branchMode: val('lpMode'), branch: val('lpBranch'),
       branches: Array.from(bg.querySelectorAll('[data-lp-br]:checked')).map(x => x.dataset.lpBr).join(','), headline: val('lpHead'), subhead: val('lpSub'), offer: val('lpOffer'),
       ctaText: val('lpCta'), country: val('lpCountry'), intake: val('lpIntake'), bullets: val('lpBul'), heroImage: val('lpImg').trim(), photos: val('lpPhotos'),
-      fields: Array.from(bg.querySelectorAll('[data-lp-f]:checked')).map(x => x.dataset.lpF).join(','), stats: val('lpStats'), testimonials: val('lpTest'),
+      fields: Array.from(bg.querySelectorAll('[data-lp-f]:checked')).map(x => x.dataset.lpF).join(','), stats: val('lpStats'), testimonials: val('lpTest'), faq: val('lpFaq'),
       whatsapp: val('lpWa'), color: val('lpColor'), thankYou: val('lpThanks') };
     run('saveLandingPage', payload).then(r => {
       toast('Page saved'); shut(); load();
