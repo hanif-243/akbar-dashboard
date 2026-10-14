@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '13 Oct 2026 · v60';
+window.AKBAR_BUILD = '14 Oct 2026 · v61';
 
 (function () {
   try {
@@ -4629,6 +4629,7 @@ Akbar Study Abroad</textarea>
 <div class="nav-item" data-ma-view="meta-campaigns" data-role-guard="financial" role="button" tabindex="0" title="Every campaign as a card"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Campaign Manager</span></div>
 <div class="nav-item" data-ma-view="meta-ad-performance" data-role-guard="financial" role="button" tabindex="0" title="Campaigns, ad sets, ads and daily trends"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Ad Performance</span></div>
 <div class="nav-item" data-ma-view="meta-settings" data-role-guard="financial" role="button" tabindex="0" title="Token, ad account, auto-sync, branch tags"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Meta Settings</span></div>
+<div class="nav-item" data-lp-open data-role-guard="financial" role="button" tabindex="0" title="Landing pages for Meta ads — leads go straight into the dashboard"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Landing Pages</span></div>
 </div>
 
 <div class="nav-group" data-group="team">
@@ -21451,6 +21452,163 @@ document.addEventListener('click', e => {
   }).catch(e => { if (/Not allowed|is not a function|getServerBuild/i.test(errText(e))) showOld('Apps Script is older than this page (' + page + '). Paste the new Code.gs, then Deploy → Manage deployments → ✏️ → New version — otherwise new buttons will fail.'); });
   function showOld(msg) { if ($('akServerOld')) return; const d = document.createElement('div'); d.id = 'akServerOld'; d.setAttribute('role', 'alert'); d.innerHTML = '<span>⚠️ ' + esc(msg) + '</span><button type="button">Hide</button>'; d.querySelector('button').onclick = () => d.remove(); document.body.appendChild(d); }
 })();
+})();
+</script>
+
+<style>
+#lpView { min-height: 100vh; background: var(--canvas); display: none; }
+.lp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+.lp-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.lp-card h3 { margin: 0; font-size: 16px; line-height: 1.3; }
+.lp-card .lp-link { font: 500 12px/1.4 'IBM Plex Mono', monospace; color: var(--muted); word-break: break-all; }
+.lp-nums { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.lp-nums div { background: var(--canvas); border-radius: 10px; padding: 8px; text-align: center; }
+.lp-nums b { display: block; font-size: 18px; } .lp-nums span { font-size: 11px; color: var(--muted); font-weight: 600; }
+.lp-acts { display: flex; gap: 6px; flex-wrap: wrap; } .lp-acts .um-btn { padding: 6px 10px; font-size: 12.5px; }
+.lp-chip { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 9px; }
+.lp-chip.Live { background: rgba(31,157,99,.14); color: var(--ok); } .lp-chip.Draft { background: var(--canvas); color: var(--muted); } .lp-chip.Paused { background: rgba(217,138,31,.15); color: var(--warm); }
+.lp-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+.lp-form .full { grid-column: 1 / -1; }
+.lp-form label.f { display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 4px; }
+.lp-form input[type=text], .lp-form select, .lp-form textarea { width: 100%; border: 1px solid var(--border); border-radius: 9px; padding: 8px 10px; font: inherit; font-size: 13.5px; background: var(--card); color: var(--ink); }
+.lp-form textarea { min-height: 76px; resize: vertical; }
+.lp-form .note { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+.lp-checks { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; } .lp-checks label { display: flex; gap: 6px; align-items: center; }
+.lp-sec { grid-column: 1 / -1; font: 600 10.5px/1 'IBM Plex Mono', monospace; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); border-top: 1px solid var(--border); padding-top: 12px; margin-top: 4px; }
+.lp-adlink { background: var(--canvas); border-radius: 10px; padding: 10px 12px; font: 500 12px/1.5 'IBM Plex Mono', monospace; word-break: break-all; }
+@media (max-width: 700px) { .lp-form { grid-template-columns: 1fr; } .lp-nums { grid-template-columns: repeat(2, 1fr); } }
+</style>
+<div id="lpView"></div>
+<script>
+(function () {
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const tok = () => window._authToken || '';
+const run = (fn, ...a) => new Promise((ok, no) => google.script.run.withSuccessHandler(ok).withFailureHandler(no)[fn](tok(), ...a));
+const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t || 'success'); };
+const errText = e => String((e && e.message) || e || 'Something went wrong').replace(/^Error:\s*/, '');
+const BASE = /github\.io$/.test(location.hostname) ? location.origin + location.pathname.replace(/[^\/]*$/, '') + 'lp/' : 'https:\x2F\x2Fhanif-243.github.io\x2Fakbar-dashboard\x2Flp\x2F';
+const linkNow = p => BASE + '?p=' + encodeURIComponent(p.slug);
+const linkFast = p => BASE + p.slug + '/';
+const UTM = 'utm_source=facebook&utm_campaign={{campaign.name}}&utm_term={{adset.name}}&utm_content={{ad.name}}';
+const FIELD_LABEL = { email: 'Email', country: 'Country of interest', intake: 'Intake', education: 'Highest education', budget: 'Budget', test: 'English test', city: 'City' };
+const L = { data: null };
+const VIEWS = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'visaView', 'b2bView', 'ownView', 'maView'];
+
+function open() {
+  const app = document.querySelector('.app'); if (app) app.style.display = 'none';
+  VIEWS.forEach(v => { const el = $(v); if (el) el.style.display = 'none'; });
+  if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
+  const root = $('lpView'); root.style.display = 'block';
+  root.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-title">📄 Landing pages</h1><div class="sx-sub">Pages for Meta ads — leads go straight into the branch, Pixel + Conversions API fire on every lead</div></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="um-btn primary" id="lpNew">＋ New page</button><button class="um-btn" id="lpRefresh">↻ Refresh</button><button class="um-btn" id="lpBack">← Back to dashboard</button></div></div>
+<div id="lpBody"><div class="sx-card"><div class="skeleton" style="height:220px;"></div></div></div></div>`;
+  $('lpBack').onclick = close; $('lpRefresh').onclick = load; $('lpNew').onclick = () => editor(null);
+  window.scrollTo(0, 0); load();
+}
+function close() { const root = $('lpView'); if (!root || root.style.display !== 'block') return; root.style.display = 'none'; root.innerHTML = ''; const app = document.querySelector('.app'); if (app) app.style.display = ''; }
+function load() { run('getLandingPages').then(d => { L.data = d; draw(); }).catch(e => { if ($('lpBody')) $('lpBody').innerHTML = `<div class="sx-card sx-empty">${esc(errText(e))}</div>`; }); }
+function draw() {
+  const d = L.data, body = $('lpBody'); if (!body) return;
+  const noPixel = d.branches.filter(b => !b.capi).map(b => b.name);
+  body.innerHTML = (noPixel.length ? `<div class="fin-alert warm" style="margin-bottom:12px;">Meta Pixel / Conversions API is not set up for <b>${esc(noPixel.join(', '))}</b> — leads still arrive, but Meta won't see them as conversions. Add them in the Branches sheet (columns Meta Pixel ID, Meta Access Token, CAPI Enabled).</div>` : '') +
+    (!d.pages.length ? `<div class="sx-card sx-empty">No landing pages yet — click <b>＋ New page</b>. It takes about two minutes.</div>` :
+    `<div class="lp-grid">${d.pages.map(p => `<div class="lp-card">
+<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;"><h3>${esc(p.title)}</h3><span class="lp-chip ${esc(p.status)}">${esc(p.status)}</span></div>
+<div class="lp-link">${esc(linkNow(p))}</div>
+<div class="sx-sub" style="margin:0;">${p.branchMode === 'choose' ? 'Visitor chooses: ' + esc(p.branches) : '→ ' + esc(p.branch)}${p.country ? ' · ' + esc(p.country) : ''}${p.intake ? ' · ' + esc(p.intake) : ''}</div>
+<div class="lp-nums"><div><b>${p.views}</b><span>views</span></div><div><b>${p.leads}</b><span>leads</span></div><div><b>${p.conversion == null ? '—' : p.conversion + '%'}</b><span>convert</span></div><div><b>${p.leads7}</b><span>last 7 days</span></div></div>
+<div class="lp-acts"><button class="um-btn" data-lp-edit="${esc(p.id)}">✎ Edit</button><a class="um-btn" href="${esc(linkNow(p) + '&preview=' + p.id)}" target="_blank" rel="noopener">👁 Preview</a><button class="um-btn" data-lp-ad="${esc(p.id)}">🔗 Ad link</button>
+${p.status === 'Live' ? `<button class="um-btn" data-lp-st="Paused" data-id="${esc(p.id)}">⏸ Pause</button>` : `<button class="um-btn primary" data-lp-st="Live" data-id="${esc(p.id)}">▶ Publish</button>`}
+<button class="um-btn" data-lp-st="Archived" data-id="${esc(p.id)}" title="Hide this page (its leads stay)" style="color:var(--red);">Archive</button></div></div>`).join('')}</div>`) +
+    (d.recent.length ? `<div class="sx-card" style="margin-top:14px;"><h3 style="margin:0 0 8px;">Latest form fills</h3><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>When</th><th>Page</th><th>Name</th><th>Phone</th><th>Branch</th><th>Result</th><th>Ad</th><th>Meta</th></tr></thead><tbody>
+${d.recent.map(s => `<tr><td style="white-space:nowrap;">${esc(s.at ? new Date(s.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '')}</td><td>${esc(s.slug)}</td><td><b>${esc(s.name)}</b></td><td>${esc(s.phone)}</td><td>${esc(s.branch)}</td><td>${s.result === 'Added' ? '<span class="lp-chip Live">New lead</span>' : '<span class="lp-chip Paused">Already a lead</span>'}<div class="sx-sub">${esc(s.leadId)}</div></td><td class="sx-sub">${esc([s.utmCampaign, s.utmAd].filter(Boolean).join(' · ') || s.utmSource || '—')}</td><td class="sx-sub">${esc(s.capi || '—')}</td></tr>`).join('')}</tbody></table></div></div>` : '');
+  body.querySelectorAll('[data-lp-edit]').forEach(b => b.onclick = () => editor(d.pages.find(p => p.id === b.dataset.lpEdit)));
+  body.querySelectorAll('[data-lp-ad]').forEach(b => b.onclick = () => adLink(d.pages.find(p => p.id === b.dataset.lpAd)));
+  body.querySelectorAll('[data-lp-st]').forEach(b => b.onclick = () => {
+    const st = b.dataset.lpSt; if (st === 'Archived' && !confirm('Archive this page? The link stops working; its leads stay in the dashboard.')) return;
+    b.disabled = true; run('setLandingPageStatus', b.dataset.id, st).then(() => { toast(st === 'Live' ? 'Published — the link works now' : st === 'Paused' ? 'Paused — visitors see "offer ended"' : 'Archived'); load(); }).catch(e => { b.disabled = false; toast(errText(e), 'error'); });
+  });
+}
+function adLink(p) {
+  const url = linkNow(p) + '&' + UTM, fast = linkFast(p) + '?' + UTM;
+  const bg = document.createElement('div'); bg.className = 'cmdk-backdrop open';
+  bg.innerHTML = `<div class="cmdk-box" role="dialog" aria-modal="true" style="max-width:720px;"><div class="preview-modal-header"><span style="font-size:15px;font-weight:800;flex:1;">🔗 Link for your Meta ad — ${esc(p.title)}</span><button class="counselor-save-btn" data-x>Close</button></div><div class="s10-body">
+<p style="margin:0 0 6px;font-weight:700;">Paste this as the ad's Website URL</p><div class="lp-adlink" id="lpU1">${esc(url)}</div><button class="um-btn primary" style="margin-top:8px;" data-copy="lpU1">Copy</button>
+<p class="sx-sub" style="margin-top:12px;">The <code>{{campaign.name}}</code> parts are Meta's own placeholders — Meta fills in the campaign, ad set and ad names, so every lead shows which ad it came from.</p>
+<p style="margin:16px 0 6px;font-weight:700;">Faster version (after the next deploy.ps1 run)</p><div class="lp-adlink" id="lpU2">${esc(fast)}</div><button class="um-btn" style="margin-top:8px;" data-copy="lpU2">Copy</button>
+<p class="sx-sub" style="margin-top:8px;">Same page with its content built in, so it opens instantly. Edits made after a deploy show on the first link straight away and on this one after the next deploy.</p>
+${p.status !== 'Live' ? '<div class="fin-alert warm" style="margin-top:12px;">This page is not live yet — click ▶ Publish before the ad goes out.</div>' : ''}</div></div>`;
+  document.body.appendChild(bg);
+  const shut = () => bg.remove();
+  bg.addEventListener('click', e => { if (e.target === bg || e.target.closest('[data-x]')) shut(); const c = e.target.closest('[data-copy]'); if (c) { navigator.clipboard.writeText($(c.dataset.copy).textContent).then(() => toast('Copied')).catch(() => toast('Select the link and copy it', 'error')); } });
+}
+function editor(p) {
+  const d = L.data; p = p || { status: 'Draft', branchMode: 'fixed', fields: 'email,country,intake', color: '#F22F3D', ctaText: 'Get my free counselling' };
+  const brs = d.branches.map(b => b.name), chosen = String(p.branches || '').split(',').map(x => x.trim());
+  const fields = String(p.fields || '').split(',');
+  const bg = document.createElement('div'); bg.className = 'cmdk-backdrop open';
+  bg.innerHTML = `<div class="cmdk-box" role="dialog" aria-modal="true" aria-labelledby="lpEdT" style="max-width:860px;max-height:92vh;display:flex;flex-direction:column;"><div class="preview-modal-header"><span id="lpEdT" style="font-size:15px;font-weight:800;flex:1;">${p.id ? 'Edit page · ' + esc(p.id) : 'New landing page'}</span><button class="counselor-save-btn" data-x>Close</button></div>
+<div class="s10-body" style="overflow-y:auto;"><div class="lp-form">
+<div><label class="f" for="lpTitle">Page name (only you see this) *</label><input type="text" id="lpTitle" value="${esc(p.title || '')}" placeholder="UK Jan 2027 — Kerala"></div>
+<div><label class="f" for="lpSlug">Link name *</label><input type="text" id="lpSlug" value="${esc(p.slug || '')}" placeholder="uk-jan-2027"><div class="note" id="lpSlugNote"></div></div>
+<div class="lp-sec">Leads go to</div>
+<div><label class="f" for="lpMode">Branch</label><select id="lpMode"><option value="fixed" ${p.branchMode !== 'choose' ? 'selected' : ''}>One branch</option><option value="choose" ${p.branchMode === 'choose' ? 'selected' : ''}>Visitor chooses nearest branch</option></select></div>
+<div id="lpFixedW"><label class="f" for="lpBranch">Which branch</label><select id="lpBranch"><option value="">Choose…</option>${brs.map(b => `<option ${b === p.branch ? 'selected' : ''}>${esc(b)}</option>`).join('')}</select></div>
+<div id="lpChooseW" class="full"><label class="f">Branches the visitor can pick</label><div class="lp-checks">${brs.map(b => `<label><input type="checkbox" data-lp-br="${esc(b)}" ${chosen.indexOf(b) !== -1 ? 'checked' : ''}> ${esc(b)}</label>`).join('')}</div></div>
+<div class="lp-sec">What the visitor sees</div>
+<div class="full"><label class="f" for="lpHead">Headline *</label><input type="text" id="lpHead" maxlength="140" value="${esc(p.headline || '')}" placeholder="Study in the UK this January — with up to 50% scholarship"></div>
+<div class="full"><label class="f" for="lpSub">Sub-headline</label><input type="text" id="lpSub" maxlength="300" value="${esc(p.subhead || '')}" placeholder="Free profile check, university shortlist and visa help from Kerala's study-abroad experts."></div>
+<div><label class="f" for="lpOffer">Offer badge</label><input type="text" id="lpOffer" maxlength="80" value="${esc(p.offer || '')}" placeholder="Free counselling · Limited seats"></div>
+<div><label class="f" for="lpCta">Button text</label><input type="text" id="lpCta" maxlength="40" value="${esc(p.ctaText || '')}"></div>
+<div><label class="f" for="lpCountry">Country</label><input type="text" id="lpCountry" value="${esc(p.country || '')}" placeholder="United Kingdom"></div>
+<div><label class="f" for="lpIntake">Intake</label><input type="text" id="lpIntake" value="${esc(p.intake || '')}" placeholder="Jan 2027"></div>
+<div class="full"><label class="f" for="lpBul">Benefits (one per line, up to 8)</label><textarea id="lpBul" placeholder="No IELTS options for eligible students&#10;Scholarships up to 50%&#10;2-year post-study work visa">${esc(p.bullets || '')}</textarea></div>
+<div class="full"><label class="f" for="lpImg">Photo link (optional)</label><input type="text" id="lpImg" value="${esc(p.heroImage || '')}" placeholder="https:\x2F\x2F… (a JPG\x2FPNG on your website or Google Drive public link)"><\x2Fdiv>
+<div class="lp-sec">Form<\x2Fdiv>
+<div class="full"><label class="f">Ask for (name + WhatsApp are always asked)<\x2Flabel><div class="lp-checks">${d.fields.map(f => `<label><input type="checkbox" data-lp-f="${f}" ${fields.indexOf(f) !== -1 ? 'checked' : ''}> ${esc(FIELD_LABEL[f] || f)}</label>`).join('')}</div><div class="note">Fewer questions = more leads. Name + WhatsApp + 2–3 questions works best.</div></div>
+<div class="lp-sec">Trust (optional — use only real numbers and real students)</div>
+<div><label class="f" for="lpStats">Numbers (one per line: value | label)</label><textarea id="lpStats" placeholder="2,500+ | students sent abroad&#10;4 | branches in India">${esc(p.stats || '')}</textarea></div>
+<div><label class="f" for="lpTest">Student quotes (one per line: Name | quote)</label><textarea id="lpTest" placeholder="Anu, Kochi | Got my UK visa in 3 weeks…">${esc(p.testimonials || '')}</textarea></div>
+<div class="lp-sec">After the form</div>
+<div><label class="f" for="lpWa">WhatsApp number for "Chat with us"</label><input type="text" id="lpWa" value="${esc(p.whatsapp || '')}" placeholder="919876543210 (blank = branch manager)"></div>
+<div><label class="f" for="lpColor">Colour</label><input type="color" id="lpColor" value="${esc(p.color || '#F22F3D')}" style="width:60px;height:36px;border:0;background:none;"></div>
+<div class="full"><label class="f" for="lpThanks">Thank-you message</label><input type="text" id="lpThanks" maxlength="300" value="${esc(p.thankYou || '')}" placeholder="Blank = “A counsellor from our [branch] branch will call you shortly on WhatsApp.”"></div>
+<div class="full"><label class="f" for="lpStatus">Status</label><select id="lpStatus">${['Draft', 'Live', 'Paused'].map(s => `<option ${s === p.status ? 'selected' : ''}>${s}</option>`).join('')}</select><div class="note">Draft = only you can preview it · Live = the link works for everyone · Paused = visitors see “offer ended”.</div></div>
+</div><p class="ea-red" id="lpErr" style="margin:10px 0 0;"></p></div>
+<div class="s10-actions" style="padding:12px 16px;border-top:1px solid var(--border);"><button class="um-btn" id="lpSavePrev">Save &amp; preview</button><button class="um-btn primary" id="lpSave">Save</button></div></div>`;
+  document.body.appendChild(bg);
+  const shut = () => bg.remove();
+  bg.addEventListener('click', e => { if (e.target === bg || e.target.closest('[data-x]')) shut(); });
+  const slugify = s => String(s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+  let slugTouched = !!p.slug;
+  const note = () => { $('lpSlugNote').textContent = BASE + '?p=' + (slugify($('lpSlug').value) || '…'); };
+  $('lpTitle').oninput = () => { if (!slugTouched) $('lpSlug').value = slugify($('lpTitle').value); note(); };
+  $('lpSlug').oninput = () => { slugTouched = true; note(); }; note();
+  const mode = () => { const ch = $('lpMode').value === 'choose'; $('lpFixedW').style.display = ch ? 'none' : ''; $('lpChooseW').style.display = ch ? '' : 'none'; };
+  $('lpMode').onchange = mode; mode();
+  const save = previewAfter => {
+    const btn = previewAfter ? $('lpSavePrev') : $('lpSave'); btn.disabled = true; $('lpErr').textContent = '';
+    const val = id => $(id).value;
+    const payload = { id: p.id || '', title: val('lpTitle'), slug: slugify(val('lpSlug')), status: val('lpStatus'), branchMode: val('lpMode'), branch: val('lpBranch'),
+      branches: Array.from(bg.querySelectorAll('[data-lp-br]:checked')).map(x => x.dataset.lpBr).join(','), headline: val('lpHead'), subhead: val('lpSub'), offer: val('lpOffer'),
+      ctaText: val('lpCta'), country: val('lpCountry'), intake: val('lpIntake'), bullets: val('lpBul'), heroImage: val('lpImg').trim(),
+      fields: Array.from(bg.querySelectorAll('[data-lp-f]:checked')).map(x => x.dataset.lpF).join(','), stats: val('lpStats'), testimonials: val('lpTest'),
+      whatsapp: val('lpWa'), color: val('lpColor'), thankYou: val('lpThanks') };
+    run('saveLandingPage', payload).then(r => {
+      toast('Page saved'); shut(); load();
+      if (previewAfter) window.open(BASE + '?p=' + encodeURIComponent(r.slug) + '&preview=' + encodeURIComponent(r.id), '_blank', 'noopener');
+    }).catch(e => { btn.disabled = false; $('lpErr').textContent = errText(e); });
+  };
+  $('lpSave').onclick = () => save(false); $('lpSavePrev').onclick = () => save(true);
+  $('lpTitle').focus();
+}
+document.addEventListener('click', e => {
+  const it = e.target.closest('[data-lp-open]'); if (it) { e.preventDefault(); open(); return; }
+  const nav = e.target.closest('#sidebar .nav-item, #sidebar .lead-set-item'); if (nav && !nav.hasAttribute('data-lp-open')) close();
+}, true);
+document.addEventListener('keydown', e => { const it = e.target.closest && e.target.closest('[data-lp-open]'); if (it && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(); } });
+window.openLandingPages = open;
 })();
 </script>
 

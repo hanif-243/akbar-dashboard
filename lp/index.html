@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Akbar Study Abroad</title>
+<meta name="description" content="Free study-abroad counselling from Akbar Study Abroad — universities, scholarships and visas.">
+<meta name="theme-color" content="#F22F3D">
+<link rel="icon" href="../portal/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root { --brand: #F22F3D; --ink: #17151F; --muted: #5E6170; --line: #E8E8EE; --soft: #F6F6F9; --ok: #138A55; --card: #fff; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: var(--ink); background: #fff; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 18px; }
+header.top { position: sticky; top: 0; z-index: 20; background: rgba(255,255,255,.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+header.top .wrap { display: flex; align-items: center; justify-content: space-between; height: 62px; }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 16px; text-decoration: none; }
+.logo img { width: 34px; height: 34px; border-radius: 9px; }
+.logo small { display: block; font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: .02em; }
+.top-cta { background: var(--brand); color: #fff; text-decoration: none; font-weight: 700; font-size: 14px; padding: 10px 16px; border-radius: 11px; }
+.hero { background: radial-gradient(1200px 500px at 85% -10%, color-mix(in srgb, var(--brand) 14%, transparent), transparent 60%), linear-gradient(180deg, #FFF7F7, #fff 70%); }
+.hero .wrap { display: grid; grid-template-columns: 1.1fr .9fr; gap: 44px; padding-top: 44px; padding-bottom: 56px; align-items: start; }
+.badge { display: inline-flex; align-items: center; gap: 8px; background: color-mix(in srgb, var(--brand) 11%, #fff); color: var(--brand); font-weight: 700; font-size: 13px; padding: 7px 13px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--brand) 25%, #fff); }
+h1 { font-size: clamp(30px, 4.4vw, 50px); line-height: 1.08; letter-spacing: -.02em; margin: 16px 0 14px; font-weight: 800; }
+.sub { font-size: clamp(16px, 1.6vw, 19px); line-height: 1.55; color: var(--muted); margin: 0 0 22px; max-width: 560px; }
+.meta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 22px; }
+.meta span { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 14px; font-weight: 600; }
+ul.ticks { list-style: none; padding: 0; margin: 0 0 26px; display: grid; gap: 12px; }
+ul.ticks li { display: flex; gap: 12px; align-items: flex-start; font-size: 16px; line-height: 1.45; }
+ul.ticks li::before { content: ''; flex: 0 0 22px; height: 22px; margin-top: 1px; border-radius: 50%; background: var(--ok) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/13px no-repeat; }
+.heroimg { width: 100%; border-radius: 18px; aspect-ratio: 16/10; object-fit: cover; box-shadow: 0 20px 40px -24px rgba(20,10,30,.45); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 24px 60px -30px rgba(30,10,40,.35); position: sticky; top: 82px; }
+.card h2 { margin: 0 0 4px; font-size: 21px; }
+.card .hint { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+.f { margin-bottom: 12px; }
+.f label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 5px; }
+.f input, .f select { width: 100%; height: 48px; border: 1.5px solid var(--line); border-radius: 12px; padding: 0 14px; font: inherit; font-size: 16px; background: #fff; color: var(--ink); }
+.f input:focus, .f select:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 15%, transparent); }
+.phone { display: flex; gap: 8px; } .phone .cc { flex: 0 0 74px; text-align: center; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+button.go { width: 100%; height: 54px; border: 0; border-radius: 13px; background: var(--brand); color: #fff; font: inherit; font-size: 17px; font-weight: 800; cursor: pointer; margin-top: 4px; box-shadow: 0 12px 26px -12px var(--brand); }
+button.go:disabled { opacity: .65; cursor: default; }
+.err { color: #C0232F; font-size: 14px; font-weight: 600; margin: 8px 0 0; min-height: 0; }
+.small { font-size: 12px; color: var(--muted); margin: 12px 0 0; line-height: 1.5; text-align: center; }
+.done { text-align: center; padding: 10px 4px; }
+.done .ic { width: 64px; height: 64px; border-radius: 50%; background: color-mix(in srgb, var(--ok) 14%, #fff); display: grid; place-items: center; margin: 0 auto 14px; font-size: 32px; }
+.done h2 { font-size: 23px; } .done p { color: var(--muted); line-height: 1.55; }
+.wa { display: flex; align-items: center; justify-content: center; gap: 10px; height: 52px; border-radius: 13px; background: #1FAF54; color: #fff; text-decoration: none; font-weight: 800; margin-top: 14px; }
+.alt { display: block; margin-top: 10px; font-weight: 700; color: var(--brand); text-decoration: none; }
+section.band { padding: 54px 0; } section.band.soft { background: var(--soft); }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.stat { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 20px; text-align: center; }
+.stat b { display: block; font-size: 30px; color: var(--brand); font-weight: 800; letter-spacing: -.02em; }
+.stat span { color: var(--muted); font-size: 14px; font-weight: 600; }
+h3.t { font-size: clamp(22px, 2.6vw, 30px); margin: 0 0 24px; letter-spacing: -.01em; text-align: center; }
+.quotes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.quote { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 20px; font-size: 15px; line-height: 1.6; }
+.quote b { display: block; margin-top: 12px; font-size: 14px; } .quote::before { content: '“'; display: block; font-size: 40px; line-height: .6; color: var(--brand); font-weight: 800; margin-bottom: 8px; }
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.step { padding: 20px; border-radius: 16px; border: 1px solid var(--line); background: #fff; } .step i { font-style: normal; display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--brand); color: #fff; font-weight: 800; margin-bottom: 10px; }
+.step b { display: block; font-size: 16px; margin-bottom: 4px; } .step span { color: var(--muted); font-size: 14px; line-height: 1.5; }
+.final { text-align: center; } .final a { display: inline-block; margin-top: 8px; background: var(--brand); color: #fff; text-decoration: none; font-weight: 800; padding: 15px 26px; border-radius: 13px; }
+footer { border-top: 1px solid var(--line); padding: 26px 0 90px; color: var(--muted); font-size: 13px; text-align: center; line-height: 1.6; }
+.sticky { display: none; position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 30; }
+.sticky a { display: block; text-align: center; background: var(--brand); color: #fff; text-decoration: none; font-weight: 800; padding: 15px; border-radius: 14px; box-shadow: 0 14px 30px -12px rgba(0,0,0,.45); }
+.skel { padding: 80px 0; text-align: center; color: var(--muted); }
+.skel .bar { height: 16px; background: linear-gradient(90deg, #f1f1f4, #e6e6ec, #f1f1f4); background-size: 200% 100%; animation: sh 1.2s infinite; border-radius: 8px; margin: 12px auto; max-width: 520px; }
+@keyframes sh { to { background-position: -200% 0; } }
+.closed { max-width: 560px; margin: 90px auto; text-align: center; padding: 0 20px; } .closed h1 { font-size: 28px; }
+@media (max-width: 900px) {
+  .hero .wrap { grid-template-columns: 1fr; gap: 26px; padding-top: 26px; }
+  .card { position: static; }
+  .stats { grid-template-columns: repeat(2, 1fr); } .quotes, .steps { grid-template-columns: 1fr; }
+  .sticky.on { display: block; } .top-cta { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .skel .bar { animation: none; } }
+</style>
+</head>
+<body>
+<div id="app"><div class="skel"><div class="bar" style="width:60%"></div><div class="bar" style="width:80%"></div><div class="bar" style="width:40%"></div></div></div>
+<script>
+(function () {
+var API = 'https://script.google.com/macros/s/AKfycbx6CcjiRhhaqd5hn--2GQDRs1a3ZcnrCQl8srQr7plBffWzrCXmpg07FF77b_PKz0d8yw/exec', ROOT = '..';
+var qs = new URLSearchParams(location.search);
+var slug = (window.LP_CONFIG && window.LP_CONFIG.slug) || qs.get('p') || '';
+var preview = qs.get('preview') || '';
+var started = Date.now();
+var $ = function (id) { return document.getElementById(id); };
+var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+function call(fn, args) {
+  return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }), redirect: 'follow' })
+    .then(function (r) { return r.text(); })
+    .then(function (t) { var j; try { j = JSON.parse(t); } catch (e) { throw new Error('Our server is busy — please try again in a moment.'); } if (!j.ok) throw new Error(j.e || 'Something went wrong.'); return j.v; });
+}
+function closed(msg) { $('app').innerHTML = '<div class="closed"><img src="' + ROOT + '/portal/icon-192.png" alt="" width="56" height="56" style="border-radius:14px"><h1>' + esc(msg) + '</h1><p style="color:var(--muted)">Call or WhatsApp Akbar Study Abroad and our counsellors will help you.</p></div>'; }
+function intakes() { var out = [], d = new Date(), M = ['Jan', 'May', 'Sep']; for (var y = d.getFullYear(); y <= d.getFullYear() + 2; y++) M.forEach(function (m, i) { var mi = [0, 4, 8][i]; if (new Date(y, mi, 1) > d) out.push(m + ' ' + y); }); return out.slice(0, 6); }
+var OPTS = {
+  country: ['United Kingdom', 'Ireland', 'Canada', 'Australia', 'USA', 'Germany', 'France', 'New Zealand', 'Dubai / UAE', 'Europe (other)', 'Not decided yet'],
+  education: ['12th / Higher Secondary', 'Diploma', 'Bachelor’s degree', 'Master’s degree', 'Working professional'],
+  budget: ['Under ₹15 Lakhs', '₹15–25 Lakhs', '₹25–40 Lakhs', 'Above ₹40 Lakhs', 'Need scholarship / loan'],
+  test: ['IELTS', 'PTE', 'TOEFL', 'Duolingo', 'Not taken yet']
+};
+var LABEL = { email: 'Email', country: 'Country you want to study in', intake: 'When do you want to start?', education: 'Highest education', budget: 'Budget (tuition + living)', test: 'English test', city: 'Your city' };
+function fieldHtml(k) {
+  if (k === 'email') return '<div class="f"><label for="f_email">Email <span style="color:var(--muted);font-weight:500">(optional)</span></label><input id="f_email" type="email" autocomplete="email" inputmode="email"></div>';
+  if (k === 'city') return '<div class="f"><label for="f_city">' + LABEL.city + '</label><input id="f_city" autocomplete="address-level2"></div>';
+  var list = k === 'intake' ? intakes().concat(['Later / not sure']) : OPTS[k] || [];
+  return '<div class="f"><label for="f_' + k + '">' + LABEL[k] + '</label><select id="f_' + k + '"><option value="">Choose…</option>' + list.map(function (x) { return '<option>' + esc(x) + '</option>'; }).join('') + '</select></div>';
+}
+function cookie(n) { var m = document.cookie.match(new RegExp('(?:^|; )' + n + '=([^;]*)')); return m ? decodeURIComponent(m[1]) : ''; }
+function pixel(c) {
+  var ids = Object.keys(c.pixels || {}).map(function (k) { return c.pixels[k]; }).filter(function (v, i, a) { return v && a.indexOf(v) === i; });
+  if (!ids.length || preview) return;
+  !function (f, b, e, v, n, t, s) { if (f.fbq) return; n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); }; if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = []; t = b.createElement(e); t.async = !0; t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s); }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+  ids.forEach(function (id) { window.fbq('init', id); }); window.fbq('track', 'PageView');
+}
+function render(c) {
+  document.documentElement.style.setProperty('--brand', c.color || '#F22F3D');
+  document.title = c.headline + ' – Akbar Study Abroad';
+  var meta = [c.country ? '🌍 ' + c.country : '', c.intake ? '🗓 ' + c.intake + ' intake' : ''].filter(Boolean);
+  var fields = c.fields || [];
+  var form = '<form id="lpForm" novalidate>' +
+    '<div class="f"><label for="f_name">Full name</label><input id="f_name" autocomplete="name" required></div>' +
+    '<div class="f"><label for="f_phone">WhatsApp number</label><div class="phone"><input class="cc" value="+91" aria-label="Country code" id="f_cc"><input id="f_phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="98765 43210" required></div></div>' +
+    fields.map(fieldHtml).join('') +
+    (c.branchMode === 'choose' ? '<div class="f"><label for="f_branch">Nearest Akbar branch</label><select id="f_branch"><option value="">Choose…</option>' + c.branches.map(function (b) { return '<option>' + esc(b) + '</option>'; }).join('') + '</select></div>' : '') +
+    '<div class="hp" aria-hidden="true"><label>Website<input id="f_website" tabindex="-1" autocomplete="off"></label></div>' +
+    '<button class="go" id="lpGo" type="submit">' + esc(c.ctaText) + ' →</button><p class="err" id="lpErr" role="alert"></p>' +
+    '<p class="small">🔒 Your details are only used by Akbar Study Abroad to call you about studying abroad. No spam.</p></form>';
+  var stats = c.stats || [];
+  $('app').innerHTML =
+    '<header class="top"><div class="wrap"><a class="logo" href="#form"><img src="' + ROOT + '/portal/icon-192.png" alt=""><span>Akbar Study Abroad<small>A vertical of Akbar Group</small></span></a><a class="top-cta" href="#form">' + esc(c.ctaText) + '</a></div></header>' +
+    '<section class="hero"><div class="wrap"><div>' +
+      (c.offer ? '<span class="badge">★ ' + esc(c.offer) + '</span>' : '') +
+      '<h1>' + esc(c.headline) + '</h1>' + (c.subhead ? '<p class="sub">' + esc(c.subhead) + '</p>' : '') +
+      (meta.length ? '<div class="meta">' + meta.map(function (m) { return '<span>' + esc(m) + '</span>'; }).join('') + '</div>' : '') +
+      (c.bullets && c.bullets.length ? '<ul class="ticks">' + c.bullets.map(function (b) { return '<li>' + esc(b) + '</li>'; }).join('') + '</ul>' : '') +
+      (c.heroImage ? '<img class="heroimg" src="' + esc(c.heroImage) + '" alt="" loading="eager">' : '') +
+    '</div><div class="card" id="form"><div id="lpBox"><h2>Free counselling call</h2><p class="hint">Fill this in — a counsellor calls you within one working day.</p>' + form + '</div></div></div></section>' +
+    (stats.length ? '<section class="band soft"><div class="wrap"><div class="stats">' + stats.map(function (s) { return '<div class="stat"><b>' + esc(s.value) + '</b><span>' + esc(s.label) + '</span></div>'; }).join('') + '</div></div></section>' : '') +
+    '<section class="band"><div class="wrap"><h3 class="t">How it works</h3><div class="steps">' +
+      '<div class="step"><i>1</i><b>Tell us about you</b><span>Your course, budget and preferred intake — takes 30 seconds.</span></div>' +
+      '<div class="step"><i>2</i><b>Free counselling call</b><span>A counsellor shortlists universities and scholarships that fit you.</span></div>' +
+      '<div class="step"><i>3</i><b>Apply, visa, fly</b><span>We handle applications, offer letters and your visa, start to finish.</span></div></div></div></section>' +
+    (c.testimonials && c.testimonials.length ? '<section class="band soft"><div class="wrap"><h3 class="t">Students we’ve helped</h3><div class="quotes">' + c.testimonials.map(function (q) { return '<div class="quote">' + esc(q.text) + (q.name ? '<b>— ' + esc(q.name) + '</b>' : '') + '</div>'; }).join('') + '</div></div></section>' : '') +
+    '<section class="band final"><div class="wrap"><h3 class="t" style="margin-bottom:6px">Ready to start?</h3><p class="sub" style="margin:0 auto 10px">Seats and scholarships fill fast for ' + esc(c.intake || 'the next') + ' intake.</p><a href="#form">' + esc(c.ctaText) + ' →</a></div></section>' +
+    '<footer><div class="wrap">© ' + new Date().getFullYear() + ' Akbar Study Abroad · A vertical of Akbar Group<br>Offices in Mumbai · Calicut · Kochi · Delhi</div></footer>' +
+    '<div class="sticky" id="lpSticky"><a href="#form">' + esc(c.ctaText) + ' →</a></div>';
+  var stick = $('lpSticky'), formEl = $('form');
+  if ('IntersectionObserver' in window) new IntersectionObserver(function (en) { stick.classList.toggle('on', !en[0].isIntersecting); }, { threshold: 0.05 }).observe(formEl);
+  $('lpForm').addEventListener('submit', function (e) { e.preventDefault(); send(c); });
+  pixel(c);
+}
+function send(c) {
+  var btn = $('lpGo'), err = $('lpErr'); err.textContent = '';
+  var v = function (id) { var el = $(id); return el ? el.value.trim() : ''; };
+  var name = v('f_name'), phone = v('f_phone').replace(/\D/g, ''), cc = v('f_cc').replace(/\D/g, '') || '91';
+  if (name.length < 2) { err.textContent = 'Please enter your full name.'; $('f_name').focus(); return; }
+  if (phone.length < 8) { err.textContent = 'Please enter your WhatsApp number.'; $('f_phone').focus(); return; }
+  if (c.branchMode === 'choose' && !v('f_branch')) { err.textContent = 'Please choose your nearest branch.'; $('f_branch').focus(); return; }
+  var full = (cc === '91' && phone.length === 10) ? '91' + phone : cc + phone.replace(/^0+/, '');
+  var eventId = 'lp.' + Date.now().toString(36) + '.' + Math.random().toString(36).slice(2, 8);
+  var fbclid = qs.get('fbclid'), fbc = cookie('_fbc') || (fbclid ? 'fb.1.' + Date.now() + '.' + fbclid : '');
+  var p = { slug: c.slug, name: name, phone: full, email: v('f_email'), country: v('f_country'), intake: v('f_intake'), education: v('f_education'), budget: v('f_budget'), test: v('f_test'), city: v('f_city'),
+    branch: c.branchMode === 'choose' ? v('f_branch') : '', website: v('f_website'), ms: Date.now() - started, eventId: eventId, url: location.href.split('#')[0], ua: navigator.userAgent, fbp: cookie('_fbp'), fbc: fbc,
+    utm: { source: qs.get('utm_source') || '', campaign: qs.get('utm_campaign') || '', adset: qs.get('utm_term') || qs.get('utm_adset') || '', ad: qs.get('utm_content') || qs.get('utm_ad') || '' } };
+  btn.disabled = true; btn.textContent = 'Sending…';
+  if (preview) { setTimeout(function () { thanks(c, { firstName: name.split(' ')[0], branch: c.branch || p.branch || 'your nearest', whatsapp: c.whatsapp }, true); }, 600); return; }
+  call('submitLandingLead', [p]).then(function (r) {
+    try { var pid = c.pixels && c.pixels[r.branch]; if (window.fbq && pid) window.fbq('trackSingle', pid, 'Lead', { content_name: c.headline }, { eventID: eventId }); } catch (e) { }
+    thanks(c, r, false);
+  }).catch(function (e) { btn.disabled = false; btn.textContent = c.ctaText + ' →'; err.textContent = e.message; });
+}
+function thanks(c, r, isPreview) {
+  var wa = r.whatsapp ? 'https://wa.me/' + r.whatsapp + '?text=' + encodeURIComponent('Hi Akbar Study Abroad, I just filled the form for ' + (c.country || 'studying abroad') + (c.intake ? ' (' + c.intake + ')' : '') + '. My name is ' + (r.firstName || '') + '.') : '';
+  $('lpBox').innerHTML = '<div class="done"><div class="ic">✅</div><h2>Thank you, ' + esc(r.firstName || '') + '!</h2><p>' + esc(c.thankYou || ('A counsellor from our ' + r.branch + ' branch will call you shortly on WhatsApp. Keep your phone close!')) + '</p>' +
+    (wa ? '<a class="wa" href="' + wa + '" target="_blank" rel="noopener">💬 Chat with us on WhatsApp now</a>' : '') +
+    '<a class="alt" href="' + ROOT + '/portal/" target="_blank" rel="noopener">Track your application in the student app →</a>' + (isPreview ? '<p class="small">Preview — nothing was saved.</p>' : '') + '</div>';
+  var s = $('lpSticky'); if (s) s.remove();
+  $('form').scrollIntoView({ block: 'start' });
+}
+if (window.LP_CONFIG) { render(window.LP_CONFIG); try { if (!preview) call('lpPing', [slug]); } catch (e) { } }
+else if (!slug) closed('This page link is not complete.');
+else call('getLandingPage', [slug, preview]).then(render).catch(function (e) { closed(e.message); });
+})();
+</script>
+</body>
+</html>
