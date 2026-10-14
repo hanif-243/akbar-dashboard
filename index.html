@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '14 Oct 2026 · v61';
+window.AKBAR_BUILD = '14 Oct 2026 · v62';
 
 (function () {
   try {
@@ -111,7 +111,7 @@ window.AKBAR_BUILD = '14 Oct 2026 · v61';
     }
     var keyOf = function (fn, args) { return fn + '|' + JSON.stringify(args || []); };
 
-    var mem = {}, memOrder = [], navAt = 0, NOMEM = { getAuthState: 1, getDashboardData: 1, getStudentQuestionCount: 1, getMetaAdsToday: 1, getFollowUpBoard: 1, getNextCallLead: 1, getChatState: 1, getChatMessages: 1, getServerBuild: 1 };
+    var mem = {}, memOrder = [], navAt = 0, NOMEM = { getAuthState: 1, getDashboardData: 1, getStudentQuestionCount: 1, getMetaAdsToday: 1, getFollowUpBoard: 1, getNextCallLead: 1, getChatState: 1, getChatMessages: 1, getServerBuild: 1, getLandingPages: 1 };
     var lastNavEl = null, userAt = 0, NAVSEL = '#sidebar .nav-item, .s10-tab, .sx-tab, .um-tab, .dash-tab, [data-fin-go], [data-dash-tab], [data-fin-view], [data-fin-tab], [data-hr-view], [data-hr-tab], [data-hr-go], [data-ma-go], [data-ma-view], [data-ma-tab], [data-visa-view], [data-vd-tab], [data-mr-tab], [data-um-tab], [data-sx-tab], [data-sq-tab], [data-sq-view], [data-s10-tab], [data-s10-go], [data-mu-view], [data-mou-view], [data-inv-view], [data-en-view], [data-go-tab], [data-b2b-view], [data-b2b-tab], [data-view], [data-own-view], #appTeamBtn, #ceoViewBtn';
     var lastWrite = 0; try { lastWrite = Number(localStorage.getItem('ak_lastwrite')) || 0; } catch (e) {   }
     function markWrite() { lastWrite = Date.now(); try { localStorage.setItem('ak_lastwrite', String(lastWrite)); } catch (e) {   } }
@@ -21507,7 +21507,11 @@ function open() {
   window.scrollTo(0, 0); load();
 }
 function close() { const root = $('lpView'); if (!root || root.style.display !== 'block') return; root.style.display = 'none'; root.innerHTML = ''; const app = document.querySelector('.app'); if (app) app.style.display = ''; }
-function load() { run('getLandingPages').then(d => { L.data = d; draw(); }).catch(e => { if ($('lpBody')) $('lpBody').innerHTML = `<div class="sx-card sx-empty">${esc(errText(e))}</div>`; }); }
+function load() {
+  const fail = msg => { const b = $('lpBody'); if (!b) return; b.innerHTML = `<div class="sx-card sx-empty">${esc(msg)}<div style="margin-top:10px;"><button class="um-btn primary" id="lpRetry">↻ Try again</button></div></div>`; $('lpRetry').onclick = () => { b.innerHTML = '<div class="sx-card"><div class="skeleton" style="height:220px;"></div></div>'; load(); }; };
+  run('getLandingPages').then(d => { if (!d || !Array.isArray(d.pages)) { fail('The landing pages did not load. Google was slow — please try again.'); return; } L.data = d; draw(); })
+    .catch(e => fail(/timed out|Service Spreadsheets/i.test(errText(e)) ? 'Google Sheets was slow to answer (this can happen the first time). Please try again.' : errText(e)));
+}
 function draw() {
   const d = L.data, body = $('lpBody'); if (!body) return;
   const noPixel = d.branches.filter(b => !b.capi).map(b => b.name);
