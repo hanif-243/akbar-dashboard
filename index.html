@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '14 Oct 2026 · v65';
+window.AKBAR_BUILD = '14 Oct 2026 · v66';
 
 (function () {
   try {
@@ -21522,12 +21522,13 @@ function draw() {
 <div class="lp-link">${esc(linkNow(p))}</div>
 <div class="sx-sub" style="margin:0;">${p.branchMode === 'choose' ? 'Visitor chooses: ' + esc(p.branches) : '→ ' + esc(p.branch)}${p.country ? ' · ' + esc(p.country) : ''}${p.intake ? ' · ' + esc(p.intake) : ''}</div>
 <div class="lp-nums"><div><b>${p.views}</b><span>views</span></div><div><b>${p.leads}</b><span>leads</span></div><div><b>${p.conversion == null ? '—' : p.conversion + '%'}</b><span>convert</span></div><div><b>${p.leads7}</b><span>last 7 days</span></div></div>
-<div class="lp-acts"><button class="um-btn" data-lp-edit="${esc(p.id)}">✎ Edit</button><a class="um-btn" href="${esc(linkNow(p) + '&preview=' + p.id)}" target="_blank" rel="noopener">👁 Preview</a><button class="um-btn" data-lp-ad="${esc(p.id)}">🔗 Ad link</button>
+<div class="lp-acts"><button class="um-btn" data-lp-edit="${esc(p.id)}">✎ Edit</button><a class="um-btn" href="${esc(linkNow(p) + '&preview=' + p.id)}" target="_blank" rel="noopener">👁 Preview</a><button class="um-btn" data-lp-ad="${esc(p.id)}">🔗 Ad link</button><button class="um-btn" data-lp-dup="${esc(p.id)}" title="Copy this page, e.g. for another branch">📋 Duplicate</button>
 ${p.status === 'Live' ? `<button class="um-btn" data-lp-st="Paused" data-id="${esc(p.id)}">⏸ Pause</button>` : `<button class="um-btn primary" data-lp-st="Live" data-id="${esc(p.id)}">▶ Publish</button>`}
 <button class="um-btn" data-lp-st="Archived" data-id="${esc(p.id)}" title="Hide this page (its leads stay)" style="color:var(--red);">Archive</button></div></div>`).join('')}</div>`) +
     (d.recent.length ? `<div class="sx-card" style="margin-top:14px;"><h3 style="margin:0 0 8px;">Latest form fills</h3><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>When</th><th>Page</th><th>Name</th><th>Phone</th><th>Branch</th><th>Result</th><th>Ad</th><th>Meta</th></tr></thead><tbody>
 ${d.recent.map(s => `<tr><td style="white-space:nowrap;">${esc(s.at ? new Date(s.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '')}</td><td>${esc(s.slug)}</td><td><b>${esc(s.name)}</b></td><td>${esc(s.phone)}</td><td>${esc(s.branch)}</td><td>${s.result === 'Added' ? '<span class="lp-chip Live">New lead</span>' : '<span class="lp-chip Paused">Already a lead</span>'}<div class="sx-sub">${esc(s.leadId)}</div></td><td class="sx-sub">${esc([s.utmCampaign, s.utmAd].filter(Boolean).join(' · ') || s.utmSource || '—')}</td><td class="sx-sub">${esc(s.capi || '—')}</td></tr>`).join('')}</tbody></table></div></div>` : '');
   body.querySelectorAll('[data-lp-edit]').forEach(b => b.onclick = () => editor(d.pages.find(p => p.id === b.dataset.lpEdit)));
+  body.querySelectorAll('[data-lp-dup]').forEach(b => b.onclick = () => { const src = d.pages.find(p => p.id === b.dataset.lpDup); if (src) editor(Object.assign({}, src, { id: '', title: src.title + ' (copy)', slug: src.slug + '-copy', status: 'Draft' })); });
   body.querySelectorAll('[data-lp-ad]').forEach(b => b.onclick = () => adLink(d.pages.find(p => p.id === b.dataset.lpAd)));
   body.querySelectorAll('[data-lp-st]').forEach(b => b.onclick = () => {
     const st = b.dataset.lpSt; if (st === 'Archived' && !confirm('Archive this page? The link stops working; its leads stay in the dashboard.')) return;
@@ -21573,11 +21574,17 @@ function editor(p) {
 <div class="lp-sec">Form</div>
 <div class="full"><label class="f">Ask for (name + WhatsApp are always asked)</label><div class="lp-checks">${d.fields.map(f => `<label><input type="checkbox" data-lp-f="${f}" ${fields.indexOf(f) !== -1 ? 'checked' : ''}> ${esc(FIELD_LABEL[f] || f)}</label>`).join('')}</div><div class="note">The form is a 3-step quiz: ① country (tap a flag) → ② the other ticked questions as tap-buttons → ③ name + WhatsApp. Easy taps first, phone last = more leads. 2–3 questions works best.</div></div>
 <div class="lp-sec">Trust (optional — use only real numbers and real students)</div>
-<div><label class="f" for="lpStats">Numbers (one per line: value | label)</label><textarea id="lpStats" placeholder="2,500+ | students sent abroad&#10;4 | branches in India">${esc(p.stats || '')}</textarea></div>
-<div><label class="f" for="lpTest">Student quotes (one per line: Name | quote)</label><textarea id="lpTest" placeholder="Anu, Kochi | Got my UK visa in 3 weeks…">${esc(p.testimonials || '')}</textarea></div>
+<div><label class="f" for="lpStats">Numbers (up to 4, one per line: value | label)</label><textarea id="lpStats" placeholder="1,00,000+ | students placed&#10;4 | branches in India">${esc(p.stats || '')}</textarea></div>
+<div><label class="f" for="lpTest">Student quotes (one per line: Name | University | quote)</label><textarea id="lpTest" placeholder="Anu, Kochi | University of Hertfordshire | Got my UK visa in 3 weeks…">${esc(p.testimonials || '')}</textarea><div class="note">Up to 9. Ask the student first; real names + universities build the most trust.</div></div>
 <div class="full"><label class="f" for="lpFaq">FAQ (optional, one per line: question | answer)</label><textarea id="lpFaq" placeholder="Do I need IELTS? | Some UK universities accept other proof of English — your counsellor will check your options.&#10;How much does it cost? | …">${esc(p.faq || '')}</textarea><div class="note">Answers the doubts that stop people filling the form. Write only what is true for Akbar Study Abroad.</div></div>
-<div class="lp-sec">After the form</div>
-<div><label class="f" for="lpWa">WhatsApp number for "Chat with us"</label><input type="text" id="lpWa" value="${esc(p.whatsapp || '')}" placeholder="919876543210 (blank = branch manager)"></div>
+<div class="lp-sec">Branch office &amp; urgency (optional)</div>
+<div class="full"><label class="f" for="lpAddr">Office address (shows a “Visit our office” card)</label><input type="text" id="lpAddr" value="${esc(p.officeAddress || '')}" placeholder="2nd floor, … Road, Calicut 673001"></div>
+<div><label class="f" for="lpHours">Office hours</label><input type="text" id="lpHours" value="${esc(p.officeHours || '')}" placeholder="Mon–Sat, 9:30 am – 6:30 pm"></div>
+<div><label class="f" for="lpMap">Google Maps link</label><input type="text" id="lpMap" value="${esc(p.mapLink || '')}" placeholder="https:\x2F\x2Fmaps.app.goo.gl\x2F…"><\x2Fdiv>
+<div><label class="f" for="lpDeadline">Application deadline (shows a countdown bar)<\x2Flabel><input type="date" id="lpDeadline" value="${esc(p.deadline || '')}"><div class="note">Only shown in the last 120 days; hidden after the date.</div></div>
+<div><label class="f" for="lpPrivacy">Privacy policy link</label><input type="text" id="lpPrivacy" value="${esc(p.privacyUrl || '')}" placeholder="https:\x2F\x2Fakbarstudy.com\x2Fprivacy-policy"><div class="note">Meta expects one on pages that collect leads.<\x2Fdiv><\x2Fdiv>
+<div class="lp-sec">After the form<\x2Fdiv>
+<div><label class="f" for="lpWa">WhatsApp number for "Chat with us"<\x2Flabel><input type="text" id="lpWa" value="${esc(p.whatsapp || '')}" placeholder="919876543210 (blank = branch manager)"></div>
 <div><label class="f" for="lpColor">Colour</label><input type="color" id="lpColor" value="${esc(p.color || '#F22F3D')}" style="width:60px;height:36px;border:0;background:none;"></div>
 <div class="full"><label class="f" for="lpThanks">Thank-you message</label><input type="text" id="lpThanks" maxlength="300" value="${esc(p.thankYou || '')}" placeholder="Blank = “A counsellor from our [branch] branch will call you shortly on WhatsApp.”"></div>
 <div class="full"><label class="f" for="lpStatus">Status</label><select id="lpStatus">${['Draft', 'Live', 'Paused'].map(s => `<option ${s === p.status ? 'selected' : ''}>${s}</option>`).join('')}</select><div class="note">Draft = only you can preview it · Live = the link works for everyone · Paused = visitors see “offer ended”.</div></div>
@@ -21600,7 +21607,7 @@ function editor(p) {
       branches: Array.from(bg.querySelectorAll('[data-lp-br]:checked')).map(x => x.dataset.lpBr).join(','), headline: val('lpHead'), subhead: val('lpSub'), offer: val('lpOffer'),
       ctaText: val('lpCta'), country: val('lpCountry'), intake: val('lpIntake'), bullets: val('lpBul'), heroImage: val('lpImg').trim(), photos: val('lpPhotos'),
       fields: Array.from(bg.querySelectorAll('[data-lp-f]:checked')).map(x => x.dataset.lpF).join(','), stats: val('lpStats'), testimonials: val('lpTest'), faq: val('lpFaq'),
-      whatsapp: val('lpWa'), color: val('lpColor'), thankYou: val('lpThanks') };
+      whatsapp: val('lpWa'), color: val('lpColor'), thankYou: val('lpThanks'), officeAddress: val('lpAddr'), officeHours: val('lpHours'), mapLink: val('lpMap').trim(), deadline: val('lpDeadline'), privacyUrl: val('lpPrivacy').trim() };
     run('saveLandingPage', payload).then(r => {
       toast('Page saved'); shut(); load();
       if (previewAfter) window.open(BASE + '?p=' + encodeURIComponent(r.slug) + '&preview=' + encodeURIComponent(r.id), '_blank', 'noopener');

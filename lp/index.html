@@ -6,6 +6,9 @@
 <title>Akbar Study Abroad</title>
 <meta name="description" content="Free study-abroad counselling from Akbar Study Abroad — universities, scholarships and visas.">
 <meta name="theme-color" content="#F22F3D">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Akbar Study Abroad">
+<meta property="og:title" content="Akbar Study Abroad"><meta property="og:description" content="Study-abroad counselling from Akbar Study Abroad — universities, scholarships and visas.">
+<meta property="og:image" content="https://hanif-243.github.io/akbar-dashboard/portal/icon-512.png">
 <link rel="icon" href="../portal/icon-192.png">
 <link rel="preconnect" href="https://script.google.com"><link rel="preconnect" href="https://script.googleusercontent.com">
 <style>
@@ -50,7 +53,23 @@ h1 em { font-style: normal; color: var(--brand); }
 .opt { position: relative; }
 .opt input { position: absolute; opacity: 0; pointer-events: none; }
 .opt span { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; background: #fff; line-height: 1.25; }
-.opt .fl { font-size: 20px; line-height: 1; }
+.fl { display: inline-block; flex: 0 0 auto; width: 26px; height: 18px; border-radius: 3px; overflow: hidden; box-shadow: 0 0 0 1px rgba(0,0,0,.12); vertical-align: -3px; }
+.fl svg { width: 100%; height: 100%; }
+.chips .fl { width: 20px; height: 14px; margin-right: 5px; }
+.dl { background: var(--ink); color: #fff; text-align: center; font-size: 14px; font-weight: 700; padding: 8px 12px; }
+.dl b { color: #FFD166; }
+.consent { font-size: 12px; color: var(--muted); margin: 8px 0 0; text-align: center; }
+.consent a { color: var(--muted); }
+.fallback { display: block; margin-top: 8px; color: #128650; font-weight: 700; }
+.quote .who { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.quote .av { width: 36px; height: 36px; border-radius: 50%; background: #FDE3E5; color: var(--brand2); display: grid; place-items: center; font-weight: 800; flex: 0 0 auto; }
+.quote .who b { display: block; margin: 0; font-size: 14px; } .quote .who span { font-size: 12.5px; color: var(--muted); }
+.office { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 20px; max-width: 860px; margin: 0 auto; }
+.office h4 { margin: 0 0 6px; font-size: 18px; } .office p { margin: 2px 0; color: var(--muted); }
+.office .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.office .acts a { text-decoration: none; font-weight: 800; padding: 12px 16px; border-radius: 12px; border: 1.5px solid var(--line); }
+.office .acts a.dir { background: var(--brand); color: #fff; border-color: var(--brand); }
+@media (max-width: 700px) { .office { grid-template-columns: 1fr; } }
 .opt input:checked + span { border-color: var(--brand); background: #FFF2F3; color: var(--brand2); box-shadow: inset 0 0 0 1px var(--brand); }
 .opt input:focus-visible + span { outline: 3px solid #F9B4BA; outline-offset: 1px; }
 .f { margin-bottom: 12px; }
@@ -75,8 +94,8 @@ button.go:disabled { opacity: .65; }
 section.band { padding: 46px 0; content-visibility: auto; contain-intrinsic-size: 1px 520px; }
 section.soft { background: var(--soft); }
 h3.t { font-size: clamp(22px, 2.6vw, 30px); line-height: 1.2; margin: 0 0 22px; text-align: center; letter-spacing: -.01em; }
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-.stat { background: #fff; border: 1px solid var(--line); border-radius: var(--r); padding: 18px; text-align: center; }
+.stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.stat { flex: 1 1 190px; max-width: 270px; background: #fff; border: 1px solid var(--line); border-radius: var(--r); padding: 20px 16px; text-align: center; }
 .stat b { display: block; font-size: 28px; color: var(--brand); font-weight: 800; }
 .stat span { color: var(--muted); font-size: 14px; font-weight: 600; }
 .photos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
@@ -125,8 +144,11 @@ var preview = qs.get('preview') || '';
 var started = Date.now();
 var $ = function (id) { return document.getElementById(id); };
 var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
-function call(fn, args) {
-  return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }), redirect: 'follow' })
+function call(fn, args, ms) {
+  var ctl = 'AbortController' in window ? new AbortController() : null, tm = ctl ? setTimeout(function () { ctl.abort(); }, ms || 25000) : 0;
+  return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }), redirect: 'follow', signal: ctl ? ctl.signal : undefined })
+    .catch(function (e) { throw new Error(e && e.name === 'AbortError' ? 'The network is slow — please try again, or message us on WhatsApp.' : 'No internet connection — please try again, or message us on WhatsApp.'); })
+    .finally(function () { clearTimeout(tm); })
     .then(function (r) { return r.text(); })
     .then(function (t) { var j; try { j = JSON.parse(t); } catch (e) { throw new Error('Our server is busy — please try again in a moment.'); } if (!j.ok) throw new Error(j.e || 'Something went wrong.'); return j.v; });
 }
@@ -135,7 +157,23 @@ function closed(msg) { $('app').innerHTML = '<div class="closed"><img src="' + R
 function img(u, w) { return /images.unsplash.com/.test(u) ? u.split('?')[0] + '?w=' + w + '&q=60&auto=format&fit=crop' : u; }
 function srcset(u) { return /images\.unsplash\.com/.test(u) ? ' srcset="' + esc(img(u, 480)) + ' 480w, ' + esc(img(u, 800)) + ' 800w, ' + esc(img(u, 1200)) + ' 1200w"' : ''; }
 function intakes() { var out = [], d = new Date(), M = ['Jan', 'May', 'Sep']; for (var y = d.getFullYear(); y <= d.getFullYear() + 2; y++) M.forEach(function (m, i) { if (new Date(y, [0, 4, 8][i], 1) > d) out.push(m + ' ' + y); }); return out.slice(0, 5); }
-var FLAG = { 'United Kingdom': '🇬🇧', 'Ireland': '🇮🇪', 'Canada': '🇨🇦', 'Australia': '🇦🇺', 'USA': '🇺🇸', 'Germany': '🇩🇪', 'France': '🇫🇷', 'New Zealand': '🇳🇿', 'Dubai / UAE': '🇦🇪', 'Europe (other)': '🇪🇺', 'Not decided yet': '🌍' };
+var UJ = '<rect width="30" height="20" fill="#012169"/><path d="M0 0L30 20M30 0L0 20" stroke="#fff" stroke-width="4"/><path d="M0 0L30 20M30 0L0 20" stroke="#C8102E" stroke-width="1.6"/><path d="M15 0v20M0 10h30" stroke="#fff" stroke-width="6"/><path d="M15 0v20M0 10h30" stroke="#C8102E" stroke-width="3.4"/>';
+var MINI = '<g transform="scale(.5)">' + UJ + '</g>';
+var FLAGSVG = {
+  'United Kingdom': UJ,
+  'Ireland': '<rect width="10" height="20" fill="#169B62"/><rect x="10" width="10" height="20" fill="#fff"/><rect x="20" width="10" height="20" fill="#FF883E"/>',
+  'Canada': '<rect width="30" height="20" fill="#fff"/><rect width="7.5" height="20" fill="#D52B1E"/><rect x="22.5" width="7.5" height="20" fill="#D52B1E"/><path d="M15 4l1.2 2.6 2-1-0.8 4 2.2-1.6 0.6 1.8 2-0.4-1.2 2.8 1 0.6-4 3-0.4 1.8h-1.2l-0.4-1.8-4-3 1-0.6-1.2-2.8 2 0.4 0.6-1.8 2.2 1.6-0.8-4 2 1z" fill="#D52B1E"/>',
+  'Australia': '<rect width="30" height="20" fill="#012169"/>' + MINI + '<g fill="#fff"><circle cx="7.5" cy="15.5" r="1.6"/><circle cx="22.5" cy="4" r=".9"/><circle cx="19" cy="9" r=".9"/><circle cx="25.5" cy="8" r=".9"/><circle cx="22.5" cy="16" r="1"/><circle cx="24" cy="11.5" r=".5"/></g>',
+  'USA': '<rect width="30" height="20" fill="#fff"/><g fill="#B22234"><rect width="30" height="1.54"/><rect y="3.08" width="30" height="1.54"/><rect y="6.15" width="30" height="1.54"/><rect y="9.23" width="30" height="1.54"/><rect y="12.3" width="30" height="1.54"/><rect y="15.38" width="30" height="1.54"/><rect y="18.46" width="30" height="1.54"/></g><rect width="13" height="10.77" fill="#3C3B6E"/><g fill="#fff"><circle cx="2.5" cy="2.2" r=".6"/><circle cx="6.5" cy="2.2" r=".6"/><circle cx="10.5" cy="2.2" r=".6"/><circle cx="4.5" cy="5.4" r=".6"/><circle cx="8.5" cy="5.4" r=".6"/><circle cx="2.5" cy="8.6" r=".6"/><circle cx="6.5" cy="8.6" r=".6"/><circle cx="10.5" cy="8.6" r=".6"/></g>',
+  'Germany': '<rect width="30" height="6.67" fill="#000"/><rect y="6.67" width="30" height="6.67" fill="#DD0000"/><rect y="13.33" width="30" height="6.67" fill="#FFCE00"/>',
+  'France': '<rect width="10" height="20" fill="#0055A4"/><rect x="10" width="10" height="20" fill="#fff"/><rect x="20" width="10" height="20" fill="#EF4135"/>',
+  'New Zealand': '<rect width="30" height="20" fill="#012169"/>' + MINI + '<g fill="#C8102E" stroke="#fff" stroke-width=".5"><circle cx="22.5" cy="5" r="1.1"/><circle cx="19.5" cy="10" r="1.1"/><circle cx="25.5" cy="9" r="1.1"/><circle cx="22.5" cy="15.5" r="1.2"/></g>',
+  'Dubai / UAE': '<rect width="30" height="6.67" fill="#00732F"/><rect y="6.67" width="30" height="6.67" fill="#fff"/><rect y="13.33" width="30" height="6.67" fill="#000"/><rect width="8" height="20" fill="#FF0000"/>',
+  'Europe (other)': '<rect width="30" height="20" fill="#003399"/><g fill="#FFCC00"><circle cx="15" cy="4" r=".9"/><circle cx="18" cy="4.8" r=".9"/><circle cx="20.2" cy="7" r=".9"/><circle cx="21" cy="10" r=".9"/><circle cx="20.2" cy="13" r=".9"/><circle cx="18" cy="15.2" r=".9"/><circle cx="15" cy="16" r=".9"/><circle cx="12" cy="15.2" r=".9"/><circle cx="9.8" cy="13" r=".9"/><circle cx="9" cy="10" r=".9"/><circle cx="9.8" cy="7" r=".9"/><circle cx="12" cy="4.8" r=".9"/></g>',
+  'Not decided yet': '<rect width="30" height="20" fill="#E8F3FF"/><circle cx="15" cy="10" r="7.5" fill="#4C9BE8"/><path d="M11 6.5c2 1 2 3 0 4.5s1 3.5 3 2.5M17.5 5c-1 2 1 3 2.5 3.5M16 13.5c1.5-.5 3 .5 3.5 1.5" stroke="#7BD389" stroke-width="2.2" fill="none" stroke-linecap="round"/>'
+};
+var FLAG = {}; Object.keys(FLAGSVG).forEach(function (k) { FLAG[k] = 1; });
+function flag(k) { return FLAGSVG[k] ? '<i class="fl" aria-hidden="true"><svg viewBox="0 0 30 20" preserveAspectRatio="none">' + FLAGSVG[k] + '</svg></i>' : ''; }
 var OPTS = {
   country: Object.keys(FLAG),
   level: ['Bachelor’s', 'Master’s', 'MBA', 'Diploma', 'PhD'],
@@ -169,7 +207,7 @@ var S = { step: 0, steps: [], a: {} };
 function choiceList(k) { return k === 'intake' ? intakes().concat(['Later / not sure']) : OPTS[k] || []; }
 function opts(k, three) {
   return '<div class="q" id="q_' + k + '">' + QUESTION[k] + '</div><div class="opts' + (three ? ' three' : '') + '" role="radiogroup" aria-labelledby="q_' + k + '">' + choiceList(k).map(function (x, i) {
-    return '<label class="opt"><input type="radio" name="' + k + '" value="' + esc(x) + '"' + (S.a[k] === x ? ' checked' : '') + '><span>' + (k === 'country' ? '<i class="fl" aria-hidden="true">' + FLAG[x] + '</i>' : '') + esc(x) + '</span></label>';
+    return '<label class="opt"><input type="radio" name="' + k + '" value="' + esc(x) + '"' + (S.a[k] === x ? ' checked' : '') + '><span>' + (k === 'country' ? flag(x) : '') + esc(x) + '</span></label>';
   }).join('') + '</div>';
 }
 function buildSteps(c) {
@@ -194,15 +232,16 @@ function drawStep(c) {
     (n > 1 ? '<div class="prog"><span>Step ' + (S.step + 1) + ' of ' + n + '</span><span class="bar"><i style="width:' + Math.round((S.step + 1) * 100 / n) + '%"></i></span></div>' : '') +
     '<form id="lpForm" novalidate>' + body + '<div class="nav">' + (S.step > 0 ? '<button type="button" class="back" id="lpBack">← Back</button>' : '') +
     '<button class="go" id="lpGo" type="submit">' + (last ? esc(c.ctaText) + ' →' : 'Continue →') + '</button></div><p class="err" id="lpErr" role="alert"></p>' +
-    (last ? '<p class="small">🔒 Only used by Akbar Study Abroad to call you. No spam.</p>' : '') + '</form>';
+    (last ? '<p class="consent">By continuing you agree that Akbar Study Abroad may call or WhatsApp you about studying abroad.' + (c.privacyUrl ? ' <a href="' + esc(c.privacyUrl) + '" target="_blank" rel="noopener">Privacy policy</a>' : '') + '</p><p class="small">🔒 Your details are never shared. No spam.</p>' : '') + '</form>';
   $('lpForm').addEventListener('submit', function (e) { e.preventDefault(); next(c); });
   if ($('lpBack')) $('lpBack').onclick = function () { save(); S.step--; drawStep(c); };
   /* a single tap question moves on by itself */
-  if (st.keys.length === 1 && st.keys[0] !== 'contact') $('lpForm').addEventListener('change', function () { setTimeout(function () { next(c); }, 180); });
+  if (st.keys.length === 1 && st.keys[0] !== 'contact') { var tapAt = 0; $('lpForm').addEventListener('pointerdown', function () { tapAt = Date.now(); }); $('lpForm').addEventListener('change', function () { if (Date.now() - tapAt < 1500) setTimeout(function () { next(c); }, 180); }); }
+  if (st.keys[0] === 'contact') ['email', 'city'].forEach(function (x) { var el = $('f_' + x); if (el && S.a[x]) el.value = S.a[x]; });
 }
 function save() {
   var st = S.steps[S.step];
-  st.keys.forEach(function (k) { if (k === 'contact') { ['name', 'phone'].forEach(function (x) { var el = $('f_' + x); if (el) S.a[x] = el.value; }); return; } var ch = document.querySelector('input[name="' + k + '"]:checked'); if (ch) S.a[k] = ch.value; });
+  st.keys.forEach(function (k) { if (k === 'contact') { ['name', 'phone', 'email', 'city'].forEach(function (x) { var el = $('f_' + x); if (el) S.a[x] = el.value; }); return; } var ch = document.querySelector('input[name="' + k + '"]:checked'); if (ch) S.a[k] = ch.value; });
 }
 function next(c) {
   save();
@@ -215,20 +254,22 @@ function next(c) {
 function render(c) {
   document.documentElement.style.setProperty('--brand', c.color || '#F22F3D');
   document.title = c.headline + ' – Akbar Study Abroad';
+  var md = document.querySelector('meta[name="description"]'); if (md && c.subhead) md.setAttribute('content', c.subhead);
   S.steps = buildSteps(c); S.step = 0; S.a = {};
   if (c.country && OPTS.country.indexOf(c.country) !== -1) S.a.country = c.country;
   var wa = c.whatsapp || '';
-  var meta = [c.country ? (FLAG[c.country] || '🌍') + ' ' + c.country : '', c.intake ? '🗓 ' + c.intake + ' intake' : '', '💬 1-on-1 counselling'].filter(Boolean);
+  var meta = [c.country ? { h: (flag(c.country) || flag('Not decided yet')) + esc(c.country) } : null, c.intake ? { h: '🗓 ' + esc(c.intake) + ' intake' } : null, { h: '💬 1-on-1 counselling' }].filter(Boolean);
   var photos = c.photos || [], stats = c.stats || [], faq = c.faq || [], quotes = c.testimonials || [];
-  $('app').innerHTML =
+  var dlDays = c.deadline ? Math.ceil((new Date(c.deadline + 'T23:59:59+05:30').getTime() - Date.now()) / 864e5) : -1;
+  $('app').innerHTML = (dlDays >= 0 && dlDays <= 120 ? '<div class="dl">⏳ Applications' + (c.intake ? ' for ' + esc(c.intake) : '') + ' close ' + (dlDays === 0 ? '<b>today</b>' : 'in <b>' + dlDays + ' day' + (dlDays === 1 ? '' : 's') + '</b>') + '</div>' : '') +
     '<header class="top"><div class="wrap"><a class="logo" href="#form"><img src="' + ROOT + '/portal/icon-192.png" alt="" width="32" height="32"><span>Akbar Study Abroad<small>A vertical of Akbar Group</small></span></a>' +
       (wa ? '<a class="call" href="https://wa.me/' + esc(wa) + '" target="_blank" rel="noopener">💬 WhatsApp us</a>' : '') + '</div></header>' +
     '<section class="hero"><div class="wrap"><div class="intro">' +
       (c.offer ? '<span class="badge">★ ' + esc(c.offer) + '</span>' : '') +
       '<h1>' + esc(c.headline) + '</h1>' + (c.subhead ? '<p class="sub">' + esc(c.subhead) + '</p>' : '') + '</div><div class="more">' +
-      '<ul class="chips">' + meta.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('') + '</ul>' +
+      '<ul class="chips">' + meta.map(function (m) { return '<li>' + m.h + '</li>'; }).join('') + '</ul>' +
       (c.bullets && c.bullets.length ? '<ul class="ticks">' + c.bullets.map(function (b) { return '<li>' + esc(b) + '</li>'; }).join('') + '</ul>' : '') +
-      (c.heroImage ? '<img class="heroimg" src="' + esc(img(c.heroImage, 800)) + '"' + srcset(c.heroImage) + ' sizes="(max-width: 900px) 100vw, 560px" width="800" height="500" alt="" fetchpriority="low" loading="lazy" decoding="async">' : ILLUS) +
+      (c.heroImage ? '<img class="heroimg" src="' + esc(img(c.heroImage, 800)) + '"' + srcset(c.heroImage) + ' sizes="(max-width: 900px) 100vw, 560px" width="800" height="500" alt="" decoding="async">' : ILLUS) +
     '</div><div class="card" id="form"><div id="lpBox"></div></div></div></section>' +
     (stats.length ? '<section class="band soft"><div class="wrap"><div class="stats">' + stats.map(function (s) { return '<div class="stat"><b>' + esc(s.value) + '</b><span>' + esc(s.label) + '</span></div>'; }).join('') + '</div></div></section>' : '') +
     (photos.length ? '<section class="band"><div class="wrap"><h3 class="t">Your life as a student abroad</h3><div class="photos">' + photos.map(function (u) { return '<img src="' + esc(img(u, 480)) + '"' + srcset(u) + ' sizes="(max-width: 900px) 50vw, 270px" width="480" height="360" alt="" loading="lazy" decoding="async">'; }).join('') + '</div></div></section>' : '') +
@@ -236,10 +277,11 @@ function render(c) {
       '<div class="step"><b>Answer 3 quick questions</b><span>Country, course and when you want to start — 30 seconds.</span></div>' +
       '<div class="step"><b>Your 1-on-1 counselling call</b><span>A counsellor shortlists universities, scholarships and loans that fit you.</span></div>' +
       '<div class="step"><b>Apply, visa, fly</b><span>We handle applications, offer letters and your visa, start to finish.</span></div></div></div></section>' +
-    (quotes.length ? '<section class="band soft"><div class="wrap"><h3 class="t">Students we’ve helped</h3><div class="quotes">' + quotes.map(function (q) { return '<div class="quote">“' + esc(q.text) + '”' + (q.name ? '<b>— ' + esc(q.name) + '</b>' : '') + '</div>'; }).join('') + '</div></div></section>' : '') +
+    (quotes.length ? '<section class="band soft"><div class="wrap"><h3 class="t">Students we’ve helped</h3><div class="quotes">' + quotes.map(function (q) { var ini = String(q.name || '?').split(/[\s,]+/).filter(Boolean).slice(0, 2).map(function (w) { return w.charAt(0).toUpperCase(); }).join(''); return '<div class="quote">“' + esc(q.text) + '”' + (q.name ? '<div class="who"><span class="av" aria-hidden="true">' + esc(ini) + '</span><span><b>' + esc(q.name) + '</b>' + (q.uni ? '<span>' + esc(q.uni) + '</span>' : '') + '</span></div>' : '') + '</div>'; }).join('') + '</div></div></section>' : '') +
     (faq.length ? '<section class="band"><div class="wrap"><h3 class="t">Questions students ask</h3><div class="faq">' + faq.map(function (x) { return '<details><summary>' + esc(x.q) + '</summary><p>' + esc(x.a) + '</p></details>'; }).join('') + '</div></div></section>' : '') +
+    (c.officeAddress ? '<section class="band"><div class="wrap"><div class="office"><div><h4>📍 Visit our ' + esc(c.branch || 'nearest') + ' office</h4><p>' + esc(c.officeAddress) + '</p>' + (c.officeHours ? '<p>🕘 ' + esc(c.officeHours) + '</p>' : '') + '</div><div class="acts">' + (c.mapLink ? '<a class="dir" href="' + esc(c.mapLink) + '" target="_blank" rel="noopener">Get directions</a>' : '') + (wa ? '<a href="https://wa.me/' + esc(wa) + '" target="_blank" rel="noopener">💬 WhatsApp</a>' : '') + '</div></div></div></section>' : '') +
     '<section class="band final soft"><div class="wrap"><h3 class="t" style="margin-bottom:6px">Ready to start?</h3><p class="sub">Seats and scholarships fill fast for ' + esc(c.intake || 'the next') + ' intake.</p><a class="btn" href="#form">' + esc(c.ctaText) + ' →</a></div></section>' +
-    '<footer><div class="wrap">© ' + new Date().getFullYear() + ' Akbar Study Abroad · A vertical of Akbar Group<br>Mumbai · Calicut · Kochi · Delhi</div></footer>' +
+    '<footer><div class="wrap">© ' + new Date().getFullYear() + ' Akbar Study Abroad · A vertical of Akbar Group' + (c.branch || (c.branches || []).length ? '<br>' + esc(c.branch ? c.branch + ' branch' : c.branches.join(' · ')) : '') + (c.privacyUrl ? '<br><a href="' + esc(c.privacyUrl) + '" target="_blank" rel="noopener">Privacy policy</a>' : '') + '</div></footer>' +
     '<div class="sticky" id="lpSticky"><a href="#form">' + esc(c.ctaText) + ' →</a>' + (wa ? '<a class="w" href="https://wa.me/' + esc(wa) + '" target="_blank" rel="noopener" aria-label="WhatsApp us">💬</a>' : '') + '</div>';
   drawStep(c);
   var stick = $('lpSticky');
@@ -251,7 +293,8 @@ function send(c) {
   var v = function (id) { var el = $(id); return el ? el.value.trim() : ''; };
   var name = v('f_name'), phone = v('f_phone').replace(/\D/g, ''), cc = v('f_cc').replace(/\D/g, '') || '91';
   if (name.length < 2) { err.textContent = 'Please enter your full name.'; $('f_name').focus(); return; }
-  if (phone.length < 8) { err.textContent = 'Please enter your WhatsApp number.'; $('f_phone').focus(); return; }
+  if (cc === '91') { phone = phone.replace(/^0+/, ''); if (phone.length === 12 && phone.indexOf('91') === 0) phone = phone.slice(2); }
+  if (cc === '91' ? !/^[6-9]\d{9}$/.test(phone) : phone.length < 8) { err.textContent = 'Please enter a valid 10-digit WhatsApp number.'; $('f_phone').focus(); return; }
   if (c.branchMode === 'choose' && !v('f_branch')) { err.textContent = 'Please choose your nearest branch.'; $('f_branch').focus(); return; }
   var full = (cc === '91' && phone.length === 10) ? '91' + phone : cc + phone.replace(/^0+/, '');
   var eventId = 'lp.' + Date.now().toString(36) + '.' + Math.random().toString(36).slice(2, 8);
@@ -264,7 +307,10 @@ function send(c) {
   call('submitLandingLead', [p]).then(function (r) {
     try { var pid = c.pixels && c.pixels[r.branch]; if (window.fbq && pid) window.fbq('trackSingle', pid, 'Lead', { content_name: c.headline }, { eventID: eventId }); } catch (e) { }
     thanks(c, r, false);
-  }).catch(function (e) { btn.disabled = false; btn.textContent = c.ctaText + ' →'; err.textContent = e.message; });
+  }).catch(function (e) {
+    btn.disabled = false; btn.textContent = c.ctaText + ' →'; err.textContent = e.message;
+    if (c.whatsapp) { var a = document.createElement('a'); a.className = 'fallback'; a.target = '_blank'; a.rel = 'noopener'; a.href = 'https://wa.me/' + c.whatsapp + '?text=' + encodeURIComponent('Hi Akbar Study Abroad, I want counselling for ' + (S.a.country || c.country || 'studying abroad') + '. My name is ' + name + ', my number is ' + full + '.'); a.textContent = '💬 Send your details on WhatsApp instead'; err.appendChild(document.createElement('br')); err.appendChild(a); }
+  });
 }
 function thanks(c, r, isPreview) {
   var wa = r.whatsapp ? 'https://wa.me/' + r.whatsapp + '?text=' + encodeURIComponent('Hi Akbar Study Abroad, I just booked a free counselling call for ' + (S.a.country || c.country || 'studying abroad') + (S.a.intake ? ' (' + S.a.intake + ')' : '') + '. My name is ' + (r.firstName || '') + '.') : '';
