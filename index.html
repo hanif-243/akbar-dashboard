@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '14 Oct 2026 · v62';
+window.AKBAR_BUILD = '14 Oct 2026 · v63';
 
 (function () {
   try {
@@ -21568,9 +21568,10 @@ function editor(p) {
 <div><label class="f" for="lpCountry">Country</label><input type="text" id="lpCountry" value="${esc(p.country || '')}" placeholder="United Kingdom"></div>
 <div><label class="f" for="lpIntake">Intake</label><input type="text" id="lpIntake" value="${esc(p.intake || '')}" placeholder="Jan 2027"></div>
 <div class="full"><label class="f" for="lpBul">Benefits (one per line, up to 8)</label><textarea id="lpBul" placeholder="No IELTS options for eligible students&#10;Scholarships up to 50%&#10;2-year post-study work visa">${esc(p.bullets || '')}</textarea></div>
-<div class="full"><label class="f" for="lpImg">Photo link (optional)</label><input type="text" id="lpImg" value="${esc(p.heroImage || '')}" placeholder="https:\x2F\x2F… (a JPG\x2FPNG on your website or Google Drive public link)"><\x2Fdiv>
-<div class="lp-sec">Form<\x2Fdiv>
-<div class="full"><label class="f">Ask for (name + WhatsApp are always asked)<\x2Flabel><div class="lp-checks">${d.fields.map(f => `<label><input type="checkbox" data-lp-f="${f}" ${fields.indexOf(f) !== -1 ? 'checked' : ''}> ${esc(FIELD_LABEL[f] || f)}</label>`).join('')}</div><div class="note">Fewer questions = more leads. Name + WhatsApp + 2–3 questions works best.</div></div>
+<div class="full"><label class="f" for="lpImg">Main photo link (optional)</label><input type="text" id="lpImg" value="${esc(p.heroImage || '')}" placeholder="https:\x2F\x2F… — blank shows a built-in illustration"><\x2Fdiv>
+<div class="full"><label class="f" for="lpPhotos">More photos (optional, one link per line, up to 4)<\x2Flabel><textarea id="lpPhotos" placeholder="https:\x2F\x2F…&#10;https:\x2F\x2F…">${esc(p.photos || '')}</textarea><div class="note">Shown as a "Your life as a student abroad" strip. Use your own photos or free ones from unsplash.com (right-click a photo → Copy image address).</div></div>
+<div class="lp-sec">Form</div>
+<div class="full"><label class="f">Ask for (name + WhatsApp are always asked)</label><div class="lp-checks">${d.fields.map(f => `<label><input type="checkbox" data-lp-f="${f}" ${fields.indexOf(f) !== -1 ? 'checked' : ''}> ${esc(FIELD_LABEL[f] || f)}</label>`).join('')}</div><div class="note">Fewer questions = more leads. Name + WhatsApp + 2–3 questions works best.</div></div>
 <div class="lp-sec">Trust (optional — use only real numbers and real students)</div>
 <div><label class="f" for="lpStats">Numbers (one per line: value | label)</label><textarea id="lpStats" placeholder="2,500+ | students sent abroad&#10;4 | branches in India">${esc(p.stats || '')}</textarea></div>
 <div><label class="f" for="lpTest">Student quotes (one per line: Name | quote)</label><textarea id="lpTest" placeholder="Anu, Kochi | Got my UK visa in 3 weeks…">${esc(p.testimonials || '')}</textarea></div>
@@ -21596,7 +21597,7 @@ function editor(p) {
     const val = id => $(id).value;
     const payload = { id: p.id || '', title: val('lpTitle'), slug: slugify(val('lpSlug')), status: val('lpStatus'), branchMode: val('lpMode'), branch: val('lpBranch'),
       branches: Array.from(bg.querySelectorAll('[data-lp-br]:checked')).map(x => x.dataset.lpBr).join(','), headline: val('lpHead'), subhead: val('lpSub'), offer: val('lpOffer'),
-      ctaText: val('lpCta'), country: val('lpCountry'), intake: val('lpIntake'), bullets: val('lpBul'), heroImage: val('lpImg').trim(),
+      ctaText: val('lpCta'), country: val('lpCountry'), intake: val('lpIntake'), bullets: val('lpBul'), heroImage: val('lpImg').trim(), photos: val('lpPhotos'),
       fields: Array.from(bg.querySelectorAll('[data-lp-f]:checked')).map(x => x.dataset.lpF).join(','), stats: val('lpStats'), testimonials: val('lpTest'),
       whatsapp: val('lpWa'), color: val('lpColor'), thankYou: val('lpThanks') };
     run('saveLandingPage', payload).then(r => {

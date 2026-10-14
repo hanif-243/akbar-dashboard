@@ -32,6 +32,10 @@ h1 { font-size: clamp(30px, 4.4vw, 50px); line-height: 1.08; letter-spacing: -.0
 ul.ticks { list-style: none; padding: 0; margin: 0 0 26px; display: grid; gap: 12px; }
 ul.ticks li { display: flex; gap: 12px; align-items: flex-start; font-size: 16px; line-height: 1.45; }
 ul.ticks li::before { content: ''; flex: 0 0 22px; height: 22px; margin-top: 1px; border-radius: 50%; background: var(--ok) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/13px no-repeat; }
+.illus { width: 100%; height: auto; display: block; border-radius: 18px; }
+.photos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.photos img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 14px; display: block; background: var(--soft); }
+@media (max-width: 900px) { .photos { grid-template-columns: repeat(2, 1fr); } .illus { display: none; } }
 .heroimg { width: 100%; border-radius: 18px; aspect-ratio: 16/10; object-fit: cover; box-shadow: 0 20px 40px -24px rgba(20,10,30,.45); }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 24px 60px -30px rgba(30,10,40,.35); position: sticky; top: 82px; }
 .card h2 { margin: 0 0 4px; font-size: 21px; }
@@ -105,6 +109,18 @@ var OPTS = {
   budget: ['Under ₹15 Lakhs', '₹15–25 Lakhs', '₹25–40 Lakhs', 'Above ₹40 Lakhs', 'Need scholarship / loan'],
   test: ['IELTS', 'PTE', 'TOEFL', 'Duolingo', 'Not taken yet']
 };
+var ILLUS = '<svg class="illus" viewBox="0 0 520 330" role="img" aria-label="Fly abroad to study">' +
+  '<defs><linearGradient id="lpSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF1F2"/><stop offset="1" stop-color="#FFFFFF"/></linearGradient></defs>' +
+  '<rect width="520" height="330" rx="22" fill="url(#lpSky)"/>' +
+  '<circle cx="430" cy="70" r="34" fill="#FFD8A8" opacity=".8"/>' +
+  '<g fill="#fff" stroke="#E9E4EC" stroke-width="2"><ellipse cx="110" cy="70" rx="46" ry="16"/><ellipse cx="140" cy="60" rx="30" ry="18"/><ellipse cx="380" cy="150" rx="40" ry="13"/></g>' +
+  '<circle cx="230" cy="205" r="98" fill="var(--brand)" opacity=".12"/><circle cx="230" cy="205" r="82" fill="#fff" stroke="var(--brand)" stroke-width="4"/>' +
+  '<g fill="none" stroke="var(--brand)" stroke-width="2.5" opacity=".75"><ellipse cx="230" cy="205" rx="34" ry="82"/><path d="M148 205h164M160 165h140M160 245h140"/></g>' +
+  '<path d="M60 250 C 150 120, 300 80, 440 110" fill="none" stroke="var(--brand)" stroke-width="3" stroke-dasharray="2 10" stroke-linecap="round"/>' +
+  '<g transform="translate(430 100) rotate(12)"><path d="M-34 0 L26 -6 L36 0 L26 6 Z" fill="var(--brand)"/><path d="M-6 -2 L-18 -26 L-8 -26 L14 -3 Z M-6 2 L-18 26 L-8 26 L14 3 Z M-30 -1 L-38 -12 L-32 -12 L-22 -1 Z" fill="var(--brand)" opacity=".85"/></g>' +
+  '<g transform="translate(230 112)"><path d="M-58 0 L0 -26 L58 0 L0 26 Z" fill="#17151F"/><path d="M-34 12 v24 c20 14 48 14 68 0 v-24 L0 26 Z" fill="#2B2838"/><path d="M50 4 v32" stroke="#F5B301" stroke-width="3"/><circle cx="50" cy="38" r="5" fill="#F5B301"/></g>' +
+  '<g fill="var(--brand)"><rect x="380" y="232" width="70" height="52" rx="8" opacity=".9"/><rect x="398" y="222" width="34" height="12" rx="4" fill="#17151F"/><rect x="392" y="244" width="46" height="5" rx="2.5" fill="#fff" opacity=".7"/></g>' +
+  '</svg>';
 var LABEL = { email: 'Email', country: 'Country you want to study in', intake: 'When do you want to start?', education: 'Highest education', budget: 'Budget (tuition + living)', test: 'English test', city: 'Your city' };
 function fieldHtml(k) {
   if (k === 'email') return '<div class="f"><label for="f_email">Email <span style="color:var(--muted);font-weight:500">(optional)</span></label><input id="f_email" type="email" autocomplete="email" inputmode="email"></div>';
@@ -140,10 +156,11 @@ function render(c) {
       '<h1>' + esc(c.headline) + '</h1>' + (c.subhead ? '<p class="sub">' + esc(c.subhead) + '</p>' : '') +
       (meta.length ? '<div class="meta">' + meta.map(function (m) { return '<span>' + esc(m) + '</span>'; }).join('') + '</div>' : '') +
       (c.bullets && c.bullets.length ? '<ul class="ticks">' + c.bullets.map(function (b) { return '<li>' + esc(b) + '</li>'; }).join('') + '</ul>' : '') +
-      (c.heroImage ? '<img class="heroimg" src="' + esc(c.heroImage) + '" alt="" loading="eager">' : '') +
+      (c.heroImage ? '<img class="heroimg" src="' + esc(c.heroImage) + '" alt="" loading="eager">' : ILLUS) +
     '</div><div class="card" id="form"><div id="lpBox"><h2>Free counselling call</h2><p class="hint">Fill this in — a counsellor calls you within one working day.</p>' + form + '</div></div></div></section>' +
     (stats.length ? '<section class="band soft"><div class="wrap"><div class="stats">' + stats.map(function (s) { return '<div class="stat"><b>' + esc(s.value) + '</b><span>' + esc(s.label) + '</span></div>'; }).join('') + '</div></div></section>' : '') +
-    '<section class="band"><div class="wrap"><h3 class="t">How it works</h3><div class="steps">' +
+    (c.photos && c.photos.length ? '<section class="band"><div class="wrap"><h3 class="t">Your life as a student abroad</h3><div class="photos">' + c.photos.map(function (u) { return '<img src="' + esc(u) + '" alt="" loading="lazy">'; }).join('') + '</div></div></section>' : '') +
+    '<section class="band' + (c.photos && c.photos.length ? ' soft' : '') + '"><div class="wrap"><h3 class="t">How it works</h3><div class="steps">' +
       '<div class="step"><i>1</i><b>Tell us about you</b><span>Your course, budget and preferred intake — takes 30 seconds.</span></div>' +
       '<div class="step"><i>2</i><b>Free counselling call</b><span>A counsellor shortlists universities and scholarships that fit you.</span></div>' +
       '<div class="step"><i>3</i><b>Apply, visa, fly</b><span>We handle applications, offer letters and your visa, start to finish.</span></div></div></div></section>' +
