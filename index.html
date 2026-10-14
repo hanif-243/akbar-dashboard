@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '14 Oct 2026 · v66';
+window.AKBAR_BUILD = '14 Oct 2026 · v67';
 
 (function () {
   try {
@@ -21574,7 +21574,7 @@ function editor(p) {
 <div class="lp-sec">Form</div>
 <div class="full"><label class="f">Ask for (name + WhatsApp are always asked)</label><div class="lp-checks">${d.fields.map(f => `<label><input type="checkbox" data-lp-f="${f}" ${fields.indexOf(f) !== -1 ? 'checked' : ''}> ${esc(FIELD_LABEL[f] || f)}</label>`).join('')}</div><div class="note">The form is a 3-step quiz: ① country (tap a flag) → ② the other ticked questions as tap-buttons → ③ name + WhatsApp. Easy taps first, phone last = more leads. 2–3 questions works best.</div></div>
 <div class="lp-sec">Trust (optional — use only real numbers and real students)</div>
-<div><label class="f" for="lpStats">Numbers (up to 4, one per line: value | label)</label><textarea id="lpStats" placeholder="1,00,000+ | students placed&#10;4 | branches in India">${esc(p.stats || '')}</textarea></div>
+<div><label class="f" for="lpStats">Numbers (up to 4, one per line: value | label)</label><textarea id="lpStats" placeholder="1,00,000+ | students placed&#10;A to Z | shortlist to visa, one team&#10;1-on-1 | your own counsellor">${esc(p.stats || '')}</textarea></div>
 <div><label class="f" for="lpTest">Student quotes (one per line: Name | University | quote)</label><textarea id="lpTest" placeholder="Anu, Kochi | University of Hertfordshire | Got my UK visa in 3 weeks…">${esc(p.testimonials || '')}</textarea><div class="note">Up to 9. Ask the student first; real names + universities build the most trust.</div></div>
 <div class="full"><label class="f" for="lpFaq">FAQ (optional, one per line: question | answer)</label><textarea id="lpFaq" placeholder="Do I need IELTS? | Some UK universities accept other proof of English — your counsellor will check your options.&#10;How much does it cost? | …">${esc(p.faq || '')}</textarea><div class="note">Answers the doubts that stop people filling the form. Write only what is true for Akbar Study Abroad.</div></div>
 <div class="lp-sec">Branch office &amp; urgency (optional)</div>
