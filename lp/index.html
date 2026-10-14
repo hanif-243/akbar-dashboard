@@ -178,6 +178,38 @@ footer a { color: rgba(255,255,255,.8); }
 @media (max-width: 560px) { .services { grid-template-columns: 1fr; } .card { padding: 20px 16px; } }
 @media (max-width: 380px) { .opts.three { grid-template-columns: repeat(2, 1fr); } .top a.call { display: none; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+/* CLASSIC RED THEME (15 Oct 2026): the Akbar red, white and soft-pink look */
+body.t-red { --gold: #F22F3D; --gold2: #C01624; --ivory: #FFFFFF; --ivory2: #F6F5F9; --line: #E8E8EE; --ink: #15131D; --muted: #5C5F6E; --serif: var(--sans); background: #fff; }
+.t-red h1, .t-red h2.t, .t-red .card h2, .t-red .done h2, .t-red .office h4 { font-weight: 800; letter-spacing: -.02em; }
+.t-red .dl { background: var(--ink); color: #fff; }
+.t-red .top { background: #fff; border-bottom: 1px solid var(--line); }
+.t-red .logo { color: var(--ink); } .t-red .logo small { color: var(--muted); }
+.t-red .top a.call { color: #fff; background: #1FAF54; border-color: #1FAF54; }
+.t-red .hero { background: radial-gradient(900px 420px at 85% -10%, rgba(242,47,61,.12), transparent 60%), linear-gradient(180deg, #FFF3F4 0%, #FFFFFF 85%); color: var(--ink); }
+.t-red h1 { color: var(--ink); } .t-red .sub { color: var(--muted); } .t-red .eyebrow { color: var(--gold2); }
+.t-red .chips li { border-color: var(--line); background: #fff; color: var(--ink); }
+.t-red .ticks li { color: var(--ink); } .t-red .ticks li::before { border-color: var(--gold); background: radial-gradient(circle, var(--gold) 0 3px, transparent 3.5px); }
+.t-red .frame { background: linear-gradient(135deg, rgba(242,47,61,.45), rgba(242,47,61,.06)); }
+.t-red .card { border: 1px solid var(--line); border-top: 3px solid var(--gold); box-shadow: 0 24px 50px -30px rgba(30,10,40,.35); }
+.t-red button.go { background: var(--gold); } .t-red button.go:hover { background: var(--gold2); }
+.t-red .opt input:checked + span { background: #FFF2F3; color: var(--gold2); border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); }
+.t-red .impact b { color: var(--ink); } .t-red .impact b em { color: var(--gold); }
+.t-red .svc .ico { background: #FFF2F3; border-color: #FAD0D4; }
+.t-red section.white { background: var(--ivory2); }
+.t-red .rs::before { background: var(--gold); color: #fff; border-color: var(--gold); box-shadow: 0 0 0 6px #fff; }
+.t-red section.white .rs::before { box-shadow: 0 0 0 6px var(--ivory2); }
+.t-red .road::before { background: linear-gradient(90deg, var(--gold), rgba(242,47,61,.2)); }
+.t-red .quote .av { background: #FFF2F3; color: var(--gold2); }
+.t-red .final { background: radial-gradient(700px 300px at 50% 0%, rgba(255,255,255,.18), transparent 70%), linear-gradient(135deg, #F22F3D, #B8121F); }
+.t-red .final .eyebrow { color: #fff; } .t-red .final .head p { color: rgba(255,255,255,.88); }
+.t-red .after div { border-color: rgba(255,255,255,.4); color: #fff; } .t-red .after b { color: #FFE3E5; }
+.t-red .btn { background: #fff; color: var(--gold2); }
+.t-red footer { background: #15131D; }
+.t-red .sticky a { background: var(--gold); color: #fff; }
+.t-red .done .ic { background: #E3F5EC; color: #1E7F55; border-color: #1E7F55; }
+.t-red .office .acts a.dir { background: var(--gold); border-color: var(--gold); }
+@media (max-width: 960px) { .t-red .road::before { background: linear-gradient(180deg, var(--gold), rgba(242,47,61,.2)); } }
+
 </style>
 </head>
 <body>
@@ -308,7 +340,9 @@ var ICON = {
 };
 function ic(k) { return '<span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24">' + ICON[k] + '</svg></span>'; }
 function render(c) {
-  var gold = c.color && c.color.toUpperCase() !== '#F22F3D' ? c.color : '';
+  var red = c.theme === 'red'; document.body.classList.toggle('t-red', red);
+  var tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.setAttribute('content', red ? '#F22F3D' : '#101B32');
+  var gold = !red && c.color && c.color.toUpperCase() !== '#F22F3D' ? c.color : '';
   if (gold) document.documentElement.style.setProperty('--gold', gold);
   document.title = c.headline + ' – Akbar Study Abroad';
   var md = document.querySelector('meta[name="description"]'); if (md && c.subhead) md.setAttribute('content', c.subhead);
