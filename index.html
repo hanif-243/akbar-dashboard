@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '15 Oct 2026 · v68';
+window.AKBAR_BUILD = '15 Oct 2026 · v69';
 
 (function () {
   try {
@@ -111,7 +111,7 @@ window.AKBAR_BUILD = '15 Oct 2026 · v68';
     }
     var keyOf = function (fn, args) { return fn + '|' + JSON.stringify(args || []); };
 
-    var mem = {}, memOrder = [], navAt = 0, NOMEM = { getAuthState: 1, getDashboardData: 1, getStudentQuestionCount: 1, getMetaAdsToday: 1, getFollowUpBoard: 1, getNextCallLead: 1, getChatState: 1, getChatMessages: 1, getServerBuild: 1, getLandingPages: 1 };
+    var mem = {}, memOrder = [], navAt = 0, NOMEM = { getAuthState: 1, getDashboardData: 1, getStudentQuestionCount: 1, getMetaAdsToday: 1, getFollowUpBoard: 1, getNextCallLead: 1, getChatState: 1, getChatMessages: 1, getServerBuild: 1, getLandingPages: 1, getStudentReviews: 1 };
     var lastNavEl = null, userAt = 0, NAVSEL = '#sidebar .nav-item, .s10-tab, .sx-tab, .um-tab, .dash-tab, [data-fin-go], [data-dash-tab], [data-fin-view], [data-fin-tab], [data-hr-view], [data-hr-tab], [data-hr-go], [data-ma-go], [data-ma-view], [data-ma-tab], [data-visa-view], [data-vd-tab], [data-mr-tab], [data-um-tab], [data-sx-tab], [data-sq-tab], [data-sq-view], [data-s10-tab], [data-s10-go], [data-mu-view], [data-mou-view], [data-inv-view], [data-en-view], [data-go-tab], [data-b2b-view], [data-b2b-tab], [data-view], [data-own-view], #appTeamBtn, #ceoViewBtn';
     var lastWrite = 0; try { lastWrite = Number(localStorage.getItem('ak_lastwrite')) || 0; } catch (e) {   }
     function markWrite() { lastWrite = Date.now(); try { localStorage.setItem('ak_lastwrite', String(lastWrite)); } catch (e) {   } }
@@ -21534,6 +21534,25 @@ ${d.recent.map(s => `<tr><td style="white-space:nowrap;">${esc(s.at ? new Date(s
     const st = b.dataset.lpSt; if (st === 'Archived' && !confirm('Archive this page? The link stops working; its leads stay in the dashboard.')) return;
     b.disabled = true; run('setLandingPageStatus', b.dataset.id, st).then(() => { toast(st === 'Live' ? 'Published — the link works now' : st === 'Paused' ? 'Paused — visitors see "offer ended"' : 'Archived'); load(); }).catch(e => { b.disabled = false; toast(errText(e), 'error'); });
   });
+  stories(d);
+}
+
+function stories(d) {
+  const body = $('lpBody'); if (!body) return;
+  let box = $('lpStories'); if (!box) { box = document.createElement('div'); box.id = 'lpStories'; box.className = 'sx-card'; box.style.marginTop = '14px'; body.appendChild(box); }
+  const link = b => BASE + 'review/' + (b ? '?b=' + encodeURIComponent(b) : '');
+  box.innerHTML = '<h3 style="margin:0 0 4px;">⭐ Student stories (testimonials)</h3><div class="sx-sub" style="margin-bottom:10px;">Send past students the link for their branch. You approve each story here; approved stories rotate on every landing page (their own branch first). Nothing shows until you approve it.</div>' +
+    '<div class="lp-acts" style="margin-bottom:12px;">' + d.branches.map(b => `<button class="um-btn" data-st-copy="${esc(link(b.name))}">🔗 ${esc(b.name)} story link</button>`).join('') + `<button class="um-btn" data-st-wa="1">💬 WhatsApp message to send</button></div><div id="lpStList"><div class="skeleton" style="height:80px;"></div></div>`;
+  box.querySelectorAll('[data-st-copy]').forEach(b => b.onclick = () => navigator.clipboard.writeText(b.dataset.stCopy).then(() => toast('Link copied — send it to past students')).catch(() => prompt('Copy this link:', b.dataset.stCopy)));
+  box.querySelector('[data-st-wa]').onclick = () => { const msg = 'Hi! 🎓 Hope you are settling in well. We would love a line or two about your experience with Akbar Study Abroad — it helps the next student take their first step. It takes one minute: ' + link(''); navigator.clipboard.writeText(msg).then(() => toast('Message copied — paste it in WhatsApp')).catch(() => prompt('Copy this message:', msg)); };
+  run('getStudentReviews').then(r => {
+    const list = r.reviews || [], el = $('lpStList'); if (!el) return;
+    const chip = s => `<span class="lp-chip ${s === 'Approved' ? 'Live' : s === 'Hidden' ? 'Draft' : 'Paused'}">${esc(s === 'Approved' ? 'Showing' : s)}</span>`;
+    el.innerHTML = !list.length ? '<div class="sx-empty">No stories yet — send the links above to students you have placed.</div>' :
+      `<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Student</th><th>Story</th><th>Branch</th><th>Status</th><th></th></tr></thead><tbody>${list.map(x => `<tr><td><b>${esc(x.name)}</b><div class="sx-sub">${esc([x.city, x.university, x.country].filter(Boolean).join(' · '))}</div></td><td style="max-width:420px;white-space:normal;">“${esc(x.quote)}”</td><td>${esc(x.branch || '—')}</td><td>${chip(x.status)}</td>
+      <td><div class="lp-acts">${x.status !== 'Approved' ? `<button class="um-btn primary" data-st="Approved" data-id="${esc(x.id)}">✓ Show</button>` : ''}${x.status !== 'Hidden' ? `<button class="um-btn" data-st="Hidden" data-id="${esc(x.id)}">Hide</button>` : ''}</div></td></tr>`).join('')}</tbody></table></div>`;
+    el.querySelectorAll('[data-st]').forEach(b => b.onclick = () => { b.disabled = true; run('setStudentReviewStatus', b.dataset.id, b.dataset.st).then(() => { toast(b.dataset.st === 'Approved' ? 'Now showing on the landing pages' : 'Hidden'); stories(d); }).catch(e => { b.disabled = false; toast(errText(e), 'error'); }); });
+  }).catch(e => { const el = $('lpStList'); if (el) el.innerHTML = `<div class="sx-empty">${esc(errText(e))}</div>`; });
 }
 function adLink(p) {
   const url = linkNow(p) + '&' + UTM, fast = linkFast(p) + '?' + UTM;
