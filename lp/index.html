@@ -243,6 +243,40 @@ body.t-red { --gold: #F22F3D; --gold2: #C01624; --ivory: #FFFFFF; --ivory2: #F6F
 .t-red .dest { background: var(--ivory2); }
 @media (max-width: 900px) { .t-red .hero.photo::before { background: linear-gradient(180deg, rgba(21,19,29,.9) 0%, rgba(96,10,20,.84) 55%, rgba(21,19,29,.94) 100%); } }
 @media (max-width: 960px) { .t-red .road::before { background: linear-gradient(180deg, var(--gold), rgba(242,47,61,.2)); } }
+/* WEBSITE STYLE (15 Oct 2026): the akbarstudy.com apply page look on top of the red theme — pill badge, counsellor card, destination cards, Akbar Group band */
+.t-akbar .hero .eyebrow { background: #FFF0F1; color: var(--gold2); border: 1px solid #FAD0D4; border-radius: 999px; padding: 7px 14px 7px 12px; letter-spacing: .06em; font-size: 11.5px; }
+.t-akbar .hero .eyebrow::before { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 4px rgba(242,47,61,.18); }
+.t-akbar .hero.photo .eyebrow { background: rgba(255,255,255,.12); color: #fff; border-color: rgba(255,255,255,.3); }
+.t-akbar .trust .stars { color: #F5B301; letter-spacing: 1px; font-size: 15px; margin-right: -4px; }
+.t-akbar .top a.tel { text-decoration: none; font-weight: 700; font-size: 14px; color: var(--ink); white-space: nowrap; padding: 9px 4px; }
+.t-akbar .top .acts { display: flex; align-items: center; gap: 10px; }
+.t-akbar .card { padding: 0; overflow: hidden; border-top: 0; }
+.cardhead { background: linear-gradient(135deg, #F22F3D, #B8121F); color: #fff; padding: 16px 24px; }
+.cardhead b { display: block; font-size: 18px; font-weight: 800; letter-spacing: -.01em; } .cardhead span { font-size: 13.5px; opacity: .9; }
+.t-akbar #lpBox { padding: 20px 24px 6px; }
+.assure { list-style: none; margin: 0; padding: 12px 18px 16px; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; border-top: 1px dashed var(--line); font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.assure li::before { content: '✓'; color: #1E7F55; margin-right: 5px; }
+.dgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.dcard { text-align: left; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 18px; cursor: pointer; font: inherit; color: var(--ink); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.dcard:hover, .dcard:focus-visible { transform: translateY(-3px); border-color: var(--gold); box-shadow: 0 18px 34px -24px rgba(184,18,31,.55); outline: none; }
+.dcard .fl { width: 38px; height: 26px; border-radius: 4px; margin-bottom: 12px; }
+.dcard b { display: block; font-size: 16.5px; } .dcard span { display: block; color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+.dcard i { display: inline-block; margin-top: 10px; font-style: normal; font-size: 11.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--gold2); background: #FFF0F1; border-radius: 999px; padding: 4px 9px; }
+.grp { background: #15131D; color: #fff; }
+.grp .head p { color: rgba(255,255,255,.72); } .grp h2.t { color: #fff; } .grp .eyebrow { color: #FF8A93; }
+.gstats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: rgba(255,255,255,.12); border-radius: 18px; overflow: hidden; }
+.gstats div { background: #1C1A26; padding: 24px 12px; text-align: center; }
+.gstats b { display: block; font-size: clamp(24px, 3vw, 34px); font-weight: 800; letter-spacing: -.02em; color: #FF6F7A; line-height: 1.1; }
+.gstats span { display: block; margin-top: 6px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.7); }
+.services.eight { grid-template-columns: repeat(4, 1fr); }
+.checks { list-style: none; padding: 0; margin: 0 auto 26px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 820px; }
+.checks li { border: 1px solid rgba(255,255,255,.4); border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 14px; }
+.checks li::before { content: '✓ '; }
+.reach { margin-top: 18px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; font-size: 14.5px; }
+.reach a { color: #fff; font-weight: 700; text-decoration: none; border: 1.5px solid rgba(255,255,255,.55); border-radius: 999px; padding: 11px 18px; }
+.reach a.w { background: #1FAF54; border-color: #1FAF54; }
+@media (max-width: 960px) { .dgrid, .services.eight { grid-template-columns: repeat(2, 1fr); } .gstats { grid-template-columns: repeat(2, 1fr); } .gstats div:last-child { grid-column: span 2; } }
+@media (max-width: 560px) { .dgrid { gap: 10px; } .dcard { padding: 14px; } .services.eight { grid-template-columns: 1fr; } .t-akbar .top a.tel { display: none; } .cardhead { padding: 14px 16px; } .t-akbar #lpBox { padding: 16px 16px 4px; } }
 
 </style>
 </head>
@@ -370,11 +404,19 @@ var ICON = {
   docs: '<rect x="4" y="3" width="13" height="17" rx="2"/><path d="M8 7h5M8 11h5M8 15h3"/><path d="M19 7v13a1 1 0 0 1-1 1H8"/>',
   english: '<path d="M4 5h9M8.5 3v2M6 5c0 4 2.5 7 6 8M11 5c-.5 3-3 6.5-7 8"/><path d="M13 21l4-9 4 9M14.5 18h5"/>',
   scholar: '<path d="M12 3 2 8l10 5 10-5z"/><path d="M6 10.5V16c3 2 9 2 12 0v-5.5"/>',
-  visa: '<rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M8.5 17h7"/>'
+  visa: '<rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M8.5 17h7"/>',
+  mba: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>',
+  med: '<path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/><path d="M12 10v5M9.5 12.5h5"/>',
+  loan: '<path d="M3 10 12 4l9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/>',
+  forex: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.5 5.5 3.5 9s-1 6.5-3.5 9c-2.5-2.5-3.5-5.5-3.5-9s1-6.5 3.5-9z"/>'
 };
+/* WEBSITE STYLE: destination cards (tap one = choose that country in the form) and the Akbar Group band — figures as published on akbarstudy.com */
+var DCARDS = [['United Kingdom', '150+ universities', '1-year Master’s'], ['USA', '500+ universities', 'STEM OPT up to 3 yrs'], ['Canada', '200+ universities', 'PGWP up to 3 yrs'], ['Australia', '40+ universities', 'Post-study work 2+ yrs'],
+  ['Germany', 'Low or no tuition at public universities', 'Job-seeker stay 18 months'], ['Ireland', 'Europe’s tech hub', 'Stay-back up to 2 yrs'], ['France', 'Grandes Écoles', 'Post-study options'], ['New Zealand', '8 universities', 'Post-study work up to 3 yrs']];
+var GROUP = [['45+', 'Years of Akbar Group'], ['30M+', 'Happy clients'], ['15+', 'Countries'], ['200+', 'Branches'], ['2000+', 'Partner universities']];
 function ic(k) { return '<span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24">' + ICON[k] + '</svg></span>'; }
 function render(c) {
-  var red = c.theme === 'red'; document.body.classList.toggle('t-red', red);
+  var ak = c.theme === 'akbar', red = c.theme === 'red' || ak; document.body.classList.toggle('t-red', red); document.body.classList.toggle('t-akbar', ak);
   var tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.setAttribute('content', red ? '#F22F3D' : '#101B32');
   var gold = !red && c.color && c.color.toUpperCase() !== '#F22F3D' ? c.color : '';
   if (gold) document.documentElement.style.setProperty('--gold', gold);
@@ -387,13 +429,19 @@ function render(c) {
   var photos = c.photos || [], stats = c.stats || [], faq = c.faq || [], quotes = c.testimonials || [];
   var dlDays = c.deadline ? Math.ceil((new Date(c.deadline + 'T23:59:59+05:30').getTime() - Date.now()) / 864e5) : -1;
   var hl = function (t) { return esc(t).replace(/\*([^*]+)\*/g, '<em>$1</em>'); }; /* *word* in the headline = accent colour */
-  var trust = stats.length ? '<p class="trust"><b>' + esc(stats[0].value) + '</b><span>' + esc(stats[0].label) + '</span>' + stats.slice(1, 3).map(function (x) { return '<span class="sep" aria-hidden="true"></span><span><b style="font-size:17px">' + esc(x.value) + '</b> ' + esc(x.label) + '</span>'; }).join('') + '</p>' : '';
+  var trust = stats.length ? '<p class="trust">' + (ak && /\/\s*5$/.test(stats[0].value) ? '<span class="stars" aria-hidden="true">★★★★★</span>' : '') + '<b>' + esc(stats[0].value) + '</b><span>' + esc(stats[0].label) + '</span>' + stats.slice(1, 3).map(function (x) { return '<span class="sep" aria-hidden="true"></span><span><b style="font-size:17px">' + esc(x.value) + '</b> ' + esc(x.label) + '</span>'; }).join('') + '</p>' : '';
   var dests = ['United Kingdom', 'Ireland', 'Canada', 'Australia', 'USA', 'Germany', 'France', 'New Zealand', 'Dubai / UAE', 'Europe (other)'];
   var destRow = dests.map(function (d) { return '<span>' + flag(d) + esc(d === 'Europe (other)' ? 'Europe' : d) + '</span>'; }).join('');
   var head = function (eye, title, p) { return '<div class="head"><span class="eyebrow">' + esc(eye) + '</span><h2 class="t">' + title + '</h2>' + (p ? '<p>' + esc(p) + '</p>' : '') + '</div>'; };
   var services = [['shortlist', 'University & course shortlist', 'Options matched to your marks, interests and budget.'], ['apply', 'Application support', 'Forms, statements of purpose and submissions handled with you.'],
     ['docs', 'Documentation guidance', 'A clear checklist so nothing is missing or late.'], ['english', 'English test guidance', 'Which tests your chosen universities accept, and what scores they ask for.'],
     ['scholar', 'Scholarships & funding', 'Scholarship options and education-loan guidance where available.'], ['visa', 'Visa guidance', 'Help preparing your visa file' + (uk ? ', from CAS to submission.' : '.')]];
+  if (ak) services = [['scholar', 'Master’s programmes', 'Globally recognised Master’s degrees to move your career forward.'], ['mba', 'MBA programmes', 'MBAs at international business schools.'], ['med', 'MBBS abroad', 'Medical degrees at recognised universities abroad.'], ['apply', 'Undergraduate degrees', 'Start strong with an international Bachelor’s degree.'],
+    ['visa', 'Visa assistance', 'Documents, guidance and interview preparation.'], ['english', 'IELTS / TOEFL / PTE', 'Coaching for the English test your universities ask for.'], ['loan', 'Education loans', 'Help applying with our partner banks.'], ['forex', 'Forex services', 'Forex, tuition fee transfers and remittances.']];
+  var dcards = ak ? '<section class="band white"><div class="wrap">' + head('Destinations', 'Study in the world’s most sought-after countries', 'Tap a country to start — your counsellor will confirm the latest visa and work rules.') +
+    '<div class="dgrid">' + DCARDS.map(function (d) { return '<button type="button" class="dcard" data-c="' + esc(d[0]) + '">' + flag(d[0]) + '<b>' + esc(d[0]) + '</b><span>' + esc(d[1]) + '</span><i>' + esc(d[2]) + '</i></button>'; }).join('') + '</div></div></section>' : '';
+  var group = ak ? '<section class="band grp"><div class="wrap">' + head('The Akbar Group', 'A legacy that spans continents', 'Akbar Study Abroad is a vertical of Akbar Group — decades of serving travellers and students worldwide.') +
+    '<div class="gstats">' + GROUP.map(function (g) { return '<div><b>' + esc(g[0]) + '</b><span>' + esc(g[1]) + '</span></div>'; }).join('') + '</div></div></section>' : '';
   var courses = ['Business & Management', 'Computer Science & AI', 'Data Science & Analytics', 'Engineering', 'Health & Nursing', 'Law', 'Media & Design', 'Hospitality & Tourism', 'Finance & Accounting', 'Public Health'];
   var road = [['Tell us your goals', 'Answer 3 quick questions on this page.', 'About 2 minutes'], ['1-on-1 counselling', 'A counsellor calls you to understand your profile.', 'Personal call'],
     ['Shortlist & documents', 'Universities that fit you, and a document checklist.', 'Clear plan'], ['Applications & offers', 'We help you apply and track every offer.', 'Track offers'],
@@ -402,17 +450,19 @@ function render(c) {
     ['Course-specific prerequisites', 'Some courses need particular subjects, experience or a portfolio.'], ['Budget & funding', 'Tuition and living costs vary by city and university.'], ['Application deadlines', 'Popular courses can fill early, so timing matters.']];
   $('app').innerHTML = (dlDays >= 0 && dlDays <= 120 ? '<div class="dl">Applications' + (c.intake ? ' for ' + esc(c.intake) : '') + ' close ' + (dlDays === 0 ? 'today' : 'in ' + dlDays + ' day' + (dlDays === 1 ? '' : 's')) + '</div>' : '') +
     '<header class="top"><div class="wrap"><a class="logo" href="#form"><img src="' + ROOT + '/portal/icon-192.png" alt="" width="34" height="34"><span>Akbar Study Abroad<small>A vertical of Akbar Group</small></span></a>' +
-      (wa ? '<a class="call" href="https://wa.me/' + esc(wa) + '" target="_blank" rel="noopener">WhatsApp us</a>' : '') + '</div></header>' +
+      (ak && wa ? '<span class="acts"><a class="tel" href="tel:+' + esc(wa) + '">📞 +' + esc(wa.replace(/^91(\d{5})(\d{5})$/, '91 $1 $2')) + '</a>' : '') +
+      (wa ? '<a class="call" href="https://wa.me/' + esc(wa) + '" target="_blank" rel="noopener">WhatsApp us</a>' : '') + (ak && wa ? '</span>' : '') + '</div></header>' +
     '<section class="hero' + (c.heroImage ? ' photo' : '') + '">' + (c.heroImage ? '<img class="herobg" src="' + esc(img(c.heroImage, 1200)) + '"' + srcset(c.heroImage) + ' sizes="100vw" alt="" fetchpriority="high" decoding="async">' : '') + '<div class="wrap"><div class="intro"><span class="eyebrow">' + esc([c.country ? (uk ? 'UK' : c.country) : '', c.intake ? c.intake + ' intake' : ''].filter(Boolean).join(' · ') || 'Study abroad') + '</span>' +
       '<h1>' + hl(c.headline) + '</h1>' + (c.subhead ? '<p class="sub">' + esc(c.subhead) + '</p>' : '') + trust + '</div><div class="more">' +
       '<ul class="chips">' + meta.map(function (m) { return '<li>' + m.h + '</li>'; }).join('') + (c.offer ? '<li>' + esc(c.offer) + '</li>' : '') + '</ul>' +
       (c.bullets && c.bullets.length ? '<ul class="ticks">' + c.bullets.slice(0, 4).map(function (b) { return '<li>' + esc(b) + '</li>'; }).join('') + '</ul>' : '') +
       (c.heroImage ? '' : ILLUS) +
-    '</div><div class="card" id="form"><div id="lpBox"></div></div></div></section>' +
-    '<div class="dest" aria-label="Destinations"><div class="row">' + destRow + destRow + '</div></div>' +
-    '<section class="band"><div class="wrap">' + head('What we do', 'Everything you need, under one roof', 'One team guides you from the first call to the day you fly.') +
-      '<div class="services">' + services.map(function (x) { return '<div class="svc">' + ic(x[0]) + '<b>' + esc(x[1]) + '</b><span>' + esc(x[2]) + '</span></div>'; }).join('') + '</div></div></section>' +
-    '<section class="band white"><div class="wrap">' + head('Your roadmap', 'How your journey works', 'Six clear steps from your first question to your first day ' + inPlace + '.') +
+    '</div><div class="card" id="form">' + (ak ? '<div class="cardhead"><b>Talk to an expert counsellor</b><span>Get your free study-abroad roadmap within 24 hours</span></div>' : '') + '<div id="lpBox"></div>' +
+      (ak ? '<ul class="assure"><li>Free counselling</li><li>No charges to students</li><li>Reply within 24 hours</li></ul>' : '') + '</div></div></section>' +
+    '<div class="dest" aria-label="Destinations"><div class="row">' + destRow + destRow + '</div></div>' + dcards +
+    '<section class="band"><div class="wrap">' + head('What we do', ak ? 'End-to-end study-abroad services' : 'Everything you need, under one roof', 'One team guides you from the first call to the day you fly.') +
+      '<div class="services' + (ak ? ' eight' : '') + '">' + services.map(function (x) { return '<div class="svc">' + ic(x[0]) + '<b>' + esc(x[1]) + '</b><span>' + esc(x[2]) + '</span></div>'; }).join('') + '</div></div></section>' +
+    group + '<section class="band white"><div class="wrap">' + head('Your roadmap', 'How your journey works', 'Six clear steps from your first question to your first day ' + inPlace + '.') +
       '<div class="road">' + road.map(function (r) { return '<div class="rs"><b>' + esc(r[0]) + '</b><span>' + esc(r[1]) + '</span><i>' + esc(r[2]) + '</i></div>'; }).join('') + '</div></div></section>' +
     '<section class="band"><div class="wrap">' + head('Explore', 'Popular course areas ' + esc(inPlace), '') +
       '<div class="courses">' + courses.map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('') + '</div>' +
@@ -426,20 +476,28 @@ function render(c) {
     (c.officeAddress ? '<section class="band white"><div class="wrap"><div class="office"><div><h4>Visit our ' + esc(c.branch || 'nearest') + ' office</h4><p>' + esc(c.officeAddress) + '</p>' + (c.officeHours ? '<p>' + esc(c.officeHours) + '</p>' : '') + '</div><div class="acts">' + (c.mapLink ? '<a class="dir" href="' + esc(c.mapLink) + '" target="_blank" rel="noopener">Get directions</a>' : '') + (wa ? '<a href="https://wa.me/' + esc(wa) + '" target="_blank" rel="noopener">WhatsApp</a>' : '') + '</div></div></div></section>' : '') +
     '<section class="band final"><div class="wrap">' + head('Next step', 'Let’s explore your ' + esc(uk ? 'UK ' : '') + 'study options', 'Answer three quick questions and a counsellor will take it from there.') +
       '<div class="after"><div><b>1 · Today</b>You answer 3 questions on this page.</div><div><b>2 · Next</b>A counsellor from our ' + esc(c.branch || 'nearest') + ' branch calls you on WhatsApp.</div><div><b>3 · Then</b>You get a shortlist and a clear plan for ' + esc(c.intake || 'your intake') + '.</div></div>' +
-      '<a class="btn" href="#form">' + esc(c.ctaText) + ' →</a></div></section>' +
+      (ak ? '<ul class="checks"><li>Free counselling</li><li>No hidden charges</li><li>2000+ partner universities</li><li>Reply within 24 hours</li></ul>' : '') +
+      '<a class="btn" href="#form">' + esc(c.ctaText) + ' →</a>' + (ak && wa ? '<div class="reach"><a href="tel:+' + esc(wa) + '">📞 Call us</a><a class="w" href="https://wa.me/' + esc(wa) + '" target="_blank" rel="noopener">💬 WhatsApp us</a></div>' : '') + '</div></section>' +
     '<footer><div class="wrap">© ' + new Date().getFullYear() + ' Akbar Study Abroad · A vertical of Akbar Group' + (c.branch || (c.branches || []).length ? '<br>' + esc(c.branch ? c.branch + ' branch' : c.branches.join(' · ')) : '') + (c.privacyUrl ? '<br><a href="' + esc(c.privacyUrl) + '" target="_blank" rel="noopener">Privacy policy</a>' : '') + '</div></footer>' +
     '<div class="sticky" id="lpSticky"><a href="#form">' + esc(c.ctaText) + ' →</a>' + (wa ? '<a class="w" href="https://wa.me/' + esc(wa) + '" target="_blank" rel="noopener" aria-label="WhatsApp us">💬</a>' : '') + '</div>';
   drawStep(c);
+  [].forEach.call(document.querySelectorAll('.dcard'), function (b) { b.onclick = function () { pickCountry(c, b.getAttribute('data-c')); }; });
   var stick = $('lpSticky');
   if ('IntersectionObserver' in window) new IntersectionObserver(function (en) { stick.classList.toggle('on', !en[0].isIntersecting); }, { threshold: 0.05 }).observe($('form'));
   carousel(); reveal();
   pixel(c);
 }
+/* a destination card fills in the country question and jumps to the form */
+function pickCountry(c, k) {
+  S.a.country = k;
+  if (S.step === 0 && S.steps[0].keys[0] === 'country' && S.steps.length > 1) S.step = 1;
+  drawStep(c); $('form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 /* sections fade up as they come into view (off for people who prefer less motion) */
 function reveal() {
   if (!('IntersectionObserver' in window) || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
   document.documentElement.classList.add('js');
-  var els = document.querySelectorAll('.head, .svc, .rs, .courses, .elig > div, .elig li, .photos img, .tcar, .faq, .office, .after > div, .final .btn');
+  var els = document.querySelectorAll('.head, .svc, .rs, .courses, .elig > div, .elig li, .photos img, .tcar, .faq, .office, .after > div, .final .btn, .dcard, .gstats');
   var io = new IntersectionObserver(function (en) { en.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { rootMargin: '0px 0px -8% 0px' });
   [].forEach.call(els, function (el, i) { el.classList.add('rv'); el.style.transitionDelay = (i % 3) * 70 + 'ms'; io.observe(el); });
 }
@@ -471,7 +529,7 @@ function send(c) {
     utm: { source: qs.get('utm_source') || '', campaign: qs.get('utm_campaign') || '', adset: qs.get('utm_term') || qs.get('utm_adset') || '', ad: qs.get('utm_content') || qs.get('utm_ad') || '' } };
   btn.disabled = true; btn.textContent = 'Booking your call…';
   var toThanks = function (r, pv) {
-    var u = ROOT + '/lp/thanks/?p=' + encodeURIComponent(c.slug) + '&n=' + encodeURIComponent(r.firstName || '') + '&b=' + encodeURIComponent(r.branch || '') + '&w=' + encodeURIComponent(r.whatsapp || '') + '&t=' + (c.theme === 'red' ? 'red' : 'premium');
+    var u = ROOT + '/lp/thanks/?p=' + encodeURIComponent(c.slug) + '&n=' + encodeURIComponent(r.firstName || '') + '&b=' + encodeURIComponent(r.branch || '') + '&w=' + encodeURIComponent(r.whatsapp || '') + '&t=' + (c.theme === 'red' || c.theme === 'akbar' ? 'red' : 'premium');
     if (pv) u += '&pv=1'; else { var pid = c.pixels && c.pixels[r.branch]; if (pid) u += '&px=' + encodeURIComponent(pid) + '&e=' + encodeURIComponent(eventId); }
     try { location.assign(u); } catch (e) { thanks(c, r, !!pv); }
   };

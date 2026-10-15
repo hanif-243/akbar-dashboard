@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '15 Oct 2026 · v69';
+window.AKBAR_BUILD = '15 Oct 2026 · v70';
 
 (function () {
   try {
@@ -21604,7 +21604,7 @@ function editor(p) {
 <div><label class="f" for="lpPrivacy">Privacy policy link</label><input type="text" id="lpPrivacy" value="${esc(p.privacyUrl || '')}" placeholder="https:\x2F\x2Fakbarstudy.com\x2Fprivacy-policy"><div class="note">Meta expects one on pages that collect leads.<\x2Fdiv><\x2Fdiv>
 <div class="lp-sec">After the form<\x2Fdiv>
 <div><label class="f" for="lpWa">WhatsApp number for "Chat with us"<\x2Flabel><input type="text" id="lpWa" value="${esc(p.whatsapp || '')}" placeholder="919876543210 (blank = branch manager)"></div>
-<div><label class="f" for="lpTheme">Look</label><select id="lpTheme"><option value="red" ${p.theme === 'red' ? 'selected' : ''}>Classic red (Akbar colours)</option><option value="premium" ${p.theme !== 'red' ? 'selected' : ''}>Premium navy &amp; gold</option></select></div>
+<div><label class="f" for="lpTheme">Look</label><select id="lpTheme"><option value="red" ${p.theme === 'red' ? 'selected' : ''}>Classic red (Akbar colours)</option><option value="akbar" ${p.theme === 'akbar' ? 'selected' : ''}>Website style (akbarstudy.com look)</option><option value="premium" ${p.theme !== 'red' && p.theme !== 'akbar' ? 'selected' : ''}>Premium navy &amp; gold</option></select></div>
 <div><label class="f" for="lpColor">Accent colour (premium look only)</label><input type="color" id="lpColor" value="${esc(p.color || '#F22F3D')}" style="width:60px;height:36px;border:0;background:none;"></div>
 <div class="full"><label class="f" for="lpThanks">Thank-you message</label><input type="text" id="lpThanks" maxlength="300" value="${esc(p.thankYou || '')}" placeholder="Blank = “A counsellor from our [branch] branch will call you shortly on WhatsApp.”"></div>
 <div class="full"><label class="f" for="lpStatus">Status</label><select id="lpStatus">${['Draft', 'Live', 'Paused'].map(s => `<option ${s === p.status ? 'selected' : ''}>${s}</option>`).join('')}</select><div class="note">Draft = only you can preview it · Live = the link works for everyone · Paused = visitors see “offer ended”.</div></div>
