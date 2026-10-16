@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '16 Oct 2026 · v72';
+window.AKBAR_BUILD = '16 Oct 2026 · v73';
 
 (function () {
   try {
@@ -14789,8 +14789,8 @@ $('hrJoinOpen').onclick = () => openChecklist(p.userId, true);
 }
 setInterval(() => { if (detectRole()) { startTracking(); loadProfile(); } }, 4000);
 
-const TABS = [['team-hub', '👥 Team'], ['attendance', '🕘 Attendance'], ['session-analytics', '📈 Session Analytics', 'lead'], ['leave', '🌴 Leave'], ['performance', '🏆 Performance'], ['training', '🎓 Training'], ['shifts', '🗓 Shifts'], ['counselling-sessions', '🎥 Sessions']];
-const HR = { tab: 'team-hub', state: {}, cache: {}, f: { attendance: { month: today().slice(0, 7) }, analytics: {}, leave: { sub: 'mine' }, performance: { month: today().slice(0, 7) }, training: { category: '' }, shifts: { week: weekStart(today()), branch: '', view: 'grid' }, sessions: { view: 'table', month: today().slice(0, 7) } } };
+const TABS = [['team-hub', '👥 Team'], ['attendance', '🕘 Attendance'], ['session-analytics', '📈 Session Analytics', 'lead'], ['leave', '🌴 Leave'], ['performance', '🏆 Performance'], ['training', '🎓 Training'], ['shifts', '🗓 Shifts'], ['allocation', '🎯 Lead allocation', 'lead'], ['counselling-sessions', '🎥 Sessions']];
+const HR = { tab: 'team-hub', state: {}, cache: {}, f: { attendance: { month: today().slice(0, 7) }, analytics: {}, leave: { sub: 'mine' }, performance: { month: today().slice(0, 7) }, training: { category: '' }, shifts: { week: weekStart(today()), branch: '', view: 'grid' }, allocation: { branch: '' }, sessions: { view: 'table', month: today().slice(0, 7) } } };
 const FETCH = {
 'team-hub': () => run('getTeamHub'),
 'attendance': () => { const m = HR.f.attendance.month.split('-'); return run('getAttendance', { month: +m[1], year: +m[0], branch: HR.f.attendance.branch || '', counsellor: HR.f.attendance.who || '' }); },
@@ -14799,10 +14799,11 @@ const FETCH = {
 'performance': () => { const m = HR.f.performance.month.split('-'); return run('getPerformanceReviews', { month: +m[1], year: +m[0] }); },
 'training': () => run('getTrainingMaterials', {}),
 'shifts': () => run('getWeeklySchedule', HR.f.shifts.branch || '', HR.f.shifts.week),
-'counselling-sessions': () => run('getCounsellingSessions', {})
+'counselling-sessions': () => run('getCounsellingSessions', {}),
+'allocation': () => run('getLeadAllocation', HR.f.allocation.branch || '')
 };
-const RENDER = { 'team-hub': renderTeamHub, 'attendance': renderAttendance, 'session-analytics': renderSessionAnalytics, 'leave': renderLeave, 'performance': renderPerformance, 'training': renderTraining, 'shifts': renderShifts, 'counselling-sessions': renderCounsellingSessions };
-const visibleTabs = () => TABS.filter(t => (!t[2] || isLead()) && (!ROLE.tc || t[0] === 'training'));
+const RENDER = { 'team-hub': renderTeamHub, 'attendance': renderAttendance, 'session-analytics': renderSessionAnalytics, 'leave': renderLeave, 'performance': renderPerformance, 'training': renderTraining, 'shifts': renderShifts, 'allocation': renderAllocation, 'counselling-sessions': renderCounsellingSessions };
+const visibleTabs = () => TABS.filter(t => (!t[2] || isLead()) && (!ROLE.tc || t[0] === 'training' || t[0] === 'shifts'));
 
 function openHRView(tab) {
 detectRole();
@@ -15187,6 +15188,87 @@ $('shSave').onclick = () => run('saveShift', { id: s ? s.id : '', userId: $('shW
 .then(nd => { closeModal(); showToast('Shift saved', 'success'); HR.cache.shifts = nd; HR.f.shifts.week = nd.weekStart; renderShifts(nd); }).catch(e => showToast(errMsg(e), 'error'));
 const del = $('shDel'); if (del) del.onclick = () => run('deleteShift', s.id).then(nd => { closeModal(); HR.cache.shifts = nd; renderShifts(nd); }).catch(e => showToast(errMsg(e), 'error'));
 }
+
+function rosterPanel(d) {
+const reqs = d.requests || [], pend = reqs.filter(r => r.canReview), mine = reqs.filter(r => r.mine);
+const row = (r, ctl) => `<div class="s10-item">${ctl || ''}<div class="grow"><div class="nm">${r.mine ? 'You' : esc(r.userName)} · ${fmtDate(r.date)} · ${r.kind === 'Day off' ? 'Day off' : esc(r.startLabel) + '–' + esc(r.endLabel)}</div><div class="meta">${st(r.status)}${r.notes ? ' · “' + esc(r.notes) + '”' : ''}${r.reviewedBy ? ' · by ' + esc(r.reviewedBy) + (r.reviewNote ? ' — ' + esc(r.reviewNote) : '') : ''}</div></div>${r.mine && r.status === 'Pending' ? `<button class="um-btn s10-mini" data-rr-wd="${esc(r.id)}">Withdraw</button>` : ''}</div>`;
+let h = '';
+if (d.canEdit) h += `<div class="sx-card"><h3>🙋 Roster requests this week ${pend.length ? '<span class="sx-sub" style="display:inline;">· ' + pend.length + ' waiting</span>' : ''}</h3>${pend.length ? `<div class="s10-list">${pend.map(r => row(r, `<input type="checkbox" data-rr="${esc(r.id)}" checked aria-label="Select request" style="width:18px;height:18px;">`)).join('')}</div>
+<div class="s10-actions" style="justify-content:flex-start;"><button class="um-btn primary" id="rrOk">✓ Approve selected</button><button class="um-btn danger" id="rrNo">Reject selected</button></div>` : empty('No requests waiting for this week.')}</div>`;
+if (mine.length || !d.canEdit) h += `<div class="sx-card"><h3>My roster requests</h3>${mine.length ? `<div class="s10-list">${mine.map(r => row(r)).join('')}</div>` : empty('None for this week — tap “Apply for roster”.')}</div>`;
+return h;
+}
+function bindRosterPanel(d) {
+const picked = () => [...body().querySelectorAll('[data-rr]:checked')].map(x => x.dataset.rr);
+const go = (decision, note) => { const ids = picked(); if (!ids.length) { showToast('Select at least one request', 'error'); return; }
+run('reviewRosterRequests', ids, decision, note || '').then(r => { showToast(r.done + ' request(s) ' + decision.toLowerCase() + (r.clashes.length ? ' · not added (clash): ' + r.clashes.join(', ') : ''), r.clashes.length ? 'error' : 'success'); reload('shifts'); }).catch(e => showToast(errMsg(e), 'error')); };
+const ok = $('rrOk'); if (ok) ok.onclick = () => go('Approved');
+const no = $('rrNo'); if (no) no.onclick = () => { const why = prompt('Reason (sent to the staff member):', ''); if (why !== null) go('Rejected', why); };
+body().querySelectorAll('[data-rr-wd]').forEach(b => b.onclick = () => { if (!confirm('Withdraw this request?')) return; run('withdrawRosterRequest', b.dataset.rrWd).then(() => { showToast('Withdrawn', 'success'); reload('shifts'); }).catch(e => showToast(errMsg(e), 'error')); });
+}
+function rosterApplyModal(d) {
+const oh = d.officeHours || { start: 9, end: 19 }, hh = n => String(n).padStart(2, '0') + ':00';
+const P = { full: ['Full day', hh(oh.start), hh(oh.end)], morning: ['Morning', hh(oh.start), '14:00'], afternoon: ['Afternoon', '13:00', hh(oh.end)] };
+const next = addDays(weekStart(today()), 7), weeks = [weekStart(today()), next, addDays(next, 7)];
+let ws = d.weekStart >= weekStart(today()) ? d.weekStart : next;
+const m = modal('Apply for roster', '', 640);
+const paint = () => {
+const days = Array.from({ length: 7 }, (_, i) => addDays(ws, i));
+m.innerHTML = `<div class="sx-filters" style="margin-bottom:8px;"><label class="sx-sub" style="margin:0;">Week of <select id="raWeek">${opts(weeks.map(w => ({ v: w, l: fmtDate(w) })), ws)}</select></label></div>
+<div class="sx-sub" style="margin-bottom:8px;">Choose what you'd like for each day. Leave a day on “—” if you don't need anything. Your manager approves it, then it shows in the roster.</div>
+<div class="s10-list">${days.map(day => { const past = day < today(); return `<div class="s10-item" style="align-items:center;gap:8px;flex-wrap:wrap;"><div style="min-width:110px;font-weight:700;">${DOW[dow(day) - 1]} ${+day.slice(8)} ${MON[+day.slice(5, 7) - 1]}</div>
+<select data-ra-day="${day}" ${past ? 'disabled' : ''} style="min-width:150px;"><option value="">—</option>${Object.keys(P).map(k => `<option value="${k}">${P[k][0]} (${P[k][1]}–${P[k][2]})</option>`).join('')}<option value="custom">Custom time</option><option value="off">Day off</option></select>
+<span data-ra-times="${day}" style="display:none;gap:6px;align-items:center;"><input type="time" data-ra-s="${day}" value="${hh(oh.start)}"> to <input type="time" data-ra-e="${day}" value="${hh(oh.end)}"></span>${past ? '<span class="sx-sub" style="margin:0;">past</span>' : ''}</div>`; }).join('')}</div>
+${field('Note for your manager (optional)', '<input type="text" id="raNote" placeholder="e.g. college exam on Thursday morning">', true)}
+<div class="s10-actions" style="justify-content:space-between;"><button class="um-btn" id="raAll">Full day Mon–Sat</button><button class="um-btn primary" id="raSend">Send request</button></div>`;
+$('raWeek').onchange = e => { ws = e.target.value; paint(); };
+m.querySelectorAll('[data-ra-day]').forEach(sel => sel.onchange = () => { const t = m.querySelector(`[data-ra-times="${sel.dataset.raDay}"]`); t.style.display = sel.value === 'custom' ? 'inline-flex' : 'none'; });
+$('raAll').onclick = () => m.querySelectorAll('[data-ra-day]').forEach(sel => { if (!sel.disabled && dow(sel.dataset.raDay) !== 7) { sel.value = 'full'; sel.onchange(); } });
+$('raSend').onclick = () => {
+const items = [...m.querySelectorAll('[data-ra-day]')].filter(x => x.value).map(x => { const day = x.dataset.raDay, v = x.value;
+if (v === 'off') return { date: day, kind: 'Day off' };
+if (v === 'custom') return { date: day, kind: 'Shift', start: m.querySelector(`[data-ra-s="${day}"]`).value, end: m.querySelector(`[data-ra-e="${day}"]`).value };
+return { date: day, kind: 'Shift', start: P[v][1], end: P[v][2] }; });
+if (!items.length) { showToast('Choose at least one day', 'error'); return; }
+$('raSend').disabled = true;
+run('applyForRoster', { items: items, notes: $('raNote').value }).then(r => { closeModal(); showToast(r.requested + ' day(s) requested — your manager has been emailed', 'success'); HR.f.shifts.week = ws; reload('shifts'); })
+.catch(e => { $('raSend').disabled = false; showToast(errMsg(e), 'error'); });
+};
+};
+paint();
+}
+
+function renderAllocation(d) {
+const f = HR.f.allocation;
+const on = d.people.filter(p => p.on), tot = on.reduce((n, p) => n + p.share, 0);
+const pct = p => p.on && tot ? Math.round(p.share / tot * 100) + '%' : '—';
+body().innerHTML = `
+<div class="sx-filters">${d.branches.length > 1 ? `<select id="alBranch">${opts(d.branches, d.branch)}</select>` : `<b>${esc(d.branch)}</b>`}<span style="flex:1"></span><button class="um-btn primary" id="alSave">Save changes</button></div>
+<div class="sx-card"><h3>Auto-assign for ${esc(d.branch)}</h3>
+<label class="s10-item" style="gap:10px;cursor:${d.canToggleAuto ? 'pointer' : 'default'};"><input type="checkbox" id="alAuto" ${d.autoAssign ? 'checked' : ''} ${d.canToggleAuto ? '' : 'disabled'} style="width:18px;height:18px;"><div class="grow"><div class="nm">Give new leads to counsellors automatically</div><div class="meta">${d.canToggleAuto ? 'When off, new leads stay unassigned until a manager assigns them.' : 'Only Super Admins can switch this.'}</div></div></label>
+<label class="s10-item" style="gap:10px;cursor:pointer;"><input type="checkbox" id="alLeave" ${d.skipLeave ? 'checked' : ''} style="width:18px;height:18px;"><div class="grow"><div class="nm">Skip counsellors on approved leave</div><div class="meta">Recommended — nobody gets new leads while they're away.</div></div></label>
+<label class="s10-item" style="gap:10px;cursor:pointer;"><input type="checkbox" id="alRoster" ${d.rosterOnly ? 'checked' : ''} style="width:18px;height:18px;"><div class="grow"><div class="nm">Only counsellors on today's roster</div><div class="meta">New leads go only to people with a shift today (Team → Shifts). Turn on once the roster is filled in every week.</div></div></label></div>
+<div class="sx-card"><h3>Counsellors</h3><div class="sx-sub" style="margin-bottom:8px;"><b>Share</b>: 2× gets twice as many new leads as 1×. <b>Daily cap</b>: the most new leads in one day (empty = no limit). Auto-assign always gives the next lead to whoever has the fewest active leads for their share.</div>
+<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Counsellor</th><th>Gets new leads</th><th>Share</th><th class="num">Daily cap</th><th class="num">Expected share</th><th class="num">Active leads</th><th class="num">Auto-assigned today</th><th>Today</th></tr></thead><tbody>
+${d.people.map((p, i) => `<tr><td style="font-weight:700;">${esc(p.name)}</td><td><label style="display:flex;gap:6px;align-items:center;cursor:pointer;"><input type="checkbox" data-al-on="${i}" ${p.on ? 'checked' : ''} style="width:18px;height:18px;">${p.on ? 'On' : '<span class="sx-bad">Paused</span>'}</label></td>
+<td><select data-al-share="${i}">${opts(d.shares.map(x => ({ v: x, l: (x === 0.5 ? '½' : x) + '×' })), p.share)}</select></td>
+<td class="num"><input type="number" min="0" max="500" data-al-cap="${i}" value="${p.cap === null ? '' : p.cap}" placeholder="no limit" style="width:90px;"></td>
+<td class="num" data-al-pct="${i}">${pct(p)}</td><td class="num">${p.activeLeads}</td><td class="num">${p.assignedToday}${p.cap !== null ? ' / ' + p.cap : ''}</td>
+<td>${p.onLeave ? st('On leave') : ''}${d.rosterOnly ? (p.onRoster ? ' <span class="sx-sub" style="display:inline;">on roster</span>' : ' <span class="sx-sub" style="display:inline;color:var(--warm);">no shift today</span>') : ''}${!p.userId ? ' <span class="sx-sub" style="display:inline;" title="No login matched this counsellor name, so leave and roster cannot be checked">no login match</span>' : ''}</td></tr>`).join('') || `<tr><td colspan="8">${empty('No counsellors in this branch.')}</td></tr>`}</tbody></table></div>
+<div class="sx-sub" style="margin-top:8px;">${d.preview.people.length ? 'Right now the next new lead can go to: <b>' + esc(d.preview.people.map(p => p.name).join(', ')) + '</b>' : '<span class="sx-bad">Right now nobody can take new leads — they would stay unassigned.</span>'}${d.preview.skipped.length ? ' · skipped: ' + esc(d.preview.skipped.join(', ')) : ''}</div></div>`;
+const recalc = () => { const P = d.people.map((p, i) => ({ on: body().querySelector(`[data-al-on="${i}"]`).checked, share: +body().querySelector(`[data-al-share="${i}"]`).value })); const t = P.filter(x => x.on).reduce((n, x) => n + x.share, 0);
+P.forEach((x, i) => { body().querySelector(`[data-al-pct="${i}"]`).textContent = x.on && t ? Math.round(x.share / t * 100) + '%' : '—'; }); };
+body().querySelectorAll('[data-al-on], [data-al-share]').forEach(x => x.onchange = recalc);
+const br = $('alBranch'); if (br) br.onchange = e => { f.branch = e.target.value; reload('allocation'); };
+$('alSave').onclick = () => {
+const people = d.people.map((p, i) => ({ name: p.name, on: body().querySelector(`[data-al-on="${i}"]`).checked, share: +body().querySelector(`[data-al-share="${i}"]`).value, cap: body().querySelector(`[data-al-cap="${i}"]`).value }));
+const p = { people: people, skipLeave: $('alLeave').checked, rosterOnly: $('alRoster').checked };
+if (d.canToggleAuto) p.autoAssign = $('alAuto').checked;
+$('alSave').disabled = true;
+run('saveLeadAllocation', d.branch, p).then(nd => { showToast('Lead allocation saved for ' + nd.branch, 'success'); HR.cache.allocation = nd; renderAllocation(nd); }).catch(e => { $('alSave').disabled = false; showToast(errMsg(e), 'error'); });
+};
+}
+
 function renderShifts(d) {
 const f = HR.f.shifts;
 const label = ymd => DOW[dow(ymd) - 1] + ' ' + (+ymd.slice(8)) + ' ' + MON[+ymd.slice(5, 7) - 1];
@@ -15195,10 +15277,11 @@ body().innerHTML = `
 <div class="sx-filters"><button class="um-btn" id="shPrev">← Prev week</button><b>Week of ${fmtDate(d.weekStart)}</b><button class="um-btn" id="shNext">Next week →</button>
 ${d.branches.length > 1 ? `<select id="shBranch">${opts(d.branches, d.branch)}</select>` : `<span class="sx-sub" style="margin:0;">${esc(d.branch)}</span>`}
 <button class="um-btn s10-mini" id="shView">${f.view === 'grid' ? '☰ List' : '▦ Grid'}</button><span style="flex:1"></span>
-${d.canEdit ? '<button class="um-btn" id="shCopy">Copy to next week</button><button class="um-btn primary" id="shAdd">+ Add Shift</button>' : ''}</div>
+<button class="um-btn" id="shApply">🙋 Apply for roster</button>${d.canEdit ? '<button class="um-btn" id="shCopy">Copy to next week</button><button class="um-btn primary" id="shAdd">+ Add Shift</button>' : ''}</div>
+${rosterPanel(d)}
 ${d.gaps.length ? `<div class="fin-alert">No coverage (office hours ${d.officeHours.start % 12 || 12} ${d.officeHours.start < 12 ? 'AM' : 'PM'}–${d.officeHours.end % 12 || 12} ${d.officeHours.end < 12 ? 'AM' : 'PM'}): ${d.gaps.slice(0, 8).map(g => esc(g.label)).join(' · ')}${d.gaps.length > 8 ? ' …' : ''}</div>` : (d.shifts.length ? '<div class="fin-alert warm" style="background:rgba(31,157,99,.1);color:var(--ok);">✓ Office hours fully covered this week.</div>' : '')}
 ${f.view === 'grid' ? `<div class="sx-card" style="overflow-x:auto;"><div class="hr-week"><div class="hd">Staff</div>${d.days.map(x => `<div class="hd">${label(x)}</div>`).join('')}
-${d.counsellors.map(c => `<div class="nm">${esc(c.name)}</div>${d.days.map(day => `<div>${(d.schedule[c.userId] && d.schedule[c.userId][day] || []).map(s => `<span class="hr-shift ${esc(s.coverage)}" data-sh="${esc(s.id)}" title="${esc(s.coverage + ' · ' + s.status + (s.notes ? ' · ' + s.notes : ''))}">${esc(s.startLabel)}–${esc(s.endLabel)}${s.status === 'Absent' ? ' ✕' : ''}</span>`).join('')}${d.canEdit ? `<button class="hr-add" data-sh-add="${esc(c.userId)}" data-day="${day}" aria-label="Add shift">+</button>` : ''}</div>`).join('')}`).join('')}
+${d.counsellors.map(c => `<div class="nm">${esc(c.name)}</div>${d.days.map(day => `<div>${(d.requests || []).filter(r => r.userId === c.userId && r.date === day && r.status === 'Pending').map(r => `<span class="hr-shift" style="background:transparent;color:var(--text);border:1.5px dashed var(--muted);" title="Requested — waiting for approval">🙋 ${r.kind === 'Day off' ? 'Day off' : esc(r.startLabel) + '–' + esc(r.endLabel)}</span>`).join('')}${(d.requests || []).filter(r => r.userId === c.userId && r.date === day && r.status === 'Approved' && r.kind === 'Day off').map(() => '<span class="hr-shift" style="background:#8a8f9c;">Day off</span>').join('')}${(d.schedule[c.userId] && d.schedule[c.userId][day] || []).map(s => `<span class="hr-shift ${esc(s.coverage)}" data-sh="${esc(s.id)}" title="${esc(s.coverage + ' · ' + s.status + (s.notes ? ' · ' + s.notes : ''))}">${esc(s.startLabel)}–${esc(s.endLabel)}${s.status === 'Absent' ? ' ✕' : ''}</span>`).join('')}${d.canEdit ? `<button class="hr-add" data-sh-add="${esc(c.userId)}" data-day="${day}" aria-label="Add shift">+</button>` : ''}</div>`).join('')}`).join('')}
 </div><div class="fin-legend"><span><i style="background:#3E6BD6"></i>Leads</span><span><i style="background:var(--ok)"></i>Support</span><span><i style="background:#8a8f9c"></i>Admin</span></div></div>`
 : `<div class="sx-card" style="padding:6px;"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Staff</th><th>Date</th><th>Start</th><th>End</th><th class="num">Hours</th><th>Coverage</th><th>Status</th><th></th></tr></thead><tbody>
 ${d.shifts.map(s => `<tr><td style="font-weight:700;">${esc(s.userName)}</td><td>${fmtDate(s.date)}</td><td>${esc(s.startLabel)}</td><td>${esc(s.endLabel)}</td><td class="num">${s.hours}</td><td>${esc(s.coverage)}</td><td>${st(s.status)}</td><td>${d.canEdit ? `<button class="um-btn s10-mini" data-sh="${esc(s.id)}">Edit</button>` : ''}</td></tr>`).join('') || `<tr><td colspan="8">${empty('No shifts this week.')}</td></tr>`}</tbody></table></div></div>`}`;
@@ -15209,6 +15292,8 @@ const br = $('shBranch'); if (br) br.onchange = e => { f.branch = e.target.value
 const add = $('shAdd'); if (add) add.onclick = () => shiftEditor(d, null);
 body().querySelectorAll('[data-sh-add]').forEach(b => b.onclick = () => shiftEditor(d, null, { userId: b.dataset.shAdd, date: b.dataset.day }));
 if (d.canEdit) body().querySelectorAll('[data-sh]').forEach(b => b.onclick = () => shiftEditor(d, byId[b.dataset.sh]));
+$('shApply').onclick = () => rosterApplyModal(d);
+bindRosterPanel(d);
 const cp = $('shCopy'); if (cp) cp.onclick = () => { if (!confirm('Copy this week\'s shifts to next week? Clashing shifts are skipped.')) return; run('copyShiftsToNextWeek', d.branch, d.weekStart).then(r => { showToast(r.copied + ' shift(s) copied' + (r.skipped ? ', ' + r.skipped + ' skipped' : ''), 'success'); move(7); }).catch(e => showToast(errMsg(e), 'error')); };
 }
 
