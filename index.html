@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '16 Oct 2026 · v73';
+window.AKBAR_BUILD = '16 Oct 2026 · v74';
 
 (function () {
   try {
@@ -7110,7 +7110,7 @@ if (btn) btn.style.display = counselorList.length > 0 ? 'flex' : 'none';
 populatePreviewDropdown();
 }
 const addLeadBtn = document.getElementById('addLeadBtn');
-if (addLeadBtn) addLeadBtn.style.display = (response.isSuperAdmin || !response.viewerCounselor) ? 'flex' : 'none';
+if (addLeadBtn) addLeadBtn.style.display = 'flex';
 const monthlyReportBtn = document.getElementById('monthlyReportBtn');
 if (monthlyReportBtn) monthlyReportBtn.style.display = (response.isSuperAdmin || !response.viewerCounselor) ? 'flex' : 'none';
 const bulkUploadBtn = document.getElementById('bulkUploadBtn');
@@ -7449,7 +7449,7 @@ status.classList.remove('err');
 google.script.run.withSuccessHandler(function() {
 btn.disabled = false;
 btn.innerHTML = original;
-showToast('Lead added successfully', 'success');
+showToast(window._isSuperAdmin || !viewerCounselor ? 'Lead added successfully' : 'Lead added and assigned to you', 'success');
 closeAddLeadModal();
 loadData();
 }).withFailureHandler(function(err) {
