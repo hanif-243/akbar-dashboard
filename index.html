@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '16 Oct 2026 · v71';
+window.AKBAR_BUILD = '16 Oct 2026 · v72';
 
 (function () {
   try {
@@ -14971,6 +14971,62 @@ $('lvTo').onchange = calc; calc();
 $('lvGo').onclick = () => run('applyForLeave', { leaveType: $('lvType').value, fromDate: $('lvFrom').value, toDate: $('lvTo').value, reason: $('lvReason').value })
 .then(r => { closeModal(); showToast('Leave requested — ' + r.days + ' day(s). Your manager has been emailed.', 'success'); reload('leave'); }).catch(e => showToast(errMsg(e), 'error'));
 }
+
+const LV_TYPES = ['Casual', 'Sick', 'Earned', 'Emergency'];
+function editLeaveModal(l) {
+if (!l) return;
+modal('Edit leave — ' + l.userName, `<div class="fin-form">${field('Leave type', `<select id="leType">${opts(LV_TYPES, l.type)}</select>`)}${field('Status', `<select id="leStatus">${opts(['Pending', 'Approved', 'Rejected', 'Cancelled'], l.status)}</select>`)}
+${field('From', `<input type="date" id="leFrom" value="${esc(l.from)}">`)}${field('To', `<input type="date" id="leTo" value="${esc(l.to)}">`)}
+${field('Reason', `<input type="text" id="leReason" value="${esc(l.reason || '')}">`, true)}${field('Note about this change (optional)', '<input type="text" id="leNote" placeholder="e.g. extended by 1 day after a call">', true)}</div>
+<div class="sx-sub" id="leDays" style="margin-top:6px;"></div><div class="sx-sub" style="margin-top:4px;">Nothing is deleted — use <b>Cancelled</b> to withdraw a leave. If an approved leave is cancelled or rejected, any leads handed over are given back. ${esc(l.userName.split(' ')[0])} gets an email about the change.</div>
+<div class="s10-actions"><button class="um-btn primary" id="leSave">Save changes</button></div>`, 560);
+const calc = () => { const n = workDays($('leFrom').value, $('leTo').value); $('leDays').innerHTML = `<b>${n}</b> working day${n === 1 ? '' : 's'} (Sundays not counted)`; };
+$('leFrom').onchange = () => { if ($('leTo').value < $('leFrom').value) $('leTo').value = $('leFrom').value; calc(); }; $('leTo').onchange = calc; calc();
+$('leSave').onclick = () => { $('leSave').disabled = true; run('editLeaveRequest', l.id, { type: $('leType').value, status: $('leStatus').value, from: $('leFrom').value, to: $('leTo').value, reason: $('leReason').value, notes: $('leNote').value })
+.then(r => { closeModal(); const lm = r.leads ? (r.leads.reassigned ? ' · ' + r.leads.reassigned + ' leads handed over' : r.leads.restored ? ' · ' + r.leads.restored + ' leads given back' : '') : ''; showToast('Leave updated — ' + r.status + ', ' + r.days + ' day(s)' + lm, 'success'); reload('leave'); })
+.catch(e => { $('leSave').disabled = false; showToast(errMsg(e), 'error'); }); };
+}
+function recordLeaveModal() {
+const m = modal('Record leave for staff', loading, 560);
+run('getLeaveSettings').then(cfg => {
+m.innerHTML = `<div class="fin-form">${field('Staff member', `<select id="lrWho"><option value="">Choose…</option>${opts(cfg.staff.map(x => ({ v: x.userId, l: x.name + ' (' + x.branch + ')' })), '')}</select>`, true)}
+${field('Leave type', `<select id="lrType">${opts(LV_TYPES, 'Casual')}</select>`)}${field('Status', `<select id="lrStatus">${opts([{ v: 'Approved', l: 'Approved' }, { v: 'Pending', l: 'Pending (needs approval)' }], 'Approved')}</select>`)}
+${field('From', `<input type="date" id="lrFrom" value="${today()}">`)}${field('To', `<input type="date" id="lrTo" value="${today()}">`)}${field('Reason', '<input type="text" id="lrReason" placeholder="e.g. called in sick">', true)}</div>
+<div class="sx-sub" id="lrInfo" style="margin-top:6px;"></div><div class="s10-actions"><button class="um-btn primary" id="lrSave">Save</button></div>`;
+const info = () => { const n = workDays($('lrFrom').value, $('lrTo').value); const p = cfg.staff.find(x => x.userId === $('lrWho').value), t = $('lrType').value;
+$('lrInfo').innerHTML = `<b>${n}</b> working day${n === 1 ? '' : 's'}` + (p ? ` · ${esc(p.name)} has used <b>${p.used[t] || 0}</b>${p.total[t] ? ' of ' + p.total[t] : ''} ${esc(t.toLowerCase())} day(s) this year` : ''); };
+['lrWho', 'lrType', 'lrFrom', 'lrTo'].forEach(id => { $(id).onchange = () => { if (id === 'lrFrom' && $('lrTo').value < $('lrFrom').value) $('lrTo').value = $('lrFrom').value; info(); }; }); info();
+$('lrSave').onclick = () => { $('lrSave').disabled = true; run('addLeaveForStaff', { userId: $('lrWho').value, type: $('lrType').value, status: $('lrStatus').value, from: $('lrFrom').value, to: $('lrTo').value, reason: $('lrReason').value })
+.then(r => { closeModal(); showToast('Leave recorded — ' + r.days + ' day(s), ' + r.status + (r.leads && r.leads.reassigned ? ' · ' + r.leads.reassigned + ' leads handed over' : ''), 'success'); reload('leave'); })
+.catch(e => { $('lrSave').disabled = false; showToast(errMsg(e), 'error'); }); };
+}).catch(e => { m.innerHTML = empty(errMsg(e)); });
+}
+function loadAllowance() {
+const el = $('lvAllow'); if (!el) return;
+run('getLeaveSettings').then(paintAllowance).catch(e => { const x = $('lvAllow'); if (x) x.innerHTML = empty(errMsg(e)); });
+}
+function paintAllowance(cfg) {
+const el = $('lvAllow'); if (!el) return;
+const T = cfg.types;
+el.innerHTML = `<div class="sx-card"><h3>Days per year — everyone</h3><div class="sx-sub" style="margin-bottom:10px;">How many days of each leave type staff get in ${esc(cfg.year)}. <b>0</b> = not capped (counted, but no limit).</div>
+<div class="sx-kpis">${T.map(t => `<div class="sx-kpi"><div class="l">${esc(t)}</div><div style="display:flex;gap:6px;align-items:center;margin-top:6px;"><input type="number" min="0" max="366" step="0.5" data-lq-def="${esc(t)}" value="${cfg.defaults[t]}" style="width:90px;"><span class="sx-sub" style="margin:0;">days</span></div></div>`).join('')}</div>
+<div class="s10-actions" style="justify-content:flex-start;"><button class="um-btn primary" id="lqDefSave">Save for everyone</button></div></div>
+<div class="sx-card"><h3>Per person</h3><div class="sx-sub" style="margin-bottom:8px;">Each cell shows <b>days used / allowed</b>. Type a number to give that person a different allowance (e.g. a senior gets 18 earned days); clear it to go back to the default. Saves when you leave the box.</div>
+<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Name</th><th>Branch</th>${T.map(t => `<th class="num">${esc(t)}</th>`).join('')}</tr></thead><tbody>
+${cfg.staff.map(p => `<tr><td style="font-weight:700;">${esc(p.name)}<div class="sx-sub">${esc(p.role)}</div></td><td>${esc(p.branch)}</td>${T.map(t => {
+const used = p.used[t] || 0, tot = p.total[t], over = tot && used > tot;
+return `<td class="num"><div class="${over ? 'sx-bad' : ''}" style="font-weight:700;">${used} / ${tot || '∞'}</div><input type="number" min="0" max="366" step="0.5" data-lq-user="${esc(p.userId)}" data-lq-type="${esc(t)}" value="${p.own[t] === null ? '' : p.own[t]}" placeholder="${cfg.defaults[t]}" title="Allowance for ${esc(p.name)} (empty = default ${cfg.defaults[t]})" style="width:70px;margin-top:4px;${p.own[t] === null ? '' : 'border-color:var(--navy);font-weight:700;'}"></td>`; }).join('')}</tr>`).join('') || `<tr><td colspan="${T.length + 2}">${empty('No staff.')}</td></tr>`}</tbody></table></div></div>`;
+$('lqDefSave').onclick = () => {
+const list = [...el.querySelectorAll('[data-lq-def]')]; $('lqDefSave').disabled = true;
+list.reduce((p, x) => p.then(() => Number(x.value) === cfg.defaults[x.dataset.lqDef] ? null : run('saveLeaveQuota', { type: x.dataset.lqDef, days: x.value })), Promise.resolve())
+.then(() => { showToast('Allowance saved for everyone', 'success'); loadAllowance(); reload('leave'); }).catch(e => { $('lqDefSave').disabled = false; showToast(errMsg(e), 'error'); });
+};
+el.querySelectorAll('[data-lq-user]').forEach(x => x.onchange = () => {
+x.disabled = true;
+run('saveLeaveQuota', { userId: x.dataset.lqUser, type: x.dataset.lqType, days: x.value }).then(nc => { showToast(x.value === '' ? 'Back to the default' : 'Allowance saved', 'success'); paintAllowance(nc); })
+.catch(e => { x.disabled = false; showToast(errMsg(e), 'error'); });
+});
+}
 function leaveTable(list, showName, actions) {
 if (!list.length) return empty('Nothing here.');
 return `<div class="sx-table-wrap"><table class="sx-table"><thead><tr>${showName ? '<th>Name</th>' : ''}<th>Type</th><th>From</th><th>To</th><th class="num">Days</th><th>Status</th><th>Reason</th>${actions ? '<th></th>' : ''}</tr></thead><tbody>
@@ -14990,18 +15046,20 @@ return `<div class="hr-cal">${DOW.map(x => `<div class="hd">${x}</div>`).join(''
 function renderLeave(d) {
 const f = HR.f.leave;
 const mine = d.requests.filter(l => l.mine), team = d.requests.filter(l => !l.mine), pending = d.requests.filter(l => l.canReview);
-const subs = [['mine', 'My Leaves']].concat(d.canReview ? [['team', 'Team Leaves'], ['pending', 'Pending Approval (' + pending.length + ')']] : []);
+const subs = [['mine', 'My Leaves']].concat(d.canReview ? [['team', 'Team Leaves'], ['pending', 'Pending Approval (' + pending.length + ')']] : []).concat(d.canAdmin ? [['allow', '⚙ Leave allowance']] : []);
 if (!subs.some(s => s[0] === f.sub)) f.sub = 'mine';
 const b = d.balance;
-let html = `<div class="s10-chips">${subs.map(s => `<button class="s10-chip ${f.sub === s[0] ? 'on' : ''}" data-lv-sub="${s[0]}">${esc(s[1])}</button>`).join('')}<span style="flex:1"></span><button class="um-btn primary" id="lvApply">+ Apply for Leave</button></div>`;
+let html = `<div class="s10-chips">${subs.map(s => `<button class="s10-chip ${f.sub === s[0] ? 'on' : ''}" data-lv-sub="${s[0]}">${esc(s[1])}</button>`).join('')}<span style="flex:1"></span>${d.canAdmin ? '<button class="um-btn" id="lvRecord">+ Record leave for staff</button>' : ''}<button class="um-btn primary" id="lvApply">+ Apply for Leave</button></div>`;
 if (f.sub === 'mine') {
 html += `<div class="sx-kpis">${['casual', 'sick', 'earned', 'emergency'].map(k => kpi(b[k].total ? b[k].remaining + '<span style="font-size:14px;color:var(--muted);font-weight:600;"> / ' + b[k].total + '</span>' : b[k].used, k.charAt(0).toUpperCase() + k.slice(1) + (b[k].total ? ' left' : ' used'))).join('')}</div>
-<div class="sx-card"><h3>My leave history</h3>${leaveTable(mine, false)}</div>`;
+<div class="sx-card"><h3>My leave history</h3>${leaveTable(mine, false, d.canAdmin ? l => `<button class="um-btn s10-mini" data-lv-edit="${esc(l.id)}">✏️ Edit</button>` : null)}</div>`;
 } else if (f.sub === 'team') {
 html += `<div class="sx-kpis">${kpi(d.summary.onLeaveToday, 'On leave today')}${kpi(d.summary.pending, 'Pending', d.summary.pending ? 'sx-mid' : '')}${kpi(d.summary.approved, 'Approved')}${kpi(d.summary.totalDays, 'Approved days')}</div>
 <div class="sx-card"><h3>This month</h3>${leaveCalendar(d.requests)}</div>
-<div class="sx-card"><h3>Team leave</h3>${leaveTable(team, true, l => (l.status === 'Approved' && l.reassigned !== 'Yes' && l.reassigned !== 'Restored' ? `<button class="um-btn s10-mini" data-lv-reassign="${esc(l.id)}">Reassign leads now</button>` : '') + (l.openReassignments ? `<button class="um-btn primary s10-mini" data-lv-restore="${esc(l.id)}">Restore ${l.openReassignments} lead${l.openReassignments === 1 ? '' : 's'}</button>` : ''))}</div>
+<div class="sx-card"><h3>Team leave</h3>${leaveTable(team, true, l => (d.canAdmin ? `<button class="um-btn s10-mini" data-lv-edit="${esc(l.id)}">✏️ Edit</button>` : '') + (l.status === 'Approved' && l.reassigned !== 'Yes' && l.reassigned !== 'Restored' ? `<button class="um-btn s10-mini" data-lv-reassign="${esc(l.id)}">Reassign leads now</button>` : '') + (l.openReassignments ? `<button class="um-btn primary s10-mini" data-lv-restore="${esc(l.id)}">Restore ${l.openReassignments} lead${l.openReassignments === 1 ? '' : 's'}</button>` : ''))}</div>
 <div class="sx-card"><h3>Leads currently handed over</h3>${d.reassignments.length ? `<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Student</th><th>From</th><th>To</th><th>Branch</th><th>When</th></tr></thead><tbody>${d.reassignments.slice().reverse().slice(0, 100).map(x => `<tr><td>${esc(x.student)}</td><td>${esc(x.from)}</td><td>${esc(x.to)}</td><td>${esc(x.branch)}</td><td>${fmtDate(x.at)}</td></tr>`).join('')}</tbody></table></div>` : empty('None — all leads are with their own counsellors.')}</div>`;
+} else if (f.sub === 'allow') {
+html += `<div id="lvAllow">${loading}</div>`;
 } else {
 html += `<div class="sx-card"><h3>Waiting for your approval</h3>${pending.length ? `<div class="s10-list">${pending.map(l => `<div class="s10-item"><div class="grow"><div class="nm">${esc(l.userName)} · ${esc(l.type)} · ${l.days} day${l.days === 1 ? '' : 's'}</div><div class="meta">${fmtDate(l.from)} → ${fmtDate(l.to)} · ${esc(l.branch)} · “${esc(l.reason)}”</div>${d.estimate[l.id] ? `<div class="meta" style="color:var(--warm);">⚠️ ${d.estimate[l.id]} Hot/Warm lead${d.estimate[l.id] === 1 ? '' : 's'} will be auto-reassigned while they're away</div>` : ''}</div>
 <button class="um-btn primary s10-mini" data-lv-ok="${esc(l.id)}">Approve</button><button class="um-btn danger s10-mini" data-lv-no="${esc(l.id)}">Reject</button></div>`).join('')}</div>` : empty('No pending requests.')}</div>`;
@@ -15009,6 +15067,9 @@ html += `<div class="sx-card"><h3>Waiting for your approval</h3>${pending.length
 body().innerHTML = html;
 body().querySelectorAll('[data-lv-sub]').forEach(x => x.onclick = () => { f.sub = x.dataset.lvSub; renderLeave(d); });
 $('lvApply').onclick = applyLeaveModal;
+if ($('lvRecord')) $('lvRecord').onclick = recordLeaveModal;
+body().querySelectorAll('[data-lv-edit]').forEach(x => x.onclick = () => editLeaveModal(d.requests.find(l => l.id === x.dataset.lvEdit)));
+if (f.sub === 'allow') loadAllowance();
 body().querySelectorAll('[data-lv-ok]').forEach(x => x.onclick = () => {
 const n = d.estimate[x.dataset.lvOk];
 if (!confirm('Approve this leave?' + (n ? '\n\n' + n + ' Hot/Warm lead(s) will be shared with colleagues while they are away (if the leave starts today or tomorrow; otherwise on the first day).' : ''))) return;
