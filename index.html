@@ -14827,13 +14827,21 @@ function go(tab) {
 HR.tab = tab;
 document.querySelectorAll('[data-hr-tab]').forEach(b => b.classList.toggle('active', b.dataset.hrTab === tab));
 if (HR.state[tab] === 'ready') { RENDER[tab](HR.cache[tab]); return; }
-const body = $('hrBody'); if (body) body.innerHTML = `<div class="sx-kpis">${Array(4).fill('<div class="sx-kpi"><div class="skeleton" style="height:52px;"></div></div>').join('')}</div>${loading}`;
+const body = $('hrBody');
+
+const keep = HR_KEEP.indexOf(tab) !== -1, saved = keep ? hrSaved(tab) : null;
+if (saved) { try { RENDER[tab](saved); if (body) body.insertAdjacentHTML('afterbegin', '<div class="sx-sub" id="hrStale" style="margin:0 0 8px;">⏳ Updating…</div>'); } catch (e) {   } }
+else if (body) body.innerHTML = `<div class="sx-kpis">${Array(4).fill('<div class="sx-kpi"><div class="skeleton" style="height:52px;"></div></div>').join('')}</div>${loading}`;
 HR.state[tab] = 'loading';
 
 const slow = setTimeout(() => { if (HR.tab === tab && HR.state[tab] === 'loading' && $('hrBody')) { $('hrBody').insertAdjacentHTML('afterbegin', '<div class="sx-sub" style="margin-bottom:10px;color:var(--warm);">Still loading… the server is busy. <button class="link-ghost" id="hrRetry">↻ Retry</button></div>'); const rb = $('hrRetry'); if (rb) rb.onclick = () => { HR.state[tab] = 'idle'; go(tab); }; } }, 20000);
-FETCH[tab]().then(d => { clearTimeout(slow); HR.state[tab] = 'ready'; HR.cache[tab] = d; if (HR.tab === tab) RENDER[tab](d); })
+FETCH[tab]().then(d => { clearTimeout(slow); HR.state[tab] = 'ready'; HR.cache[tab] = d; if (keep) hrSave(tab, d); if (HR.tab === tab && !(saved && $('hrModalBg') && $('hrModalBg').classList.contains('open'))) RENDER[tab](d); })
 .catch(e => { clearTimeout(slow); HR.state[tab] = 'idle'; if (HR.tab === tab && $('hrBody')) $('hrBody').innerHTML = empty(errMsg(e)); });
 }
+const HR_KEEP = ['team-hub', 'leave'];
+const hrKey = tab => 'akbar_hr_' + tab + '_' + String(localStorage.getItem('lo_token') || '').slice(-10);
+function hrSaved(tab) { try { const x = JSON.parse(localStorage.getItem(hrKey(tab)) || 'null'); return x && Date.now() - x.at < 864e5 ? x.d : null; } catch (e) { return null; } }
+function hrSave(tab, d) { try { localStorage.setItem(hrKey(tab), JSON.stringify({ at: Date.now(), d: d })); } catch (e) {   } }
 const reload = tab => { HR.state[tab || HR.tab] = 'idle'; HR.state['team-hub'] = 'idle'; if (!tab || tab === HR.tab) go(HR.tab); };
 const body = () => $('hrBody');
 
