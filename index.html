@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '15 Oct 2026 · v70';
+window.AKBAR_BUILD = '16 Oct 2026 · v71';
 
 (function () {
   try {
@@ -20129,7 +20129,7 @@ const digits = p => clean(p).replace(/\D/g, '');
 const today = () => { const d = new Date(Date.now() + 330 * 60000); return d.toISOString().slice(0, 10); };
 const OTHER = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView'];
 
-const C = { setup: null, branch: '', lead: null, result: '', skip: [], timerAt: 0, timerSec: 0, timerId: 0, busy: false };
+const C = { setup: null, branch: '', lead: null, result: '', skip: [], timerAt: 0, timerSec: 0, timerId: 0, busy: false, pre: null, saving: 0, failed: [] };
 function isCallerRole() {
   if (document.body.classList.contains('tc-staff')) return true;
   if (window._isSuperAdmin) return true;
@@ -20144,18 +20144,19 @@ function openCalling() {
   root.style.display = 'block';
   root.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-title">📞 Calling queue</h1><div class="sx-sub" id="cqSub">Loading…</div></div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><select id="cqBranch" style="display:none;" aria-label="Branch"></select><button class="um-btn" id="cqBack">← Back to dashboard</button></div></div>
-<div id="cqStats"></div><div id="cqBody"><div class="sx-card"><div class="skeleton" style="height:220px;"></div></div></div></div>`;
+<div id="cqPend"></div><div id="cqStats"></div><div id="cqBody"><div class="sx-card"><div class="skeleton" style="height:220px;"></div></div></div></div>`;
   $('cqBack').onclick = closeCalling;
   window.scrollTo(0, 0);
   loadSetup();
 }
 function closeCalling() {
-  stopTimer();
+  stopTimer(); C.pre = null;
   const root = $('callView'); if (root) { root.style.display = 'none'; root.innerHTML = ''; }
   const app = document.querySelector('.app'); if (app) app.style.display = '';
   if (typeof loadData === 'function') loadData();
 }
 function loadSetup() {
+  C.pre = null;
   run('getCallingSetup', C.branch).then(s => {
     C.setup = s; C.branch = s.branch;
     $('cqSub').textContent = s.branch + ' · bulk leads one by one · signed in as ' + s.me;
@@ -20238,10 +20239,34 @@ function resetLead() { stopTimer(); C.timerSec = 0; C.result = ''; C.notes = '';
 function next() {
   resetLead();
   const b = $('cqNext'); if (b) { b.disabled = true; b.textContent = 'Finding the next lead…'; }
-  run('getNextCallLead', C.branch, C.skip).then(r => {
+  const pre = C.pre; C.pre = null;
+  (pre || run('getNextCallLead', C.branch, C.skip)).then(r => {
     if (!r.lead) { C.lead = null; draw(); const m = $('cqMsg'); if (m) m.textContent = r.message || 'No leads right now.'; return; }
-    C.lead = r.lead; draw();
+    C.lead = r.lead; draw(); prefetch();
   }).catch(e => { C.lead = null; draw(); toast(errMsg(e), 'error'); });
+}
+
+window.addEventListener('beforeunload', ev => { if (C.saving || C.failed.length) { ev.preventDefault(); ev.returnValue = ''; } });
+function prefetch() {
+  if (!C.lead) return;
+  const p = run('getNextCallLead', C.branch, C.skip.concat([C.lead.leadId]));
+  p.catch(() => { if (C.pre === p) C.pre = null; });
+  C.pre = p;
+}
+function drawPend() {
+  const el = $('cqPend'); if (!el) return;
+  const f = C.failed.length;
+  el.innerHTML = f ? `<div class="sx-card" style="border-color:var(--danger,#B4232F);display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><b style="color:var(--danger,#B4232F);">⚠ ${f} call result${f === 1 ? '' : 's'} not saved</b><span class="sx-sub">${esc(C.failed.map(x => x.leadName || x.leadId).join(', '))}</span><button class="um-btn primary" id="cqRetry">Retry now</button></div>`
+    : C.saving ? `<div class="sx-sub" style="margin:0 0 8px;">⏳ Saving ${C.saving} call result${C.saving === 1 ? '' : 's'} in the background…</div>` : '';
+  const r = $('cqRetry'); if (r) r.onclick = () => { const list = C.failed; C.failed = []; list.forEach(send); drawPend(); };
+}
+function send(p) {
+  C.saving++; drawPend();
+  run('saveCallResult', p).then(r => {
+    C.saving--; drawPend();
+    toast(r.handedOverTo ? 'Handed over to ' + r.handedOverTo + ' — they have been notified' : 'Saved: ' + (p.leadName || '') + ' · ' + p.result);
+    if (!C.saving) run('getCallStats', C.branch).then(drawStats).catch(() => {});
+  }).catch(e => { C.saving--; C.failed.push(p); drawPend(); toast('Not saved: ' + (p.leadName || '') + ' — ' + errMsg(e), 'error'); });
 }
 function save(goNext) {
   if (C.busy || !C.lead || !C.result) return;
@@ -20250,14 +20275,9 @@ function save(goNext) {
   const p = { branch: C.branch, leadId: C.lead.leadId, leadName: C.lead.name, phone: C.lead.phone, result: C.result, talkSec: res && res.connected ? C.timerSec : 0, notes: C.notes || '' };
   if (C.result === 'Call back later') { if (!C.cbDate) { toast('Pick the call-back date', 'error'); return; } p.callBack = { date: C.cbDate, time: C.cbTime || '' }; }
   if (C.result === 'Interested' && C.ho) p.handover = { counsellor: C.ho, note: C.hoNote || '' };
-  C.busy = true;
-  const btn = $('cqSave'); if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
-  run('saveCallResult', p).then(r => {
-    C.busy = false; drawStats(r.stats);
-    toast(r.handedOverTo ? 'Handed over to ' + r.handedOverTo + ' — they have been notified' : 'Saved: ' + p.result);
-    C.lead = null;
-    if (goNext) next(); else { resetLead(); draw(); }
-  }).catch(e => { C.busy = false; toast(errMsg(e), 'error'); draw(); });
+  send(p);
+  C.lead = null;
+  if (goNext) next(); else { C.pre = null; resetLead(); draw(); }
 }
 function addStartButton() {
   const banner = $('leadsetBanner');
