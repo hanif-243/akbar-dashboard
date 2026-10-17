@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '16 Oct 2026 · v75';
+window.AKBAR_BUILD = '17 Oct 2026 · v76';
 
 (function () {
   try {
@@ -6737,12 +6737,13 @@ function missedHeadBtn(branch) {
 }
 function missedIsLead() { return !!(window._isSuperAdmin || (typeof viewerBranch !== 'undefined' && viewerBranch && typeof viewerCounselor !== 'undefined' && !viewerCounselor)); }
 function loadMissedFollowUps(showPopup) {
-  if (!window._authToken || typeof allRows === 'undefined' || !allRows.length || document.body.classList.contains('tc-staff')) return;
+  const tcMode = document.body.classList.contains('tc-staff');
+  if (!window._authToken || typeof allRows === 'undefined' || (!allRows.length && !tcMode)) return;
   promisifyRun('getMissedFollowUps', window._authToken).then(m => {
     const before = window._missedFU ? window._missedFU.total : null;
     window._missedFU = m;
     if (before !== m.total) { try { lastInsightsSignature = null; updateInsightsRow(allRows); } catch (e) {   } }
-    if (showPopup && missedIsLead() && m.total) {
+    if (showPopup && m.total) {
       let snooze = null; try { snooze = JSON.parse(localStorage.getItem('akbar_missed_snooze') || 'null'); } catch (e) { snooze = null; }
       if (!snooze || Date.now() > snooze.until || m.total > snooze.count) openMissedPopup('');
     }
@@ -6762,7 +6763,7 @@ function openMissedPopup(person) {
   const groups = {}; rows.forEach(x => { (groups[x.person] = groups[x.person] || []).push(x); });
   const ago = h => h < 1 ? 'less than an hour ago' : h < 24 ? h + ' hour' + (h === 1 ? '' : 's') + ' overdue' : Math.floor(h / 24) + ' day' + (Math.floor(h / 24) === 1 ? '' : 's') + ' overdue';
   const when = x => { const d = new Date(x.dueAt); return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) + (x.time ? ', ' + d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : ''); };
-  document.getElementById('missedFuTitle').textContent = '⏰ ' + rows.length + ' missed follow-up' + (rows.length === 1 ? '' : 's') + (person ? ' — ' + person : '');
+  document.getElementById('missedFuTitle').textContent = '⏰ ' + rows.length + ' missed follow-up' + (rows.length === 1 ? '' : 's') + (person ? ' — ' + person : missedIsLead() ? '' : ' — please call them back');
   document.getElementById('missedFuBody').innerHTML = (rows.length ? Object.keys(groups).sort((a, b) => groups[b].length - groups[a].length).map(name => '<div class="mfu-group"><div class="mfu-person"><b>' + escapeHtml(name) + '</b><span>' + groups[name].length + ' missed</span></div>' +
     groups[name].map(x => '<div class="mfu-row"><div class="mfu-main"><b>' + escapeHtml(x.leadName || x.leadId) + '</b><span>' + escapeHtml([x.type, x.branch].filter(Boolean).join(' · ')) + (x.notes ? ' — ' + escapeHtml(x.notes.slice(0, 80)) : '') + '</span></div><div class="mfu-due"><b>' + escapeHtml(when(x)) + '</b><span>' + ago(x.overdueHours) + '</span></div><button class="um-btn" data-missed-lead="' + escapeHtml(x.leadId) + '" data-missed-branch="' + escapeHtml(x.branch) + '">Open lead</button><span class="mfu-acts"><button class="um-btn" data-mfu-act="done" data-fu="' + escapeHtml(x.followUpId) + '" title="Mark this follow-up done">✓ Done</button><button class="um-btn" data-mfu-act="tomorrow" data-fu="' + escapeHtml(x.followUpId) + '" title="Move it to tomorrow, same time">→ Tomorrow</button><button class="um-btn" data-mfu-act="cancel" data-fu="' + escapeHtml(x.followUpId) + '" title="Cancel it (kept in the sheet)">✕ Cancel</button></span></div>').join('') + '</div>').join('')
     : '<div class="sx-empty">No missed follow-ups. 🎉</div>') +
@@ -6789,7 +6790,7 @@ document.addEventListener('click', e => {
 document.addEventListener('keydown', e => { const bg = document.getElementById('missedFuBg'); if (e.key === 'Escape' && bg && bg.classList.contains('open')) { closeMissedPopup(30); e.stopPropagation(); } }, true);
 (function () {
   let first = true;
-  setInterval(() => { if (typeof allRows !== 'undefined' && allRows.length && window._authToken) { if (first) { first = false; loadMissedFollowUps(true); } } }, 2000);
+  setInterval(() => { if (typeof allRows !== 'undefined' && (allRows.length || document.body.classList.contains('tc-staff')) && window._authToken) { if (first) { first = false; loadMissedFollowUps(true); } } }, 2000);
   setInterval(() => { if (!document.hidden) loadMissedFollowUps(true); }, 5 * 60000);
 })();
 
@@ -20283,7 +20284,7 @@ const digits = p => clean(p).replace(/\D/g, '');
 const today = () => { const d = new Date(Date.now() + 330 * 60000); return d.toISOString().slice(0, 10); };
 const OTHER = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView'];
 
-const C = { setup: null, branch: '', lead: null, result: '', skip: [], timerAt: 0, timerSec: 0, timerId: 0, busy: false, pre: null, saving: 0, failed: [] };
+const C = { setup: null, branch: '', lead: null, result: '', skip: [], timerAt: 0, timerSec: 0, timerId: 0, busy: false, pre: null, saving: 0, failed: [], done: [] };
 function isCallerRole() {
   if (document.body.classList.contains('tc-staff')) return true;
   if (window._isSuperAdmin) return true;
@@ -20349,7 +20350,7 @@ function draw() {
   b.innerHTML = `<div class="cq-cols"><div class="sx-card cq-lead">
 <h2>${esc(l.name || 'No name')}</h2><div class="cq-phone">${esc(clean(l.phone) || 'No phone')}</div>
 <div class="cq-facts">${facts.map(f => `<span><b>${esc(f[0])}</b>${esc(f[1])}</span>`).join('')}</div>
-${l.remark ? `<div class="cq-prev">${esc(l.remark)}</div>` : ''}
+${(l.history || []).length ? `<div class="cq-prev"><b>Earlier calls</b>${l.history.map(h => `<div>• ${esc(new Date(h.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }))} — ${esc(h.result)}${h.by ? ' (' + esc(h.by) + ')' : ''}${h.notes ? ': ' + esc(h.notes) : ''}</div>`).join('')}</div>` : ''}${l.remark ? `<div class="cq-prev">${esc(l.remark)}</div>` : ''}
 <div class="cq-callrow">${digits(l.phone) ? `<a class="cq-call" id="cqCall" href="tel:${esc(digits(l.phone).length === 10 ? '+91' + digits(l.phone) : '+' + digits(l.phone))}">📞 Call<\x2Fa><a class="um-btn" target="_blank" rel="noopener" href="https:\x2F\x2Fwa.me/${esc(digits(l.phone).length === 10 ? '91' + digits(l.phone) : digits(l.phone))}">WhatsApp</a>` : ''}
 <span class="cq-timer ${C.timerId ? 'on' : ''}" id="cqTimer">${clock()}</span><button class="um-btn" id="cqTimerBtn">${C.timerId ? '⏸ Stop timer' : '⏱ Start timer'}</button></div>
 <label class="f" style="font-size:12px;font-weight:700;color:var(--muted);">Call result</label>
@@ -20394,8 +20395,9 @@ function next() {
   resetLead();
   const b = $('cqNext'); if (b) { b.disabled = true; b.textContent = 'Finding the next lead…'; }
   const pre = C.pre; C.pre = null;
-  (pre || run('getNextCallLead', C.branch, C.skip)).then(r => {
+  (pre || run('getNextCallLead', C.branch, C.skip.concat(C.done))).then(r => {
     if (!r.lead) { C.lead = null; draw(); const m = $('cqMsg'); if (m) m.textContent = r.message || 'No leads right now.'; return; }
+    if (C.done.indexOf(r.lead.leadId) !== -1) { next(); return; }
     C.lead = r.lead; draw(); prefetch();
   }).catch(e => { C.lead = null; draw(); toast(errMsg(e), 'error'); });
 }
@@ -20403,7 +20405,7 @@ function next() {
 window.addEventListener('beforeunload', ev => { if (C.saving || C.failed.length) { ev.preventDefault(); ev.returnValue = ''; } });
 function prefetch() {
   if (!C.lead) return;
-  const p = run('getNextCallLead', C.branch, C.skip.concat([C.lead.leadId]));
+  const p = run('getNextCallLead', C.branch, C.skip.concat(C.done, [C.lead.leadId]));
   p.catch(() => { if (C.pre === p) C.pre = null; });
   C.pre = p;
 }
@@ -20415,6 +20417,7 @@ function drawPend() {
   const r = $('cqRetry'); if (r) r.onclick = () => { const list = C.failed; C.failed = []; list.forEach(send); drawPend(); };
 }
 function send(p) {
+  if (C.done.indexOf(p.leadId) === -1) { C.done.push(p.leadId); if (C.done.length > 500) C.done.shift(); }
   C.saving++; drawPend();
   run('saveCallResult', p).then(r => {
     C.saving--; drawPend();
@@ -21485,10 +21488,32 @@ function poll(force) {
     document.body.classList.add('ak-chat-on');
     if (s.same) return;
     const changed = C.ver && C.ver !== s.ver;
-    C.ver = s.ver; C.state = s; badge();
+    C.ver = s.ver; C.state = s; badge(); announce();
     if (C.open && C.view === 'list') drawList();
     if (C.open && C.view === 'chat' && C.ch && changed) loadChat(C.ch.id, true);
   }).catch(() => { C.busy = false; });
+}
+
+let annBusy = false;
+function announce() {
+  const s = C.state; if (!s || annBusy || C.open || document.getElementById('akAnnBg')) return;
+  const ch = s.channels.find(c => c.id === 'all'); if (!ch || !ch.unread) return;
+  annBusy = true;
+  call('getChatMessages', 'all').then(r => {
+    const list = r.messages.filter(m => !m.deleted && !m.mine).slice(-Math.min(ch.unread, 5));
+    s.unread = Math.max(0, s.unread - ch.unread); ch.unread = 0; badge();
+    if (list.length) showAnn(list);
+  }).catch(() => {}).then(() => { annBusy = false; });
+}
+function showAnn(list) {
+  const bg = document.createElement('div'); bg.id = 'akAnnBg'; bg.className = 'cmdk-backdrop open';
+  bg.innerHTML = '<div class="cmdk-box" role="dialog" aria-modal="true" aria-labelledby="akAnnT" style="max-width:520px;"><div class="preview-modal-header"><span id="akAnnT" style="font-size:15px;font-weight:800;flex:1;">📣 ' + (list.length === 1 ? 'New announcement' : list.length + ' new announcements') + '</span></div><div class="s10-body">' +
+    list.map(m => '<div style="border-left:4px solid #f22f3d;background:var(--canvas,#f6f7fb);border-radius:10px;padding:12px 14px;margin-bottom:10px;"><div style="font-size:12px;color:var(--muted,#667085);margin-bottom:4px;"><b style="color:var(--ink,#14161f);">' + esc(m.fromName) + '</b> · ' + esc(tm(m.at)) + '</div><div style="white-space:pre-wrap;font-size:14.5px;line-height:1.5;">' + esc(m.text || (m.lead ? '📎 ' + m.lead.name : '')) + '</div></div>').join('') +
+    '<div class="s10-actions"><button class="um-btn" id="akAnnChat">Open chat</button><button class="um-btn primary" id="akAnnOk">Got it</button></div></div></div>';
+  document.body.appendChild(bg);
+  const close = () => bg.remove();
+  $('akAnnOk').onclick = close;
+  $('akAnnChat').onclick = () => { close(); openPanel(); loadChat('all'); };
 }
 function schedule() { clearTimeout(C.timer); C.timer = setTimeout(() => poll().then(schedule), C.open ? 12000 : 30000); }
 
