@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '17 Oct 2026 · v77';
+window.AKBAR_BUILD = '17 Oct 2026 · v78';
 
 (function () {
   try {
@@ -21206,7 +21206,7 @@ const body = () => $('owBody');
 const fail = e => { const b = body(); if (b) b.innerHTML = `<div class="sx-card sx-empty">${esc(errMsg(e))}</div>`; };
 function load(force) {
   const v = V.view;
-  if (v === 'productivity') { if (!force && V.data.prod) drawProd(V.data.prod); run('getTeamProductivity', { days: V.prod.days, branch: V.prod.branch }).then(d => { V.data.prod = d; if (V.view === v) drawProd(d); }).catch(e => { if (!V.data.prod) fail(e); else toast(errMsg(e), 'error'); }); }
+  if (v === 'productivity') { if (!force && V.data.prod) drawProd(V.data.prod); run('getTeamProductivity', { days: V.prod.days, branch: V.prod.branch, source: V.prod.source || 'main' }).then(d => { V.data.prod = d; if (V.view === v) drawProd(d); }).catch(e => { if (!V.data.prod) fail(e); else toast(errMsg(e), 'error'); }); }
   else if (v === 'health') run('getBusinessHealth').then(d => { if (V.view === v) drawHealth(d); }).catch(fail);
   else if (v === 'leaderboard') run('getLeaderboard', V.month || '').then(d => { if (V.view === v) drawBoard(d); }).catch(fail);
   else if (v === 'cps') run('getCostPerStudent', V.cps.from || '', V.cps.to || '').then(d => { if (V.view === v) drawCps(d); }).catch(fail);
@@ -21226,7 +21226,7 @@ const HOW = { call: '📞 call', remark: '📝 remark', status: '🏷 status' };
 function drawProd(d) {
   const P = V.prod, s = d.summary, oh = d.officeHours;
   const hh = h => (h % 12 || 12) + (h < 12 ? ' am' : ' pm');
-  let h = `<div class="pd-bar"><div class="pd-seg">${[7, 14, 30, 90].map(n => `<button class="${n === d.days ? 'on' : ''}" data-pd-days="${n}">${n} days</button>`).join('')}</div>
+  let h = `<div class="pd-bar"><div class="pd-seg">${[['main', 'Meta & website leads'], ['bulk', 'Bulk telecalling'], ['all', 'All']].map(x => `<button class="${x[0] === d.source ? 'on' : ''}" data-pd-src="${x[0]}">${x[1]}</button>`).join('')}</div><div class="pd-seg">${[7, 14, 30, 90].map(n => `<button class="${n === d.days ? 'on' : ''}" data-pd-days="${n}">${n} days</button>`).join('')}</div>
 ${d.branches.length > 1 ? `<select id="pdBranch" class="pd-sel"><option value="">All branches</option>${d.branches.map(b => `<option ${b === d.branch ? 'selected' : ''}>${esc(b)}</option>`).join('')}</select>` : `<span class="pd-chip">${esc(d.branch)}</span>`}
 <span class="pd-note">Office time = Mon–Sat, ${hh(oh.start)}–${hh(oh.end)}. A lead that arrives at night and is called next morning counts only the office minutes.</span></div>
 <div class="pd-hero">
@@ -21260,6 +21260,7 @@ ${list.length > 400 || d.more ? `<div class="sx-sub" style="padding:8px 10px;">S
 <div class="sx-sub" style="margin-top:8px;">First touch = the first call (calling queue or call buttons), stamped remark or status change by a person on that lead — whichever came first. Auto-scoring and the system don't count. Hover a time to see the clock time including nights and Sundays.</div>`;
   body().innerHTML = h;
   body().querySelectorAll('[data-pd-days]').forEach(b => b.onclick = () => { P.days = +b.dataset.pdDays; load(true); });
+  body().querySelectorAll('[data-pd-src]').forEach(b => b.onclick = () => { P.source = b.dataset.pdSrc; P.person = ''; load(true); });
   const br = $('pdBranch'); if (br) br.onchange = () => { P.branch = br.value; P.person = ''; load(true); };
   body().querySelectorAll('[data-pd-person]').forEach(b => b.onclick = e => { e.stopPropagation(); P.person = P.person === b.dataset.pdPerson ? '' : b.dataset.pdPerson; drawProd(d); });
   body().querySelectorAll('[data-pd-f]').forEach(b => b.onclick = () => { P.filter = b.dataset.pdF; drawProd(d); });
