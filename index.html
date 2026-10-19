@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '18 Oct 2026 · v79';
+window.AKBAR_BUILD = '19 Oct 2026 · v80';
 
 (function () {
   try {
@@ -6489,6 +6489,7 @@ const q = document.getElementById('search').value.trim().toLowerCase();
 
 const baseFiltered = allRows.filter(r => {
 if (activeBranch !== 'All' && r.branch !== activeBranch) return false;
+if (window.akSheetFilter != null && (r.sheet || '') !== window.akSheetFilter) return false;
 if (q && !((r.name || '').toLowerCase().includes(q) || (r.phone || '').includes(q))) return false;
 if (bellFilterActive && !(!r.notifiedAt && minsSince(r.createdAt) > 15)) return false;
 if (dateRangeFrom || dateRangeTo) {
@@ -21494,6 +21495,63 @@ window.akIntake = function (v) {
   var b = /^(\d{4})-(\d{2})-\d{2}/.exec(s); if (b && +b[2] >= 1 && +b[2] <= 12) return M[+b[2] - 1] + ' ' + b[1];
   return s;
 };
+</script>
+
+<style>
+#akSheetBar { display: none; gap: 8px; padding: 10px 16px 6px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--border); }
+#akSheetBar.on { display: flex; }
+#akSheetBar .lbl { font: 600 10px/1 'IBM Plex Mono', monospace; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-right: 2px; }
+#akSheetBar .sh { display: inline-flex; align-items: stretch; border: 1px solid var(--border); border-radius: 12px; background: var(--card); overflow: hidden; box-shadow: 0 6px 16px -14px rgba(20,22,31,.6); }
+#akSheetBar .sh button { border: 0; background: none; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink); padding: 7px 11px; cursor: pointer; display: inline-flex; gap: 8px; align-items: center; max-width: 320px; }
+#akSheetBar .sh button .n { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#akSheetBar .sh button i { font-style: normal; font: 600 11px/1 'IBM Plex Mono', monospace; color: var(--muted); }
+#akSheetBar .sh button em { font-style: normal; font-size: 10.5px; font-weight: 700; color: var(--ok); }
+#akSheetBar .sh a { display: grid; place-items: center; padding: 0 9px; border-left: 1px solid var(--border); color: var(--muted); text-decoration: none; font-size: 13px; }
+#akSheetBar .sh a:hover { color: var(--red); background: var(--canvas); }
+#akSheetBar .sh.on { border-color: transparent; background: linear-gradient(160deg, #f22f3d, #b8121f); box-shadow: 0 8px 18px -10px rgba(242,47,61,.85); }
+#akSheetBar .sh.on button, #akSheetBar .sh.on button i, #akSheetBar .sh.on a { color: #fff; } #akSheetBar .sh.on button em { color: #FFE3E5; } #akSheetBar .sh.on a { border-left-color: rgba(255,255,255,.3); }
+#akSheetBar .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: 0 0 auto; } #akSheetBar .sh.main .dot { background: #3E6BD6; } #akSheetBar .sh.extra .dot { background: #1F9D63; }
+</style>
+<script>
+(function () {
+const bar = document.createElement('div'); bar.id = 'akSheetBar'; bar.setAttribute('role', 'tablist'); bar.setAttribute('aria-label', 'Lead sheets');
+const sfb = document.getElementById('statusFilterBar'); if (!sfb) return; sfb.before(bar);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const SRC = {}, asked = {};
+window.akSheetFilter = null;
+let lastBranch = null, lastSig = '';
+const canSee = () => !!(window._isSuperAdmin || (typeof viewerBranch !== 'undefined' && viewerBranch && typeof viewerCounselor !== 'undefined' && !viewerCounselor && !document.body.classList.contains('tc-staff')));
+function load(branch) {
+  if (asked[branch] || !window._authToken) return; asked[branch] = 1;
+  promisifyRun('getBranchSources', window._authToken, branch).then(list => { SRC[branch] = list; lastSig = ''; paint(); }).catch(() => { asked[branch] = 0; });
+}
+function paint() {
+  const branch = typeof activeBranch !== 'undefined' ? activeBranch : 'All';
+  if (branch !== lastBranch) { lastBranch = branch; if (window.akSheetFilter !== null) { window.akSheetFilter = null; if (typeof render === 'function') render(); } }
+  if (!canSee() || branch === 'All' || typeof allRows === 'undefined') { bar.classList.remove('on'); return; }
+  load(branch);
+  const rows = allRows.filter(r => r.branch === branch), today = new Date().toISOString().slice(0, 10);
+  const known = (SRC[branch] || [{ key: '', label: 'Main sheet', main: true }]).slice();
+  rows.forEach(r => { const k = r.sheet || ''; if (k && !known.some(s => s.key === k)) known.push({ key: k, label: k, main: false }); });
+  if (known.length < 2) { bar.classList.remove('on'); return; }
+  const stat = k => { const m = rows.filter(r => (r.sheet || '') === k); return { n: m.length, today: m.filter(r => String(r.createdAt || '').slice(0, 10) === today).length }; };
+  const sig = branch + '|' + window.akSheetFilter + '|' + rows.length + '|' + known.map(s => s.key + s.url).join(',');
+  if (sig === lastSig) return; lastSig = sig;
+  const f = window.akSheetFilter;
+  bar.innerHTML = '<span class="lbl">Sheets</span>' +
+    '<span class="sh ' + (f === null ? 'on' : '') + '"><button type="button" role="tab" data-sh-k="__all" aria-selected="' + (f === null) + '"><span class="n">All sheets</span><i>' + rows.length + '</i></button></span>' +
+    known.map(s => { const st = stat(s.key), on = f === s.key;
+      return '<span class="sh ' + (s.main ? 'main' : 'extra') + (on ? ' on' : '') + '" title="' + esc(s.label) + (s.error ? ' — ' + esc(s.error) : '') + '"><button type="button" role="tab" data-sh-k="' + esc(s.key) + '" aria-selected="' + on + '"><span class="dot"></span><span class="n">' + esc(s.main ? s.label + ' (main)' : s.label) + '</span><i>' + st.n + '</i>' + (st.today ? '<em>+' + st.today + ' today</em>' : '') + '</button>' +
+        (s.url ? '<a href="' + esc(s.url) + '" target="_blank" rel="noopener" title="Open this sheet in Google Sheets" aria-label="Open ' + esc(s.label) + '">↗</a>' : '') + '</span>'; }).join('');
+  bar.classList.add('on');
+}
+bar.addEventListener('click', e => {
+  const b = e.target.closest('[data-sh-k]'); if (!b) return;
+  const k = b.dataset.shK; window.akSheetFilter = k === '__all' ? null : (window.akSheetFilter === k ? null : k);
+  lastSig = ''; paint(); if (typeof render === 'function') render();
+});
+setInterval(paint, 1500);
+})();
 </script>
 
 <style>
