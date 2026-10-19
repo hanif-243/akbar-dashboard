@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '19 Oct 2026 · v82';
+window.AKBAR_BUILD = '19 Oct 2026 · v83';
 
 (function () {
   try {
@@ -21582,11 +21582,11 @@ window.akIntake = function (v) {
 #akSheetBar { display: none; gap: 8px; padding: 12px 16px 8px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--border); }
 #akSheetBar.aksb-show { display: flex; }
 #akSheetBar .aksb-lbl { font: 600 10px/1 'IBM Plex Mono', monospace; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
-#akSheetBar .aksb-chip { display: inline-flex; align-items: center; flex: 0 0 auto; height: 34px; max-width: 360px; border: 1px solid var(--border); border-radius: 999px; background: var(--card); overflow: hidden; box-shadow: 0 4px 12px -10px rgba(20,22,31,.6); }
-#akSheetBar .aksb-btn { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px; height: 100%; padding: 0 12px; min-width: 0; cursor: pointer; font: 600 12.5px/1 'IBM Plex Sans', system-ui, sans-serif; color: var(--ink); white-space: nowrap; }
+#akSheetBar .aksb-chip { display: inline-flex; align-items: center; flex: 0 0 auto; height: 34px; max-width: 420px; border: 1px solid var(--border); border-radius: 999px; background: var(--card); overflow: hidden; box-shadow: 0 4px 12px -10px rgba(20,22,31,.6); }
+#akSheetBar .aksb-btn { all: unset; box-sizing: border-box; flex: 1 1 auto; overflow: hidden; display: inline-flex; align-items: center; gap: 8px; height: 100%; padding: 0 12px; min-width: 0; cursor: pointer; font: 600 12.5px/1 'IBM Plex Sans', system-ui, sans-serif; color: var(--ink); white-space: nowrap; }
 #akSheetBar .aksb-btn:focus-visible { outline: 2px solid var(--red); outline-offset: -2px; }
-#akSheetBar .aksb-name { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-#akSheetBar .aksb-sub { font-weight: 500; color: var(--muted); overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+#akSheetBar .aksb-name { flex: 0 0 auto; }
+#akSheetBar .aksb-sub { flex: 0 1 auto; font-weight: 500; color: var(--muted); overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 #akSheetBar .aksb-n { flex: 0 0 auto; font: 600 11px/1 'IBM Plex Mono', monospace; color: var(--muted); background: var(--canvas); padding: 4px 7px; border-radius: 999px; }
 #akSheetBar .aksb-new { flex: 0 0 auto; font: 700 10.5px/1 'IBM Plex Sans', system-ui, sans-serif; color: var(--ok); }
 #akSheetBar .aksb-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
