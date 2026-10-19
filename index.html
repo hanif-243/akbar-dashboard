@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '19 Oct 2026 · v81';
+window.AKBAR_BUILD = '19 Oct 2026 · v82';
 
 (function () {
   try {
@@ -21579,19 +21579,23 @@ window.akIntake = function (v) {
 </script>
 
 <style>
-#akSheetBar { display: none; gap: 8px; padding: 10px 16px 6px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--border); }
-#akSheetBar.on { display: flex; }
-#akSheetBar .lbl { font: 600 10px/1 'IBM Plex Mono', monospace; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-right: 2px; }
-#akSheetBar .sh { display: inline-flex; align-items: stretch; border: 1px solid var(--border); border-radius: 12px; background: var(--card); overflow: hidden; box-shadow: 0 6px 16px -14px rgba(20,22,31,.6); }
-#akSheetBar .sh button { border: 0; background: none; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink); padding: 7px 11px; cursor: pointer; display: inline-flex; gap: 8px; align-items: center; max-width: 320px; }
-#akSheetBar .sh button .n { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#akSheetBar .sh button i { font-style: normal; font: 600 11px/1 'IBM Plex Mono', monospace; color: var(--muted); }
-#akSheetBar .sh button em { font-style: normal; font-size: 10.5px; font-weight: 700; color: var(--ok); }
-#akSheetBar .sh a { display: grid; place-items: center; padding: 0 9px; border-left: 1px solid var(--border); color: var(--muted); text-decoration: none; font-size: 13px; }
-#akSheetBar .sh a:hover { color: var(--red); background: var(--canvas); }
-#akSheetBar .sh.on { border-color: transparent; background: linear-gradient(160deg, #f22f3d, #b8121f); box-shadow: 0 8px 18px -10px rgba(242,47,61,.85); }
-#akSheetBar .sh.on button, #akSheetBar .sh.on button i, #akSheetBar .sh.on a { color: #fff; } #akSheetBar .sh.on button em { color: #FFE3E5; } #akSheetBar .sh.on a { border-left-color: rgba(255,255,255,.3); }
-#akSheetBar .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: 0 0 auto; } #akSheetBar .sh.main .dot { background: #3E6BD6; } #akSheetBar .sh.extra .dot { background: #1F9D63; }
+#akSheetBar { display: none; gap: 8px; padding: 12px 16px 8px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--border); }
+#akSheetBar.aksb-show { display: flex; }
+#akSheetBar .aksb-lbl { font: 600 10px/1 'IBM Plex Mono', monospace; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+#akSheetBar .aksb-chip { display: inline-flex; align-items: center; flex: 0 0 auto; height: 34px; max-width: 360px; border: 1px solid var(--border); border-radius: 999px; background: var(--card); overflow: hidden; box-shadow: 0 4px 12px -10px rgba(20,22,31,.6); }
+#akSheetBar .aksb-btn { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px; height: 100%; padding: 0 12px; min-width: 0; cursor: pointer; font: 600 12.5px/1 'IBM Plex Sans', system-ui, sans-serif; color: var(--ink); white-space: nowrap; }
+#akSheetBar .aksb-btn:focus-visible { outline: 2px solid var(--red); outline-offset: -2px; }
+#akSheetBar .aksb-name { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+#akSheetBar .aksb-sub { font-weight: 500; color: var(--muted); overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+#akSheetBar .aksb-n { flex: 0 0 auto; font: 600 11px/1 'IBM Plex Mono', monospace; color: var(--muted); background: var(--canvas); padding: 4px 7px; border-radius: 999px; }
+#akSheetBar .aksb-new { flex: 0 0 auto; font: 700 10.5px/1 'IBM Plex Sans', system-ui, sans-serif; color: var(--ok); }
+#akSheetBar .aksb-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+#akSheetBar .aksb-main .aksb-dot { background: #3E6BD6; } #akSheetBar .aksb-extra .aksb-dot { background: #1F9D63; }
+#akSheetBar .aksb-open { all: unset; flex: 0 0 auto; display: inline-grid; place-items: center; width: 32px; height: 100%; border-left: 1px solid var(--border); color: var(--muted); cursor: pointer; font-size: 13px; }
+#akSheetBar .aksb-open:hover { color: var(--red); background: var(--canvas); }
+#akSheetBar .aksb-on { border-color: transparent; background: linear-gradient(160deg, #f22f3d, #b8121f); box-shadow: 0 8px 18px -10px rgba(242,47,61,.85); }
+#akSheetBar .aksb-on .aksb-btn, #akSheetBar .aksb-on .aksb-sub, #akSheetBar .aksb-on .aksb-open { color: #fff; } #akSheetBar .aksb-on .aksb-n { background: rgba(255,255,255,.22); color: #fff; }
+#akSheetBar .aksb-on .aksb-new { color: #FFE3E5; } #akSheetBar .aksb-on .aksb-open { border-left-color: rgba(255,255,255,.3); } #akSheetBar .aksb-on .aksb-dot { background: #fff; }
 </style>
 <script>
 (function () {
@@ -21609,22 +21613,23 @@ function load(branch) {
 function paint() {
   const branch = typeof activeBranch !== 'undefined' ? activeBranch : 'All';
   if (branch !== lastBranch) { lastBranch = branch; if (window.akSheetFilter !== null) { window.akSheetFilter = null; if (typeof render === 'function') render(); } }
-  if (!canSee() || branch === 'All' || typeof allRows === 'undefined') { bar.classList.remove('on'); return; }
+  if (!canSee() || branch === 'All' || typeof allRows === 'undefined') { bar.classList.remove('aksb-show'); return; }
   load(branch);
   const rows = allRows.filter(r => r.branch === branch), today = new Date().toISOString().slice(0, 10);
   const known = (SRC[branch] || [{ key: '', label: 'Main sheet', main: true }]).slice();
   rows.forEach(r => { const k = r.sheet || ''; if (k && !known.some(s => s.key === k)) known.push({ key: k, label: k, main: false }); });
-  if (known.length < 2) { bar.classList.remove('on'); return; }
+  if (known.length < 2) { bar.classList.remove('aksb-show'); return; }
   const stat = k => { const m = rows.filter(r => (r.sheet || '') === k); return { n: m.length, today: m.filter(r => String(r.createdAt || '').slice(0, 10) === today).length }; };
   const sig = branch + '|' + window.akSheetFilter + '|' + rows.length + '|' + known.map(s => s.key + s.url).join(',');
   if (sig === lastSig) return; lastSig = sig;
   const f = window.akSheetFilter;
-  bar.innerHTML = '<span class="lbl">Sheets</span>' +
-    '<span class="sh ' + (f === null ? 'on' : '') + '"><button type="button" role="tab" data-sh-k="__all" aria-selected="' + (f === null) + '"><span class="n">All sheets</span><i>' + rows.length + '</i></button></span>' +
-    known.map(s => { const st = stat(s.key), on = f === s.key;
-      return '<span class="sh ' + (s.main ? 'main' : 'extra') + (on ? ' on' : '') + '" title="' + esc(s.label) + (s.error ? ' — ' + esc(s.error) : '') + '"><button type="button" role="tab" data-sh-k="' + esc(s.key) + '" aria-selected="' + on + '"><span class="dot"></span><span class="n">' + esc(s.main ? s.label + ' (main)' : s.label) + '</span><i>' + st.n + '</i>' + (st.today ? '<em>+' + st.today + ' today</em>' : '') + '</button>' +
-        (s.url ? '<a href="' + esc(s.url) + '" target="_blank" rel="noopener" title="Open this sheet in Google Sheets" aria-label="Open ' + esc(s.label) + '">↗</a>' : '') + '</span>'; }).join('');
-  bar.classList.add('on');
+  const split = l => { const i = String(l).lastIndexOf(' › '); return i === -1 ? [String(l).trim(), ''] : [String(l).slice(0, i).trim(), String(l).slice(i + 3).trim()]; };
+  bar.innerHTML = '<span class="aksb-lbl">Sheets</span>' +
+    '<span class="aksb-chip' + (f === null ? ' aksb-on' : '') + '"><button type="button" class="aksb-btn" role="tab" data-sh-k="__all" aria-selected="' + (f === null) + '"><span class="aksb-name">All sheets</span><span class="aksb-n">' + rows.length + '</span></button></span>' +
+    known.map(s => { const st = stat(s.key), on = f === s.key, p = split(s.label);
+      return '<span class="aksb-chip ' + (s.main ? 'aksb-main' : 'aksb-extra') + (on ? ' aksb-on' : '') + '" title="' + esc(s.label) + (s.main ? ' — main sheet' : '') + (s.error ? ' — ' + esc(s.error) : '') + '"><button type="button" class="aksb-btn" role="tab" data-sh-k="' + esc(s.key) + '" aria-selected="' + on + '"><span class="aksb-dot"></span><span class="aksb-name">' + esc(s.main ? 'Main sheet' : p[0]) + '</span>' + ((s.main ? p[0] : p[1]) ? '<span class="aksb-sub">' + esc(s.main ? p[0] + (p[1] ? ' › ' + p[1] : '') : p[1]) + '</span>' : '') + '<span class="aksb-n">' + st.n + '</span>' + (st.today ? '<span class="aksb-new">+' + st.today + ' today</span>' : '') + '</button>' +
+        (s.url ? '<a class="aksb-open" href="' + esc(s.url) + '" target="_blank" rel="noopener" title="Open this sheet in Google Sheets" aria-label="Open ' + esc(s.label) + '">↗</a>' : '') + '</span>'; }).join('');
+  bar.classList.add('aksb-show');
 }
 bar.addEventListener('click', e => {
   const b = e.target.closest('[data-sh-k]'); if (!b) return;
