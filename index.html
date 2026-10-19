@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '19 Oct 2026 · v83';
+window.AKBAR_BUILD = '19 Oct 2026 · v84';
 
 (function () {
   try {
@@ -21590,6 +21590,19 @@ window.akIntake = function (v) {
 #akSheetBar .aksb-n { flex: 0 0 auto; font: 600 11px/1 'IBM Plex Mono', monospace; color: var(--muted); background: var(--canvas); padding: 4px 7px; border-radius: 999px; }
 #akSheetBar .aksb-new { flex: 0 0 auto; font: 700 10.5px/1 'IBM Plex Sans', system-ui, sans-serif; color: var(--ok); }
 #akSheetBar .aksb-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+#akSheetBar .aksb-view .aksb-dot { background: transparent; box-shadow: inset 0 0 0 1.5px var(--muted); }
+#akSheetBar .aksb-sep { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
+#akSheetBar .aksb-sec { font: 600 10px/1 'IBM Plex Mono', monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+#akViewBg .cmdk-box { max-width: 1100px; width: calc(100vw - 32px); }
+#akViewBg .vt-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+#akViewBg .vt-bar input { flex: 1; min-width: 200px; height: 36px; border: 1px solid var(--border); border-radius: 10px; padding: 0 12px; font: inherit; background: var(--card); color: inherit; }
+#akViewBg .vt-note { font-size: 12px; color: var(--muted); }
+#akViewBg .vt-wrap { max-height: 62vh; overflow: auto; border: 1px solid var(--border); border-radius: 12px; }
+#akViewBg table { width: 100%; border-collapse: collapse; font-size: 13px; }
+#akViewBg th { position: sticky; top: 0; background: var(--canvas); text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 8px 10px; }
+#akViewBg td { padding: 8px 10px; border-top: 1px solid var(--border); vertical-align: top; }
+#akViewBg td small { color: var(--muted); display: block; }
+#akViewBg .vt-acts a { margin-right: 8px; text-decoration: none; }
 #akSheetBar .aksb-main .aksb-dot { background: #3E6BD6; } #akSheetBar .aksb-extra .aksb-dot { background: #1F9D63; }
 #akSheetBar .aksb-open { all: unset; flex: 0 0 auto; display: inline-grid; place-items: center; width: 32px; height: 100%; border-left: 1px solid var(--border); color: var(--muted); cursor: pointer; font-size: 13px; }
 #akSheetBar .aksb-open:hover { color: var(--red); background: var(--canvas); }
@@ -21618,7 +21631,7 @@ function paint() {
   const rows = allRows.filter(r => r.branch === branch), today = new Date().toISOString().slice(0, 10);
   const known = (SRC[branch] || [{ key: '', label: 'Main sheet', main: true }]).slice();
   rows.forEach(r => { const k = r.sheet || ''; if (k && !known.some(s => s.key === k)) known.push({ key: k, label: k, main: false }); });
-  if (known.length < 2) { bar.classList.remove('aksb-show'); return; }
+  if (known.filter(s => !s.view).length < 2 && !known.some(s => s.view)) { bar.classList.remove('aksb-show'); return; }
   const stat = k => { const m = rows.filter(r => (r.sheet || '') === k); return { n: m.length, today: m.filter(r => String(r.createdAt || '').slice(0, 10) === today).length }; };
   const sig = branch + '|' + window.akSheetFilter + '|' + rows.length + '|' + known.map(s => s.key + s.url).join(',');
   if (sig === lastSig) return; lastSig = sig;
@@ -21626,12 +21639,45 @@ function paint() {
   const split = l => { const i = String(l).lastIndexOf(' › '); return i === -1 ? [String(l).trim(), ''] : [String(l).slice(0, i).trim(), String(l).slice(i + 3).trim()]; };
   bar.innerHTML = '<span class="aksb-lbl">Sheets</span>' +
     '<span class="aksb-chip' + (f === null ? ' aksb-on' : '') + '"><button type="button" class="aksb-btn" role="tab" data-sh-k="__all" aria-selected="' + (f === null) + '"><span class="aksb-name">All sheets</span><span class="aksb-n">' + rows.length + '</span></button></span>' +
-    known.map(s => { const st = stat(s.key), on = f === s.key, p = split(s.label);
+    known.filter(s => !s.view).map(s => { const st = stat(s.key), on = f === s.key, p = split(s.label);
       return '<span class="aksb-chip ' + (s.main ? 'aksb-main' : 'aksb-extra') + (on ? ' aksb-on' : '') + '" title="' + esc(s.label) + (s.main ? ' — main sheet' : '') + (s.error ? ' — ' + esc(s.error) : '') + '"><button type="button" class="aksb-btn" role="tab" data-sh-k="' + esc(s.key) + '" aria-selected="' + on + '"><span class="aksb-dot"></span><span class="aksb-name">' + esc(s.main ? 'Main sheet' : p[0]) + '</span>' + ((s.main ? p[0] : p[1]) ? '<span class="aksb-sub">' + esc(s.main ? p[0] + (p[1] ? ' › ' + p[1] : '') : p[1]) + '</span>' : '') + '<span class="aksb-n">' + st.n + '</span>' + (st.today ? '<span class="aksb-new">+' + st.today + ' today</span>' : '') + '</button>' +
-        (s.url ? '<a class="aksb-open" href="' + esc(s.url) + '" target="_blank" rel="noopener" title="Open this sheet in Google Sheets" aria-label="Open ' + esc(s.label) + '">↗</a>' : '') + '</span>'; }).join('');
+        (s.url ? '<a class="aksb-open" href="' + esc(s.url) + '" target="_blank" rel="noopener" title="Open this sheet in Google Sheets" aria-label="Open ' + esc(s.label) + '">↗</a>' : '') + '</span>'; }).join('') +
+(known.some(s => s.view) ? '<span class="aksb-sep" aria-hidden="true"></span><span class="aksb-sec">Old tabs · view only</span>' + known.filter(s => s.view).map(s => { const p = split(s.label);
+      return '<span class="aksb-chip aksb-view" title="' + esc(s.label) + ' — view only' + (s.error ? ' — ' + esc(s.error) : '') + '"><button type="button" class="aksb-btn" data-vt-k="' + esc(s.key) + '" data-vt-l="' + esc(s.label) + '"><span class="aksb-dot"></span><span class="aksb-name">' + esc(p[1] || p[0]) + '</span><span class="aksb-sub">' + esc(p[1] ? p[0] : '') + '</span><span class="aksb-n">' + (s.rows || 0) + '</span></button>' +
+        (s.url ? '<a class="aksb-open" href="' + esc(s.url) + '" target="_blank" rel="noopener" title="Open this tab in Google Sheets" aria-label="Open ' + esc(s.label) + '">↗</a>' : '') + '</span>'; }).join('') : '');
   bar.classList.add('aksb-show');
 }
+function openView(key, label) {
+  let bg = document.getElementById('akViewBg');
+  if (!bg) {
+    bg = document.createElement('div'); bg.id = 'akViewBg'; bg.className = 'cmdk-backdrop'; document.body.appendChild(bg);
+    bg.addEventListener('click', e => { if (e.target === bg || e.target.closest('[data-vt-x]')) bg.classList.remove('open'); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && bg.classList.contains('open')) { bg.classList.remove('open'); e.stopPropagation(); } }, true);
+  }
+  bg.innerHTML = '<div class="cmdk-box" role="dialog" aria-modal="true" aria-label="' + esc(label) + '"><div class="preview-modal-header"><span style="font-size:14px;font-weight:800;flex:1;">👁 ' + esc(label) + '</span><button class="counselor-save-btn" data-vt-x>Close</button></div><div class="s10-body" id="akViewBody"><div class="skeleton" style="height:220px;"></div></div></div>';
+  bg.classList.add('open');
+  promisifyRun('getViewTabLeads', window._authToken, activeBranch, key).then(d => {
+    const el = document.getElementById('akViewBody'); if (!el) return;
+    const dt = x => { if (!x) return ''; const t = new Date(x); return isNaN(t) ? '' : t.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); };
+    const digits = p => String(p || '').split('').filter(ch => ch >= '0' && ch <= '9').join('');
+    const draw = q => {
+      q = (q || '').toLowerCase();
+      const list = d.rows.filter(r => !q || (r.name + ' ' + r.phone + ' ' + r.email + ' ' + r.counselor + ' ' + r.remark + ' ' + r.campaign).toLowerCase().indexOf(q) !== -1);
+      document.getElementById('akViewRows').innerHTML = list.slice(0, 500).map(r => {
+        const ph = digits(r.phone), wa = ph.length === 10 ? '91' + ph : ph;
+        return '<tr><td><b>' + esc(r.name || '—') + '</b>' + (r.email ? '<small>' + esc(r.email) + '</small>' : '') + '</td><td>' + esc(r.phone) + (ph ? '<div class="vt-acts"><a href="tel:+' + esc(wa) + '">📞<\x2Fa><a href="https:\x2F\x2Fwa.me\x2F' + esc(wa) + '" target="_blank" rel="noopener">💬</a></div>' : '') + '</td><td>' + esc(dt(r.createdAt)) + '</td><td>' + esc(r.status) + '</td><td>' + esc(r.counselor) + '</td><td>' + esc(r.remark) + '</td><td><small>' + esc(r.campaign) + '</small></td></tr>';
+      }).join('') || '<tr><td colspan="7"><div class="sx-empty">Nothing matches.</div></td></tr>';
+      document.getElementById('akViewCount').textContent = list.length + ' of ' + d.total + (list.length > 500 ? ' (first 500 shown — search to narrow)' : '');
+    };
+    el.innerHTML = '<div class="vt-bar"><input type="search" id="akViewQ" placeholder="Search name, phone, email, counsellor, remark…"><span class="vt-note" id="akViewCount"></span><a class="um-btn" href="' + esc(d.url) + '" target="_blank" rel="noopener">Open in Google Sheets ↗</a></div>' +
+      '<div class="vt-note" style="margin-bottom:8px;">View only — these leads stay in their old tab. Nothing here is assigned, alerted or sent to Meta.' + (d.headerless ? ' This tab has no header row, so name, phone and email were recognised from the values.' : '') + '</div>' +
+      '<div class="vt-wrap"><table><thead><tr><th>Lead</th><th>Phone</th><th>Arrived</th><th>Status</th><th>Counsellor</th><th>Remark</th><th>Source</th></tr></thead><tbody id="akViewRows"></tbody></table></div>';
+    draw('');
+    document.getElementById('akViewQ').oninput = e => draw(e.target.value);
+  }).catch(err => { const el = document.getElementById('akViewBody'); if (el) el.innerHTML = '<div class="sx-empty">' + esc(err && err.message ? err.message : err) + '</div>'; });
+}
 bar.addEventListener('click', e => {
+  const v = e.target.closest('[data-vt-k]'); if (v) { openView(v.dataset.vtK, v.dataset.vtL); return; }
   const b = e.target.closest('[data-sh-k]'); if (!b) return;
   const k = b.dataset.shK; window.akSheetFilter = k === '__all' ? null : (window.akSheetFilter === k ? null : k);
   lastSig = ''; paint(); if (typeof render === 'function') render();
