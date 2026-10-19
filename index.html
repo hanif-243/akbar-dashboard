@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '19 Oct 2026 · v84';
+window.AKBAR_BUILD = '19 Oct 2026 · v85';
 
 (function () {
   try {
@@ -111,7 +111,7 @@ window.AKBAR_BUILD = '19 Oct 2026 · v84';
     }
     var keyOf = function (fn, args) { return fn + '|' + JSON.stringify(args || []); };
 
-    var mem = {}, memOrder = [], navAt = 0, NOMEM = { getAuthState: 1, getDashboardData: 1, getStudentQuestionCount: 1, getMetaAdsToday: 1, getFollowUpBoard: 1, getNextCallLead: 1, getChatState: 1, getChatMessages: 1, getServerBuild: 1, getLandingPages: 1, getStudentReviews: 1 };
+    var mem = {}, memOrder = [], navAt = 0, NOMEM = { getAuthState: 1, getDashboardData: 1, getStudentQuestionCount: 1, getMetaAdsToday: 1, getFollowUpBoard: 1, getNextCallLead: 1, getChatState: 1, getChatMessages: 1, getServerBuild: 1, getLandingPages: 1, getStudentReviews: 1, getBranchSources: 1, getViewTabLeads: 1, getCounsellorAvailability: 1, getSecurityStatus: 1 };
     var lastNavEl = null, userAt = 0, NAVSEL = '#sidebar .nav-item, .s10-tab, .sx-tab, .um-tab, .dash-tab, [data-fin-go], [data-dash-tab], [data-fin-view], [data-fin-tab], [data-hr-view], [data-hr-tab], [data-hr-go], [data-ma-go], [data-ma-view], [data-ma-tab], [data-visa-view], [data-vd-tab], [data-mr-tab], [data-um-tab], [data-sx-tab], [data-sq-tab], [data-sq-view], [data-s10-tab], [data-s10-go], [data-mu-view], [data-mou-view], [data-inv-view], [data-en-view], [data-go-tab], [data-b2b-view], [data-b2b-tab], [data-view], [data-own-view], #appTeamBtn, #ceoViewBtn';
     var lastWrite = 0; try { lastWrite = Number(localStorage.getItem('ak_lastwrite')) || 0; } catch (e) {   }
     function markWrite() { lastWrite = Date.now(); try { localStorage.setItem('ak_lastwrite', String(lastWrite)); } catch (e) {   } }
@@ -21620,7 +21620,7 @@ window.akSheetFilter = null;
 let lastBranch = null, lastSig = '';
 const canSee = () => !!(window._isSuperAdmin || (typeof viewerBranch !== 'undefined' && viewerBranch && typeof viewerCounselor !== 'undefined' && !viewerCounselor && !document.body.classList.contains('tc-staff')));
 function load(branch) {
-  if (asked[branch] || !window._authToken) return; asked[branch] = 1;
+  if ((asked[branch] && Date.now() - asked[branch] < 180000) || !window._authToken) return; asked[branch] = Date.now();
   promisifyRun('getBranchSources', window._authToken, branch).then(list => { SRC[branch] = list; lastSig = ''; paint(); }).catch(() => { asked[branch] = 0; });
 }
 function paint() {
