@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '19 Oct 2026 · v80';
+window.AKBAR_BUILD = '19 Oct 2026 · v81';
 
 (function () {
   try {
@@ -4464,6 +4464,10 @@ Akbar Study Abroad</textarea>
 <div class="nav-item own-mgr" data-own-view="quality" role="button" tabindex="0" title="Remarks that say nothing, follow-ups always pushed to tomorrow">
 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
 <span>Remark quality</span>
+</div>
+<div class="nav-item own-sa" data-own-view="security" role="button" tabindex="0" title="Meta tokens in secure storage, sheet access">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+<span>Security</span>
 </div>
 <div class="nav-item own-sa" data-own-view="audit" role="button" tabindex="0" title="Every important change, kept for good">
 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
@@ -14669,6 +14673,16 @@ body.tc-staff .hr-book-btn { display: none !important; }
 .hr-week > div { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 6px; min-height: 52px; font-size: 11.5px; }
 .hr-week .hd { background: var(--canvas); font-weight: 700; min-height: 0; text-align: center; }
 .hr-week .nm { font-weight: 700; display: flex; align-items: center; }
+.av-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 0 0 10px; } .av-legend span { display: inline-flex; gap: 6px; align-items: center; } .av-legend i { width: 14px; height: 10px; border-radius: 3px; display: inline-block; }
+.av-free { background: rgba(31,157,99,.55); } .av-ses { background: #3E6BD6; } .av-fu { background: #E0A126; } .av-off { background: repeating-linear-gradient(135deg, rgba(120,125,140,.18) 0 6px, rgba(120,125,140,.08) 6px 12px); }
+.av-slots { display: flex; gap: 8px; flex-wrap: wrap; } .av-slot { display: inline-flex; flex-direction: column; padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(31,157,99,.35); background: rgba(31,157,99,.07); font-size: 12.5px; } .av-slot b { font-size: 13px; }
+.av-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; } .av-av { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 12.5px; background: linear-gradient(160deg, #2b2838, #15131d); }
+.av-now { font-size: 12px; font-weight: 700; color: var(--muted); } .av-now.free { color: var(--ok); }
+.av-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; } .av-day { min-width: 0; } .av-day.today .av-dl { color: var(--red); }
+.av-dl { font-size: 11.5px; font-weight: 800; margin-bottom: 4px; } .av-bar { position: relative; height: 22px; border-radius: 7px; background: var(--canvas); overflow: hidden; box-shadow: inset 0 0 0 1px var(--border); }
+.av-bar > i { position: absolute; top: 3px; bottom: 3px; border-radius: 4px; } .av-full { position: absolute; inset: 0; display: grid; place-items: center; font-size: 10.5px; font-weight: 700; color: var(--muted); }
+.av-nowline { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--red); } .av-txt { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.35; }
+@media (max-width: 900px) { .av-week { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .hr-shift { display: block; border-radius: 6px; padding: 3px 6px; margin-bottom: 3px; color: #fff; cursor: pointer; font-weight: 600; }
 .hr-shift.Leads { background: #3E6BD6; } .hr-shift.Support { background: var(--ok); } .hr-shift.Admin { background: #8a8f9c; }
 .hr-add { width: 100%; border: 1px dashed var(--border); background: transparent; border-radius: 6px; color: var(--muted); cursor: pointer; font: inherit; }
@@ -14795,8 +14809,8 @@ $('hrJoinOpen').onclick = () => openChecklist(p.userId, true);
 }
 setInterval(() => { if (detectRole()) { startTracking(); loadProfile(); } }, 4000);
 
-const TABS = [['team-hub', '👥 Team'], ['attendance', '🕘 Attendance'], ['session-analytics', '📈 Session Analytics', 'lead'], ['leave', '🌴 Leave'], ['performance', '🏆 Performance'], ['training', '🎓 Training'], ['shifts', '🗓 Shifts'], ['allocation', '🎯 Lead allocation', 'lead'], ['counselling-sessions', '🎥 Sessions']];
-const HR = { tab: 'team-hub', state: {}, cache: {}, f: { attendance: { month: today().slice(0, 7) }, analytics: {}, leave: { sub: 'mine' }, performance: { month: today().slice(0, 7) }, training: { category: '' }, shifts: { week: weekStart(today()), branch: '', view: 'grid' }, allocation: { branch: '' }, sessions: { view: 'table', month: today().slice(0, 7) } } };
+const TABS = [['team-hub', '👥 Team'], ['attendance', '🕘 Attendance'], ['session-analytics', '📈 Session Analytics', 'lead'], ['leave', '🌴 Leave'], ['performance', '🏆 Performance'], ['training', '🎓 Training'], ['shifts', '🗓 Shifts'], ['allocation', '🎯 Lead allocation', 'lead'], ['availability', '📅 Availability', 'lead'], ['counselling-sessions', '🎥 Sessions']];
+const HR = { tab: 'team-hub', state: {}, cache: {}, f: { attendance: { month: today().slice(0, 7) }, analytics: {}, leave: { sub: 'mine' }, performance: { month: today().slice(0, 7) }, training: { category: '' }, shifts: { week: weekStart(today()), branch: '', view: 'grid' }, allocation: { branch: '' }, avail: { branch: '', week: weekStart(today()), need: 30 }, sessions: { view: 'table', month: today().slice(0, 7) } } };
 const FETCH = {
 'team-hub': () => run('getTeamHub'),
 'attendance': () => { const m = HR.f.attendance.month.split('-'); return run('getAttendance', { month: +m[1], year: +m[0], branch: HR.f.attendance.branch || '', counsellor: HR.f.attendance.who || '' }); },
@@ -14806,9 +14820,10 @@ const FETCH = {
 'training': () => run('getTrainingMaterials', {}),
 'shifts': () => run('getWeeklySchedule', HR.f.shifts.branch || '', HR.f.shifts.week),
 'counselling-sessions': () => run('getCounsellingSessions', {}),
-'allocation': () => run('getLeadAllocation', HR.f.allocation.branch || '')
+'allocation': () => run('getLeadAllocation', HR.f.allocation.branch || ''),
+'availability': () => run('getCounsellorAvailability', HR.f.avail.branch || '', HR.f.avail.week)
 };
-const RENDER = { 'team-hub': renderTeamHub, 'attendance': renderAttendance, 'session-analytics': renderSessionAnalytics, 'leave': renderLeave, 'performance': renderPerformance, 'training': renderTraining, 'shifts': renderShifts, 'allocation': renderAllocation, 'counselling-sessions': renderCounsellingSessions };
+const RENDER = { 'team-hub': renderTeamHub, 'attendance': renderAttendance, 'session-analytics': renderSessionAnalytics, 'leave': renderLeave, 'performance': renderPerformance, 'training': renderTraining, 'shifts': renderShifts, 'allocation': renderAllocation, 'availability': renderAvailability, 'counselling-sessions': renderCounsellingSessions };
 const visibleTabs = () => TABS.filter(t => (!t[2] || isLead()) && (!ROLE.tc || t[0] === 'training' || t[0] === 'shifts'));
 
 function openHRView(tab) {
@@ -15244,6 +15259,36 @@ run('applyForRoster', { items: items, notes: $('raNote').value }).then(r => { cl
 paint();
 }
 
+function renderAvailability(d) {
+const f = HR.f.avail, o = d.office, span = (o.end - o.start) * 60;
+const hm = m => { const h = Math.floor(m / 60), mm = m % 60; return ((h % 12) || 12) + (mm ? ':' + String(mm).padStart(2, '0') : '') + (h < 12 ? ' am' : ' pm'); };
+const pos = m => Math.max(0, Math.min(100, (m - o.start * 60) / span * 100));
+const label = ymd => DOW[dow(ymd) - 1] + ' ' + (+ymd.slice(8)) + ' ' + MON[+ymd.slice(5, 7) - 1];
+const nowD = d.nowIst.slice(0, 10), nowM = +d.nowIst.slice(11, 13) * 60 + +d.nowIst.slice(14, 16);
+const freeNow = p => { const day = p.week.find(x => x.day === nowD); return !!(day && day.free.some(x => x[0] <= nowM && x[1] > nowM)); };
+const upcoming = []; d.people.forEach(p => p.week.forEach(day => day.free.forEach(x => { if (day.day > nowD || (day.day === nowD && x[1] > nowM)) upcoming.push({ name: p.name, day: day.day, from: day.day === nowD ? Math.max(x[0], nowM) : x[0], to: x[1] }); })));
+upcoming.sort((a, b) => (a.day + String(a.from).padStart(4, '0')).localeCompare(b.day + String(b.from).padStart(4, '0')));
+const need = f.need || 30, fits = upcoming.filter(u => u.to - u.from >= need);
+body().innerHTML = `
+<div class="sx-filters"><button class="um-btn" id="avPrev">← Prev week</button><b>Week of ${fmtDate(d.weekStart)}</b><button class="um-btn" id="avNext">Next week →</button>
+${d.branches.length > 1 ? `<select id="avBranch">${opts(d.branches, d.branch)}</select>` : `<span class="sx-sub" style="margin:0;">${esc(d.branch)}</span>`}
+<span class="sx-sub" style="margin:0;flex:1;">Office ${hm(o.start * 60)}–${hm(o.end * 60)}, Mon–Sat. Busy = counselling sessions and follow-up calls with a time. With a roster, only rostered hours count as working time.</span></div>
+<div class="av-legend"><span><i class="av-free"></i>Free</span><span><i class="av-ses"></i>Counselling session</span><span><i class="av-fu"></i>Follow-up call</span><span><i class="av-off"></i>Off / leave / not rostered</span></div>
+<div class="sx-card"><h3>🔎 Find a free slot</h3><div class="sx-filters" style="margin:0 0 8px;"><span class="sx-sub" style="margin:0;">I need</span><select id="avNeed">${opts([{ v: 30, l: '30 minutes' }, { v: 60, l: '1 hour' }, { v: 90, l: '1½ hours' }, { v: 120, l: '2 hours' }], need)}</select></div>
+${fits.length ? `<div class="av-slots">${fits.slice(0, 12).map(u => `<span class="av-slot"><b>${esc(u.name)}</b>${esc(u.day === nowD ? 'Today' : label(u.day))} · ${hm(u.from)}–${hm(u.to)}</span>`).join('')}</div>` : empty('No free time of that length left this week.')}</div>
+${d.people.map(p => `<div class="sx-card av-person"><div class="av-head"><span class="av-av">${esc(String(p.name).split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase())}</span><div style="flex:1;min-width:0;"><b>${esc(p.name)}</b><div class="sx-sub">${p.hasRoster ? 'On the roster this week' : 'No roster this week — office hours used'}${p.userId ? '' : ' · no login matched'}</div></div>${d.weekStart <= nowD && nowD <= d.days[6] ? (freeNow(p) ? '<span class="av-now free">● Free now</span>' : '<span class="av-now">● Busy / off now</span>') : ''}<span class="sx-sub" style="margin:0;">${Math.round(p.week.reduce((t, x) => t + x.freeMins, 0) / 6) / 10} h free this week</span></div>
+<div class="av-week">${p.week.map(day => `<div class="av-day ${day.day === nowD ? 'today' : ''}"><div class="av-dl">${esc(label(day.day))}</div>
+<div class="av-bar">${day.onLeave ? '<div class="av-full av-off">On leave</div>' : day.off ? '<div class="av-full av-off">Off</div>' :
+  day.free.map(x => `<i class="av-free" style="left:${pos(x[0])}%;width:${pos(x[1]) - pos(x[0])}%" title="Free ${hm(x[0])}–${hm(x[1])}"></i>`).join('') +
+  day.busy.map(x => `<i class="${x.kind === 'session' ? 'av-ses' : 'av-fu'}" style="left:${pos(x.from)}%;width:${Math.max(1.5, pos(x.to) - pos(x.from))}%" title="${esc(hm(x.from) + ' · ' + x.title)}"></i>`).join('') +
+  (day.day === nowD ? `<b class="av-nowline" style="left:${pos(nowM)}%"></b>` : '')}</div>
+<div class="av-txt">${day.onLeave ? 'On leave' : day.off ? (p.hasRoster ? 'Not rostered' : 'Off') : day.free.length ? day.free.map(x => hm(x[0]) + '–' + hm(x[1])).join(', ') : 'Fully booked'}${day.busy.length ? ` <span class="sx-sub" style="display:inline;">· ${day.busy.length} booked</span>` : ''}</div></div>`).join('')}</div></div>`).join('') || empty('No counsellors in this branch.')}`;
+const move = n => { f.week = addDays(d.weekStart, n); reload('availability'); };
+$('avPrev').onclick = () => move(-7); $('avNext').onclick = () => move(7);
+const br = $('avBranch'); if (br) br.onchange = e => { f.branch = e.target.value; reload('availability'); };
+$('avNeed').onchange = e => { f.need = +e.target.value; renderAvailability(d); };
+}
+
 function renderAllocation(d) {
 const f = HR.f.allocation;
 const on = d.people.filter(p => p.on), tot = on.reduce((n, p) => n + p.share, 0);
@@ -15253,6 +15298,7 @@ body().innerHTML = `
 <div class="sx-card"><h3>Auto-assign for ${esc(d.branch)}</h3>
 <label class="s10-item" style="gap:10px;cursor:${d.canToggleAuto ? 'pointer' : 'default'};"><input type="checkbox" id="alAuto" ${d.autoAssign ? 'checked' : ''} ${d.canToggleAuto ? '' : 'disabled'} style="width:18px;height:18px;"><div class="grow"><div class="nm">Give new leads to counsellors automatically</div><div class="meta">${d.canToggleAuto ? 'When off, new leads stay unassigned until a manager assigns them.' : 'Only Super Admins can switch this.'}</div></div></label>
 <label class="s10-item" style="gap:10px;cursor:pointer;"><input type="checkbox" id="alLeave" ${d.skipLeave ? 'checked' : ''} style="width:18px;height:18px;"><div class="grow"><div class="nm">Skip counsellors on approved leave</div><div class="meta">Recommended — nobody gets new leads while they're away.</div></div></label>
+<div id="alSlow" class="sx-sub" style="margin:4px 0 8px;">Loading slow-lead rules…</div>
 <label class="s10-item" style="gap:10px;cursor:pointer;"><input type="checkbox" id="alRoster" ${d.rosterOnly ? 'checked' : ''} style="width:18px;height:18px;"><div class="grow"><div class="nm">Only counsellors on today's roster</div><div class="meta">New leads go only to people with a shift today (Team → Shifts). Turn on once the roster is filled in every week.</div></div></label></div>
 <div class="sx-card"><h3>Counsellors</h3><div class="sx-sub" style="margin-bottom:8px;"><b>Share</b>: 2× gets twice as many new leads as 1×. <b>Daily cap</b>: the most new leads in one day (empty = no limit). Auto-assign always gives the next lead to whoever has the fewest active leads for their share.</div>
 <div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Counsellor</th><th>Gets new leads</th><th>Share</th><th class="num">Daily cap</th><th class="num">Expected share</th><th class="num">Active leads</th><th class="num">Auto-assigned today</th><th>Today</th></tr></thead><tbody>
@@ -15262,6 +15308,12 @@ ${d.people.map((p, i) => `<tr><td style="font-weight:700;">${esc(p.name)}</td><t
 <td class="num" data-al-pct="${i}">${pct(p)}</td><td class="num">${p.activeLeads}</td><td class="num">${p.assignedToday}${p.cap !== null ? ' / ' + p.cap : ''}</td>
 <td>${p.onLeave ? st('On leave') : ''}${d.rosterOnly ? (p.onRoster ? ' <span class="sx-sub" style="display:inline;">on roster</span>' : ' <span class="sx-sub" style="display:inline;color:var(--warm);">no shift today</span>') : ''}${!p.userId ? ' <span class="sx-sub" style="display:inline;" title="No login matched this counsellor name, so leave and roster cannot be checked">no login match</span>' : ''}</td></tr>`).join('') || `<tr><td colspan="8">${empty('No counsellors in this branch.')}</td></tr>`}</tbody></table></div>
 <div class="sx-sub" style="margin-top:8px;">${d.preview.people.length ? 'Right now the next new lead can go to: <b>' + esc(d.preview.people.map(p => p.name).join(', ')) + '</b>' : '<span class="sx-bad">Right now nobody can take new leads — they would stay unassigned.</span>'}${d.preview.skipped.length ? ' · skipped: ' + esc(d.preview.skipped.join(', ')) : ''}</div></div>`;
+if (d.people.length === 1) body().querySelector('.sx-card').insertAdjacentHTML('afterbegin', '<div class="fin-alert" style="margin-bottom:10px;">⚠️ ' + esc(d.branch) + ' has only one counsellor, so there is no cover for leave or busy days. Leads that wait too long are reported to the branch manager and Super Admins instead of being moved.</div>');
+run('getSlowLeadRules', d.branch).then(r => { const el = $('alSlow'); if (!el) return;
+  el.outerHTML = '<label class="s10-item" style="gap:10px;cursor:pointer;"><input type="checkbox" id="alSlowOn" ' + (r.on ? 'checked' : '') + ' style="width:18px;height:18px;"><div class="grow"><div class="nm">Slow-lead alerts</div><div class="meta">A new Meta / website lead nobody has called: the counsellor is alerted after 1 office hour, the branch manager after 4.</div></div></label>' +
+    '<label class="s10-item" style="gap:10px;cursor:pointer;"><input type="checkbox" id="alSlowMove" ' + (r.move ? 'checked' : '') + ' style="width:18px;height:18px;"><div class="grow"><div class="nm">Pass the lead on after a full working day</div><div class="meta">Still untouched after 10 office hours → it moves to the next available counsellor (share, cap and leave rules apply). Both are told.</div></div></label>';
+  const save = () => run('saveSlowLeadRules', d.branch, { on: $('alSlowOn').checked, move: $('alSlowMove').checked }).then(() => showToast('Slow-lead rules saved', 'success')).catch(e => showToast(errMsg(e), 'error'));
+  $('alSlowOn').onchange = save; $('alSlowMove').onchange = save; }).catch(() => { const el = $('alSlow'); if (el) el.textContent = ''; });
 const recalc = () => { const P = d.people.map((p, i) => ({ on: body().querySelector(`[data-al-on="${i}"]`).checked, share: +body().querySelector(`[data-al-share="${i}"]`).value })); const t = P.filter(x => x.on).reduce((n, x) => n + x.share, 0);
 P.forEach((x, i) => { body().querySelector(`[data-al-pct="${i}"]`).textContent = x.on && t ? Math.round(x.share / t * 100) + '%' : '—'; }); };
 body().querySelectorAll('[data-al-on], [data-al-share]').forEach(x => x.onchange = recalc);
@@ -21188,7 +21240,7 @@ setInterval(() => { const mgr = typeof viewerBranch !== 'undefined' && !!viewerB
 const TITLES = { health: ['📊 Business health', 'Leads, follow-ups, applications, visa and money — one screen'], leaderboard: ['🏆 Leaderboard', 'Counsellors and branches by their results this month'],
   cps: ['💸 Ad spend → enrolment → fees', 'True cost per student, from the ads to the money received'], audit: ['🧾 Audit log', 'Every important change — nothing is thrown away'],
   backup: ['💾 Backups', 'Copies of every sheet in a private Drive folder'], alerts: ['📱 Phone alerts', 'Messages to the branch managers’ phones through Google Chat'],
-  productivity: ['⚡ Team productivity', 'Speed to lead, leads nobody has worked, calls, follow-ups — per person and per lead'], deadlines: ['📅 Deadlines', 'University deadlines, deposits, CAS, offer expiry — with reminders'], quality: ['🔍 Remark quality', 'Remarks that say nothing, follow-ups always pushed to tomorrow'] };
+  security: ['🔒 Security', 'Meta tokens kept where only the server can read them'], productivity: ['⚡ Team productivity', 'Speed to lead, leads nobody has worked, calls, follow-ups — per person and per lead'], deadlines: ['📅 Deadlines', 'University deadlines, deposits, CAS, offer expiry — with reminders'], quality: ['🔍 Remark quality', 'Remarks that say nothing, follow-ups always pushed to tomorrow'] };
 function open(view) {
   V.view = view;
   const app = document.querySelector('.app'); if (app) app.style.display = 'none';
@@ -21207,7 +21259,8 @@ const body = () => $('owBody');
 const fail = e => { const b = body(); if (b) b.innerHTML = `<div class="sx-card sx-empty">${esc(errMsg(e))}</div>`; };
 function load(force) {
   const v = V.view;
-  if (v === 'productivity') { if (!force && V.data.prod) drawProd(V.data.prod); run('getTeamProductivity', { days: V.prod.days, branch: V.prod.branch, source: V.prod.source || 'main' }).then(d => { V.data.prod = d; if (V.view === v) drawProd(d); }).catch(e => { if (!V.data.prod) fail(e); else toast(errMsg(e), 'error'); }); }
+  if (v === 'security') { run('getSecurityStatus').then(d => { if (V.view === v) drawSecurity(d); }).catch(fail); }
+  else if (v === 'productivity') { if (!force && V.data.prod) drawProd(V.data.prod); run('getTeamProductivity', { days: V.prod.days, branch: V.prod.branch, source: V.prod.source || 'main' }).then(d => { V.data.prod = d; if (V.view === v) drawProd(d); }).catch(e => { if (!V.data.prod) fail(e); else toast(errMsg(e), 'error'); }); }
   else if (v === 'health') run('getBusinessHealth').then(d => { if (V.view === v) drawHealth(d); }).catch(fail);
   else if (v === 'leaderboard') run('getLeaderboard', V.month || '').then(d => { if (V.view === v) drawBoard(d); }).catch(fail);
   else if (v === 'cps') run('getCostPerStudent', V.cps.from || '', V.cps.to || '').then(d => { if (V.view === v) drawCps(d); }).catch(fail);
@@ -21218,6 +21271,19 @@ function load(force) {
   else if (v === 'quality') run('getRemarkQuality', V.quality.branch || (typeof activeBranch !== 'undefined' && activeBranch !== 'All' ? activeBranch : ''), V.quality.days).then(d => { if (V.view === v) drawQuality(d); }).catch(fail);
 }
 const kpi = (l, v, s, cls) => `<div class="ow-kpi ${cls || ''}"><div class="l">${esc(l)}</div><div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ''}</div>`;
+
+function drawSecurity(d) {
+  const t = d.tokens, inSheet = t.filter(x => x.inSheet).length;
+  body().innerHTML = (inSheet ? `<div class="fin-alert">⚠️ ${inSheet} branch token${inSheet === 1 ? ' is' : 's are'} still typed in the Branches sheet — anyone who can open the Lead Ops Control Panel can copy ${inSheet === 1 ? 'it' : 'them'}. <button class="um-btn primary" id="secMove" style="margin-left:8px;">🔒 Move to secure storage</button></div>` : '<div class="fin-alert warm" style="background:rgba(31,157,99,.1);color:var(--ok);">✓ No tokens in the sheet — they are in secure storage, readable only by the server.</div>') +
+  `<div class="sx-card"><h3>Meta Conversions API tokens</h3><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Branch</th><th>Token</th><th>Pixel</th><th>CAPI</th><th>Replace token</th></tr></thead><tbody>${t.map(x => `<tr><td><b>${esc(x.branch)}</b></td>
+<td>${x.stored ? '<span style="color:var(--ok);font-weight:700;">🔒 secure storage</span>' : x.inSheet ? '<span style="color:var(--red);font-weight:700;">⚠️ in the sheet</span>' : '<span class="sx-sub">none</span>'}</td><td>${x.pixel ? '✓' : '—'}</td><td>${x.ready ? '<span style="color:var(--ok);font-weight:700;">ready</span>' : x.capiOn ? 'on, incomplete' : 'off'}</td>
+<td><div style="display:flex;gap:6px;"><input type="password" autocomplete="off" data-sec-tok="${esc(x.branch)}" placeholder="Paste a new token" style="min-width:180px;"><button class="um-btn s10-mini" data-sec-save="${esc(x.branch)}">Save</button></div></td></tr>`).join('')}</tbody></table></div>
+<div class="sx-sub" style="margin-top:8px;">A pasted token goes straight to secure storage and is never shown again. The page never receives the token itself.</div></div>
+<div class="sx-card"><h3>Also do this in Google Sheets (2 minutes)</h3><ol style="margin:0;padding-left:18px;line-height:1.8;font-size:13.5px;"><li>Open the <a href="${esc(d.controlSheetUrl)}" target="_blank" rel="noopener">Lead Ops Control Panel</a> → <b>Share</b>.</li><li>Keep only the directors as <b>Editor</b>. Staff never need this sheet — they work in the dashboard.</li><li>Set <b>General access</b> to <b>Restricted</b>.</li></ol></div>`;
+  const mv = $('secMove'); if (mv) mv.onclick = () => { mv.disabled = true; run('moveMetaTokensToSecure').then(r => { toast(r.moved + ' token(s) moved to secure storage'); drawSecurity({ tokens: r.tokens, controlSheetUrl: d.controlSheetUrl }); }).catch(e => { mv.disabled = false; toast(errMsg(e), 'error'); }); };
+  body().querySelectorAll('[data-sec-save]').forEach(b => b.onclick = () => { const inp = body().querySelector('[data-sec-tok="' + CSS.escape(b.dataset.secSave) + '"]'); if (!inp.value.trim()) { toast('Paste the token first', 'error'); return; }
+    b.disabled = true; run('setBranchMetaToken', b.dataset.secSave, inp.value).then(r => { inp.value = ''; toast('Token saved for ' + b.dataset.secSave); drawSecurity({ tokens: r.tokens, controlSheetUrl: d.controlSheetUrl }); }).catch(e => { b.disabled = false; toast(errMsg(e), 'error'); }); });
+}
 
 const dur = m => { if (m == null) return '—'; m = Math.round(m); if (m < 60) return m + ' min'; if (m < 1440) return Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' m' : ''); const d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60); return d + ' d' + (h ? ' ' + h + ' h' : ''); };
 const talk = s => { s = Number(s) || 0; if (!s) return '0 m'; const h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60); return (h ? h + ' h ' : '') + m + ' m'; };
@@ -21495,6 +21561,21 @@ window.akIntake = function (v) {
   var b = /^(\d{4})-(\d{2})-\d{2}/.exec(s); if (b && +b[2] >= 1 && +b[2] <= 12) return M[+b[2] - 1] + ' ' + b[1];
   return s;
 };
+</script>
+
+<script>
+(function () {
+  if (window.AKBAR_API) return;
+  const NEW = 'https:\x2F\x2Fhanif-243.github.io\x2Fakbar-dashboard\x2F';
+  const show = () => {
+    if (document.getElementById('akOldLink')) return;
+    const d = document.createElement('div'); d.id = 'akOldLink';
+    d.setAttribute('style', 'position:fixed;left:0;right:0;top:0;z-index:30000;background:linear-gradient(90deg,#b8121f,#f22f3d);color:#fff;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;font:600 14px/1.4 system-ui,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.25)');
+    d.innerHTML = '<span>⚠️ You are on the old, slower address. Please use the new Lead Ops link and bookmark it.</span><a href="' + NEW + '" target="_top" rel="noopener" style="background:#fff;color:#b8121f;padding:7px 14px;border-radius:999px;text-decoration:none;font-weight:800;">Open the new Lead Ops →</a>';
+    document.body.appendChild(d);
+  };
+  if (document.body) show(); else document.addEventListener('DOMContentLoaded', show);
+})();
 </script>
 
 <style>
