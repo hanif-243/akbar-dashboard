@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '21 Oct 2026 · v87';
+window.AKBAR_BUILD = '21 Oct 2026 · v88';
 
 (function () {
   try {
@@ -21280,6 +21280,18 @@ function drawSecurity(d) {
 <td><div style="display:flex;gap:6px;"><input type="password" autocomplete="off" data-sec-tok="${esc(x.branch)}" placeholder="Paste a new token" style="min-width:180px;"><button class="um-btn s10-mini" data-sec-save="${esc(x.branch)}">Save</button></div></td></tr>`).join('')}</tbody></table></div>
 <div class="sx-sub" style="margin-top:8px;">A pasted token goes straight to secure storage and is never shown again. The page never receives the token itself.</div></div>
 <div class="sx-card"><h3>Also do this in Google Sheets (2 minutes)</h3><ol style="margin:0;padding-left:18px;line-height:1.8;font-size:13.5px;"><li>Open the <a href="${esc(d.controlSheetUrl)}" target="_blank" rel="noopener">Lead Ops Control Panel</a> → <b>Share</b>.</li><li>Keep only the directors as <b>Editor</b>. Staff never need this sheet — they work in the dashboard.</li><li>Set <b>General access</b> to <b>Restricted</b>.</li></ol></div>`;
+  body().insertAdjacentHTML('afterbegin', '<div class="sx-card" id="secMig" style="border-left:4px solid var(--red);"><h3>🚚 Workspace migration — what must be copied</h3><div class="sx-sub">Checking every sheet, folder and job…</div></div>');
+  run('getMigrationInventory').then(m => { const el = $('secMig'); if (!el) return;
+    el.innerHTML = '<h3>🚚 Workspace migration — what must be copied</h3><div class="sx-sub" style="margin-bottom:8px;">Lead Ops runs as <b>' + esc(m.owner) + '</b>. IT is not moving Drive files, so each item below must be copied to the new console before the old accounts are switched off. The owner shown is the account that has to share or copy it.</div><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>What</th><th>Name</th><th>Owner</th><th></th></tr></thead><tbody>' +
+      m.files.map(x => '<tr><td>' + esc(x.kind) + '<div class="sx-sub">' + esc(x.label) + '</div></td><td>' + esc(x.name || '—') + (x.items != null ? ' <span class="sx-sub" style="display:inline;">· ' + x.items + ' files</span>' : '') + (x.error ? '<div class="sx-sub" style="color:var(--red);">' + esc(x.error) + '</div>' : '') + '</td><td>' + esc(x.owner || '—') + '</td><td><a href="' + esc(x.url) + '" target="_blank" rel="noopener">Open ↗</a></td></tr>').join('') + '</tbody></table></div>' +
+      '<div class="sx-sub" style="margin-top:8px;"><b>' + m.jobs.length + ' automatic jobs</b> run under this account (they must be re-created in the new one): ' + esc(Array.from(new Set(m.jobs)).join(', ')) + '.<br><b>' + m.storedSettings.length + ' stored settings</b> (Meta tokens etc.) to re-enter: ' + esc(m.storedSettings.join(', ')) + '. <b>' + m.users + '</b> active logins.</div>'; })
+    .catch(e => { const el = $('secMig'); if (el) el.innerHTML = '<h3>🚚 Workspace migration</h3><div class="sx-sub">' + esc(errMsg(e)) + '</div>'; });
+  body().insertAdjacentHTML('beforeend', '<div class="sx-card" id="secMail"><h3>Email senders</h3><div class="sx-sub">Checking…</div></div>');
+  run('getEmailSenders').then(m => { const el = $('secMail'); if (!el) return;
+    const row = (lbl, x) => `<tr><td><b>${esc(lbl)}</b></td><td>${esc(x.address)}</td><td>${x.ready ? '<span style="color:var(--ok);font-weight:700;">✓ sending from this address</span>' : '<span style="color:var(--warm);font-weight:700;">not set up yet — emails go from ' + esc(m.owner) + '</span>'}</td></tr>`;
+    el.innerHTML = '<h3>Email senders</h3><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Emails</th><th>From</th><th>Status</th></tr></thead><tbody>' + row('Lead alerts, assignments, hand-overs, slow-lead & SLA', m.lead) + row('Login codes, follow-ups, leave, roster, reports, students', m.sys) + '</tbody></table></div>' +
+      (m.lead.ready && m.sys.ready ? '' : '<div class="sx-sub" style="margin-top:8px;">To finish: in Gmail for <b>' + esc(m.owner) + '</b> → ⚙ Settings → See all settings → Accounts → <b>Send mail as</b> → Add another email address → add the missing address (untick “Treat as an alias” is not needed) → confirm. Then press ↻ Refresh here.</div>'); })
+    .catch(e => { const el = $('secMail'); if (el) el.innerHTML = '<h3>Email senders</h3><div class="sx-sub">' + esc(errMsg(e)) + '</div>'; });
   const mv = $('secMove'); if (mv) mv.onclick = () => { mv.disabled = true; run('moveMetaTokensToSecure').then(r => { toast(r.moved + ' token(s) moved to secure storage'); drawSecurity({ tokens: r.tokens, controlSheetUrl: d.controlSheetUrl }); }).catch(e => { mv.disabled = false; toast(errMsg(e), 'error'); }); };
   body().querySelectorAll('[data-sec-save]').forEach(b => b.onclick = () => { const inp = body().querySelector('[data-sec-tok="' + CSS.escape(b.dataset.secSave) + '"]'); if (!inp.value.trim()) { toast('Paste the token first', 'error'); return; }
     b.disabled = true; run('setBranchMetaToken', b.dataset.secSave, inp.value).then(r => { inp.value = ''; toast('Token saved for ' + b.dataset.secSave); drawSecurity({ tokens: r.tokens, controlSheetUrl: d.controlSheetUrl }); }).catch(e => { b.disabled = false; toast(errMsg(e), 'error'); }); });
