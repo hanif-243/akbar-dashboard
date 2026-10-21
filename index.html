@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '19 Oct 2026 · v86';
+window.AKBAR_BUILD = '21 Oct 2026 · v87';
 
 (function () {
   try {
@@ -6916,7 +6916,7 @@ const parts = email.split('@')[0].split(/[._-]/);
 const initials = parts.slice(0, 2).map(s => s[0] || '').join('').toUpperCase() || '?';
 
 const displayName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
-const roleLabel = isSuperAdmin ? (window._isHydra ? 'Hydra' : 'Super Admin') : (viewerCounselor ? 'Counselor' : 'Branch Manager');
+const roleLabel = isSuperAdmin ? 'Super Admin' : (viewerCounselor ? 'Counselor' : 'Branch Manager');
 
 const si = document.getElementById('viewerIdentity');
 if (si) {
@@ -10749,7 +10749,7 @@ body.innerHTML=list.map(function(u){
 return '<tr class="'+(u.canManage===false?'':'um-row-click')+'" data-um-user="'+escUm(u.username)+'" title="'+(u.canManage===false?'':'Click to edit')+'"><td><strong>'+escUm(u.name)+'</strong></td><td class="mono">'+escUm(u.username)+'</td><td>'+escUm(u.email)+'</td><td>'+escUm(u.role)+'</td><td>'+escUm(u.branch||'—')+'</td><td>'+escUm(u.counselorName||'—')+'</td><td><span class="um-status '+(u.enabled?'on':'off')+'">'+(u.enabled?'Active':'Inactive')+'</span></td><td>'+escUm(fmtUmDate(u.lastLogin))+'</td><td><div class="um-actions">'+
 (u.canManage===false
 ? (u.canChangePassword ? '<button class="um-icon-btn" onclick="changeUmPassword(\''+escUm(u.username)+'\')">Password</button>' : '')+'<span class="um-icon-btn" title="Only Hydra can change this account" style="cursor:default;">🔒 Protected</span>'
-: '<button class="um-icon-btn" onclick="editUmUser(\''+escUm(u.username)+'\')">Edit</button><button class="um-icon-btn" onclick="changeUmPassword(\''+escUm(u.username)+'\')">Password</button>'+(u.canRename?'<button class="um-icon-btn" onclick="renameUmUser(\''+escUm(u.username)+'\')">Rename</button>':'')+(u.canDelete?'<button class="um-icon-btn danger" onclick="deleteUmUser(\x27'+escUm(u.username)+'\x27)">Delete</button>':'')+(u.role==='Hydra'?'':'<button class="um-icon-btn" onclick="toggleUmUser(\''+escUm(u.username)+'\','+(!u.enabled)+')">'+(u.enabled?'Deactivate':'Activate')+'</button>'))+
+: '<button class="um-icon-btn" onclick="editUmUser(\''+escUm(u.username)+'\')">Edit</button><button class="um-icon-btn" onclick="changeUmPassword(\''+escUm(u.username)+'\')">Password</button>'+(u.canRename?'<button class="um-icon-btn" onclick="renameUmUser(\''+escUm(u.username)+'\')">Rename</button>':'')+(u.canDelete?'<button class="um-icon-btn danger" onclick="deleteUmUser(\x27'+escUm(u.username)+'\x27)">Delete</button>':'')+(u.isOwner||u.role==='Hydra'?'':'<button class="um-icon-btn" onclick="toggleUmUser(\''+escUm(u.username)+'\','+(!u.enabled)+')">'+(u.enabled?'Deactivate':'Activate')+'</button>'))+
 '</div></td></tr>';
 }).join('');
 }
