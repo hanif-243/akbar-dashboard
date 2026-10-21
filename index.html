@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '21 Oct 2026 · v88';
+window.AKBAR_BUILD = '21 Oct 2026 · v89';
 
 (function () {
   try {
@@ -21284,7 +21284,20 @@ function drawSecurity(d) {
   run('getMigrationInventory').then(m => { const el = $('secMig'); if (!el) return;
     el.innerHTML = '<h3>🚚 Workspace migration — what must be copied</h3><div class="sx-sub" style="margin-bottom:8px;">Lead Ops runs as <b>' + esc(m.owner) + '</b>. IT is not moving Drive files, so each item below must be copied to the new console before the old accounts are switched off. The owner shown is the account that has to share or copy it.</div><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>What</th><th>Name</th><th>Owner</th><th></th></tr></thead><tbody>' +
       m.files.map(x => '<tr><td>' + esc(x.kind) + '<div class="sx-sub">' + esc(x.label) + '</div></td><td>' + esc(x.name || '—') + (x.items != null ? ' <span class="sx-sub" style="display:inline;">· ' + x.items + ' files</span>' : '') + (x.error ? '<div class="sx-sub" style="color:var(--red);">' + esc(x.error) + '</div>' : '') + '</td><td>' + esc(x.owner || '—') + '</td><td><a href="' + esc(x.url) + '" target="_blank" rel="noopener">Open ↗</a></td></tr>').join('') + '</tbody></table></div>' +
-      '<div class="sx-sub" style="margin-top:8px;"><b>' + m.jobs.length + ' automatic jobs</b> run under this account (they must be re-created in the new one): ' + esc(Array.from(new Set(m.jobs)).join(', ')) + '.<br><b>' + m.storedSettings.length + ' stored settings</b> (Meta tokens etc.) to re-enter: ' + esc(m.storedSettings.join(', ')) + '. <b>' + m.users + '</b> active logins.</div>'; })
+      '<div class="sx-sub" style="margin-top:8px;"><b>' + m.jobs.length + ' automatic jobs</b> run under this account (they must be re-created in the new one): ' + esc(Array.from(new Set(m.jobs)).join(', ')) + '.<br><b>' + m.storedSettings.length + ' stored settings</b> (Meta tokens etc.) to re-enter: ' + esc(m.storedSettings.join(', ')) + '. <b>' + m.users + '</b> active logins.</div>';
+
+    if (/@akbarstudy\.com$/i.test(m.owner)) {
+      const mains = m.files.filter(x => /^Branch lead sheet/.test(x.kind)), bulks = m.files.filter(x => /^Bulk lead sheet/.test(x.kind)).map(x => x.label.split(' — ')[0]);
+      el.insertAdjacentHTML('beforeend', '<div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);"><b>Separate bulk leads</b><div class="sx-sub" style="margin:4px 0 8px;">Moves each branch’s bulk / telecaller leads out of its main sheet into a new “Branch – Bulk Leads” file in this account. Do this after the branch sheets are copied in and linked. Meta leads stay where they are.</div>' +
+        mains.map(x => { const b = x.label.split(' — ')[0], done = bulks.indexOf(b) !== -1; return '<button class="um-btn s10-mini" style="margin:0 6px 6px 0;" ' + (done || x.error ? 'disabled' : '') + ' data-bulk-split="' + esc(b) + '">' + (done ? '✓ ' + esc(b) + ' — bulk file ready' : x.error ? esc(b) + ' — sheet not reachable yet' : 'Split ' + esc(b)) + '</button>'; }).join('') + '</div>');
+      el.querySelectorAll('[data-bulk-split]').forEach(btn => btn.onclick = () => {
+        const b = btn.dataset.bulkSplit;
+        if (!confirm('Move ' + b + '’s bulk / telecaller leads into a new “' + b + ' – Bulk Leads” file?\n\nThis changes the NEW account copy only. The live sheets are not touched.')) return;
+        btn.disabled = true; btn.textContent = 'Moving ' + b + '…';
+        run('splitBulkLeads', b, 'MOVE').then(r => { btn.textContent = '✓ ' + b + ' — ' + r.moved + ' bulk leads moved'; toast(b + ': ' + r.moved + ' bulk leads moved to their own file, ' + r.kept + ' kept in the main sheet'); })
+          .catch(e2 => { btn.disabled = false; btn.textContent = 'Split ' + b; toast(errMsg(e2), 'error'); });
+      });
+    } })
     .catch(e => { const el = $('secMig'); if (el) el.innerHTML = '<h3>🚚 Workspace migration</h3><div class="sx-sub">' + esc(errMsg(e)) + '</div>'; });
   body().insertAdjacentHTML('beforeend', '<div class="sx-card" id="secMail"><h3>Email senders</h3><div class="sx-sub">Checking…</div></div>');
   run('getEmailSenders').then(m => { const el = $('secMail'); if (!el) return;
