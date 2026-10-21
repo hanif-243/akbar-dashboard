@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '21 Oct 2026 · v94';
+window.AKBAR_BUILD = '21 Oct 2026 · v95';
 
 (function () {
   try {
@@ -21290,7 +21290,8 @@ function drawSecurity(d) {
     el.insertAdjacentHTML('beforeend', '<div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);" id="migSteps">' + (isNew
       ? '<b>Step 2 · Copy the sheets into this account</b><div class="sx-sub" style="margin:4px 0 8px;">Makes a copy of every shared sheet next to this Control Panel and points the Branches tab at the copies. The old sheets are only read.</div><button class="um-btn primary s10-mini" id="migCopy">Copy sheets here</button><div id="migCopyOut"></div>' +
         '<div style="margin-top:12px;"><b>Step 3 · Copy the Drive folders</b><div class="sx-sub" style="margin:4px 0 8px;">Student documents, invoices, B2B files, backups. Big folders take a few rounds — click again until every line says done.</div><button class="um-btn s10-mini" id="migFolders">Copy folders</button><div id="migFoldersOut"></div></div>' +
-        '<div style="margin-top:12px;"><b>Step 4 · Catch up — just before the switch</b><div class="sx-sub" style="margin:4px 0 8px;">Brings over everything the team did on the old system since the copies were made. <b>Control Panel</b>: users, call logs, follow-ups, chat, leave… (each tab replaces the test data here). <b>Leads</b>: new leads are added and changed statuses, remarks and counsellors are updated. Nothing is deleted. Safe to run more than once.</div><button class="um-btn primary s10-mini" id="migCatchCp">1 · Catch up Control Panel</button> <button class="um-btn primary s10-mini" id="migCatchLeads">2 · Catch up leads</button><div id="migCatchCpOut"></div><div id="migCatchLeadsOut"></div></div>'
+        '<div style="margin-top:12px;"><b>Step 4 · Catch up — just before the switch</b><div class="sx-sub" style="margin:4px 0 8px;">Brings over everything the team did on the old system since the copies were made. <b>Control Panel</b>: users, call logs, follow-ups, chat, leave… (each tab replaces the test data here). <b>Leads</b>: new leads are added and changed statuses, remarks and counsellors are updated. Nothing is deleted. Safe to run more than once.</div><button class="um-btn primary s10-mini" id="migCatchCp">1 · Catch up Control Panel</button> <button class="um-btn primary s10-mini" id="migCatchLeads">2 · Catch up leads</button><div id="migCatchCpOut"></div><div id="migCatchLeadsOut"></div></div>' +
+        '<div style="margin-top:12px;"><b>Step 5 · Start the core jobs</b><div class="sx-sub" style="margin:4px 0 8px;">The 5-minute lead check (new-lead and slow-lead alerts), follow-up reminders, SLA, digests, weekly report, nightly backup. “Install all” on the Automation page does not include these. Anything already running is left alone.</div><button class="um-btn primary s10-mini" id="migCoreJobs">Start core jobs</button><div id="migCoreJobsOut"></div></div>'
       : '<b>Step 1 · Share everything with the new account</b><div class="sx-sub" style="margin:4px 0 8px;">Gives the new account Editor access to every sheet and folder above. Nothing is copied or changed.</div><input type="email" id="migTo" value="hanif.s@akbarstudy.com" style="height:34px;min-width:240px;border:1px solid var(--border);border-radius:9px;padding:0 10px;"> <button class="um-btn primary s10-mini" id="migShare">Share with new account</button><div id="migShareOut"></div>' +
         '<div style="margin-top:12px;"><b>After the switch · Stop this old system</b><div class="sx-sub" style="margin:4px 0 8px;">Removes this old system’s automatic jobs (lead checks, Meta pulls, reminders, backups) so it stops sending alerts. Do this only once the new system is live.</div><button class="um-btn s10-mini" id="migStopOld" style="color:var(--red);">Stop old system’s jobs</button><div id="migStopOldOut"></div></div>') + '</div>');
     const go = (btnId, outId, fn, args, msg) => { const b = $(btnId); if (!b) return; b.onclick = () => { b.disabled = true; const t = b.textContent; b.textContent = 'Working… (up to 5 minutes)';
@@ -21301,6 +21302,7 @@ function drawSecurity(d) {
     go('migFolders', 'migFoldersOut', 'migCopyFolders', () => [], 'Folder copy round finished');
     go('migCatchCp', 'migCatchCpOut', 'migCatchUpControlPanel', () => [], 'Control Panel caught up');
     go('migCatchLeads', 'migCatchLeadsOut', 'migCatchUpLeads', () => [], 'Leads caught up');
+    go('migCoreJobs', 'migCoreJobsOut', 'migInstallCoreJobs', () => [], 'Core jobs started');
     const stop = $('migStopOld'); if (stop) stop.onclick = () => {
       if (!confirm('Stop every automatic job of this OLD system?\n\nOnly do this after the dashboard has switched to the new account.')) return;
       stop.disabled = true;
