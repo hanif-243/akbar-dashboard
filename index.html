@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbx6Cc
 </script>
 <script>
 
-window.AKBAR_BUILD = '21 Oct 2026 · v91';
+window.AKBAR_BUILD = '21 Oct 2026 · v92';
 
 (function () {
   try {
@@ -21281,12 +21281,11 @@ function drawSecurity(d) {
 <div class="sx-sub" style="margin-top:8px;">A pasted token goes straight to secure storage and is never shown again. The page never receives the token itself.</div></div>
 <div class="sx-card"><h3>Also do this in Google Sheets (2 minutes)</h3><ol style="margin:0;padding-left:18px;line-height:1.8;font-size:13.5px;"><li>Open the <a href="${esc(d.controlSheetUrl)}" target="_blank" rel="noopener">Lead Ops Control Panel</a> → <b>Share</b>.</li><li>Keep only the directors as <b>Editor</b>. Staff never need this sheet — they work in the dashboard.</li><li>Set <b>General access</b> to <b>Restricted</b>.</li></ol></div>`;
   body().insertAdjacentHTML('afterbegin', '<div class="sx-card" id="secMig" style="border-left:4px solid var(--red);"><h3>🚚 Workspace migration — what must be copied</h3><div class="sx-sub">Checking every sheet, folder and job…</div></div>');
-  run('getMigrationInventory').then(m => { const el = $('secMig'); if (!el) return;
-    el.innerHTML = '<h3>🚚 Workspace migration — what must be copied</h3><div class="sx-sub" style="margin-bottom:8px;">Lead Ops runs as <b>' + esc(m.owner) + '</b>. IT is not moving Drive files, so each item below must be copied to the new console before the old accounts are switched off. The owner shown is the account that has to share or copy it.</div><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>What</th><th>Name</th><th>Owner</th><th></th></tr></thead><tbody>' +
-      m.files.map(x => '<tr><td>' + esc(x.kind) + '<div class="sx-sub">' + esc(x.label) + '</div></td><td>' + esc(x.name || '—') + (x.items != null ? ' <span class="sx-sub" style="display:inline;">· ' + x.items + ' files</span>' : '') + (x.error ? '<div class="sx-sub" style="color:var(--red);">' + esc(x.error) + '</div>' : '') + '</td><td>' + esc(x.owner || '—') + '</td><td><a href="' + esc(x.url) + '" target="_blank" rel="noopener">Open ↗</a></td></tr>').join('') + '</tbody></table></div>' +
-      '<div class="sx-sub" style="margin-top:8px;"><b>' + m.jobs.length + ' automatic jobs</b> run under this account (they must be re-created in the new one): ' + esc(Array.from(new Set(m.jobs)).join(', ')) + '.<br><b>' + m.storedSettings.length + ' stored settings</b> (Meta tokens etc.) to re-enter: ' + esc(m.storedSettings.join(', ')) + '. <b>' + m.users + '</b> active logins.</div>';
 
-    const isNew = /@akbarstudy\.com$/i.test(m.owner);
+  $('secMig').insertAdjacentHTML('beforebegin', '<div class="sx-card" id="secSteps" style="border-left:4px solid var(--red);"><h3>🚚 Migration steps</h3></div>');
+  (() => {
+
+    const isNew = /@akbarstudy\.com$/i.test(d.owner || ''), el = $('secSteps');
     const list = r => '<ul style="margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.7;">' + r.items.map(x => '<li>' + (x.ok ? (x.skipped ? '⏭ ' : '✅ ') : '❌ ') + esc(x.label) + (x.name ? ' — ' + esc(x.name) : '') + (x.files != null ? ' — ' + x.files + ' files' + (x.finished ? ' ✔ done' : ' … continue') : '') + (x.skipped ? ' <span class="sx-sub" style="display:inline;">(' + esc(x.skipped) + ')</span>' : '') + (x.error ? ' <span style="color:var(--red);">' + esc(x.error) + '</span>' : '') + (x.url ? ' <a href="' + esc(x.url) + '" target="_blank" rel="noopener">open ↗</a>' : '') + '</li>').join('') + '</ul>';
     el.insertAdjacentHTML('beforeend', '<div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);" id="migSteps">' + (isNew
       ? '<b>Step 2 · Copy the sheets into this account</b><div class="sx-sub" style="margin:4px 0 8px;">Makes a copy of every shared sheet next to this Control Panel and points the Branches tab at the copies. The old sheets are only read.</div><button class="um-btn primary s10-mini" id="migCopy">Copy sheets here</button><div id="migCopyOut"></div>' +
@@ -21308,6 +21307,11 @@ function drawSecurity(d) {
       run('migStopOldJobs').then(r => { $('migStopOldOut').innerHTML = '<div class="sx-sub" style="margin-top:6px;">✅ ' + r.stopped + ' job(s) stopped: ' + esc(r.jobs.join(', ')) + '</div>'; toast('Old system stopped'); })
         .catch(e => { stop.disabled = false; toast(errMsg(e), 'error'); });
     };
+  })();
+  run('getMigrationInventory').then(m => { const el = $('secMig'); if (!el) return;
+    el.innerHTML = '<h3>🚚 Workspace migration — what must be copied</h3><div class="sx-sub" style="margin-bottom:8px;">Lead Ops runs as <b>' + esc(m.owner) + '</b>. IT is not moving Drive files, so each item below must be copied to the new console before the old accounts are switched off. The owner shown is the account that has to share or copy it.</div><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>What</th><th>Name</th><th>Owner</th><th></th></tr></thead><tbody>' +
+      m.files.map(x => '<tr><td>' + esc(x.kind) + '<div class="sx-sub">' + esc(x.label) + '</div></td><td>' + esc(x.name || '—') + (x.items != null ? ' <span class="sx-sub" style="display:inline;">· ' + x.items + ' files</span>' : '') + (x.error ? '<div class="sx-sub" style="color:var(--red);">' + esc(x.error) + '</div>' : '') + '</td><td>' + esc(x.owner || '—') + '</td><td><a href="' + esc(x.url) + '" target="_blank" rel="noopener">Open ↗</a></td></tr>').join('') + '</tbody></table></div>' +
+      '<div class="sx-sub" style="margin-top:8px;"><b>' + m.jobs.length + ' automatic jobs</b> run under this account (they must be re-created in the new one): ' + esc(Array.from(new Set(m.jobs)).join(', ')) + '.<br><b>' + m.storedSettings.length + ' stored settings</b> (Meta tokens etc.) to re-enter: ' + esc(m.storedSettings.join(', ')) + '. <b>' + m.users + '</b> active logins.</div>';
 
     if (/@akbarstudy\.com$/i.test(m.owner)) {
       const mains = m.files.filter(x => /^Branch lead sheet/.test(x.kind)), bulks = m.files.filter(x => /^Bulk lead sheet/.test(x.kind)).map(x => x.label.split(' — ')[0]);
