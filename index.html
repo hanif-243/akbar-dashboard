@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '22 Oct 2026 · v121';
+window.AKBAR_BUILD = '22 Oct 2026 · v122';
 
 (function () {
   try {
@@ -20136,9 +20136,9 @@ ${sec('📈 Performance', grid([kpi('Spend', inr(t.spend)), kpi('Impressions', n
   kpi('CPM', inr(t.cpm), 'cost per 1,000 views'), kpi('Leads (Meta)', num(t.leads)), kpi('CPL', inr(t.cpl), 'cost per lead'), kpi('Frequency', t.frequency ? t.frequency.toFixed(2) : '—', 'times each person saw an ad')]))}
 ${sec('✅ Lead quality', grid([kpi('Leads in Lead Ops', num(q.leads), num(q.contacted) + ' contacted · ' + num(q.untouched) + ' not yet'), kpi('Qualified', num(q.qualified), pct(q.qualifiedRate) + ' of leads · Hot ' + num(q.hot) + ' / Warm ' + num(q.warm)),
   kpi('Cost per qualified lead', inr(t.cpql)), kpi('Junk', num(q.junk), pct(q.junkRate) + ' of leads · Cold ' + num(q.cold)), kpi('Enrolled', num(q.enrolled), t.costPerEnrolled ? inr(t.costPerEnrolled) + ' per enrolment' : '')]), 'Qualified = leads a counsellor marked Hot or Warm. Leads from a Meta campaign created in these dates.')}
-${sec('💰 Funds & forecast', fundsLine + grid([kpi('Available now', fu.error ? '—' : inr(fu.remaining), fu.prepaid ? 'prepaid balance' : fu.spendCap ? 'left of the spending limit' : 'no spending limit set'), kpi('Spent (lifetime)', inr(fu.amountSpent), fu.account ? esc(fu.account) : ''),
+${sec('💰 Funds & forecast', fundsLine + grid([kpi(fu.prepaid ? 'Available now' : 'Spending limit left', fu.error ? '—' : inr(fu.remaining), fu.prepaid ? 'prepaid balance' : fu.spendCap ? 'of the ' + inr(fu.spendCap) + ' account spending limit' : 'no spending limit set — Meta charges the card'), kpi('Spent (since limit set)', inr(fu.amountSpent), fu.account ? esc(fu.account) : ''),
   kpi('Added in these dates', inr(d.addedInRange)), kpi('Avg spend / day', inr(fc.burnPerDay), 'last 7 days'),
-  kpi('Money lasts', fc.daysLeft !== undefined ? fc.daysLeft + ' days' : '—', fc.runOutOn ? 'runs out ' + esc(fc.runOutOn) : ''), kpi('Add funds by', fc.addBy ? esc(fc.addBy) : '—', fc.addFor30Days !== undefined ? 'add ' + inr(fc.addFor30Days) + ' for 30 days' : ''),
+  kpi(fu.prepaid ? 'Money lasts' : 'Limit lasts', fc.daysLeft !== undefined ? fc.daysLeft + ' days' : '—', fc.runOutOn ? (fu.prepaid ? 'runs out ' : 'limit reached ') + esc(fc.runOutOn) : ''), kpi(fu.prepaid ? 'Add funds by' : 'Raise the limit by', fc.addBy ? esc(fc.addBy) : '—', fc.addFor30Days !== undefined ? (fc.addFor30Days ? (fu.prepaid ? 'add ' : 'raise by ') + inr(fc.addFor30Days) + ' to cover 30 days' : 'enough for the next 30 days') : ''),
   kpi('Next 30 days', inr((fc.next30 || {}).spend), num((fc.next30 || {}).leads) + ' leads · ' + num((fc.next30 || {}).qualified) + ' qualified (forecast)'), kpi('Bill due', inr(fu.billDue), fu.fundingSource ? esc(fu.fundingSource) : '')]) +
   `<div style="margin-top:6px;"><b>Funds added</b> <span class="sx-sub">— log each top-up so the report knows when money went in</span>
 <div class="ma-form" style="margin-top:8px;"><div><label class="f">Date</label><input type="date" id="mfDate" value="${esc(new Date(Date.now() + 330 * 60000).toISOString().slice(0, 10))}"></div><div><label class="f">Amount (₹)</label><input type="number" id="mfAmt" min="1" placeholder="e.g. 20000"></div><div><label class="f">Paid by / method</label><input type="text" id="mfMethod" placeholder="e.g. UPI, company card"></div><div><label class="f">Note</label><input type="text" id="mfNote" placeholder="optional"></div></div>
