@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '22 Oct 2026 · v99';
+window.AKBAR_BUILD = '22 Oct 2026 · v100';
 
 (function () {
   try {
@@ -18810,6 +18810,11 @@ el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { 
 .vd-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 6px; }
 .vd-seg button { border: 1.5px solid var(--border); background: var(--card); color: var(--ink); border-radius: 10px; padding: 10px 8px; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
 .vd-seg button.on { border-color: var(--navy); background: var(--navy); color: #fff; }
+.vd-grp { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0 0 14px; }
+.vd-grp button { text-align: left; border: 1.5px solid var(--border); background: var(--card); color: var(--ink); border-radius: 14px; padding: 12px 14px; font: inherit; cursor: pointer; }
+.vd-grp button b { display: block; font-size: 14px; } .vd-grp button span { font-size: 12px; color: var(--muted); }
+.vd-grp button.on { border-color: transparent; background: linear-gradient(160deg, #f22f3d, #b8121f); color: #fff; box-shadow: 0 8px 18px -10px rgba(242,47,61,.85); } .vd-grp button.on span { color: #FFE3E5; }
+@media (max-width: 600px) { .vd-grp { grid-template-columns: 1fr; } }
 .vd-pick { max-height: 220px; overflow: auto; display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
 .vd-pick button { text-align: left; border: 1px solid var(--border); background: var(--card); color: var(--ink); border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 12.5px; cursor: pointer; }
 .vd-pick button.on { border-color: var(--navy); box-shadow: inset 0 0 0 1px var(--navy); }
@@ -18850,7 +18855,7 @@ body.tc-staff .lvisa { display: none !important; }
 <script>
 
 (function () {
-const V = { data: null, tab: 'cases', q: '', source: '', stage: '', officer: '', branch: '', country: '', vtype: '', result: '', month: '', teamMode: false, loading: false, apptView: 'list', calMonth: null, flag: '' };
+const V = { data: null, tab: 'cases', group: '', q: '', source: '', stage: '', officer: '', branch: '', country: '', vtype: '', result: '', month: '', teamMode: false, loading: false, apptView: 'list', calMonth: null, flag: '' };
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const TABS = [['cases', 'Cases'], ['appointments', 'Appointments'], ['documents', 'Documents'], ['analytics', 'Analytics'], ['business', 'Business']];
 const SRC_CLS = { 'Our student': 's0', 'B2B agent': 's1', 'Direct client': 's2' };
@@ -18873,6 +18878,12 @@ const O = () => (V.data && V.data.options) || { stages: [], docTypes: [], source
 const X = () => (V.data && V.data.extras) || { missing: true, options: { visaTypes: [], apptTypes: [], apptStatuses: [], feeTypes: [], feeStatuses: [], englishTests: [], currencies: ['INR'], fxRates: { INR: 1 } }, alerts: {}, analytics: { kpis: {}, byCountry: [], byType: [], byOfficer: [], monthly: [], processing: [], rejectReasons: [], deadlines: { cas: [], passports: [], appointments: [] } }, appointments: [], feeSummary: {} };
 const XO = () => X().options;
 const caseById = id => ((V.data && V.data.cases) || []).find(c => c.id === id);
+
+function groupBar() {
+const g = (V.data && V.data.groups) || {}, b = (k, t, sub) => `<button type="button" data-vd-grp="${k}" class="${V.group === k ? 'on' : ''}"><b>${t}</b><span>${sub}</span></button>`;
+setTimeout(() => document.querySelectorAll('[data-vd-grp]').forEach(x => x.onclick = () => { if (V.group === x.dataset.vdGrp) return; V.group = x.dataset.vdGrp; load(); }), 0);
+return `<div class="vd-grp" role="tablist">${b('', 'All visa cases', (g.all || 0) + ' cases')}${b('inhouse', '🏠 In-house', (g.inhouse || 0) + ' cases · ' + (g.inhouseOpen || 0) + ' open — our study-abroad students')}${b('outsource', '🌍 Outsource', (g.outsource || 0) + ' cases · ' + (g.outsourceOpen || 0) + ' open — agents & outside clients')}</div>`;
+}
 const isOfficer = () => V.data && /^Visa (Officer|Executive)$/.test(V.data.me.role);
 const RESULT_CLS = { Approved: 'ok', Rejected: 'bad', Withdrawn: 'muted', Pending: 'warm' };
 const resultPill = r => `<span class="vd-pill ${RESULT_CLS[r] || 'warm'}">${esc(r || 'Pending')}</span>`;
@@ -18941,10 +18952,10 @@ function openWhenReady(id) { if (V.data && caseById(id)) caseForm(caseById(id));
 function load(openId) {
 if (openId) pendingOpen = openId;
 if (V.loading) return; V.loading = true;
-run('getVisaDesk', { month: V.month }).then(d => { V.loading = false; V.data = d; render(); if (pendingOpen) { const c = caseById(pendingOpen); pendingOpen = null; if (c) caseForm(c); } })
+run('getVisaDesk', { month: V.month, group: V.group }).then(d => { V.loading = false; V.data = d; render(); if (pendingOpen) { const c = caseById(pendingOpen); pendingOpen = null; if (c) caseForm(c); } })
 .catch(e => { V.loading = false; const b = $('vdBody'); if (b) b.innerHTML = `<div class="sx-card sx-empty">Couldn't load the visa desk: ${esc(errMsg(e))} <button class="um-btn" id="vdRetry">Retry</button></div>`; const r = $('vdRetry'); if (r) r.onclick = () => load(); });
 }
-function refreshThen(fn) { V.loading = false; run('getVisaDesk', { month: V.month }).then(d => { V.data = d; render(); if (fn) fn(); }).catch(() => load()); }
+function refreshThen(fn) { V.loading = false; run('getVisaDesk', { month: V.month, group: V.group }).then(d => { V.data = d; render(); if (fn) fn(); }).catch(() => load()); }
 
 function monthOptions() { const out = [['', 'All time']]; const d = new Date(); for (let i = 0; i < 12; i++) { const x = new Date(d.getFullYear(), d.getMonth() - i, 1); const mk = x.getFullYear() + '-' + ('0' + (x.getMonth() + 1)).slice(-2); out.push([mk, fmtMonth(mk)]); } return out; }
 function render() {
@@ -18980,7 +18991,7 @@ return d.cases.filter(c => (!flagIds || flagIds.has(c.id)) && (!V.source || c.so
 function renderCases() {
 const d = V.data, me = d.me, uniq = k => Array.from(new Set(d.cases.map(c => c[k]).filter(Boolean))).sort();
 const offs = uniq('officer');
-$('vdBody').innerHTML = kpiStrip() + banners() + `<div class="sx-filters">
+$('vdBody').innerHTML = groupBar() + kpiStrip() + banners() + `<div class="sx-filters">
 <input type="text" id="vdQ" placeholder="Search student, case, passport, CAS, university…" value="${esc(V.q)}" style="min-width:230px;">
 ${O().branches.length > 1 ? `<select id="vdBrF" aria-label="Branch">${opts(O().branches, V.branch, 'All branches')}</select>` : ''}
 ${O().canAssign ? `<select id="vdOffF" aria-label="Officer">${opts([['__none', 'Unassigned']].concat(offs), V.officer, 'Any officer')}</select>` : ''}
