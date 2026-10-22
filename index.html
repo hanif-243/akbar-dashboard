@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '22 Oct 2026 · v100';
+window.AKBAR_BUILD = '22 Oct 2026 · v101';
 
 (function () {
   try {
@@ -4636,6 +4636,7 @@ Akbar Study Abroad</textarea>
 <div class="nav-item" data-ma-view="meta-ads" data-role-guard="financial" role="button" tabindex="0" title="Spend, leads and cost per lead from Meta"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Meta Ads</span></div>
 <div class="nav-item" data-ma-view="meta-campaigns" data-role-guard="financial" role="button" tabindex="0" title="Every campaign as a card"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Campaign Manager</span></div>
 <div class="nav-item" data-ma-view="meta-ad-performance" data-role-guard="financial" role="button" tabindex="0" title="Campaigns, ad sets, ads and daily trends"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Ad Performance</span></div>
+<div class="nav-item" data-ma-view="meta-report" data-role-guard="financial" role="button" tabindex="0" title="CTR, CPM, CPL, qualified leads, funds and forecast — download as PDF"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Meta Report</span></div>
 <div class="nav-item" data-ma-view="meta-settings" data-role-guard="financial" role="button" tabindex="0" title="Token, ad account, auto-sync, branch tags"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Meta Settings</span></div>
 <div class="nav-item" data-lp-open data-role-guard="financial" role="button" tabindex="0" title="Landing pages for Meta ads — leads go straight into the dashboard"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Landing Pages</span></div>
 </div>
@@ -19589,11 +19590,11 @@ body.fin-ok .nav-item[data-role-guard="financial"] { display: flex !important; }
 <script>
 
 (function () {
-const M = { tab: 'overview', data: null, perf: null, settings: null, loading: false, f: { days: 30, from: '', to: '', branch: '', status: '', search: '' },
+const M = { tab: 'overview', data: null, perf: null, settings: null, rep: null, rf: { days: 30, from: '', to: '', branch: '' }, loading: false, f: { days: 30, from: '', to: '', branch: '', status: '', search: '' },
   ptab: 'campaigns', sort: { campaigns: ['spend', -1], adsets: ['spend', -1], ads: ['cpl', 1] }, setsCampaign: '', trendMetric: 'spend', compare: false, open: {}, detail: {},
   cols: { status: 1, branch: 1, spend: 1, leads: 1, cpl: 1, impressions: 1, clicks: 1, ctr: 1, cpm: 1, cpc: 1, reach: 1, frequency: 1, quality: 0, objective: 0 } };
-const TABS = [['overview', 'Meta Ads'], ['campaigns', 'Campaign Manager'], ['performance', 'Ad Performance'], ['settings', 'Meta Settings']];
-const VIEW_OF = { 'meta-ads': 'overview', 'meta-campaigns': 'campaigns', 'meta-ad-performance': 'performance', 'meta-settings': 'settings' };
+const TABS = [['overview', 'Meta Ads'], ['campaigns', 'Campaign Manager'], ['performance', 'Ad Performance'], ['report', '📊 Report'], ['settings', 'Meta Settings']];
+const VIEW_OF = { 'meta-ads': 'overview', 'meta-campaigns': 'campaigns', 'meta-ad-performance': 'performance', 'meta-report': 'report', 'meta-settings': 'settings' };
 const BCOL = { Mumbai: '#3E6BD6', Calicut: '#1F9D63', Kochi: '#D98A1F', Delhi: '#8452C9', Untagged: '#9AA0AE' };
 const $ = id => document.getElementById(id);
 const esc = v => escapeHtml(v == null ? '' : String(v));
@@ -19703,9 +19704,10 @@ function load() {
 const body = $('maBody'); if (!body) return;
 const seq = ++loadSeq;
 const fail = e => { if (seq !== loadSeq || !$('maBody')) return; $('maBody').innerHTML = `<div class="sx-card sx-empty">Couldn't load Meta Ads: ${esc(errMsg(e))} <button class="um-btn" id="maRetry">Retry</button></div>`; const r = $('maRetry'); if (r) r.onclick = load; };
-const cached = M.tab === 'settings' ? M.settings : M.tab === 'performance' ? M.perf : M.data;
+const cached = M.tab === 'settings' ? M.settings : M.tab === 'report' ? M.rep : M.tab === 'performance' ? M.perf : M.data;
 if (cached) render(); else body.innerHTML = '<div class="sx-card"><div class="skeleton" style="height:240px;"></div></div>';
 if (M.tab === 'settings') run('getMetaAdsSettings').then(d => { if (seq !== loadSeq) return; M.settings = d; render(); }).catch(fail);
+else if (M.tab === 'report') run('getMetaReport', mrFilt()).then(d => { if (seq !== loadSeq) return; M.rep = d; render(); }).catch(fail);
 else if (M.tab === 'performance') run('getMetaAdPerformance', filt()).then(d => { if (seq !== loadSeq) return; M.perf = d; M.data = M.data || d; render(); }).catch(fail);
 else run('getMetaAdsDashboard', filt()).then(d => { if (seq !== loadSeq) return; M.data = d; render(); }).catch(fail);
 }
@@ -19714,6 +19716,7 @@ function render() {
 const body = $('maBody'); if (!body) return;
 try {
 if (M.tab === 'settings') return renderMetaSettings(M.settings);
+if (M.tab === 'report') return renderMetaReport(M.rep);
 const d = M.tab === 'performance' ? M.perf : M.data; if (!d) return;
 if (!d.configured) { body.innerHTML = topBar(d) + setupCard(); wireTop(); return; }
 if (M.tab === 'overview') renderMetaAdsDashboard(d); else if (M.tab === 'campaigns') renderMetaCampaigns(d); else renderMetaAdPerformance(d);
@@ -20057,6 +20060,54 @@ run('getMetaAdsToday').then(r => { todayBusy = false; drawToday(r); }).catch(() 
 }
 setInterval(() => refreshToday(false), 4000);
 
+function renderMetaReport(d) {
+const body = $('maBody'); if (!body || !d) return;
+const rf = M.rf, t = d.total, q = t.quality, fu = d.funds || {}, fc = d.forecast || {};
+const pct = n => (n === null || n === undefined || isNaN(n)) ? '—' : Number(n).toFixed(2) + '%';
+const range = rf.days === 'custom' ? 'custom' : String(rf.days);
+const sec = (title, inner, sub) => `<div class="sx-card"><h3 style="margin:0 0 ${sub ? 2 : 10}px;">${title}</h3>${sub ? `<div class="sx-sub" style="margin-bottom:10px;">${sub}</div>` : ''}${inner}</div>`;
+const grid = list => `<div class="ma-kpis">${list.join('')}</div>`;
+const noHist = !d.historyDays;
+const tbl = rows => `<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Name</th><th class="num">Spend</th><th class="num">Impr.</th><th class="num">Clicks</th><th class="num">CTR</th><th class="num">CPM</th><th class="num">CPC</th><th class="num">Leads (Meta)</th><th class="num">CPL</th><th class="num">In sheet</th><th class="num">Qualified</th><th class="num">Junk</th><th class="num">Cost / qualified</th></tr></thead><tbody>${rows.map(x => `<tr><td><b>${esc(x.name)}</b></td><td class="num">${inr(x.spend)}</td><td class="num">${num(x.impressions)}</td><td class="num">${num(x.clicks)}</td><td class="num">${pct(x.ctr)}</td><td class="num">${inr(x.cpm)}</td><td class="num">${inr2(x.cpc)}</td><td class="num">${num(x.leads)}</td><td class="num">${inr(x.cpl)}</td><td class="num">${num(x.quality.leads)}</td><td class="num">${num(x.quality.qualified)}</td><td class="num">${num(x.quality.junk)}</td><td class="num"><b>${inr(x.cpql)}</b></td></tr>`).join('') || '<tr><td colspan="13" class="sx-sub">Nothing in these dates.</td></tr>'}</tbody></table></div>`;
+const maxS = Math.max(1, ...d.daily.map(x => x.spend)), maxQ = Math.max(1, ...d.daily.map(x => Math.max(x.sheetLeads, x.leads)));
+const chart = d.daily.length ? `<div style="display:flex;align-items:flex-end;gap:2px;height:120px;border-bottom:1px solid var(--border);">${d.daily.map(x => `<div title="${esc(x.date)}: ${esc(inr(x.spend))} spend · ${x.leads} Meta leads · ${x.qualified} qualified" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:1px;height:100%;"><div style="height:${x.spend / maxS * 100}%;background:#3E6BD6;opacity:.35;border-radius:2px 2px 0 0;"></div></div>`).join('')}</div>
+<div style="display:flex;align-items:flex-end;gap:2px;height:60px;margin-top:4px;">${d.daily.map(x => `<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;"><div style="height:${Math.max(x.leads, x.sheetLeads) / maxQ * 100}%;background:#D98A1F;border-radius:2px 2px 0 0;position:relative;"><div style="position:absolute;bottom:0;left:0;right:0;height:${Math.max(x.leads, x.sheetLeads) ? x.qualified / Math.max(x.leads, x.sheetLeads) * 100 : 0}%;background:#1F9D63;border-radius:2px 2px 0 0;"></div></div></div>`).join('')}</div>
+<div class="sx-sub" style="margin-top:6px;"><i style="display:inline-block;width:9px;height:9px;background:#3E6BD6;opacity:.35;"></i> spend per day &nbsp; <i style="display:inline-block;width:9px;height:9px;background:#D98A1F;"></i> leads &nbsp; <i style="display:inline-block;width:9px;height:9px;background:#1F9D63;"></i> of which qualified · ${esc(d.range.from)} → ${esc(d.range.to)}</div>` : '';
+const fundsLine = fu.error ? `<div class="ma-banner warm">Live funds could not be read from Meta: ${esc(fu.error)}. Paste a working token in Meta Settings.</div>` : '';
+body.innerHTML = `<div class="ma-top"><span class="grow">${noHist ? '<b style="color:var(--red)">No Meta data synced yet</b> — add the token in Meta Settings and press Sync, then this report fills in.' : 'Meta data synced for ' + esc(d.historyDays.first) + ' → ' + esc(d.historyDays.last)}</span>
+<select id="mrRange" aria-label="Date range">${opts([['7', 'Last 7 days'], ['30', 'Last 30 days'], ['60', 'Last 60 days'], ['90', 'Last 90 days'], ['custom', 'Custom dates…']], range)}</select>
+<span id="mrCustom" style="display:${range === 'custom' ? 'inline-flex' : 'none'};gap:6px;align-items:center;"><input type="date" id="mrFrom" value="${esc(rf.from)}" aria-label="From"> – <input type="date" id="mrTo" value="${esc(rf.to)}" aria-label="To"><button class="um-btn" id="mrApply">Apply</button></span>
+<select id="mrBranch" aria-label="Branch">${opts([['', 'All branches']].concat(d.branches.map(b => [b, b])), rf.branch)}</select>
+<button class="um-btn primary" id="mrPdf">⬇ Download PDF</button></div>
+${sec('📈 Performance', grid([kpi('Spend', inr(t.spend)), kpi('Impressions', num(t.impressions), 'Reach ' + num(t.reach)), kpi('Clicks', num(t.clicks), 'CPC ' + inr2(t.cpc)), kpi('CTR', pct(t.ctr)),
+  kpi('CPM', inr(t.cpm), 'cost per 1,000 views'), kpi('Leads (Meta)', num(t.leads)), kpi('CPL', inr(t.cpl), 'cost per lead'), kpi('Frequency', t.frequency ? t.frequency.toFixed(2) : '—', 'times each person saw an ad')]))}
+${sec('✅ Lead quality', grid([kpi('Leads in Lead Ops', num(q.leads), num(q.contacted) + ' contacted · ' + num(q.untouched) + ' not yet'), kpi('Qualified', num(q.qualified), pct(q.qualifiedRate) + ' of leads · Hot ' + num(q.hot) + ' / Warm ' + num(q.warm)),
+  kpi('Cost per qualified lead', inr(t.cpql)), kpi('Junk', num(q.junk), pct(q.junkRate) + ' of leads · Cold ' + num(q.cold)), kpi('Enrolled', num(q.enrolled), t.costPerEnrolled ? inr(t.costPerEnrolled) + ' per enrolment' : '')]), 'Qualified = leads a counsellor marked Hot or Warm. Leads from a Meta campaign created in these dates.')}
+${sec('💰 Funds & forecast', fundsLine + grid([kpi('Available now', fu.error ? '—' : inr(fu.remaining), fu.prepaid ? 'prepaid balance' : fu.spendCap ? 'left of the spending limit' : 'no spending limit set'), kpi('Spent (lifetime)', inr(fu.amountSpent), fu.account ? esc(fu.account) : ''),
+  kpi('Added in these dates', inr(d.addedInRange)), kpi('Avg spend / day', inr(fc.burnPerDay), 'last 7 days'),
+  kpi('Money lasts', fc.daysLeft !== undefined ? fc.daysLeft + ' days' : '—', fc.runOutOn ? 'runs out ' + esc(fc.runOutOn) : ''), kpi('Add funds by', fc.addBy ? esc(fc.addBy) : '—', fc.addFor30Days !== undefined ? 'add ' + inr(fc.addFor30Days) + ' for 30 days' : ''),
+  kpi('Next 30 days', inr((fc.next30 || {}).spend), num((fc.next30 || {}).leads) + ' leads · ' + num((fc.next30 || {}).qualified) + ' qualified (forecast)'), kpi('Bill due', inr(fu.billDue), fu.fundingSource ? esc(fu.fundingSource) : '')]) +
+  `<div style="margin-top:6px;"><b>Funds added</b> <span class="sx-sub">— log each top-up so the report knows when money went in</span>
+<div class="ma-form" style="margin-top:8px;"><div><label class="f">Date</label><input type="date" id="mfDate" value="${esc(new Date(Date.now() + 330 * 60000).toISOString().slice(0, 10))}"></div><div><label class="f">Amount (₹)</label><input type="number" id="mfAmt" min="1" placeholder="e.g. 20000"></div><div><label class="f">Paid by / method</label><input type="text" id="mfMethod" placeholder="e.g. UPI, company card"></div><div><label class="f">Note</label><input type="text" id="mfNote" placeholder="optional"></div></div>
+<button class="um-btn primary" id="mfAdd" style="margin-top:8px;">+ Add top-up</button>
+<div class="sx-table-wrap" style="margin-top:10px;"><table class="sx-table"><thead><tr><th>Date</th><th class="num">Amount</th><th>Method</th><th>Note</th><th>By</th><th></th></tr></thead><tbody>${d.fundsAdded.map(x => `<tr><td>${esc(String(x.date).slice(0, 10))}</td><td class="num">${inr(x.amount)}</td><td>${esc(x.method)}</td><td>${esc(x.note)}</td><td>${esc(x.by)}</td><td><button class="um-btn s10-mini" data-mf-del="${esc(x.id)}">Remove</button></td></tr>`).join('') || '<tr><td colspan="6" class="sx-sub">No top-ups logged yet.</td></tr>'}</tbody></table></div></div>`, 'Live from your Meta ad account. The forecast uses the last 7 days’ average spend and cost per lead.')}
+${chart ? sec('📅 Day by day', chart) : ''}
+${sec('🎯 By campaign', tbl(d.byCampaign))}
+${sec('🏢 By branch', tbl(d.byBranch))}`;
+const reload = () => { M.rep = null; load(); };
+$('mrRange').onchange = e => { const v = e.target.value; if (v === 'custom') { $('mrCustom').style.display = 'inline-flex'; return; } rf.days = Number(v); rf.from = rf.to = ''; reload(); };
+$('mrApply').onclick = () => { rf.days = 'custom'; rf.from = $('mrFrom').value; rf.to = $('mrTo').value; if (!rf.from || !rf.to) return toast('Pick both dates', 'error'); reload(); };
+$('mrBranch').onchange = e => { rf.branch = e.target.value; reload(); };
+$('mrPdf').onclick = () => { const b = $('mrPdf'); b.disabled = true; b.textContent = 'Making the PDF…';
+  run('getMetaReportPdf', mrFilt()).then(r => { const bin = atob(r.base64), arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    const url = URL.createObjectURL(new Blob([arr], { type: 'application/pdf' })), a = document.createElement('a'); a.href = url; a.download = r.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 30000); toast('PDF downloaded'); })
+    .catch(e => toast(errMsg(e), 'error')).then(() => { b.disabled = false; b.textContent = '⬇ Download PDF'; }); };
+$('mfAdd').onclick = () => { const p = { date: $('mfDate').value, amount: $('mfAmt').value, method: $('mfMethod').value, note: $('mfNote').value };
+  run('addMetaFunds', p).then(() => { toast('Top-up logged'); reload(); }).catch(e => toast(errMsg(e), 'error')); };
+body.querySelectorAll('[data-mf-del]').forEach(x => x.onclick = () => { if (!confirm('Remove this top-up entry?')) return; run('deleteMetaFunds', x.dataset.mfDel).then(() => { toast('Removed'); reload(); }).catch(e => toast(errMsg(e), 'error')); });
+}
+function mrFilt() { const rf = M.rf; return rf.days === 'custom' ? { from: rf.from, to: rf.to, branch: rf.branch } : { days: rf.days, branch: rf.branch }; }
+
 document.querySelectorAll('[data-ma-view]').forEach(el => {
 const go = () => openMetaAds(VIEW_OF[el.dataset.maView] || 'overview');
 el.addEventListener('click', go);
@@ -20315,6 +20366,11 @@ new MutationObserver(addButton).observe(document.body, { childList: true, subtre
 .cq-results button.no.on { background: var(--navy); border-color: var(--navy); color: #fff; }
 .cq-results button.bad.on { background: var(--red); border-color: var(--red); color: #fff; }
 .cq-box { background: var(--canvas); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+.cq-mtg { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+.cq-av { display: grid; gap: 6px; margin-top: 8px; max-height: 220px; overflow: auto; }
+.cq-avrow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; } .cq-avrow b { min-width: 90px; }
+.cq-slot { border: 1px solid var(--border); background: var(--card); color: var(--ink); border-radius: 999px; padding: 4px 10px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.cq-slot:hover { border-color: var(--ok, #1F9D63); } .cq-slot.on { background: #1F9D63; border-color: #1F9D63; color: #fff; }
 .cq-box label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin: 0 0 4px; }
 .cq-box input, .cq-box select, .cq-lead textarea { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13.5px; background: var(--card); color: var(--ink); box-sizing: border-box; }
 .cq-lead textarea { min-height: 70px; resize: vertical; }
@@ -20428,9 +20484,11 @@ ${(l.history || []).length ? `<div class="cq-prev"><b>Earlier calls</b>${l.histo
 <label class="f" style="font-size:12px;font-weight:700;color:var(--muted);">Call result</label>
 <div class="cq-results">${R.map(r => `<button type="button" class="${cls(r)} ${r.result === C.result ? 'on' : ''}" data-cq-res="${esc(r.result)}">${esc(r.result)}</button>`).join('')}</div>
 ${C.result === 'Call back later' ? `<div class="cq-box"><div class="cq-two"><div><label for="cqCbD">Call back on</label><input type="date" id="cqCbD" min="${today()}" value="${esc(C.cbDate || '')}"></div><div><label for="cqCbT">At</label><input type="time" id="cqCbT" value="${esc(C.cbTime || '')}"></div></div></div>` : ''}
-${C.result === 'Interested' ? `<div class="cq-box"><div class="cq-two"><div><label for="cqHo">Hand over to counsellor</label><select id="cqHo"><option value="">Keep with me for now</option>${C.setup.counsellors.map(n => `<option ${n === C.ho ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></div><div><label for="cqHoNote">Note for the counsellor</label><input type="text" id="cqHoNote" value="${esc(C.hoNote || '')}" placeholder="e.g. wants UK, Sept intake, call after 6 pm"></div></div><div class="sx-sub" style="margin-top:6px;">The counsellor gets a notification and an email from you.</div></div>` : ''}
+${C.result === 'Interested' ? `<div class="cq-box"><div class="cq-two"><div><label for="cqHo">Send to</label><select id="cqHo"><option value="mgr" ${C.ho === 'mgr' ? 'selected' : ''}>Branch manager — assigns a counsellor</option><option value="" ${C.ho === '' ? 'selected' : ''}>Keep with me for now</option>${C.setup.role !== 'Telecaller' ? C.setup.counsellors.map(n => `<option ${n === C.ho ? 'selected' : ''}>${esc(n)}</option>`).join('') : ''}</select></div><div><label for="cqHoNote">Note for the ${C.ho === 'mgr' ? 'manager' : 'counsellor'}</label><input type="text" id="cqHoNote" value="${esc(C.hoNote || '')}" placeholder="e.g. wants UK, Sept intake, call after 6 pm"></div></div>
+${C.ho === 'mgr' ? `<div class="cq-mtg"><div class="cq-two"><div><label for="cqMD">📅 Book a meeting (optional) — who is free on</label><input type="date" id="cqMD" min="${today()}" value="${esc(C.mDate || today())}"></div><div class="cq-two"><div><label for="cqMC">Counsellor</label><select id="cqMC"><option value="">No meeting</option>${C.setup.counsellors.map(n => `<option ${n === C.mC ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></div><div><label for="cqMT">Time</label><input type="time" id="cqMT" value="${esc(C.mTime || '')}"></div></div></div><div id="cqAv" class="cq-av"><span class="sx-sub">Checking who is free…</span></div></div>` : ''}
+<div class="sx-sub" style="margin-top:6px;">${C.ho === 'mgr' ? 'The branch manager gets a notification and an email to assign a counsellor.' + (C.mC ? ' The meeting goes on ' + esc(C.mC) + '’s calendar.' : '') : C.ho ? 'The counsellor gets a notification and an email from you.' : 'The lead stays in the calling queue with you.'}</div></div>` : ''}
 <label class="f" for="cqNotes" style="font-size:12px;font-weight:700;color:var(--muted);">Notes</label><textarea id="cqNotes" placeholder="What did they say?">${esc(C.notes || '')}</textarea>
-<div class="cq-actions"><button class="um-btn primary" id="cqSave" ${C.result ? '' : 'disabled'}>${res && res.result === 'Interested' && C.ho ? '🤝 Hand over & next' : '✓ Save & next'}</button><button class="um-btn" id="cqSkip" title="Skip this lead for now — it stays in the queue">Skip</button><button class="um-btn" id="cqStop">Save & stop</button></div>
+<div class="cq-actions"><button class="um-btn primary" id="cqSave" ${C.result ? '' : 'disabled'}>${res && res.result === 'Interested' && C.ho === 'mgr' ? '📞 Send to manager & next' : res && res.result === 'Interested' && C.ho ? '🤝 Hand over & next' : '✓ Save & next'}</button><button class="um-btn" id="cqSkip" title="Skip this lead for now — it stays in the queue">Skip</button><button class="um-btn" id="cqStop">Save & stop</button></div>
 <div class="sx-sub" style="margin-top:8px;">${res ? (res.status ? 'Lead becomes <b>' + esc(res.status) + '</b>.' : res.connected ? '' : 'The lead comes back to the queue in 3 hours (up to 4 tries).') : ''}</div>
 </div>${scriptCard()}</div>`;
   b.querySelectorAll('[data-cq-res]').forEach(x => x.onclick = () => { keep(); C.result = x.dataset.cqRes; if (C.timerId && !(R.find(r => r.result === C.result) || {}).connected) stopTimer(); draw(); });
@@ -20440,12 +20498,15 @@ ${C.result === 'Interested' ? `<div class="cq-box"><div class="cq-two"><div><lab
   $('cqStop').onclick = () => save(false);
   $('cqSkip').onclick = () => { stopTimer(); C.skip.push(C.lead.leadId); C.lead = null; next(); };
   const ho = $('cqHo'); if (ho) ho.onchange = () => { keep(); draw(); };
+  const md = $('cqMD'); if (md) { md.onchange = () => { keep(); loadAv(); }; loadAv(); }
+  const mc = $('cqMC'); if (mc) mc.onchange = () => { keep(); draw(); };
   wireScript();
 }
 function keep() {
   const n = $('cqNotes'); if (n) C.notes = n.value;
   const d = $('cqCbD'); if (d) C.cbDate = d.value; const t = $('cqCbT'); if (t) C.cbTime = t.value;
   const h = $('cqHo'); if (h) C.ho = h.value; const hn = $('cqHoNote'); if (hn) C.hoNote = hn.value;
+  const md = $('cqMD'); if (md) C.mDate = md.value; const mc = $('cqMC'); if (mc) C.mC = mc.value; const mt = $('cqMT'); if (mt) C.mTime = mt.value;
 }
 function wireScript() {
   const e = $('cqEditScript'); if (!e) return;
@@ -20462,7 +20523,26 @@ function wireScript() {
 function clock() { const s = C.timerSec + (C.timerId ? Math.floor((Date.now() - C.timerAt) / 1000) : 0); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
 function startTimer() { if (C.timerId) return; C.timerAt = Date.now(); C.timerId = setInterval(() => { const t = $('cqTimer'); if (t) t.textContent = clock(); }, 1000); }
 function stopTimer() { if (!C.timerId) return; C.timerSec += Math.floor((Date.now() - C.timerAt) / 1000); clearInterval(C.timerId); C.timerId = 0; }
-function resetLead() { stopTimer(); C.timerSec = 0; C.result = ''; C.notes = ''; C.cbDate = ''; C.cbTime = ''; C.ho = ''; C.hoNote = ''; }
+function resetLead() { stopTimer(); C.timerSec = 0; C.result = ''; C.notes = ''; C.cbDate = ''; C.cbTime = ''; C.ho = 'mgr'; C.hoNote = ''; C.mDate = ''; C.mC = ''; C.mTime = ''; }
+
+function loadAv() {
+  const date = C.mDate || today(); C.av = C.av || {};
+  const key = C.branch + '|' + date;
+  if (C.av[key] && Date.now() - C.av[key].at < 120000) { drawAv(C.av[key].d); return; }
+  run('getCallAvailability', C.branch, date).then(d => { C.av[key] = { d: d, at: Date.now() }; if ((C.mDate || today()) === date) drawAv(d); })
+    .catch(e => { const el = $('cqAv'); if (el) el.innerHTML = '<span class="sx-sub">' + esc(errMsg(e)) + '</span>'; });
+}
+function drawAv(d) {
+  const el = $('cqAv'); if (!el) return;
+  const hm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+  const nowMin = d.date === today() ? (() => { const t = new Date(d.nowIst); return t.getUTCHours() * 60 + t.getUTCMinutes(); })() : 0;
+  const start = f => { const s = Math.max(f[0], nowMin ? Math.ceil(nowMin / 30) * 30 : 0); return s + 30 <= f[1] ? s : null; };
+  el.innerHTML = d.people.length ? d.people.map(p => {
+    const slots = (p.free || []).map(f => [start(f), f[1]]).filter(f => f[0] !== null);
+    return `<div class="cq-avrow"><b>${esc(p.name)}</b>${p.onLeave ? '<span class="sx-sub">on leave</span>' : p.off ? '<span class="sx-sub">off this day</span>' : slots.length ? slots.map(f => `<button type="button" class="cq-slot ${C.mC === p.name && C.mTime === hm(f[0]) ? 'on' : ''}" data-mc="${esc(p.name)}" data-mt="${hm(f[0])}">${hm(f[0])}–${hm(f[1])}</button>`).join('') : '<span class="sx-sub">fully booked</span>'}</div>`;
+  }).join('') : '<span class="sx-sub">No counsellors set up for this branch.</span>';
+  el.querySelectorAll('[data-mc]').forEach(x => x.onclick = () => { keep(); C.mC = x.dataset.mc; C.mTime = x.dataset.mt; draw(); });
+}
 function next() {
   resetLead();
   const b = $('cqNext'); if (b) { b.disabled = true; b.textContent = 'Finding the next lead…'; }
@@ -20493,7 +20573,7 @@ function send(p) {
   C.saving++; drawPend();
   run('saveCallResult', p).then(r => {
     C.saving--; drawPend();
-    toast(r.handedOverTo ? 'Handed over to ' + r.handedOverTo + ' — they have been notified' : 'Saved: ' + (p.leadName || '') + ' · ' + p.result);
+    toast(r.handedOverTo ? 'Handed over to ' + r.handedOverTo + ' — they have been notified' + (r.meeting ? ' · meeting with ' + r.meeting.counsellor + ' ' + r.meeting.date + ' ' + r.meeting.time : '') : 'Saved: ' + (p.leadName || '') + ' · ' + p.result);
     if (!C.saving) run('getCallStats', C.branch).then(drawStats).catch(() => {});
   }).catch(e => { C.saving--; C.failed.push(p); drawPend(); toast('Not saved: ' + (p.leadName || '') + ' — ' + errMsg(e), 'error'); });
 }
@@ -20503,7 +20583,10 @@ function save(goNext) {
   const res = C.setup.results.find(r => r.result === C.result);
   const p = { branch: C.branch, leadId: C.lead.leadId, leadName: C.lead.name, phone: C.lead.phone, result: C.result, talkSec: res && res.connected ? C.timerSec : 0, notes: C.notes || '' };
   if (C.result === 'Call back later') { if (!C.cbDate) { toast('Pick the call-back date', 'error'); return; } p.callBack = { date: C.cbDate, time: C.cbTime || '' }; }
-  if (C.result === 'Interested' && C.ho) p.handover = { counsellor: C.ho, note: C.hoNote || '' };
+  if (C.result === 'Interested' && C.ho === 'mgr') {
+    if (C.mC && !C.mTime) { toast('Pick the meeting time (or choose “No meeting”)', 'error'); return; }
+    p.handover = { toManager: true, note: C.hoNote || '', meeting: C.mC ? { counsellor: C.mC, date: C.mDate || today(), time: C.mTime } : null };
+  } else if (C.result === 'Interested' && C.ho) p.handover = { counsellor: C.ho, note: C.hoNote || '' };
   send(p);
   C.lead = null;
   if (goNext) next(); else { C.pre = null; resetLead(); draw(); }
