@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '22 Oct 2026 · v119';
+window.AKBAR_BUILD = '22 Oct 2026 · v120';
 
 (function () {
   try {
@@ -18346,8 +18346,22 @@ return Promise.resolve(paste.indexOf('\t') !== -1 ? paste.replace(/\r/g, '').spl
 }
 const cleanRows = rows => (rows || []).map(r => (r || []).map(c => String(c == null ? '' : c).trim())).filter(r => r.some(c => c !== ''));
 
-const DB_COLS = [['name', /^(contact|full|agent|student|person|owner)?name$|^name|contactperson|^agent$/], ['phone', /phone|mobile|whatsapp|contactno|cell|^number$|^no$/], ['email', /e?mail/],
+const DB_COLS = [['name', /^(contact|full|agent|student|person|owner)?name$|^name|contactperson|^agent$/], ['phone', /phone|mobile|whatsapp|contactno|contactnumber|^contact$|^mob|^ph$|^phno|^tel|cell|^number$|^no$/], ['email', /e?mail/],
 ['company', /company|school|college|agency|organi[sz]ation|institute|consultancy|firm|business/], ['city', /city|town|district|location|place/], ['country', /country|state|region/]];
+
+function dbFindHeader(rows) {
+const lim = Math.min(15, rows.length), isPh = c => String(c || '').replace(/[^\d]/g, '').length >= 10 && String(c || '').replace(/[\d\s+()\-.]/g, '').length === 0;
+for (let i = 0; i < lim; i++) if (dbMap(rows[i]).map.phone !== undefined) return i;
+for (let i = 1; i < lim; i++) if (rows[i].some(isPh)) return i - 1;
+return 0;
+}
+function dbPhoneByContent(rows, h) {
+const isPh = c => String(c || '').replace(/[^\d]/g, '').length >= 10 && String(c || '').replace(/[\d\s+()\-.\/,]/g, '').length === 0;
+const data = rows.slice(h + 1, h + 60), width = Math.max(0, ...data.map(r => r.length));
+let best = -1, bestN = 0;
+for (let j = 0; j < width; j++) { const n = data.filter(r => isPh(r[j])).length; if (n > bestN) { best = j; bestN = n; } }
+return bestN >= Math.max(1, Math.ceil(data.length * 0.5)) ? best : -1;
+}
 function dbMap(headers) {
 const map = {}, used = {};
 headers.forEach((h, i) => { const k = String(h || '').toLowerCase().replace(/[\s_\/\-.()#:]+/g, ''); if (!k) return; for (const [f, re] of DB_COLS) { if (map[f] === undefined && re.test(k)) { map[f] = i; used[i] = 1; return; } } });
@@ -18387,8 +18401,8 @@ modal('📇 Import a calling database', `<div class="b2b-form">${fld('Database n
 <div class="b2b-sec"><h4><span>Excel / CSV file</span><button class="um-btn" id="dbImTpl">⬇ Template</button></h4><input type="file" id="dbImFile" accept=".xlsx,.xls,.csv" aria-label="Contact list file">
 <div class="b2b-note">…or paste the rows from Excel / Google Sheets <b>with the header row</b>:</div><textarea id="dbImPaste" style="min-height:90px;font-family:'IBM Plex Mono',monospace;font-size:12px;" placeholder="Name&#9;Phone&#9;Email&#9;Company&#9;City"></textarea>
 <div class="b2b-note">Needs a <b>Phone</b> column. Also read: Name, Email, Company / School / Agency, City, Country — every other column is kept as “other details” for the telecaller. Up to ${max} contacts; a phone already in another database is skipped.</div></div>
-<div id="dbImPrev"></div>${errBox('dbImErr')}<div class="sx-modal-actions"><button class="um-btn" id="dbImCheck">Check the list</button><button class="um-btn primary" id="dbImGo" disabled>Import</button></div>`, 780);
-const reset = () => { checked = null; $('dbImGo').disabled = true; $('dbImGo').textContent = 'Import'; };
+<div id="dbImPrev"></div>${errBox('dbImErr')}<div class="sx-modal-actions"><button class="um-btn" id="dbImCheck">Check the list</button><button class="um-btn primary" id="dbImGo">Import</button></div>`, 780);
+const reset = () => { checked = null; $('dbImGo').disabled = false; $('dbImGo').textContent = 'Import'; };
 $('dbImFile').addEventListener('change', reset); $('dbImPaste').addEventListener('input', reset);
 $('dbImTpl').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿Name,Phone,Email,Company,City,Country,Notes\r\nRahul Menon,+91 98470 12345,rahul@edu.in,Bright Future Consultancy,Kochi,India,met at fair\r\n'], { type: 'text/csv' })); a.download = 'b2b-database-template.csv'; document.body.appendChild(a); a.click(); a.remove(); };
 $('dbImCheck').onclick = () => {
@@ -18397,23 +18411,28 @@ if (!val('dbImName')) { formErr('dbImErr', 'Give the database a name.'); return;
 busy(btn, true, 'Reading…');
 readListRows($('dbImFile'), $('dbImPaste').value).then(rows => {
 rows = cleanRows(rows);
+const hr = dbFindHeader(rows); rows = rows.slice(hr);
 if (rows.length < 2) throw new Error('No contacts found — the list needs a header row and at least one contact.');
 const m = dbMap(rows[0]);
-if (m.map.phone === undefined) throw new Error('No “Phone” column found. The first row must be the header (Name, Phone, Email, Company, City…).');
+if (m.map.phone === undefined) { const pj = dbPhoneByContent(rows, 0); if (pj !== -1) { m.map.phone = pj; m.extra = m.extra.filter(j => j !== pj); } }
+if (m.map.phone === undefined) throw new Error('No phone column found. Name the phone column “Phone” (or Mobile / Contact) and try again.');
 const list = rows.slice(1).map((r, i) => { const o = { line: i + 2 }; Object.keys(m.map).forEach(f => { o[f] = r[m.map[f]] || ''; }); o.extra = m.extra.map(j => r[j] ? rows[0][j] + ': ' + r[j] : '').filter(Boolean).join(' · '); return o; });
 if (list.length > max) throw new Error('That list has ' + list.length + ' contacts. Import at most ' + max + ' at a time.');
 btn.textContent = 'Checking…';
 return run('importB2BDatabase', { name: val('dbImName'), source: val('dbImSrc'), dryRun: true }, list).then(r => ({ r: r, list: list }));
 }).then(({ r, list }) => {
 busy(btn, false); checked = list;
+if (window.__dbImAuto) { window.__dbImAuto = false; setTimeout(() => $('dbImGo').click(), 0); }
 $('dbImPrev').innerHTML = `<div class="b2b-sec"><h4><span><span class="sx-good">${r.ready} ready</span>${r.skipped.length ? ' · <span class="sx-bad">' + r.skipped.length + ' skipped</span>' : ''}</span></h4>
 ${r.skipped.length ? `<div class="sx-table-wrap" style="max-height:170px;overflow:auto;"><table class="sx-table"><thead><tr><th class="num">Row</th><th>Contact</th><th>Why skipped</th></tr></thead><tbody>${r.skipped.slice(0, 300).map(x => `<tr><td class="num">${x.line}</td><td>${esc(x.name || '—')}</td><td class="sx-bad">${esc(x.reason)}</td></tr>`).join('')}</tbody></table></div>` : ''}
 <div class="sx-table-wrap" style="max-height:200px;overflow:auto;margin-top:6px;"><table class="sx-table"><thead><tr><th>Name</th><th>Phone</th><th>Company · city</th></tr></thead><tbody>${list.slice(0, 50).map(x => `<tr><td>${esc(x.name || '—')}</td><td>${esc(x.phone)}</td><td>${esc([x.company, x.city].filter(Boolean).join(' · '))}</td></tr>`).join('')}</tbody></table></div>${list.length > 50 ? `<div class="b2b-note">First 50 of ${list.length} rows shown.</div>` : ''}</div>`;
 $('dbImGo').disabled = !r.ready; $('dbImGo').textContent = r.ready ? 'Import ' + r.ready + ' contacts' : 'Nothing to import';
-}).catch(e => { busy(btn, false); formErr('dbImErr', e); });
+$('dbImPrev').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}).catch(e => { busy(btn, false); window.__dbImAuto = false; formErr('dbImErr', e); const eb = $('dbImErr'); if (eb) eb.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
 };
 $('dbImGo').onclick = () => {
-if (!checked) return; const btn = $('dbImGo'); busy(btn, true, 'Importing…'); formErr('dbImErr');
+if (!checked) { window.__dbImAuto = true; $('dbImCheck').click(); return; }
+const btn = $('dbImGo'); busy(btn, true, 'Importing…'); formErr('dbImErr');
 run('importB2BDatabase', { name: val('dbImName'), source: val('dbImSrc') }, checked).then(r => {
 toast(r.added + ' contacts imported' + (r.skipped.length ? ' · ' + r.skipped.length + ' skipped' : ''));
 B.db = null; B.dbBusy = false; run('getB2BDatabases').then(d => { B.db = d; renderDatabase(); dbAssignForm(r.dbId); }).catch(() => { closeModal(1); renderDatabase(); });
