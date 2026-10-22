@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '22 Oct 2026 · v123';
+window.AKBAR_BUILD = '22 Oct 2026 · v124';
 
 (function () {
   try {
@@ -4458,6 +4458,18 @@ Akbar Study Abroad</textarea>
 <div class="nav-item own-mgr" data-own-view="productivity" role="button" tabindex="0" title="Speed to lead and how productive each counsellor and telecaller is">
 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14l4-4"/><path d="M3.3 19a10 10 0 1 1 17.4 0"/></svg>
 <span>Team productivity</span>
+</div>
+<div class="nav-item own-sa own-dir" data-own-view="journey" role="button" tabindex="0" title="Where every student is on the road to enrolment, and who is stuck">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+<span>Student journey</span>
+</div>
+<div class="nav-item own-sa own-dir" data-own-view="reminders" role="button" tabindex="0" title="Payments due, deadlines, commission owed, money to collect">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6M22 6l-3-3"/></svg>
+<span>Money reminders</span>
+</div>
+<div class="nav-item own-sa own-dir" data-own-view="bpnl" role="button" tabindex="0" title="Income and costs per branch, month by month">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
+<span>Branch P&amp;L</span>
 </div>
 <div class="nav-item own-sa" data-own-view="health" role="button" tabindex="0" title="Leads, follow-ups, applications, visa and money on one screen">
 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
@@ -21309,6 +21321,7 @@ function fixForm(leadId, branch) {
 <style>
 #ownView { min-height: 100vh; background: var(--canvas); }
 .own-sa, .own-mgr, .own-group { display: none !important; }
+body.ak-sa:not(.fin-ok) .own-dir { display: none !important; }
 body.ak-sa .own-sa, body.ak-sa .own-mgr, body.ak-mgr .own-mgr { display: flex !important; }
 body.ak-sa .own-group, body.ak-mgr .own-group { display: block !important; }
 .ow-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 14px; }
@@ -21384,7 +21397,7 @@ const OTHER = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView',
 const V = { view: '', data: {}, month: '', audit: { page: 0, f: {} }, cps: {}, quality: { days: 14, branch: '' }, dl: { month: '' }, prod: { days: 30, branch: '', filter: 'all', person: '', q: '' } };
 setInterval(() => { const mgr = typeof viewerBranch !== 'undefined' && !!viewerBranch && !(typeof viewerCounselor !== 'undefined' && viewerCounselor) && !document.body.classList.contains('tc-staff'); document.body.classList.toggle('ak-mgr', mgr); }, 2000);
 
-const TITLES = { health: ['📊 Business health', 'Leads, follow-ups, applications, visa and money — one screen'], leaderboard: ['🏆 Leaderboard', 'Counsellors and branches by their results this month'],
+const TITLES = { journey: ['🧭 Student journey', 'Lead → Application → Offer → Deposit → Visa → Enrolled — where every student is, and who is stuck'], reminders: ['⏰ Money reminders', 'Payments due, deadlines, commission owed and money to collect'], bpnl: ['📊 Branch P&L', 'Income and every cost per branch, month by month'], health: ['📊 Business health', 'Leads, follow-ups, applications, visa and money — one screen'], leaderboard: ['🏆 Leaderboard', 'Counsellors and branches by their results this month'],
   cps: ['💸 Ad spend → enrolment → fees', 'True cost per student, from the ads to the money received'], audit: ['🧾 Audit log', 'Every important change — nothing is thrown away'],
   backup: ['💾 Backups', 'Copies of every sheet in a private Drive folder'], alerts: ['📱 Phone alerts', 'Messages to the branch managers’ phones through Google Chat'],
   security: ['🔒 Security', 'Meta tokens kept where only the server can read them'], productivity: ['⚡ Team productivity', 'Speed to lead, leads nobody has worked, calls, follow-ups — per person and per lead'], deadlines: ['📅 Deadlines', 'University deadlines, deposits, CAS, offer expiry — with reminders'], quality: ['🔍 Remark quality', 'Remarks that say nothing, follow-ups always pushed to tomorrow'] };
@@ -21415,9 +21428,59 @@ function load(force) {
   else if (v === 'backup') run('getBackupStatus').then(d => { if (V.view === v) drawBackup(d); }).catch(fail);
   else if (v === 'alerts') run('getAlertSettings').then(d => { if (V.view === v) drawAlerts(d); }).catch(fail);
   else if (v === 'deadlines') { const r = dlRange(); run('getAppDeadlines', r[0], r[1]).then(d => { if (V.view === v) drawDeadlines(d); }).catch(fail); }
+  else if (v === 'journey') run('getStudentJourney').then(d => { if (V.view === v) drawJourney(d); }).catch(fail);
+  else if (v === 'reminders') run('getMoneyReminders').then(d => { if (V.view === v) drawReminders(d); }).catch(fail);
+  else if (v === 'bpnl') run('getBranchPnl', V.pl.months).then(d => { if (V.view === v) drawBranchPnl(d); }).catch(fail);
   else if (v === 'quality') run('getRemarkQuality', V.quality.branch || (typeof activeBranch !== 'undefined' && activeBranch !== 'All' ? activeBranch : ''), V.quality.days).then(d => { if (V.view === v) drawQuality(d); }).catch(fail);
 }
 const kpi = (l, v, s, cls) => `<div class="ow-kpi ${cls || ''}"><div class="l">${esc(l)}</div><div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ''}</div>`;
+
+V.jr = V.jr || { stage: '', branch: '' }; V.mr = V.mr || { bucket: '', kind: '' }; V.pl = V.pl || { months: 6, show: 'net' };
+function drawJourney(d) {
+  const b = body(); if (!b) return;
+  const f = V.jr, list = d.stuck.filter(p => (!f.stage || p.stage === f.stage) && (!f.branch || p.branch === f.branch));
+  b.innerHTML = `<div class="sx-card"><h3>The road every student is on</h3><div class="sx-sub" style="margin-bottom:10px;">${num(d.total)} students in progress · ${num(d.stuckTotal)} stuck past the normal time for their stage · ${num(d.closedApps)} closed applications not shown. Click a stage to see who is stuck there.</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;">${d.stages.map((s, i) => `<button type="button" data-jr-stage="${s.key}" style="text-align:left;border:1.5px solid ${f.stage === s.key ? 'var(--red)' : 'var(--border)'};background:var(--card);border-radius:12px;padding:10px 12px;cursor:pointer;font:inherit;color:var(--ink);">
+<div style="font-size:11px;font-weight:700;color:var(--muted);">${i + 1} · ${esc(s.label)}</div><div style="font-size:24px;font-weight:800;">${num(s.count)}</div>
+<div style="font-size:12px;${s.stuck ? 'color:var(--red);font-weight:700;' : 'color:var(--muted);'}">${s.limit ? s.stuck + ' stuck (> ' + s.limit + ' d)' : 'done'}</div><div class="sx-sub">${s.avgDays != null ? 'avg ' + s.avgDays + ' days here' : ''}</div></button>`).join('')}</div></div>
+<div class="sx-card"><h3>By branch</h3><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Branch</th>${d.stages.map(s => `<th class="num">${esc(s.label.split(' ')[0])}</th>`).join('')}<th class="num">Stuck</th></tr></thead><tbody>${d.byBranch.map(r => `<tr><td><b>${esc(r.branch)}</b></td>${d.stages.map(s => `<td class="num">${num(r[s.key])}</td>`).join('')}<td class="num" style="${r.stuck ? 'color:var(--red);font-weight:700;' : ''}">${num(r.stuck)}</td></tr>`).join('')}</tbody></table></div></div>
+<div class="sx-card"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;"><h3 style="margin:0;flex:1;">Stuck students ${f.stage ? '· ' + esc((d.stages.find(s => s.key === f.stage) || {}).label || '') : ''}</h3>
+<select id="jrBr" aria-label="Branch"><option value="">All branches</option>${d.byBranch.map(r => `<option ${f.branch === r.branch ? 'selected' : ''}>${esc(r.branch)}</option>`).join('')}</select>${f.stage ? '<button class="um-btn" id="jrAll">All stages</button>' : ''}</div>
+<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Student</th><th>Branch</th><th>Counsellor</th><th>Stage</th><th class="num">Days here</th><th>University / country</th><th>Next step</th></tr></thead><tbody>${list.map(p => `<tr><td><b>${esc(p.name || '—')}</b><div class="sx-sub">${p.kind === 'lead' ? esc(p.status || 'lead') : esc(p.id || '')}</div></td><td>${esc(p.branch)}</td><td>${esc(p.counsellor || '—')}</td><td>${esc(p.label)}</td><td class="num" style="color:var(--red);font-weight:700;">${p.days}</td><td>${esc([p.university, p.country, p.intake].filter(Boolean).join(' · ') || '—')}</td><td>${esc(p.next)}</td></tr>`).join('') || '<tr><td colspan="7" class="sx-sub">Nobody stuck here. 🎉</td></tr>'}</tbody></table></div></div>`;
+  b.querySelectorAll('[data-jr-stage]').forEach(x => x.onclick = () => { V.jr.stage = V.jr.stage === x.dataset.jrStage ? '' : x.dataset.jrStage; drawJourney(d); });
+  const br = $('jrBr'); if (br) br.onchange = () => { V.jr.branch = br.value; drawJourney(d); };
+  const all = $('jrAll'); if (all) all.onclick = () => { V.jr.stage = ''; drawJourney(d); };
+}
+function drawReminders(d) {
+  const b = body(); if (!b) return;
+  const f = V.mr, BK = { overdue: '🔴 Overdue', week: '🟠 Next 7 days', later: '🟢 Later', nodate: '⚪ No date' };
+  const list = d.items.filter(x => (!f.bucket || x.bucket === f.bucket) && (!f.kind || x.kind === f.kind));
+  b.innerHTML = `<div class="ow-kpis">${kpi('Overdue', num(d.overdue.count), inr(d.overdue.in) + ' to collect · ' + inr(d.overdue.out) + ' to pay', d.overdue.count ? 'bad' : '')}${kpi('Next 7 days', num(d.week.count), inr(d.week.in) + ' in · ' + inr(d.week.out) + ' out')}${kpi('To collect (all)', inr(d.toCollect), 'student payments, visa fees, university commission')}${kpi('To pay (all)', inr(d.toPay), 'agent commission, visa costs')}</div>
+<div class="sx-card"><h3>By type</h3><div style="display:flex;gap:8px;flex-wrap:wrap;">${d.byKind.map(k => `<button type="button" class="um-btn ${f.kind === k.kind ? 'primary' : ''}" data-mr-kind="${esc(k.kind)}">${esc(k.kind)} · ${k.count}${k.amount ? ' · ' + inr(k.amount) : ''}</button>`).join('') || '<span class="sx-sub">Nothing pending.</span>'}</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">${Object.keys(BK).map(k => `<button type="button" class="um-btn ${f.bucket === k ? 'primary' : ''}" data-mr-bk="${k}">${BK[k]}</button>`).join('')}</div>
+<div class="sx-sub" style="margin-top:8px;">A summary of anything overdue or due in the next 3 days is emailed to the directors every morning at 9:30.</div></div>
+<div class="sx-card"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Due</th><th>Type</th><th>What</th><th>Student / client</th><th>Branch</th><th class="num">Amount</th></tr></thead><tbody>${list.map(x => `<tr><td style="white-space:nowrap;${x.bucket === 'overdue' ? 'color:var(--red);font-weight:700;' : ''}">${x.due ? esc(x.due) + (x.days < 0 ? ' · ' + (-x.days) + ' d late' : x.days === 0 ? ' · today' : ' · in ' + x.days + ' d') : '—'}</td><td>${x.dir === 'in' ? '⬇ ' : x.dir === 'out' ? '⬆ ' : ''}${esc(x.kind)}</td><td>${esc(x.title)}</td><td>${esc(x.who || '—')}</td><td>${esc(x.branch || '—')}</td><td class="num">${x.amount ? inr(x.amount) : '—'}</td></tr>`).join('') || '<tr><td colspan="6" class="sx-sub">Nothing here.</td></tr>'}</tbody></table></div>${d.total > d.items.length ? `<div class="sx-sub">Showing the first ${d.items.length} of ${d.total}.</div>` : ''}</div>`;
+  b.querySelectorAll('[data-mr-kind]').forEach(x => x.onclick = () => { V.mr.kind = V.mr.kind === x.dataset.mrKind ? '' : x.dataset.mrKind; drawReminders(d); });
+  b.querySelectorAll('[data-mr-bk]').forEach(x => x.onclick = () => { V.mr.bucket = V.mr.bucket === x.dataset.mrBk ? '' : x.dataset.mrBk; drawReminders(d); });
+}
+function drawBranchPnl(d) {
+  const b = body(); if (!b) return;
+  const show = V.pl.show, SHOW = [['net', 'Net profit'], ['income', 'Income'], ['costs', 'Costs'], ['ads', 'Ad spend'], ['margin', 'Margin %']];
+  const val = (x, k) => k === 'margin' ? (x.margin == null ? '—' : x.margin + '%') : inr(x[k]);
+  const col = (x, k) => k === 'net' || k === 'margin' ? ((k === 'net' ? x.net : x.margin) < 0 ? 'color:var(--red);font-weight:700;' : x.net > 0 ? 'color:var(--ok,#1F9D63);font-weight:700;' : '') : '';
+  const all = d.grid.reduce((t, g) => { ['income', 'costs', 'net'].forEach(k => { t[k] = (t[k] || 0) + g.total[k]; }); return t; }, {});
+  const missing = d.grid.some(g => g.months.some(m => m.missingCosts));
+  b.innerHTML = `<div class="ow-kpis">${kpi('Income · ' + d.months.length + ' months', inr(all.income), 'university commission + visa fees')}${kpi('Costs', inr(all.costs), 'ads, salaries, rent, visa, agents, refunds')}${kpi('Net profit', inr(all.net), all.income ? Math.round(all.net / all.income * 100) + '% margin' : '', all.net < 0 ? 'bad' : '')}${kpi('Best branch', esc((d.grid.slice().sort((x, y) => y.total.net - x.total.net)[0] || {}).branch || '—'), '')}</div>
+${missing ? '<div class="fin-alert warm">Salaries / rent are missing for some months — enter them in Financials → P&L (they are read from there), otherwise profit looks higher than it is.</div>' : ''}
+<div class="sx-card"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;"><h3 style="margin:0;flex:1;">Branch × month</h3>${SHOW.map(s => `<button class="um-btn ${show === s[0] ? 'primary' : ''}" data-pl-show="${s[0]}">${s[1]}</button>`).join('')}<select id="plMonths" aria-label="Months">${[3, 6, 12].map(n => `<option value="${n}" ${V.pl.months === n ? 'selected' : ''}>Last ${n} months</option>`).join('')}</select></div>
+<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Branch</th>${d.labels.map(l => `<th class="num">${esc(l)}</th>`).join('')}<th class="num">Total</th></tr></thead><tbody>${d.grid.map(g => `<tr><td><b>${esc(g.branch)}</b></td>${g.months.map(m => `<td class="num" style="${col(m, show)}" title="Income ${inr(m.income)} · costs ${inr(m.costs)}">${val(m, show)}</td>`).join('')}<td class="num" style="${col(g.total, show)}"><b>${val(g.total, show)}</b></td></tr>`).join('')}
+<tr style="border-top:2px solid var(--border);"><td><b>All branches</b></td>${d.monthTotals.map(m => `<td class="num" style="${col(m, show)}"><b>${show === 'margin' ? (m.margin == null ? '—' : m.margin + '%') : inr(m[show] || 0)}</b></td>`).join('')}<td></td></tr></tbody></table></div></div>
+${d.grid.map(g => `<div class="sx-card"><h3>${esc(g.branch)} — where the money came from and went</h3><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th></th>${d.labels.map(l => `<th class="num">${esc(l)}</th>`).join('')}<th class="num">Total</th></tr></thead><tbody>
+${[['education', '⬇ University commission'], ['visaIncome', '⬇ Visa service fees'], ['income', 'Income', 1], ['ads', '⬆ Ad spend'], ['salaries', '⬆ Salaries'], ['rent', '⬆ Rent'], ['other', '⬆ Other'], ['visaCosts', '⬆ Visa costs'], ['agentCommission', '⬆ Agent commission'], ['refunds', '⬆ Refunds'], ['costs', 'Costs', 1], ['net', 'Net profit', 1], ['enrollments', 'Enrolments'], ['leads', 'Leads']].map(r => `<tr${r[2] ? ' style="background:var(--canvas);"' : ''}><td>${r[2] ? '<b>' + esc(r[1]) + '</b>' : esc(r[1])}</td>${g.months.map(m => `<td class="num" style="${r[0] === 'net' ? col(m, 'net') : ''}">${r[0] === 'enrollments' || r[0] === 'leads' ? num(m[r[0]]) : inr(m[r[0]])}</td>`).join('')}<td class="num"><b>${r[0] === 'enrollments' || r[0] === 'leads' ? num(g.total[r[0]]) : inr(g.total[r[0]])}</b></td></tr>`).join('')}</tbody></table></div></div>`).join('')}
+${d.unassignedAds ? `<div class="sx-sub">${inr(d.unassignedAds)} of Meta spend could not be matched to a branch — tag those campaigns in Meta Settings → Branch tags.</div>` : ''}`;
+  b.querySelectorAll('[data-pl-show]').forEach(x => x.onclick = () => { V.pl.show = x.dataset.plShow; drawBranchPnl(d); });
+  const pm = $('plMonths'); if (pm) pm.onchange = () => { V.pl.months = Number(pm.value); load(true); };
+}
 
 function drawSecurity(d) {
   const t = d.tokens, inSheet = t.filter(x => x.inSheet).length;
