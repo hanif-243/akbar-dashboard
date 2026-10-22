@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '22 Oct 2026 · v118';
+window.AKBAR_BUILD = '22 Oct 2026 · v119';
 
 (function () {
   try {
@@ -198,6 +198,7 @@ window.AKBAR_BUILD = '22 Oct 2026 · v118';
     function pfRun() {
       var t = window._authToken || '';
       if (pfBusy || !t || document.hidden || Date.now() - pfAt < 600000) return;
+      if (fgBusy > 0 || Date.now() - navAt < 20000) return;
       if (pfAt && Date.now() - userAt > 15 * 60000) return;
       var lo = document.getElementById('loginScreen'); if (lo && lo.style.display !== 'none') return;
       pfAt = Date.now();
@@ -208,6 +209,7 @@ window.AKBAR_BUILD = '22 Oct 2026 · v118';
       var chunks = []; for (var i = 0; i < list.length; i += 3) chunks.push(list.slice(i, i + 3));
       var next = function () {
         if (!chunks.length || (window._authToken || '') !== t || document.hidden) { pfBusy = false; return; }
+        if (fgBusy > 0 || Date.now() - navAt < 20000) { pfBusy = false; pfAt = 0; return; }
         var c = chunks.shift(), started = Date.now(), wrote = lastWrite;
         var calls = c.map(function (e) { return { fn: e.k, args: e.a.map(function (x) { return x === '#' ? t : x; }) }; });
         real.withSuccessHandler(function (out) {
@@ -223,10 +225,14 @@ window.AKBAR_BUILD = '22 Oct 2026 · v118';
     }
     setTimeout(function pfLoop() { try { pfRun(); } catch (e) { pfBusy = false; } setTimeout(pfLoop, 60000); }, 12000);
     window.akPrefetchNow = function () { pfAt = 0; pfRun(); };
+
+    var fgBusy = 0;
     function callReal(st, fn, args) {
-      var r = real;
-      if (st.s) r = r.withSuccessHandler(st.s);
-      if (st.f) r = r.withFailureHandler(st.f);
+      var r = real, bg = /^(prefetchRun|updateSessionHeartbeat|getChatState|getServerBuild)$/.test(fn), ended = false;
+      var end = function () { if (!bg && !ended) { ended = true; fgBusy = Math.max(0, fgBusy - 1); } };
+      if (!bg) fgBusy++;
+      r = r.withSuccessHandler(function (v, u) { end(); if (st.s) st.s(v, u); });
+      r = r.withFailureHandler(function (e, u) { end(); if (st.f) st.f(e, u); });
       if ('u' in st) r = r.withUserObject(st.u);
       r[fn].apply(r, args);
     }
