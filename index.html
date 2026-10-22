@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '22 Oct 2026 · v125';
+window.AKBAR_BUILD = '22 Oct 2026 · v126';
 
 (function () {
   try {
@@ -21471,6 +21471,7 @@ function drawBranchPnl(d) {
   const all = d.grid.reduce((t, g) => { ['income', 'costs', 'net'].forEach(k => { t[k] = (t[k] || 0) + g.total[k]; }); return t; }, {});
   const missing = d.grid.some(g => g.months.some(m => m.missingCosts));
   b.innerHTML = `<div class="ow-kpis">${kpi('Income · ' + d.months.length + ' months', inr(all.income), 'university commission + visa fees')}${kpi('Costs', inr(all.costs), 'ads, salaries, rent, visa, agents, refunds')}${kpi('Net profit', inr(all.net), all.income ? Math.round(all.net / all.income * 100) + '% margin' : '', all.net < 0 ? 'bad' : '')}${kpi('Best branch', esc((d.grid.slice().sort((x, y) => y.total.net - x.total.net)[0] || {}).branch || '—'), '')}</div>
+${(d.badEnrolments || []).length ? `<div class="fin-alert">⚠️ ${d.badEnrolments.length} enrolment(s) have a “Payment to Third Party” bigger than the commission itself — probably a typing error. They are counted at the plain commission until fixed in Financials → Enrollments: ${d.badEnrolments.map(x => esc('#' + x.srNo + ' ' + x.student + ' (' + x.branch + ') — third party ' + inr(x.thirdParty) + ' vs commission ' + inr(x.commission))).join('; ')}</div>` : ''}
 ${missing ? '<div class="fin-alert warm">Salaries / rent are missing for some months — enter them in Financials → P&L (they are read from there), otherwise profit looks higher than it is.</div>' : ''}
 <div class="sx-card"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;"><h3 style="margin:0;flex:1;">Branch × month</h3>${SHOW.map(s => `<button class="um-btn ${show === s[0] ? 'primary' : ''}" data-pl-show="${s[0]}">${s[1]}</button>`).join('')}<select id="plMonths" aria-label="Months">${[3, 6, 12].map(n => `<option value="${n}" ${V.pl.months === n ? 'selected' : ''}>Last ${n} months</option>`).join('')}</select></div>
 <div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Branch</th>${d.labels.map(l => `<th class="num">${esc(l)}</th>`).join('')}<th class="num">Total</th></tr></thead><tbody>${d.grid.map(g => `<tr><td><b>${esc(g.branch)}</b></td>${g.months.map(m => `<td class="num" style="${col(m, show)}" title="Income ${inr(m.income)} · costs ${inr(m.costs)}">${val(m, show)}</td>`).join('')}<td class="num" style="${col(g.total, show)}"><b>${val(g.total, show)}</b></td></tr>`).join('')}
