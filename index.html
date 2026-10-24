@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '24 Oct 2026 · v129';
+window.AKBAR_BUILD = '24 Oct 2026 · v130';
 
 (function () {
   try {
@@ -20435,6 +20435,7 @@ new MutationObserver(addButton).observe(document.body, { childList: true, subtre
 .cq-wa-list { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .cq-wa-btn { border: 1px solid #25D366; background: rgba(37,211,102,.08); color: var(--ink); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
 .cq-wa-btn:hover { background: #25D366; color: #fff; }
+.cq-wa-btn.sug { border-width: 2px; background: rgba(37,211,102,.18); }
 .cq-wa select { width: auto; min-width: 160px; }
 .cq-av { display: grid; gap: 6px; margin-top: 8px; max-height: 220px; overflow: auto; }
 .cq-avrow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; } .cq-avrow b { min-width: 90px; }
@@ -20479,38 +20480,47 @@ const dur = s => { s = Math.round(Number(s) || 0); const h = Math.floor(s / 3600
 const clean = p => String(p || '').replace(/^p:/i, '').trim();
 const digits = p => clean(p).replace(/\D/g, '');
 
-const CQ_WA = {
-  noanswer: [['🙋 Tried calling', 'Hi {{name}}, this is {{me}} from Akbar Study Abroad, {{branch}}. I tried calling you about your study abroad enquiry. When is a good time to talk? You can also reply here.'],
-    ['🕐 Best time?', 'Hi {{name}}, {{me}} here from Akbar Study Abroad {{branch}}. Could you share a convenient time today or tomorrow for a quick 5-minute call about studying abroad?']],
-  interested: [['📄 Documents needed', 'Hi {{name}}, thank you for your time today! To check the best universities and scholarships for you, please send:\n1) 10th & 12th marksheets\n2) Degree marksheets / certificate (if any)\n3) Passport (front & back)\n4) English test score (IELTS / PTE), if taken\n— {{me}}, Akbar Study Abroad {{branch}}'],
-    ['🏢 Visit our office', 'Hi {{name}}, great speaking with you! Our counsellor would love to meet you at the Akbar Study Abroad {{branch}} office to plan your study abroad options. Which day this week suits you? — {{me}}'],
-    ['📅 Meeting confirmed', 'Hi {{name}}, your meeting with {{counsellor}} at Akbar Study Abroad {{branch}} is confirmed for {{mdate}} at {{mtime}}. Please bring your marksheets and passport. See you! — {{me}}', 'meeting']],
-  callback: [['📞 Call back confirmed', 'Hi {{name}}, as discussed I will call you on {{cbdate}}{{cbtime}}. If another time suits you better, just reply here. — {{me}}, Akbar Study Abroad {{branch}}']],
-  notinterested: [['🙏 Door open', 'Hi {{name}}, thank you for your time. If you plan to study abroad in the future, we are happy to help — just message us here. — Akbar Study Abroad {{branch}}']],
-  elsewhere: [['🤝 Help anytime', 'Hi {{name}}, best of luck with your application! If you need help with your visa, accommodation or a second opinion, we are here. — {{me}}, Akbar Study Abroad {{branch}}']]
+const CQ_SIGN = '\n\nBest regards,\n{{me1}}\nAkbar Study Abroad – {{branch}}\nhttps:\x2F\x2Fakbarstudy.com\x2F';
+const CQ_MSG = {
+  try1: ['📞 1st try — Tried calling', 'Hi {{name}}! 👋\n\nThis is {{me1}} from Akbar Study Abroad, following up on your enquiry about studying overseas.\n\nI just tried calling you but couldn\'t get through. I\'d love to connect for a quick 2-minute call to understand your course preferences, intake and budget, and suggest the right universities for you.\n\nWhen would be a good time to call? Feel free to reply here with a time that works best for you!'],
+  try2: ['🔁 2nd try — Follow-up', 'Hi {{name}},\n\nHope you\'re doing well! I tried reaching you again about your plans to study abroad{{countryBit}}.\n\nIntakes fill up quickly, so now is a great time to explore your options — university shortlist, scholarships and the documents you\'ll need.\n\nJust reply with a convenient time and I\'ll call you, or simply send a "Hi" and we can chat right here.'],
+  try3: ['⏳ Last try', 'Hi {{name}},\n\nI\'ve tried calling you a couple of times about your study abroad enquiry, but haven\'t been able to reach you.\n\nIf you\'re still interested, just reply to this message and I\'ll call you at a time that suits you. If your plans have changed, no worries at all — we\'re here whenever you\'re ready.'],
+  freetime: ['🕐 Ask for a free time', 'Hi {{name}}! 👋\n\nThis is {{me1}} from Akbar Study Abroad. Could you share a convenient time today or tomorrow for a quick 2-minute call?\n\nI\'d like to understand your goals and suggest the best course and university options for you.\n\nJust reply with a time — morning, afternoon or evening — whatever works best for you.'],
+  docs: ['📄 Documents needed', 'Hi {{name}},\n\nThank you for your time on the call today! 😊\n\nTo shortlist the best universities and scholarships for you, please share these documents here:\n\n1. 10th & 12th marksheets\n2. Graduation marksheets & degree certificate (if applicable)\n3. Passport — front & back page\n4. English test scorecard (IELTS / PTE / TOEFL), if taken\n5. CV / work experience letter (if any)\n\nClear photos or PDFs are perfectly fine. Once received, our counsellor will get back to you with your options.'],
+  visit: ['🏢 Invite to the office', 'Hi {{name}},\n\nIt was great speaking with you! 😊\n\nWe\'d love to meet you at our Akbar Study Abroad {{branch}} office for a free one-on-one counselling session — we\'ll go through your profile, courses, universities and budget in detail.\n\nWhich day this week works best for you? Reply with a convenient day and time and I\'ll book your slot.'],
+  meeting: ['📅 Meeting confirmed', 'Hi {{name}},\n\nYour counselling session is confirmed! ✅\n\n📅 Date: {{mdate}}\n⏰ Time: {{mtime}}\n👤 Counsellor: {{counsellor}}\n📍 Akbar Study Abroad – {{branch}}\n\nPlease carry your marksheets, passport and English test score (if any) so we can make the most of the session.\n\nNeed a different time? Just reply here.', 'meeting'],
+  callback: ['📞 Call-back confirmed', 'Hi {{name}},\n\nThank you for your time! As discussed, I\'ll call you on {{cbdate}}{{cbtime}}.\n\nIf another time works better, just reply here and I\'ll adjust.'],
+  notint: ['🙏 Not interested — door open', 'Hi {{name}},\n\nThank you for letting me know, and for your time today.\n\nIf you ever plan to study abroad in the future — or need guidance on courses, scholarships or visas — we\'d be happy to help. Just message us here anytime.\n\nWishing you all the very best!'],
+  elsewhere: ['🤝 Already applied — help anytime', 'Hi {{name}},\n\nGreat to hear you\'ve already applied — wishing you the very best! 🎓\n\nIf you need help along the way — a second opinion on your offer, scholarships, visa filing, accommodation or travel — feel free to reach out. We\'re always happy to help.']
 };
+const CQ_BY_RESULT = { noanswer: ['try1', 'try2', 'try3', 'freetime'], interested: ['docs', 'visit', 'meeting'], callback: ['callback', 'freetime'], notinterested: ['notint'], elsewhere: ['elsewhere'], '': ['try1', 'freetime', 'docs'] };
 function cqWaKey(r) {
   if (/^(No answer|Busy|Switched off|Not reachable)/i.test(r)) return 'noanswer';
   if (/^Interested/i.test(r)) return 'interested';
   if (/^Call back/i.test(r)) return 'callback';
   if (/^Not interested/i.test(r)) return 'notinterested';
   if (/^Already applied/i.test(r)) return 'elsewhere';
-  return r ? '' : 'noanswer';
+  return r ? 'none' : '';
 }
+function cqTitle(s) { return String(s || '').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()); }
 function cqFill(t) {
-  const l = C.lead || {}, fd = d => { if (!d) return ''; const x = new Date(d + 'T12:00:00'); return isNaN(x) ? d : x.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }); };
-  const first = String(l.name || '').trim().split(/\s+/)[0] || 'there';
-  const v = { name: first.charAt(0).toUpperCase() + first.slice(1).toLowerCase(), me: (C.setup && C.setup.me) || 'Akbar Study Abroad', branch: C.branch || '', country: l.country || 'abroad',
-    counsellor: C.mC || 'our counsellor', mdate: fd(C.mDate || today()), mtime: C.mTime || '', cbdate: fd(C.cbDate), cbtime: C.cbTime ? ' at ' + C.cbTime : '' };
+  const l = C.lead || {}, fd = d => { if (!d) return ''; const x = new Date(d + 'T12:00:00'); return isNaN(x) ? d : x.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' }); };
+  const first = String(l.name || '').trim().split(/\s+/)[0] || 'there', me = (C.setup && C.setup.me) || 'Team';
+  const ctry0 = String(l.country || '').replace(/_/g, ' ').trim(), CQ_C = { uk: 'the UK', usa: 'the USA', us: 'the USA', uae: 'the UAE', nz: 'New Zealand' }, ctry = CQ_C[ctry0.toLowerCase()] || (ctry0.length <= 3 ? ctry0.toUpperCase() : cqTitle(ctry0));
+  const t12 = h => { const m = /^(\d{1,2}):(\d{2})/.exec(String(h || '')); if (!m) return h || ''; const H = +m[1]; return ((H % 12) || 12) + ':' + m[2] + (H < 12 ? ' AM' : ' PM'); };
+  const v = { name: cqTitle(first), me: me, me1: cqTitle(me.split(/\s+/)[0]), branch: C.branch || '', country: ctry || 'abroad', countryBit: ctry && !/not.?sure|other/i.test(ctry) ? ' in ' + ctry : '',
+    counsellor: C.mC || 'our counsellor', mdate: fd(C.mDate || today()), mtime: t12(C.mTime), cbdate: fd(C.cbDate) || 'the agreed day', cbtime: C.cbTime ? ' at ' + t12(C.cbTime) : '' };
   return String(t || '').replace(/\{\{(\w+)\}\}/g, (m, k) => v[k] !== undefined ? v[k] : m);
 }
+function cqSuggested(key) { if (key !== 'noanswer') return ''; const n = Number((C.lead || {}).tries) || 0; return n <= 0 ? 'try1' : n === 1 ? 'try2' : 'try3'; }
 function cqWaBox() {
   const ph = digits((C.lead || {}).phone); if (ph.length < 10) return '';
-  const key = cqWaKey(C.result), list = (CQ_WA[key] || []).filter(t => t[2] !== 'meeting' || (C.ho === 'mgr' && C.mC && C.mTime));
+  const key = cqWaKey(C.result); if (key === 'none') return '';
+  const ids = (CQ_BY_RESULT[key] || []).filter(id => CQ_MSG[id][2] !== 'meeting' || (C.ho === 'mgr' && C.mC && C.mTime)), sug = cqSuggested(key);
   const extra = (C.waT || []).filter(t => t.active !== false && t.message);
-  if (!list.length && !extra.length) return '';
-  return `<div class="cq-box cq-wa"><label>💬 WhatsApp message${C.result ? ' for “' + esc(C.result) + '”' : ''}</label><div class="cq-wa-list">${list.map((t, i) => `<button type="button" class="cq-wa-btn" data-cq-wa="${key}|${i}" title="${esc(cqFill(t[1]))}">${esc(t[0])}</button>`).join('')}
-${extra.length ? `<select id="cqWaMore" aria-label="More messages"><option value="">More messages…</option>${extra.map((t, i) => `<option value="${i}">${esc(t.name || 'Message ' + (i + 1))}</option>`).join('')}</select>` : ''}</div><div class="sx-sub" style="margin-top:6px;">Opens WhatsApp with the message filled in — check it and press send. It is noted on this call.</div></div>`;
+  return `<div class="cq-box cq-wa"><label>💬 WhatsApp message${C.result ? ' for “' + esc(C.result) + '”' : ''}</label><div class="cq-wa-list">${ids.map(id => `<button type="button" class="cq-wa-btn ${id === sug ? 'sug' : ''}" data-cq-wa="${id}" title="${esc(cqFill(CQ_MSG[id][1] + CQ_SIGN))}">${id === sug ? '⭐ ' : ''}${esc(CQ_MSG[id][0])}</button>`).join('')}
+<select id="cqWaAll" aria-label="All messages"><option value="">All messages…</option>${Object.keys(CQ_MSG).filter(id => CQ_MSG[id][2] !== 'meeting').map(id => `<option value="m:${id}">${esc(CQ_MSG[id][0])}</option>`).join('')}${extra.map((t, i) => `<option value="t:${i}">${esc(t.name || 'Message ' + (i + 1))}</option>`).join('')}</select></div>
+<div class="sx-sub" style="margin-top:6px;">${sug ? '⭐ suggested for try ' + ((Number((C.lead || {}).tries) || 0) + 1) + '. ' : ''}Opens WhatsApp with the message filled in — check it and press send. It is noted on this call.</div></div>`;
 }
 function cqWaOpen(text, label) {
   const d = digits((C.lead || {}).phone), to = d.length === 10 ? '91' + d : d;
@@ -20519,8 +20529,10 @@ function cqWaOpen(text, label) {
   const n = $('cqNotes'); if (n) n.value = C.notes;
 }
 function cqWaWire(b) {
-  b.querySelectorAll('[data-cq-wa]').forEach(x => x.onclick = () => { const p = x.dataset.cqWa.split('|'), t = (CQ_WA[p[0]] || [])[Number(p[1])]; if (t) cqWaOpen(cqFill(t[1]), t[0].replace(/^\S+\s/, '')); });
-  const m = $('cqWaMore'); if (m) m.onchange = () => { const t = (C.waT || []).filter(x => x.active !== false && x.message)[Number(m.value)]; if (t) cqWaOpen(cqFill(String(t.message).replace(/\{\{counsellor\}\}/g, '{{me}}')), t.name); m.value = ''; };
+  b.querySelectorAll('[data-cq-wa]').forEach(x => x.onclick = () => { const m = CQ_MSG[x.dataset.cqWa]; if (m) cqWaOpen(cqFill(m[1] + CQ_SIGN), m[0].replace(/^\S+\s/, '')); });
+  const all = $('cqWaAll'); if (all) all.onchange = () => { const v = all.value; all.value = ''; if (!v) return;
+    if (v.indexOf('m:') === 0) { const m = CQ_MSG[v.slice(2)]; if (m) cqWaOpen(cqFill(m[1] + CQ_SIGN), m[0].replace(/^\S+\s/, '')); }
+    else { const t = (C.waT || []).filter(x => x.active !== false && x.message)[Number(v.slice(2))]; if (t) cqWaOpen(cqFill(String(t.message).replace(/\{\{counsellor\}\}/g, '{{me}}')), t.name); } };
 }
 
 const today = () => { const d = new Date(Date.now() + 330 * 60000); return d.toISOString().slice(0, 10); };
