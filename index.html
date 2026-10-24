@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '22 Oct 2026 · v127';
+window.AKBAR_BUILD = '24 Oct 2026 · v129';
 
 (function () {
   try {
@@ -20432,6 +20432,10 @@ new MutationObserver(addButton).observe(document.body, { childList: true, subtre
 .cq-results button.bad.on { background: var(--red); border-color: var(--red); color: #fff; }
 .cq-box { background: var(--canvas); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
 .cq-mtg { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+.cq-wa-list { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.cq-wa-btn { border: 1px solid #25D366; background: rgba(37,211,102,.08); color: var(--ink); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.cq-wa-btn:hover { background: #25D366; color: #fff; }
+.cq-wa select { width: auto; min-width: 160px; }
 .cq-av { display: grid; gap: 6px; margin-top: 8px; max-height: 220px; overflow: auto; }
 .cq-avrow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; } .cq-avrow b { min-width: 90px; }
 .cq-slot { border: 1px solid var(--border); background: var(--card); color: var(--ink); border-radius: 999px; padding: 4px 10px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
@@ -20474,6 +20478,51 @@ const fmtDay = ymd => { const p = String(ymd || '').split('-'); return p.length 
 const dur = s => { s = Math.round(Number(s) || 0); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? h + 'h ' + m + 'm' : m + 'm ' + (s % 60) + 's'; };
 const clean = p => String(p || '').replace(/^p:/i, '').trim();
 const digits = p => clean(p).replace(/\D/g, '');
+
+const CQ_WA = {
+  noanswer: [['🙋 Tried calling', 'Hi {{name}}, this is {{me}} from Akbar Study Abroad, {{branch}}. I tried calling you about your study abroad enquiry. When is a good time to talk? You can also reply here.'],
+    ['🕐 Best time?', 'Hi {{name}}, {{me}} here from Akbar Study Abroad {{branch}}. Could you share a convenient time today or tomorrow for a quick 5-minute call about studying abroad?']],
+  interested: [['📄 Documents needed', 'Hi {{name}}, thank you for your time today! To check the best universities and scholarships for you, please send:\n1) 10th & 12th marksheets\n2) Degree marksheets / certificate (if any)\n3) Passport (front & back)\n4) English test score (IELTS / PTE), if taken\n— {{me}}, Akbar Study Abroad {{branch}}'],
+    ['🏢 Visit our office', 'Hi {{name}}, great speaking with you! Our counsellor would love to meet you at the Akbar Study Abroad {{branch}} office to plan your study abroad options. Which day this week suits you? — {{me}}'],
+    ['📅 Meeting confirmed', 'Hi {{name}}, your meeting with {{counsellor}} at Akbar Study Abroad {{branch}} is confirmed for {{mdate}} at {{mtime}}. Please bring your marksheets and passport. See you! — {{me}}', 'meeting']],
+  callback: [['📞 Call back confirmed', 'Hi {{name}}, as discussed I will call you on {{cbdate}}{{cbtime}}. If another time suits you better, just reply here. — {{me}}, Akbar Study Abroad {{branch}}']],
+  notinterested: [['🙏 Door open', 'Hi {{name}}, thank you for your time. If you plan to study abroad in the future, we are happy to help — just message us here. — Akbar Study Abroad {{branch}}']],
+  elsewhere: [['🤝 Help anytime', 'Hi {{name}}, best of luck with your application! If you need help with your visa, accommodation or a second opinion, we are here. — {{me}}, Akbar Study Abroad {{branch}}']]
+};
+function cqWaKey(r) {
+  if (/^(No answer|Busy|Switched off|Not reachable)/i.test(r)) return 'noanswer';
+  if (/^Interested/i.test(r)) return 'interested';
+  if (/^Call back/i.test(r)) return 'callback';
+  if (/^Not interested/i.test(r)) return 'notinterested';
+  if (/^Already applied/i.test(r)) return 'elsewhere';
+  return r ? '' : 'noanswer';
+}
+function cqFill(t) {
+  const l = C.lead || {}, fd = d => { if (!d) return ''; const x = new Date(d + 'T12:00:00'); return isNaN(x) ? d : x.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }); };
+  const first = String(l.name || '').trim().split(/\s+/)[0] || 'there';
+  const v = { name: first.charAt(0).toUpperCase() + first.slice(1).toLowerCase(), me: (C.setup && C.setup.me) || 'Akbar Study Abroad', branch: C.branch || '', country: l.country || 'abroad',
+    counsellor: C.mC || 'our counsellor', mdate: fd(C.mDate || today()), mtime: C.mTime || '', cbdate: fd(C.cbDate), cbtime: C.cbTime ? ' at ' + C.cbTime : '' };
+  return String(t || '').replace(/\{\{(\w+)\}\}/g, (m, k) => v[k] !== undefined ? v[k] : m);
+}
+function cqWaBox() {
+  const ph = digits((C.lead || {}).phone); if (ph.length < 10) return '';
+  const key = cqWaKey(C.result), list = (CQ_WA[key] || []).filter(t => t[2] !== 'meeting' || (C.ho === 'mgr' && C.mC && C.mTime));
+  const extra = (C.waT || []).filter(t => t.active !== false && t.message);
+  if (!list.length && !extra.length) return '';
+  return `<div class="cq-box cq-wa"><label>💬 WhatsApp message${C.result ? ' for “' + esc(C.result) + '”' : ''}</label><div class="cq-wa-list">${list.map((t, i) => `<button type="button" class="cq-wa-btn" data-cq-wa="${key}|${i}" title="${esc(cqFill(t[1]))}">${esc(t[0])}</button>`).join('')}
+${extra.length ? `<select id="cqWaMore" aria-label="More messages"><option value="">More messages…</option>${extra.map((t, i) => `<option value="${i}">${esc(t.name || 'Message ' + (i + 1))}</option>`).join('')}</select>` : ''}</div><div class="sx-sub" style="margin-top:6px;">Opens WhatsApp with the message filled in — check it and press send. It is noted on this call.</div></div>`;
+}
+function cqWaOpen(text, label) {
+  const d = digits((C.lead || {}).phone), to = d.length === 10 ? '91' + d : d;
+  window.open('https:\x2F\x2Fwa.me\x2F' + to + '?text=' + encodeURIComponent(text), '_blank', 'noopener');
+  keep(); const line = '💬 WhatsApp sent: ' + label; if (String(C.notes || '').indexOf(line) === -1) C.notes = (C.notes ? C.notes + '\n' : '') + line;
+  const n = $('cqNotes'); if (n) n.value = C.notes;
+}
+function cqWaWire(b) {
+  b.querySelectorAll('[data-cq-wa]').forEach(x => x.onclick = () => { const p = x.dataset.cqWa.split('|'), t = (CQ_WA[p[0]] || [])[Number(p[1])]; if (t) cqWaOpen(cqFill(t[1]), t[0].replace(/^\S+\s/, '')); });
+  const m = $('cqWaMore'); if (m) m.onchange = () => { const t = (C.waT || []).filter(x => x.active !== false && x.message)[Number(m.value)]; if (t) cqWaOpen(cqFill(String(t.message).replace(/\{\{counsellor\}\}/g, '{{me}}')), t.name); m.value = ''; };
+}
+
 const today = () => { const d = new Date(Date.now() + 330 * 60000); return d.toISOString().slice(0, 10); };
 const OTHER = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView'];
 
@@ -20507,6 +20556,7 @@ function loadSetup() {
   C.pre = null;
   run('getCallingSetup', C.branch).then(s => {
     C.setup = s; C.branch = s.branch;
+    if (!C.waT) run('getWhatsAppTemplates').then(t => { C.waT = (t && t.templates) || []; }).catch(() => { C.waT = []; });
     $('cqSub').textContent = s.branch + ' · bulk leads one by one · signed in as ' + s.me;
     const sel = $('cqBranch');
     if (s.branches.length > 1) { sel.style.display = ''; sel.innerHTML = s.branches.map(b => `<option ${b === s.branch ? 'selected' : ''}>${esc(b)}</option>`).join(''); sel.onchange = () => { C.branch = sel.value; C.lead = null; C.skip = []; loadSetup(); }; }
@@ -20552,6 +20602,7 @@ ${C.result === 'Call back later' ? `<div class="cq-box"><div class="cq-two"><div
 ${C.result === 'Interested' ? `<div class="cq-box"><div class="cq-two"><div><label for="cqHo">Send to</label><select id="cqHo"><option value="mgr" ${C.ho === 'mgr' ? 'selected' : ''}>Branch manager — assigns a counsellor</option><option value="" ${C.ho === '' ? 'selected' : ''}>Keep with me for now</option>${C.setup.role !== 'Telecaller' ? C.setup.counsellors.map(n => `<option ${n === C.ho ? 'selected' : ''}>${esc(n)}</option>`).join('') : ''}</select></div><div><label for="cqHoNote">Note for the ${C.ho === 'mgr' ? 'manager' : 'counsellor'}</label><input type="text" id="cqHoNote" value="${esc(C.hoNote || '')}" placeholder="e.g. wants UK, Sept intake, call after 6 pm"></div></div>
 ${C.ho === 'mgr' ? `<div class="cq-mtg"><div class="cq-two"><div><label for="cqMD">📅 Book a meeting (optional) — who is free on</label><input type="date" id="cqMD" min="${today()}" value="${esc(C.mDate || today())}"></div><div class="cq-two"><div><label for="cqMC">Counsellor</label><select id="cqMC"><option value="">No meeting</option>${C.setup.counsellors.map(n => `<option ${n === C.mC ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></div><div><label for="cqMT">Time</label><input type="time" id="cqMT" value="${esc(C.mTime || '')}"></div></div></div><div id="cqAv" class="cq-av"><span class="sx-sub">Checking who is free…</span></div></div>` : ''}
 <div class="sx-sub" style="margin-top:6px;">${C.ho === 'mgr' ? 'The branch manager gets a notification and an email to assign a counsellor.' + (C.mC ? ' The meeting goes on ' + esc(C.mC) + '’s calendar.' : '') : C.ho ? 'The counsellor gets a notification and an email from you.' : 'The lead stays in the calling queue with you.'}</div></div>` : ''}
+${cqWaBox()}
 <label class="f" for="cqNotes" style="font-size:12px;font-weight:700;color:var(--muted);">Notes</label><textarea id="cqNotes" placeholder="What did they say?">${esc(C.notes || '')}</textarea>
 <div class="cq-actions"><button class="um-btn primary" id="cqSave" ${C.result ? '' : 'disabled'}>${res && res.result === 'Interested' && C.ho === 'mgr' ? '📞 Send to manager & next' : res && res.result === 'Interested' && C.ho ? '🤝 Hand over & next' : '✓ Save & next'}</button><button class="um-btn" id="cqSkip" title="Skip this lead for now — it stays in the queue">Skip</button><button class="um-btn" id="cqStop">Save & stop</button></div>
 <div class="sx-sub" style="margin-top:8px;">${res ? (res.status ? 'Lead becomes <b>' + esc(res.status) + '</b>.' : res.connected ? '' : 'The lead comes back to the queue in 3 hours (up to 4 tries).') : ''}</div>
@@ -20563,8 +20614,11 @@ ${C.ho === 'mgr' ? `<div class="cq-mtg"><div class="cq-two"><div><label for="cqM
   $('cqStop').onclick = () => save(false);
   $('cqSkip').onclick = () => { stopTimer(); C.skip.push(C.lead.leadId); C.lead = null; next(); };
   const ho = $('cqHo'); if (ho) ho.onchange = () => { keep(); draw(); };
+  cqWaWire(b);
   const md = $('cqMD'); if (md) { md.onchange = () => { keep(); loadAv(); }; loadAv(); }
   const mc = $('cqMC'); if (mc) mc.onchange = () => { keep(); draw(); };
+  const mt = $('cqMT'); if (mt) mt.onchange = () => { keep(); draw(); };
+  const cbd = $('cqCbD'); if (cbd) cbd.onchange = () => { keep(); draw(); }; const cbt = $('cqCbT'); if (cbt) cbt.onchange = () => { keep(); draw(); };
   wireScript();
 }
 function keep() {
@@ -21491,54 +21545,9 @@ function drawSecurity(d) {
 <td><div style="display:flex;gap:6px;"><input type="password" autocomplete="off" data-sec-tok="${esc(x.branch)}" placeholder="Paste a new token" style="min-width:180px;"><button class="um-btn s10-mini" data-sec-save="${esc(x.branch)}">Save</button></div></td></tr>`).join('')}</tbody></table></div>
 <div class="sx-sub" style="margin-top:8px;">A pasted token goes straight to secure storage and is never shown again. The page never receives the token itself.</div></div>
 <div class="sx-card"><h3>Also do this in Google Sheets (2 minutes)</h3><ol style="margin:0;padding-left:18px;line-height:1.8;font-size:13.5px;"><li>Open the <a href="${esc(d.controlSheetUrl)}" target="_blank" rel="noopener">Lead Ops Control Panel</a> → <b>Share</b>.</li><li>Keep only the directors as <b>Editor</b>. Staff never need this sheet — they work in the dashboard.</li><li>Set <b>General access</b> to <b>Restricted</b>.</li></ol></div>`;
-  body().insertAdjacentHTML('afterbegin', '<div class="sx-card" id="secMig" style="border-left:4px solid var(--red);"><h3>🚚 Workspace migration — what must be copied</h3><div class="sx-sub">Checking every sheet, folder and job…</div></div>');
 
-  $('secMig').insertAdjacentHTML('beforebegin', '<div class="sx-card" id="secSteps" style="border-left:4px solid var(--red);"><h3>🚚 Migration steps</h3></div>');
-  (() => {
-
-    const isNew = /@akbarstudy\.com$/i.test(d.owner || ''), el = $('secSteps');
-    const list = r => '<ul style="margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.7;">' + r.items.map(x => '<li>' + (x.ok ? (x.skipped ? '⏭ ' : '✅ ') : '❌ ') + esc(x.label) + (x.name ? ' — ' + esc(x.name) : '') + (x.files != null ? ' — ' + x.files + ' files' + (x.finished ? ' ✔ done' : ' … continue') : '') + (x.skipped ? ' <span class="sx-sub" style="display:inline;">(' + esc(x.skipped) + ')</span>' : '') + (x.error ? ' <span style="color:var(--red);">' + esc(x.error) + '</span>' : '') + (x.url ? ' <a href="' + esc(x.url) + '" target="_blank" rel="noopener">open ↗</a>' : '') + '</li>').join('') + '</ul>';
-    el.insertAdjacentHTML('beforeend', '<div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);" id="migSteps">' + (isNew
-      ? '<b>Step 2 · Copy the sheets into this account</b><div class="sx-sub" style="margin:4px 0 8px;">Makes a copy of every shared sheet next to this Control Panel and points the Branches tab at the copies. The old sheets are only read.</div><button class="um-btn primary s10-mini" id="migCopy">Copy sheets here</button><div id="migCopyOut"></div>' +
-        '<div style="margin-top:12px;"><b>Step 3 · Copy the Drive folders</b><div class="sx-sub" style="margin:4px 0 8px;">Student documents, invoices, B2B files, backups. Big folders take a few rounds — click again until every line says done.</div><button class="um-btn s10-mini" id="migFolders">Copy folders</button><div id="migFoldersOut"></div></div>' +
-        '<div style="margin-top:12px;"><b>Step 4 · Catch up — just before the switch</b><div class="sx-sub" style="margin:4px 0 8px;">Brings over everything the team did on the old system since the copies were made. <b>Control Panel</b>: users, call logs, follow-ups, chat, leave… (each tab replaces the test data here). <b>Leads</b>: new leads are added and changed statuses, remarks and counsellors are updated. Nothing is deleted. Safe to run more than once.</div><button class="um-btn primary s10-mini" id="migCatchCp">1 · Catch up Control Panel</button> <button class="um-btn primary s10-mini" id="migCatchLeads">2 · Catch up leads</button><div id="migCatchCpOut"></div><div id="migCatchLeadsOut"></div></div>' +
-        '<div style="margin-top:12px;"><b>Step 5 · Start the core jobs</b><div class="sx-sub" style="margin:4px 0 8px;">The 5-minute lead check (new-lead and slow-lead alerts), follow-up reminders, SLA, digests, weekly report, nightly backup. “Install all” on the Automation page does not include these. Anything already running is left alone.</div><button class="um-btn primary s10-mini" id="migCoreJobs">Start core jobs</button><div id="migCoreJobsOut"></div></div>'
-      : '<b>Step 1 · Share everything with the new account</b><div class="sx-sub" style="margin:4px 0 8px;">Gives the new account Editor access to every sheet and folder above. Nothing is copied or changed.</div><input type="email" id="migTo" value="hanif.s@akbarstudy.com" style="height:34px;min-width:240px;border:1px solid var(--border);border-radius:9px;padding:0 10px;"> <button class="um-btn primary s10-mini" id="migShare">Share with new account</button><div id="migShareOut"></div>' +
-        '<div style="margin-top:12px;"><b>After the switch · Stop this old system</b><div class="sx-sub" style="margin:4px 0 8px;">Removes this old system’s automatic jobs (lead checks, Meta pulls, reminders, backups) so it stops sending alerts. Do this only once the new system is live.</div><button class="um-btn s10-mini" id="migStopOld" style="color:var(--red);">Stop old system’s jobs</button><div id="migStopOldOut"></div></div>') + '</div>');
-    const go = (btnId, outId, fn, args, msg) => { const b = $(btnId); if (!b) return; b.onclick = () => { b.disabled = true; const t = b.textContent; b.textContent = 'Working… (up to 5 minutes)';
-      run(fn, ...args()).then(r => { const o = $(outId); if (!o) { toast(msg); return; } o.innerHTML = list(r) + (r.branchCellsUpdated != null ? '<div class="sx-sub" style="margin-top:6px;">' + r.branchCellsUpdated + ' link(s) in the Branches tab now point at the copies.</div>' : '') + (r.allDone === false ? '<div class="sx-sub" style="margin-top:6px;">Not finished yet — click again to continue.</div>' : ''); toast(msg); })
-        .catch(e => toast(errMsg(e), 'error')).then(() => { if (!document.body.contains(b)) return; b.disabled = false; b.textContent = t; }); }; };
-    go('migShare', 'migShareOut', 'migShareWithNewAccount', () => [$('migTo').value], 'Shared — now open the test page as the new account for step 2');
-    go('migCopy', 'migCopyOut', 'migCopySheets', () => [], 'Sheets copied');
-    go('migFolders', 'migFoldersOut', 'migCopyFolders', () => [], 'Folder copy round finished');
-    go('migCatchCp', 'migCatchCpOut', 'migCatchUpControlPanel', () => [], 'Control Panel caught up');
-    go('migCatchLeads', 'migCatchLeadsOut', 'migCatchUpLeads', () => [], 'Leads caught up');
-    go('migCoreJobs', 'migCoreJobsOut', 'migInstallCoreJobs', () => [], 'Core jobs started');
-    const stop = $('migStopOld'); if (stop) stop.onclick = () => {
-      if (!confirm('Stop every automatic job of this OLD system?\n\nOnly do this after the dashboard has switched to the new account.')) return;
-      stop.disabled = true;
-      run('migStopOldJobs').then(r => { const o = $('migStopOldOut'); if (o) o.innerHTML ='<div class="sx-sub" style="margin-top:6px;">✅ ' + r.stopped + ' job(s) stopped: ' + esc(r.jobs.join(', ')) + '</div>'; toast('Old system stopped'); })
-        .catch(e => { stop.disabled = false; toast(errMsg(e), 'error'); });
-    };
-  })();
-  run('getMigrationInventory').then(m => { const el = $('secMig'); if (!el) return;
-    el.innerHTML = '<h3>🚚 Workspace migration — what must be copied</h3><div class="sx-sub" style="margin-bottom:8px;">Lead Ops runs as <b>' + esc(m.owner) + '</b>. IT is not moving Drive files, so each item below must be copied to the new console before the old accounts are switched off. The owner shown is the account that has to share or copy it.</div><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>What</th><th>Name</th><th>Owner</th><th></th></tr></thead><tbody>' +
-      m.files.map(x => '<tr><td>' + esc(x.kind) + '<div class="sx-sub">' + esc(x.label) + '</div></td><td>' + esc(x.name || '—') + (x.items != null ? ' <span class="sx-sub" style="display:inline;">· ' + x.items + ' files</span>' : '') + (x.error ? '<div class="sx-sub" style="color:var(--red);">' + esc(x.error) + '</div>' : '') + '</td><td>' + esc(x.owner || '—') + '</td><td><a href="' + esc(x.url) + '" target="_blank" rel="noopener">Open ↗</a></td></tr>').join('') + '</tbody></table></div>' +
-      '<div class="sx-sub" style="margin-top:8px;"><b>' + m.jobs.length + ' automatic jobs</b> run under this account (they must be re-created in the new one): ' + esc(Array.from(new Set(m.jobs)).join(', ')) + '.<br><b>' + m.storedSettings.length + ' stored settings</b> (Meta tokens etc.) to re-enter: ' + esc(m.storedSettings.join(', ')) + '. <b>' + m.users + '</b> active logins.</div>';
-
-    if (/@akbarstudy\.com$/i.test(m.owner)) {
-      const mains = m.files.filter(x => /^Branch lead sheet/.test(x.kind)), bulks = m.files.filter(x => /^Bulk lead sheet/.test(x.kind)).map(x => x.label.split(' — ')[0]);
-      el.insertAdjacentHTML('beforeend', '<div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);"><b>Separate bulk leads</b><div class="sx-sub" style="margin:4px 0 8px;">Moves each branch’s bulk / telecaller leads out of its main sheet into a new “Branch – Bulk Leads” file in this account. Do this after the branch sheets are copied in and linked. Meta leads stay where they are.</div>' +
-        mains.map(x => { const b = x.label.split(' — ')[0], done = bulks.indexOf(b) !== -1; return '<button class="um-btn s10-mini" style="margin:0 6px 6px 0;" ' + (done || x.error ? 'disabled' : '') + ' data-bulk-split="' + esc(b) + '">' + (done ? '✓ ' + esc(b) + ' — bulk file ready' : x.error ? esc(b) + ' — sheet not reachable yet' : 'Split ' + esc(b)) + '</button>'; }).join('') + '</div>');
-      el.querySelectorAll('[data-bulk-split]').forEach(btn => btn.onclick = () => {
-        const b = btn.dataset.bulkSplit;
-        if (!confirm('Move ' + b + '’s bulk / telecaller leads into a new “' + b + ' – Bulk Leads” file?\n\nThis changes the NEW account copy only. The live sheets are not touched.')) return;
-        btn.disabled = true; btn.textContent = 'Moving ' + b + '…';
-        run('splitBulkLeads', b, 'MOVE').then(r => { btn.textContent = '✓ ' + b + ' — ' + r.moved + ' bulk leads moved'; toast(b + ': ' + r.moved + ' bulk leads moved to their own file, ' + r.kept + ' kept in the main sheet'); })
-          .catch(e2 => { btn.disabled = false; btn.textContent = 'Split ' + b; toast(errMsg(e2), 'error'); });
-      });
-    } })
-    .catch(e => { const el = $('secMig'); if (el) el.innerHTML = '<h3>🚚 Workspace migration</h3><div class="sx-sub">' + esc(errMsg(e)) + '</div>'; });
+  body().insertAdjacentHTML('afterbegin', '<div class="sx-card" id="secJobs"><h3>⚙️ Automatic jobs</h3><div class="sx-sub" style="margin:4px 0 8px;">Makes sure the lead check, reminders, SLA, digests, reports, backups and the Meta spend sync are all running. Anything already running is left alone.</div><button class="um-btn s10-mini" id="secJobsGo">Check &amp; start missing jobs</button><div id="secJobsOut"></div></div>');
+  $('secJobsGo').onclick = () => { const b = $('secJobsGo'); b.disabled = true; run('migInstallCoreJobs').then(r => { const o = $('secJobsOut'); if (o) o.innerHTML = '<ul style="margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.7;">' + r.items.map(x => '<li>' + (x.ok ? (x.skipped ? '✓ ' : '✅ ') : '❌ ') + esc(x.label) + (x.name ? ' — ' + esc(x.name) : '') + (x.error ? ' <span style="color:var(--red);">' + esc(x.error) + '</span>' : '') + '</li>').join('') + '</ul>'; toast('Jobs checked'); }).catch(e => toast(errMsg(e), 'error')).then(() => { b.disabled = false; }); };
   body().insertAdjacentHTML('beforeend', '<div class="sx-card" id="secMail"><h3>Email senders</h3><div class="sx-sub">Checking…</div></div>');
   run('getEmailSenders').then(m => { const el = $('secMail'); if (!el) return;
     const row = (lbl, x) => `<tr><td><b>${esc(lbl)}</b></td><td>${esc(x.address)}</td><td>${x.ready ? '<span style="color:var(--ok);font-weight:700;">✓ sending from this address</span>' : '<span style="color:var(--warm);font-weight:700;">not set up yet — emails go from ' + esc(m.owner) + '</span>'}</td></tr>`;
