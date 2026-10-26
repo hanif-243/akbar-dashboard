@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '24 Oct 2026 · v130';
+window.AKBAR_BUILD = '26 Oct 2026 · v131';
 
 (function () {
   try {
@@ -20158,7 +20158,8 @@ ${sec('💰 Funds & forecast', fundsLine + grid([kpi(fu.prepaid ? 'Available now
 <div class="sx-table-wrap" style="margin-top:10px;"><table class="sx-table"><thead><tr><th>Date</th><th class="num">Amount</th><th>Method</th><th>Note</th><th>By</th><th></th></tr></thead><tbody>${d.fundsAdded.map(x => `<tr><td>${esc(String(x.date).slice(0, 10))}</td><td class="num">${inr(x.amount)}</td><td>${esc(x.method)}</td><td>${esc(x.note)}</td><td>${esc(x.by)}</td><td><button class="um-btn s10-mini" data-mf-del="${esc(x.id)}">Remove</button></td></tr>`).join('') || '<tr><td colspan="6" class="sx-sub">No top-ups logged yet.</td></tr>'}</tbody></table></div></div>`, 'Live from your Meta ad account. The forecast uses the last 7 days’ average spend and cost per lead.')}
 ${chart ? sec('📅 Day by day', chart) : ''}
 ${sec('🎯 By campaign', tbl(d.byCampaign))}
-${sec('🏢 By branch', tbl(d.byBranch))}`;
+${sec('🏢 By branch', tbl(d.byBranch))}
+${window._isSuperAdmin ? sec('📧 Automatic Meta reports', `<div id="marBox" class="sx-sub">Loading…</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"><button class="um-btn primary" id="marTestW">Send test weekly report now</button><button class="um-btn primary" id="marTestM">Send test monthly report now</button><button class="um-btn" id="marInstall">Turn on the schedule</button></div>`, 'Super Admins only. Weekly email every Monday 9 AM IST, monthly on the 1st at 9 AM IST, plus the editable report Sheet. Recipients, branches and the ad set → branch mapping are edited in the Sheet’s Settings tab.') : ''}`;
 const reload = () => { M.rep = null; load(); };
 $('mrRange').onchange = e => { const v = e.target.value; if (v === 'custom') { $('mrCustom').style.display = 'inline-flex'; return; } rf.days = Number(v); rf.from = rf.to = ''; reload(); };
 $('mrApply').onclick = () => { rf.days = 'custom'; rf.from = $('mrFrom').value; rf.to = $('mrTo').value; if (!rf.from || !rf.to) return toast('Pick both dates', 'error'); reload(); };
@@ -20170,7 +20171,28 @@ $('mrPdf').onclick = () => { const b = $('mrPdf'); b.disabled = true; b.textCont
 $('mfAdd').onclick = () => { const p = { date: $('mfDate').value, amount: $('mfAmt').value, method: $('mfMethod').value, note: $('mfNote').value };
   run('addMetaFunds', p).then(() => { toast('Top-up logged'); reload(); }).catch(e => toast(errMsg(e), 'error')); };
 body.querySelectorAll('[data-mf-del]').forEach(x => x.onclick = () => { if (!confirm('Remove this top-up entry?')) return; run('deleteMetaFunds', x.dataset.mfDel).then(() => { toast('Removed'); reload(); }).catch(e => toast(errMsg(e), 'error')); });
+if ($('marBox')) mrAuto('status');
 }
+
+function mrAuto(action) {
+const box = $('marBox'); if (!box) return;
+const btns = ['marTestW', 'marTestM', 'marInstall'].map(id => $(id)).filter(Boolean);
+btns.forEach(b => { b.disabled = true; });
+if (action !== 'status') box.innerHTML = action === 'install' ? 'Turning on the schedule…' : 'Building the report and sending it — this takes up to a minute…';
+const last = x => x ? esc(x.period) + ' → ' + esc((x.to || []).join(', ')) + (x.test ? ' (test)' : '') + ' · ' + esc(new Date(x.at).toLocaleString('en-IN')) : 'not sent yet';
+run('metaAutoReport', action).then(s => {
+  const r = s.result || {};
+  if (action === 'testWeekly' || action === 'testMonthly') toast(r.sent ? 'Test report sent to ' + r.sent.join(', ') : 'Not sent: ' + (r.skipped || 'unknown reason'), r.sent ? '' : 'error');
+  if (action === 'install') toast('Schedule is on');
+  box.innerHTML = `<div><b>Report Sheet:</b> <a href="${esc(s.sheetUrl)}" target="_blank" rel="noopener">open in Google Sheets</a></div>
+<div><b>Sends to:</b> ${esc(s.recipients.join(', ') || 'nobody — add addresses in the Settings tab')}</div>
+<div><b>Weekly:</b> ${s.weeklyOn ? 'ON' : 'OFF'} · ${s.weeklyScheduled ? 'scheduled Monday 9 AM' : '<b style="color:var(--red)">not scheduled</b>'} · last: ${last(s.lastWeekly)}</div>
+<div><b>Monthly:</b> ${s.monthlyOn ? 'ON' : 'OFF'} · ${s.monthlyScheduled ? 'scheduled on the 1st, 9 AM' : '<b style="color:var(--red)">not scheduled</b>'} · last: ${last(s.lastMonthly)}</div>
+${r.metaError ? `<div class="ma-banner warm">Meta could not be reached for this report: ${esc(r.metaError)}</div>` : ''}`;
+}).catch(e => { box.textContent = errMsg(e); toast(errMsg(e), 'error'); })
+  .then(() => btns.forEach(b => { b.disabled = false; }));
+}
+document.addEventListener('click', e => { const id = e.target && e.target.id; if (id === 'marTestW') mrAuto('testWeekly'); else if (id === 'marTestM') mrAuto('testMonthly'); else if (id === 'marInstall') mrAuto('install'); });
 function mrFilt() { const rf = M.rf; return rf.days === 'custom' ? { from: rf.from, to: rf.to, branch: rf.branch } : { days: rf.days, branch: rf.branch }; }
 
 document.querySelectorAll('[data-ma-view]').forEach(el => {
