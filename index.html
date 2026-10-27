@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
  
-window.AKBAR_BUILD = '27 Oct 2026 · v133';
+window.AKBAR_BUILD = '27 Oct 2026 · v134';
 
 
 (function () {
@@ -18392,7 +18392,7 @@ ${fld('Terms / notes', `<textarea id="b2bAgCommTerms" style="min-height:52px;" p
 ${fld('MOU status', `<select id="b2bAgMou">${opts(T.mouStatuses || ['Not sent', 'Sent for signing', 'Signed', 'Expired'], a.mouStatus || 'Not sent')}</select>`)}<div class="b2b-note" style="align-self:end;">Upload the signed file from the agent’s profile.</div>
 ${fld('Signed on', `<input type="date" id="b2bAgMouS" value="${esc(a.mouSigned || '')}">`)}${fld('Valid until', `<input type="date" id="b2bAgMouE" value="${esc(a.mouExpiry || '')}">`)}
 ${fld('Notes', `<textarea id="b2bAgNotes" style="min-height:60px;">${esc(a.notes)}</textarea>`, true)}</div>
-${errBox('b2bAgErr')}<div class="sx-modal-actions">${a.id ? '<button class="um-btn" id="b2bAgBack" style="margin-right:auto;">← Agent</button>' : ''}${a.id && typeof window.pbBtn === 'function' ? window.pbBtn({ subjectType: 'agent', subjectId: a.id, subject: a.name, phone: a.phone, kinds: ['agentOnboard'] }, '🤝 Onboarding checklist') : ''}<button class="um-btn primary" id="b2bAgSave">Save agent</button></div>`, 640);
+${errBox('b2bAgErr')}<div class="sx-modal-actions">${a.id ? '<button class="um-btn" id="b2bAgBack" style="margin-right:auto;">← Agent</button>' : ''}${a.id && typeof window.pbBtn === 'function' ? window.pbBtn({ subjectType: 'agent', subjectId: a.id, subject: a.name, phone: a.phone, kinds: ['agentOnboard'] }, '🤝 Onboarding checklist') : ''}${a.id ? `<button class="um-btn" type="button" data-pb-brand="${esc(a.id)}">🎨 White-label brand</button>` : ''}<button class="um-btn primary" id="b2bAgSave">Save agent</button></div>`, 640);
 const rateL = () => { const t = val('b2bAgCommType'); $('b2bAgRateL').textContent = t.indexOf('Percent') === 0 ? 'Rate (% of first-year tuition)' : t === 'No commission' || !t ? 'Rate' : 'Rate (₹ per student)'; $('b2bAgCommRate').disabled = t === 'No commission'; };
 $('b2bAgCommType').onchange = rateL; rateL();
 if ($('b2bAgBack')) $('b2bAgBack').onclick = () => agentView(a.id);
@@ -23165,6 +23165,8 @@ window.openLandingPages = open;
 .pb-item .tx { font-size: 13px; font-weight: 600; }
 .pb-item small { display: block; font-size: 11.5px; color: var(--muted); font-weight: 500; margin-top: 2px; text-decoration: none; }
 .pb-item .opt { font-size: 10.5px; color: var(--muted); font-weight: 700; margin-left: 6px; }
+.pb-share { margin-top: 10px; border: 1px dashed var(--border); border-radius: 12px; padding: 10px 12px; background: var(--canvas); }
+.pb-share-h { font-size: 12.5px; font-weight: 800; margin-bottom: 8px; }
 .pb-prog { height: 8px; border-radius: 99px; background: var(--canvas); overflow: hidden; min-width: 80px; }
 .pb-prog i { display: block; height: 100%; background: var(--ok); border-radius: 99px; }
 .pb-prog.late i { background: var(--red); }
@@ -23293,7 +23295,7 @@ function drawRuns() {
   body().innerHTML = `<div class="sx-filters"><select id="pbRfS">${[['open', 'Open'], ['overdue', 'Overdue'], ['complete', 'Complete'], ['', 'All']].map(o => `<option value="${o[0]}" ${P.rf.status === o[0] ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>
 <select id="pbRfK"><option value="">Every type</option>${(d.kinds || []).map(k => `<option value="${esc(k.k)}" ${P.rf.kind === k.k ? 'selected' : ''}>${esc(k.icon + ' ' + k.l)}</option>`).join('')}</select>${brs}
 <input id="pbRfQ" placeholder="Search name, phone, country…" value="${esc(P.rf.q)}" style="min-width:200px;"><label style="font-size:12.5px;display:flex;gap:5px;align-items:center;"><input type="checkbox" id="pbRfM" ${P.rf.mine ? 'checked' : ''}> Started by me</label>
-<span style="flex:1"></span><button class="um-btn primary" id="pbNewRun">＋ Start checklist</button></div>
+<span style="flex:1"></span>${ME().isLead || ME().role === 'B2B Team' ? '<button class="um-btn" id="pbBrands">🎨 Agent brands</button>' : ''}<button class="um-btn primary" id="pbNewRun">＋ Start checklist</button></div>
 <div class="sx-card">${!R ? '<div class="skeleton" style="height:160px;"></div>' : !R.runs.length ? '<div class="sx-empty">No checklists here. Start one with “＋ Start checklist”, or from a lead, a visa case or an agent.</div>' : `<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Name</th><th>Checklist</th><th>Country</th><th>Branch</th><th>Progress</th><th>Due</th><th>Updated</th></tr></thead><tbody>
 ${R.runs.map(r => { const late = r.status !== 'Complete' && r.dueDate && r.dueDate < td; return `<tr class="pb-row-click" data-pb-run="${esc(r.id)}"><td><b>${esc(r.subject)}</b>${r.phone ? `<div class="sx-sub">${esc(r.phone)}</div>` : ''}</td><td>${esc(kindOf(r.kind).icon)} ${esc(r.title)}</td><td>${esc(r.country || '—')}</td><td>${esc(r.branch || '—')}</td>
 <td style="min-width:130px;"><div class="pb-prog ${late ? 'late' : ''}"><i style="width:${r.pct}%"></i></div><div class="sx-sub">${r.done}/${r.total}${r.status === 'Complete' ? ' · ✓ complete' : r.reqLeft ? ' · ' + r.reqLeft + ' required left' : ''}</div></td>
@@ -23302,6 +23304,7 @@ ${R.runs.map(r => { const late = r.status !== 'Complete' && r.dueDate && r.dueDa
   ['pbRfS', 'pbRfK', 'pbRfM', 'pbRfB'].forEach(id => { const el = $(id); if (el) el.onchange = re; });
   let tq; $('pbRfQ').oninput = () => { clearTimeout(tq); tq = setTimeout(re, 400); };
   $('pbNewRun').onclick = () => startForm({});
+  const bb = $('pbBrands'); if (bb) bb.onclick = () => brandForm('');
   body().querySelectorAll('[data-pb-run]').forEach(tr => tr.onclick = () => { const r = (P.runs.runs || []).find(x => x.id === tr.dataset.pbRun); if (r) runModal(r); });
 }
 function countryOpts(cur, withAll) {
@@ -23342,16 +23345,22 @@ function missingText(r) {
 function runModal(r) {
   const td = today(), late = r.status !== 'Complete' && r.dueDate && r.dueDate < td, me = ME();
   const left = r.items.filter(i => !i.sec && !i.done && i.req !== false).length;
-  const ph = digits(r.phone);
-  const b = modal(kindOf(r.kind).icon + ' ' + r.title + ' — ' + r.subject, `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
-<div style="flex:1;min-width:180px;"><div class="pb-prog ${late ? 'late' : ''}"><i style="width:${r.pct}%"></i></div><div class="sx-sub" style="margin-top:4px;">${r.done} of ${r.total} done${left ? ' · ' + left + ' required left' : ' · ✓ all required items done'}</div></div>
+  const ph = digits(r.phone), checks = r.items.filter(i => i.check).length;
+  const canBrand = me.isLead || me.role === 'B2B Team';
+  modal(kindOf(r.kind).icon + ' ' + r.title + ' — ' + r.subject, `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+<div style="flex:1;min-width:180px;"><div class="pb-prog ${late ? 'late' : ''}"><i style="width:${r.pct}%"></i></div><div class="sx-sub" style="margin-top:4px;">${r.done} of ${r.total} done${left ? ' · ' + left + ' required left' : ' · ✓ all required items done'}${checks ? ' · <b style="color:#B7791F;">' + checks + ' upload' + (checks === 1 ? '' : 's') + ' to check</b>' : ''}</div></div>
 ${r.status === 'Complete' ? '<span class="pb-badge ok">✓ Complete</span>' : late ? '<span class="pb-badge bad">Overdue</span>' : ''}</div>
 <div class="sx-sub">${[r.country, r.level, r.branch, r.phone].filter(Boolean).map(esc).join(' · ')}${r.startedBy ? ' · started by ' + esc(r.startedBy) + ' ' + esc(fst(r.startedAt)) : ''}</div>
-<div id="pbItems" style="margin-top:8px;max-height:52vh;overflow:auto;padding-right:4px;"></div>
+<div class="pb-share"><div class="pb-share-h">📤 Share with the ${/^agent/.test(r.kind) ? 'agent' : 'student'} <span class="sx-sub">— a live link: they see their progress and upload each document${r.shareUrl ? ' · opened ' + r.shareViews + '×' : ''}</span></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">${canBrand ? `<select id="pbShB" class="pb-in" style="width:auto;padding:6px 8px;"><option value="akbar" ${r.shareBrand !== 'agent' ? 'selected' : ''}>Akbar brand</option><option value="agent" ${r.shareBrand === 'agent' ? 'selected' : ''}>White label — agent's brand</option></select><select id="pbShA" class="pb-in" style="width:auto;padding:6px 8px;${r.shareBrand === 'agent' ? '' : 'display:none;'}"><option value="">Choose agent…</option></select>` : ''}
+<button class="um-btn" id="pbShLink">🔗 Copy link</button><button class="um-btn sx-wa" id="pbShWa">💬 WhatsApp${ph.length >= 10 ? '' : ' text'}</button><button class="um-btn" id="pbShMail">✉ Email</button><button class="um-btn" id="pbShPdf">⬇ PDF</button><button class="um-btn" id="pbShOpen">👁 Preview</button></div></div>
+<div id="pbItems" style="margin-top:8px;max-height:46vh;overflow:auto;padding-right:4px;"></div>
 <div class="sx-modal-actions" style="align-items:center;"><label style="font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;margin-right:auto;">Due <input type="date" id="pbRmDue" class="pb-in" style="width:auto;padding:5px 8px;" value="${esc(r.dueDate || '')}"></label>
-${me.isLead || r.startedBy === me.name ? '<button class="um-btn" id="pbRmDel" style="color:var(--red);">Remove</button>' : ''}<button class="um-btn" id="pbRmCopy">Copy missing list</button>${ph.length >= 10 && left ? '<button class="um-btn sx-wa" id="pbRmWa">WhatsApp missing list</button>' : ''}</div>`, 720);
+${me.isLead || r.startedBy === me.name ? '<button class="um-btn" id="pbRmDel" style="color:var(--red);">Remove</button>' : ''}<button class="um-btn" id="pbRmCopy">Copy missing list</button></div>`, 760);
   const drawItems = () => {
-    $('pbItems').innerHTML = r.items.map(i => i.sec ? `<div class="pb-sec">${esc(i.t)}</div>` : `<button type="button" class="pb-item ${i.done ? 'done' : ''}" data-pb-it="${esc(i.id)}"><span class="bx">${i.done ? '✓' : ''}</span><span style="flex:1;min-width:0;"><span class="tx">${esc(i.t)}</span>${i.req === false ? '<span class="opt">optional</span>' : ''}${i.lv && i.lv.length ? `<span class="opt">${esc(i.lv.join('/'))}</span>` : ''}<small>${i.h ? esc(i.h) : ''}${i.done && i.by ? (i.h ? ' · ' : '') + '✓ ' + esc(i.by) + ' ' + esc(fst(i.at)) : ''}</small></span></button>`).join('');
+    $('pbItems').innerHTML = r.items.map(i => i.sec ? `<div class="pb-sec">${esc(i.t)}</div>` : `<div style="display:flex;gap:6px;align-items:flex-start;"><button type="button" class="pb-item ${i.done ? 'done' : ''}" data-pb-it="${esc(i.id)}" style="${i.check ? 'border-color:#F2B84B;' : ''}"><span class="bx" style="${i.check ? 'background:#F2B84B;border-color:#F2B84B;color:#fff;' : ''}">${i.done ? '✓' : ''}</span><span style="flex:1;min-width:0;"><span class="tx">${esc(i.t)}</span>${i.req === false ? '<span class="opt">optional</span>' : ''}${i.lv && i.lv.length ? `<span class="opt">${esc(i.lv.join('/'))}</span>` : ''}<small>${i.h ? esc(i.h) : ''}${i.done && i.by ? (i.h ? ' · ' : '') + '✓ ' + esc(i.by) + ' ' + esc(fst(i.at)) : ''}</small>${(i.up || []).length ? `<small>${i.up.map(f => `<a href="https:\x2F\x2Fdrive.google.com\x2Ffile\x2Fd/${esc(f.f)}/view" target="_blank" rel="noopener" data-pb-file="1">📎 ${esc(f.n)}</a>`).join(' · ')}</small>` : ''}</span></button>${i.check ? `<button class="um-btn" data-pb-ok="${esc(i.id)}" title="The upload is correct" style="margin-top:5px;white-space:nowrap;">✓ Looks good</button>` : ''}</div>`).join('');
+    $('pbItems').querySelectorAll('[data-pb-file]').forEach(a => a.onclick = e => e.stopPropagation());
+    $('pbItems').querySelectorAll('[data-pb-ok]').forEach(x => x.onclick = () => run('confirmPbUpload', r.id, x.dataset.pbOk).then(nr => { Object.assign(r, nr); runModal(r); toast('Marked as checked'); }).catch(e => toast(errMsg(e), 'error')));
     $('pbItems').querySelectorAll('[data-pb-it]').forEach(x => x.onclick = () => {
       const it = r.items.find(i => i.id === x.dataset.pbIt); if (!it) return;
       const was = it.done; it.done = !was; it.by = it.done ? ME().name : ''; it.at = it.done ? new Date().toISOString() : ''; drawItems();
@@ -23360,11 +23369,81 @@ ${me.isLead || r.startedBy === me.name ? '<button class="um-btn" id="pbRmDel" st
     });
   };
   drawItems();
-  $('pbRmDue').onchange = () => run('setPbRunDue', r.id, $('pbRmDue').value).then(nr => { Object.assign(r, nr); toast('Due date saved'); }).catch(e => toast(errMsg(e), 'error'));
-  $('pbRmCopy').onclick = () => { const t = missingText(r); try { navigator.clipboard.writeText(t).then(() => toast('Copied')); } catch (e) { toast('Copy not available', 'error'); } };
-  const wa = $('pbRmWa'); if (wa) wa.onclick = () => { const to = ph.length === 10 ? '91' + ph : ph; window.open('https:\x2F\x2Fwa.me\x2F' + to + '?text=' + encodeURIComponent(missingText(r)), '_blank', 'noopener'); };
-  const del = $('pbRmDel'); if (del) del.onclick = () => { if (!confirm('Remove this checklist? It is kept in the sheet as removed.')) return; run('deletePbRun', r.id).then(() => { closeModal(); toast('Removed'); if (P.runs) { P.runs.runs = P.runs.runs.filter(z => z.id !== r.id); if (isOpen() && P.tab === 'checklists') drawRuns(); } }).catch(e => toast(errMsg(e), 'error')); };
+  const bSel = $('pbShB'), aSel = $('pbShA');
+  if (aSel) run('getPbAgentBrand', '').then(d => { aSel.innerHTML = '<option value="">Choose agent…</option>' + d.agents.map(a => `<option value="${esc(a.id)}" ${r.shareAgentId === a.id ? 'selected' : ''}>${esc(a.company || a.name)}${a.company && a.name ? ' — ' + esc(a.name) : ''}</option>`).join(''); }).catch(() => {});
+  if (bSel) bSel.onchange = () => { aSel.style.display = bSel.value === 'agent' ? '' : 'none'; };
+  const share = () => {
+    const brand = bSel ? bSel.value : 'akbar', agentId = aSel ? aSel.value : '';
+    if (brand === 'agent' && !agentId) return Promise.reject(new Error('Choose the agent whose brand to use.'));
+    if (r.shareUrl && r._brand && (r.shareBrand || 'akbar') === brand && (brand !== 'agent' || r.shareAgentId === agentId)) return Promise.resolve({ url: r.shareUrl, brand: r._brand });
+    return run('sharePbRun', r.id, { brand: brand, agentId: agentId }).then(s => { Object.assign(r, s.run); r.shareUrl = s.url; r._brand = s.brand; return s; });
+  };
+  const fail = e => toast(errMsg(e), 'error');
+  const copy = (t, msg) => { try { navigator.clipboard.writeText(t).then(() => toast(msg), () => prompt('Copy:', t)); } catch (e) { prompt('Copy:', t); } };
+  $('pbShLink').onclick = () => share().then(s => copy(s.url, 'Link copied — paste it in chat, email or your landing page')).catch(fail);
+  $('pbShOpen').onclick = () => share().then(s => window.open(s.url, '_blank', 'noopener')).catch(fail);
+  $('pbShPdf').onclick = () => share().then(s => window.open(s.url + '&print=1', '_blank', 'noopener')).catch(fail);
+  $('pbShWa').onclick = () => share().then(s => {
+    const t = waText(r, s.brand, s.url);
+    if (ph.length >= 10) window.open('https:\x2F\x2Fwa.me\x2F' + (ph.length === 10 ? '91' + ph : ph) + '?text=' + encodeURIComponent(t), '_blank', 'noopener');
+    else copy(t, 'WhatsApp text copied — this checklist has no phone number');
+  }).catch(fail);
+  $('pbShMail').onclick = () => share().then(s => mailForm(r, s.brand)).catch(fail);
+  $('pbRmDue').onchange = () => run('setPbRunDue', r.id, $('pbRmDue').value).then(nr => { Object.assign(r, nr); toast('Due date saved'); }).catch(fail);
+  $('pbRmCopy').onclick = () => copy(missingText(r), 'Copied');
+  const del = $('pbRmDel'); if (del) del.onclick = () => { if (!confirm('Remove this checklist? It is kept in the sheet as removed.')) return; run('deletePbRun', r.id).then(() => { closeModal(); toast('Removed'); if (P.runs) { P.runs.runs = P.runs.runs.filter(z => z.id !== r.id); if (isOpen() && P.tab === 'checklists') drawRuns(); } }).catch(fail); };
 }
+function waText(r, B, url) {
+  const first = String(r.subject || '').trim().split(/\s+/)[0] || 'there';
+  const miss = r.items.filter(i => !i.sec && !i.done && i.req !== false), opt = r.items.filter(i => !i.sec && !i.done && i.req === false), done = r.items.filter(i => !i.sec && i.done);
+  const k = Math.round(r.pct / 10), bar = '▰'.repeat(k) + '▱'.repeat(10 - k);
+  const what = kindOf(r.kind).l.toLowerCase(), where = [r.country, r.level].filter(Boolean).join(' · ');
+  const agent = /^agent/.test(r.kind);
+  return [`*${B.name}*${B.tagline ? ' · _' + B.tagline + '_' : ''}`, '━━━━━━━━━━━━━━━━', `📋 *${kindOf(r.kind).l} checklist*${where ? '  ·  ' + where : ''}`, '',
+    agent ? `Hi ${first}! Here's where this file stands 👇` : `Hi ${first}! 👋 Here's where you are with your ${what} 👇`, '',
+    `${bar}  *${r.pct}%*  (${r.done}/${r.total} done)`, '',
+    miss.length ? `*📌 Still needed (${miss.length})*\n` + miss.map(i => '⬜ ' + i.t).join('\n') : '🎉 *Everything required is done!*',
+    opt.length ? `\n_If it applies to you:_\n` + opt.map(i => '◽ ' + i.t).join('\n') : '',
+    done.length ? `\n*✅ Done (${done.length})*\n` + done.slice(0, 8).map(i => '✔ ~' + i.t + '~').join('\n') + (done.length > 8 ? `\n…and ${done.length - 8} more` : '') : '',
+    '', `👉 *See your live checklist and upload each document here:*\n${url}`, '',
+    `_Clear photos or PDFs are fine. Any question — just reply here._`, B.white ? `— ${B.name}` : `— Akbar Study Abroad${r.branch ? ', ' + r.branch : ''}`].filter(x => x !== '').join('\n');
+}
+function mailForm(r, B) {
+  const forAgent = !!B.white;
+  modal('✉ Email the checklist', `<div class="pb-form"><div class="full"><label for="pbEmT">${forAgent ? 'Agent’s email (they forward it to their student — the link shows only their brand)' : 'Student’s email'}</label><input id="pbEmT" type="email" value="${esc(forAgent ? (B.email || '') : '')}" placeholder="name@example.com"></div>
+<div class="full"><label for="pbEmN">Personal note (optional)</label><textarea id="pbEmN" placeholder="e.g. Please send these before Friday so we can apply for the September intake."></textarea></div>
+<div class="full pb-help">${forAgent ? 'White label: the link and the PDF carry only <b>' + esc(B.name) + '</b>’s name and logo. The email itself comes from Akbar Study Abroad to the agent, who forwards it from their own email or WhatsApp.' : 'A designed email from noreply@akbarstudy.com: progress bar, what is still needed, and a button to the live checklist where they upload each document.'}</div></div>
+<div id="pbEmErr" class="fin-alert" style="display:none;margin-top:8px;"></div><div class="sx-modal-actions"><button class="um-btn" id="pbEmBack" style="margin-right:auto;">← Back</button><button class="um-btn primary" id="pbEmGo">Send email</button></div>`, 560);
+  $('pbEmBack').onclick = () => runModal(r);
+  $('pbEmGo').onclick = () => { const btn = $('pbEmGo'); btn.disabled = true; btn.textContent = 'Sending…';
+    run('emailPbRun', r.id, $('pbEmT').value.trim(), $('pbEmN').value.trim()).then(x => { toast('Sent to ' + x.to); runModal(r); })
+      .catch(e => { btn.disabled = false; btn.textContent = 'Send email'; const er = $('pbEmErr'); er.textContent = errMsg(e); er.style.display = 'block'; }); };
+}
+function brandForm(agentId) {
+  const b = modal('🎨 Agent brand (white label)', '<div class="skeleton" style="height:160px;"></div>', 620);
+  run('getPbAgentBrand', agentId || '').then(d => {
+    const B = d.brand || {}; let logo = B.hasBrand ? B.logo : '';
+    const paint = () => { const pv = $('pbBrPv'); if (!pv) return; const col = $('pbBrC').value || '#2563EB'; pv.style.background = `linear-gradient(135deg, #14213D, ${col})`; pv.innerHTML = `${logo ? `<img src="${esc(logo)}" alt="" style="max-height:38px;max-width:150px;background:#fff;border-radius:8px;padding:4px 6px;">` : ''}<div><div style="font-weight:800;">${esc($('pbBrN').value || 'Brand name')}</div><div style="font-size:12px;opacity:.8;">${esc($('pbBrT').value || '')}</div></div>`; };
+    b.innerHTML = `<div class="pb-form"><div class="full"><label for="pbBrA">Agent</label><select id="pbBrA"><option value="">Choose agent…</option>${d.agents.map(a => `<option value="${esc(a.id)}" ${agentId === a.id ? 'selected' : ''}>${esc(a.company || a.name)}${a.company && a.name ? ' — ' + esc(a.name) : ''}</option>`).join('')}</select></div>
+<div><label for="pbBrN">Brand name (what the student sees)</label><input id="pbBrN" value="${esc(B.name || '')}"></div><div><label for="pbBrT">Tagline (optional)</label><input id="pbBrT" value="${esc(B.tagline || '')}"></div>
+<div><label for="pbBrL">Logo (PNG / JPG)</label><input type="file" id="pbBrL" accept="image/png,image/jpeg,image/webp"></div><div><label for="pbBrC">Brand colour</label><input type="color" id="pbBrC" value="${esc(B.color || '#2563EB')}" style="height:38px;padding:3px;"></div>
+<div><label for="pbBrP">Phone / WhatsApp</label><input id="pbBrP" value="${esc(B.phone || '')}"></div><div><label for="pbBrE">Email</label><input id="pbBrE" value="${esc(B.email || '')}"></div>
+<div class="full"><label for="pbBrW">Website (optional)</label><input id="pbBrW" value="${esc(B.website || '')}" placeholder="https:\x2F\x2F"><\x2Fdiv>
+<div class="full"><label>Preview<\x2Flabel><div id="pbBrPv" style="border-radius:12px;padding:14px 16px;color:#fff;display:flex;gap:12px;align-items:center;min-height:62px;"><\x2Fdiv><\x2Fdiv><\x2Fdiv>
+<div id="pbBrErr" class="fin-alert" style="display:none;margin-top:8px;"><\x2Fdiv><div class="sx-modal-actions">${logo ? '<button class="um-btn" id="pbBrX" style="margin-right:auto;">Remove logo</button>' : ''}<button class="um-btn primary" id="pbBrS">Save brand</button></div>`;
+    paint(); ['pbBrN', 'pbBrT', 'pbBrC'].forEach(id => { $(id).oninput = paint; });
+    $('pbBrA').onchange = () => brandForm($('pbBrA').value);
+    const x = $('pbBrX'); if (x) x.onclick = () => { logo = ''; paint(); x.remove(); };
+    $('pbBrL').onchange = () => { const f = $('pbBrL').files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { const im = new Image(); im.onload = () => {
+      const k = Math.min(1, 360 / im.width, 140 / im.height), cv = document.createElement('canvas'); cv.width = Math.max(1, Math.round(im.width * k)); cv.height = Math.max(1, Math.round(im.height * k)); cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
+      let q = cv.toDataURL('image/png'); if (q.length > 42000) q = cv.toDataURL('image/jpeg', 0.85); if (q.length > 42000) q = cv.toDataURL('image/jpeg', 0.6);
+      if (q.length > 43000) { toast('That logo is too detailed — try a simpler or smaller image', 'error'); return; } logo = q; paint(); }; im.src = rd.result; }; rd.readAsDataURL(f); };
+    $('pbBrS').onclick = () => { const btn = $('pbBrS'); btn.disabled = true;
+      run('savePbAgentBrand', { agentId: $('pbBrA').value, name: $('pbBrN').value, tagline: $('pbBrT').value, logo: logo, color: $('pbBrC').value, phone: $('pbBrP').value, email: $('pbBrE').value, website: $('pbBrW').value })
+        .then(() => { closeModal(); toast('Brand saved — white-label links use it straight away'); }).catch(e => { btn.disabled = false; const er = $('pbBrErr'); er.textContent = errMsg(e); er.style.display = 'block'; }); };
+  }).catch(e => { b.innerHTML = `<div class="sx-empty">${esc(errMsg(e))}</div>`; });
+}
+window.pbBrandForm = brandForm;
 
 function openFor(s) {
   const go = () => {
@@ -23603,6 +23682,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { const bg =
 
 document.addEventListener('click', e => {
   const it = e.target.closest('[data-pb-view]'); if (it) { e.preventDefault(); e.stopPropagation(); open(it.dataset.pbView || 'home'); return; }
+  const br = e.target.closest('[data-pb-brand]'); if (br) { e.preventDefault(); e.stopPropagation(); const go = () => brandForm(br.dataset.pbBrand); if (P.data) go(); else run('getPlaybook').then(d => { P.data = d; go(); }).catch(er => toast(errMsg(er), 'error')); return; }
   const s = e.target.closest('[data-pb-st]');
   if (s) { e.preventDefault(); e.stopPropagation(); const x = s.dataset; openFor({ subjectType: x.pbSt, subjectId: x.pbId || '', subject: x.pbName || '', phone: x.pbPhone || '', branch: x.pbBranch || '', country: x.pbCountry || '', kinds: x.pbKinds ? x.pbKinds.split(',') : null }); return; }
   const nav = e.target.closest('#sidebar .nav-item, #sidebar .lead-set-item'); if (nav && isOpen()) close(true);

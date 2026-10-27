@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Your checklist</title>
+<meta name="description" content="Your personal checklist — see what is done, what is still needed, and upload each document.">
+<meta property="og:title" content="Your checklist">
+<meta property="og:description" content="See what is done, what is still needed, and upload each document.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root { --c: #E2231A; --d: #151A35; --ink: #1B1830; --mut: #6B6478; --line: #E9E5EF; --bg: #F6F4F9; --ok: #16935A; --card: #fff; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+.hero { position: relative; overflow: hidden; color: #fff; padding: 26px 20px 74px; background: var(--d); background: linear-gradient(135deg, var(--d) 0%, color-mix(in srgb, var(--d) 70%, var(--c)) 70%, var(--c) 130%); }
+.hero::before, .hero::after { content: ""; position: absolute; border-radius: 50%; border: 26px solid color-mix(in srgb, var(--c) 45%, transparent); }
+.hero::before { width: 220px; height: 220px; right: -70px; top: -80px; }
+.hero::after { width: 120px; height: 120px; left: -50px; bottom: -40px; border-width: 16px; opacity: .6; }
+.wrap { max-width: 680px; margin: 0 auto; position: relative; z-index: 1; }
+.brand { display: flex; align-items: center; gap: 12px; min-height: 40px; }
+.brand img { max-height: 42px; max-width: 180px; object-fit: contain; background: #fff; border-radius: 10px; padding: 5px 8px; }
+.brand .nm { font-weight: 800; font-size: 15px; letter-spacing: .01em; } .brand .tg { font-size: 12px; opacity: .75; }
+  .eyebrow { margin-top: 22px; font-size: 11.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: #F2B84B; color: color-mix(in srgb, #fff 70%, var(--c)); }
+h1 { font-family: Fraunces, Georgia, serif; font-weight: 800; font-size: clamp(26px, 7vw, 38px); line-height: 1.1; margin: 8px 0 6px; }
+.lead { font-size: 15px; line-height: 1.5; opacity: .9; max-width: 520px; }
+.sum { margin: -52px auto 0; max-width: 680px; padding: 0 16px; position: relative; z-index: 2; }
+.sumcard { background: var(--card); border-radius: 22px; box-shadow: 0 20px 50px -24px rgba(21,26,53,.45); padding: 18px; display: flex; gap: 18px; align-items: center; }
+.ring { flex: 0 0 auto; width: 104px; height: 104px; position: relative; }
+.ring svg { transform: rotate(-90deg); }
+.ring .v { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; font-weight: 800; font-size: 24px; }
+.ring .v small { display: block; font-size: 10.5px; font-weight: 700; color: var(--mut); letter-spacing: .08em; text-transform: uppercase; }
+.facts { flex: 1; min-width: 0; display: grid; gap: 8px; }
+.facts .big { font-family: Fraunces, Georgia, serif; font-weight: 800; font-size: 20px; line-height: 1.2; }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 4px 10px; background: var(--bg); color: var(--mut); }
+.pill.need { background: #FDECEC; } .pill.need { background: color-mix(in srgb, var(--c) 12%, #fff); color: var(--c); } .pill.done { background: #E6F5EE; color: var(--ok); }
+main { max-width: 680px; margin: 0 auto; padding: 18px 16px 40px; }
+.sec { margin: 22px 4px 8px; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--mut); display: flex; align-items: center; gap: 10px; }
+.sec::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.it { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 13px 14px; margin: 8px 0; display: flex; gap: 12px; align-items: flex-start; transition: transform .2s ease, box-shadow .2s ease; }
+.it .bx { flex: 0 0 auto; width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; font-weight: 800; font-size: 14px; border: 2px solid var(--line); color: transparent; margin-top: 1px; }
+.it.done .bx { background: var(--ok); border-color: var(--ok); color: #fff; }
+.it.chk .bx { background: #F2B84B; border-color: #F2B84B; color: #fff; }
+.it .tx { flex: 1; min-width: 0; }
+.it .t { font-weight: 700; font-size: 14.5px; line-height: 1.35; }
+.it.done .t { color: var(--mut); }
+.it .h { font-size: 12.5px; color: var(--mut); margin-top: 3px; line-height: 1.4; }
+.it .st { font-size: 11.5px; font-weight: 700; margin-top: 6px; color: var(--mut); }
+.it .st.ok { color: var(--ok); } .it .st.wait { color: #B7791F; }
+.opt { font-size: 10.5px; font-weight: 700; color: var(--mut); background: var(--bg); border-radius: 999px; padding: 2px 7px; margin-left: 6px; vertical-align: 2px; }
+.up { flex: 0 0 auto; border: 0; cursor: pointer; font: inherit; font-weight: 800; font-size: 13px; color: #fff; background: var(--c); border-radius: 11px; padding: 9px 13px; box-shadow: 0 8px 18px -10px var(--c); }
+.up:disabled { opacity: .55; cursor: wait; }
+.it:not(.done):hover { transform: translateY(-1px); box-shadow: 0 10px 24px -18px rgba(21,26,53,.6); }
+.cheer { background: linear-gradient(135deg, #E6F5EE, #fff); border: 1px solid #BFE5D2; border-radius: 18px; padding: 16px; margin-top: 14px; text-align: center; font-weight: 700; }
+.foot { margin-top: 26px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px; display: grid; gap: 10px; }
+.foot .who { font-weight: 800; } .foot .sub { font-size: 12.5px; color: var(--mut); }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 12px; padding: 10px 14px; font: inherit; font-weight: 700; font-size: 13.5px; cursor: pointer; }
+.btn.wa { background: #1FA855; border-color: #1FA855; color: #fff; }
+.note { font-size: 11.5px; color: var(--mut); text-align: center; margin-top: 16px; line-height: 1.5; }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--d); color: #fff; padding: 11px 16px; border-radius: 12px; font-size: 13.5px; font-weight: 600; z-index: 9; box-shadow: 0 12px 30px rgba(0,0,0,.25); max-width: calc(100vw - 32px); }
+.toast.bad { background: #B42318; }
+.load { padding: 80px 20px; text-align: center; color: var(--mut); }
+.sk { height: 14px; border-radius: 8px; background: linear-gradient(90deg, #ece8f1, #f6f4f9, #ece8f1); background-size: 200% 100%; animation: sk 1.2s infinite; margin: 10px auto; max-width: 320px; }
+@keyframes sk { to { background-position: -200% 0; } }
+.conf { position: fixed; inset: 0; pointer-events: none; z-index: 8; overflow: hidden; }
+.conf i { position: absolute; top: -12px; width: 8px; height: 14px; border-radius: 2px; animation: fall 2.6s ease-in forwards; }
+@keyframes fall { to { transform: translateY(105vh) rotate(540deg); opacity: .9; } }
+@media print {
+  @page { size: A4; margin: 12mm; }
+  body { background: #fff; } .hero { padding: 18px 20px 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .sum { margin: 12px auto 0; } .sumcard { box-shadow: none; border: 1px solid var(--line); }
+  .up, .btns, .noprint, .toast { display: none !important; }
+  .it { break-inside: avoid; border-radius: 10px; padding: 8px 10px; margin: 5px 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  main { padding-top: 6px; }
+}
+</style>
+</head>
+<body>
+<div id="app"><div class="load"><div class="sk"></div><div class="sk" style="max-width:220px"></div><div class="sk" style="max-width:260px"></div></div></div>
+<input type="file" id="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.doc,.docx,application/pdf,image/*" style="display:none">
+<script>
+(function () {
+  var API = 'https://script.google.com/macros/s/AKfycbzM25HLBhuI36dn-uUgdTUoXiiTXABMBNDuaBMGjC_SUUU9eueVPn35lFowwBIqb1XNTw/exec';
+  var qs = new URLSearchParams(location.search), KEY = qs.get('t') || '', PRINT = qs.get('print') === '1';
+  var app = document.getElementById('app'), D = null, busy = '';
+  function esc(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+  function api(fn, args) {
+    return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }), redirect: 'follow' })
+      .then(function (r) { return r.text(); }).then(function (t) { var j = JSON.parse(t); if (!j.ok) throw new Error(j.e || 'Something went wrong'); return j.v; });
+  }
+  function toast(m, bad) { var t = document.createElement('div'); t.className = 'toast' + (bad ? ' bad' : ''); t.textContent = m; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 4200); }
+  function fd(ymd) { var p = String(ymd || '').slice(0, 10).split('-'); if (p.length < 3) return ''; return Number(p[2]) + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Number(p[1]) - 1] + ' ' + p[0]; }
+  function digits(s) { return String(s || '').replace(/\D/g, ''); }
+  function confetti(col) {
+    var c = document.createElement('div'); c.className = 'conf'; var cols = [col, '#F2B84B', '#16935A', '#5B8DEF', '#fff'];
+    for (var i = 0; i < 70; i++) { var b = document.createElement('i'); b.style.left = Math.random() * 100 + 'vw'; b.style.background = cols[i % cols.length]; b.style.animationDelay = Math.random() * .8 + 's'; c.appendChild(b); }
+    document.body.appendChild(c); setTimeout(function () { c.remove(); }, 3800);
+  }
+  function ring(p, col) {
+    var r = 44, C = 2 * Math.PI * r, off = C * (1 - p / 100);
+    return '<div class="ring"><svg width="104" height="104"><circle cx="52" cy="52" r="' + r + '" fill="none" stroke="#EEE9F2" stroke-width="10"/><circle cx="52" cy="52" r="' + r + '" fill="none" stroke="' + esc(col) + '" stroke-width="10" stroke-linecap="round" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + off.toFixed(1) + '" style="transition:stroke-dashoffset .9s ease"/></svg><div class="v"><div>' + p + '%<small>done</small></div></div></div>';
+  }
+  function draw() {
+    var B = D.brand || {}, col = B.color || '#E2231A';
+    document.documentElement.style.setProperty('--c', col); document.documentElement.style.setProperty('--d', B.dark || '#151A35');
+    document.title = (D.kind ? D.kind + ' checklist' : 'Your checklist') + (B.name ? ' · ' + B.name : '');
+    var need = D.items.filter(function (i) { return !i.sec && !i.done && i.req; }), opt = D.items.filter(function (i) { return !i.sec && !i.done && !i.req; });
+    var late = D.dueDate && D.status !== 'Complete' && D.dueDate < new Date().toISOString().slice(0, 10);
+    var h = '<header class="hero"><div class="wrap"><div class="brand">' + (B.logo ? '<img src="' + esc(B.logo) + '" alt="' + esc(B.name) + '">' : '') + '<div><div class="nm">' + esc(B.name || '') + '</div>' + (B.tagline ? '<div class="tg">' + esc(B.tagline) + '</div>' : '') + '</div></div>' +
+      '<div class="eyebrow">' + esc([D.country, D.level].filter(Boolean).join(' · ') || D.kind) + '</div>' +
+      '<h1>' + (D.first ? 'Hi ' + esc(D.first) + ', here’s your ' : 'Your ') + esc((D.kind || 'checklist').toLowerCase()) + (/checklist/i.test(D.kind) ? '' : ' checklist') + '</h1>' +
+      '<div class="lead">' + (D.status === 'Complete' ? 'Everything required is in. Thank you — we’ll take it from here.' : 'Tick by tick, you’re getting closer. Upload each document below — we’re told the moment it arrives.') + '</div></div></header>';
+    h += '<div class="sum"><div class="sumcard">' + ring(D.pct, col) + '<div class="facts"><div class="big">' + D.done + ' of ' + D.total + ' done</div><div class="pills">' +
+      (need.length ? '<span class="pill need">' + need.length + ' still needed</span>' : '<span class="pill done">✓ All required done</span>') +
+      (D.dueDate && D.status !== 'Complete' ? '<span class="pill' + (late ? ' need' : '') + '">' + (late ? 'Was due ' : 'Due ') + esc(fd(D.dueDate)) + '</span>' : '') +
+      '<span class="pill">Updated ' + esc(new Date(D.updatedAt || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })) + '</span></div></div></div></div><main>';
+    var sec = '';
+    D.items.forEach(function (i) {
+      if (i.sec) { sec = '<div class="sec">' + esc(i.t) + '</div>'; return; }
+      var cls = i.done ? (i.check ? 'it chk' : 'it done') : 'it';
+      var st = i.done ? (i.check ? '<div class="st wait">📎 Received — being checked</div>' : '<div class="st ok">✓ Done</div>') : i.up ? '<div class="st wait">📎 ' + i.up + ' file' + (i.up === 1 ? '' : 's') + ' received</div>' : '';
+      h += sec; sec = '';
+      h += '<div class="' + cls + '"><div class="bx">' + (i.done ? (i.check ? '•' : '✓') : '') + '</div><div class="tx"><div class="t">' + esc(i.t) + (i.req ? '' : '<span class="opt">if it applies</span>') + '</div>' + (i.h ? '<div class="h">' + esc(i.h) + '</div>' : '') + st + '</div>' +
+        (!i.done && D.canUpload ? '<button class="up" data-up="' + esc(i.id) + '"' + (busy ? ' disabled' : '') + '>' + (busy === i.id ? 'Uploading…' : '↑ Upload') + '</button>' : '') + '</div>';
+    });
+    if (D.status === 'Complete') h += '<div class="cheer">🎉 Everything required is done — great work!</div>';
+    var ph = digits(B.phone), wa = ph ? 'https://wa.me/' + (ph.length === 10 ? '91' + ph : ph) + '?text=' + encodeURIComponent('Hi, this is ' + (D.first || '') + ' — about my ' + (D.kind || 'checklist').toLowerCase() + ' checklist.') : '';
+    h += '<div class="foot"><div><div class="who">' + esc(B.name || '') + '</div><div class="sub">Questions about any item? We’re one message away.</div></div><div class="btns">' +
+      (wa ? '<a class="btn wa" href="' + esc(wa) + '" target="_blank" rel="noopener">💬 WhatsApp us</a>' : '') + (B.email ? '<a class="btn" href="mailto:' + esc(B.email) + '">✉ Email</a>' : '') +
+      (B.website ? '<a class="btn" href="' + esc(B.website) + '" target="_blank" rel="noopener">🌐 Website</a>' : '') + '<button class="btn" id="pdf">⬇ Save as PDF</button><button class="btn" id="rf">↻ Refresh</button></div></div>' +
+      '<div class="note noprint">Upload PDF, JPG, PNG or Word files up to 10 MB. Only you and your counsellor can see this page — please don’t forward the link.</div></main>';
+    app.innerHTML = h;
+    var p = document.getElementById('pdf'); if (p) p.onclick = function () { window.print(); };
+    var r = document.getElementById('rf'); if (r) r.onclick = load;
+  }
+  app.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-up]'); if (!b || busy) return;
+    var id = b.getAttribute('data-up'), inp = document.getElementById('file'); inp.value = '';
+    inp.onchange = function () {
+      var f = inp.files && inp.files[0]; if (!f) return;
+      if (f.size > 10 * 1024 * 1024) { toast('That file is larger than 10 MB.', true); return; }
+      var type = f.type || (/\.pdf$/i.test(f.name) ? 'application/pdf' : /\.docx$/i.test(f.name) ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : /\.doc$/i.test(f.name) ? 'application/msword' : '');
+      var rd = new FileReader();
+      rd.onload = function () {
+        busy = id; draw(); toast('Uploading ' + f.name + '…');
+        var before = D.reqLeft;
+        api('uploadSharedChecklistDoc', [KEY, id, f.name, type, String(rd.result).split(',')[1] || '']).then(function (v) {
+          busy = ''; D = v; draw(); toast('Received — thank you! Your counsellor has been told.');
+          if (before > 0 && v.reqLeft === 0) confetti((v.brand || {}).color || '#E2231A');
+        }).catch(function (er) { busy = ''; draw(); toast(String(er.message || er), true); });
+      };
+      rd.readAsDataURL(f);
+    };
+    inp.click();
+  });
+  function load() {
+    if (!KEY) { app.innerHTML = '<div class="load">This link is incomplete. Please open the full link you were sent.</div>'; return; }
+    api('getSharedChecklist', [KEY]).then(function (v) { D = v; draw(); if (PRINT) setTimeout(function () { window.print(); }, 700); })
+      .catch(function (e) { app.innerHTML = '<div class="load">' + esc(e.message || e) + '</div>'; });
+  }
+  load();
+})();
+</script>
+</body>
+</html>
