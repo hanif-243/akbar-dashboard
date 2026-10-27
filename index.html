@@ -23343,6 +23343,7 @@ function missingText(r) {
   return `Hi ${first},\n\nTo move your ${r.country ? r.country + ' ' : ''}${kindOf(r.kind).l.toLowerCase()} forward, we still need:\n${miss.map((m, i) => (i + 1) + '. ' + m).join('\n')}\n\nClear photos or PDFs on this WhatsApp are fine. Thank you!\nAkbar Study Abroad – ${r.branch || ''}`;
 }
 function runModal(r) {
+  if (!P.data) { run('getPlaybook').then(d => { P.data = d; runModal(r); }).catch(e => toast(errMsg(e), 'error')); return; }
   const td = today(), late = r.status !== 'Complete' && r.dueDate && r.dueDate < td, me = ME();
   const left = r.items.filter(i => !i.sec && !i.done && i.req !== false).length;
   const ph = digits(r.phone), checks = r.items.filter(i => i.check).length;
