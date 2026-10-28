@@ -548,9 +548,10 @@ function thanks(c, r, isPreview) {
   var s = $('lpSticky'); if (s) s.remove();
   $('form').scrollIntoView({ block: 'start' });
 }
-if (window.LP_CONFIG) { render(window.LP_CONFIG); if (!preview) setTimeout(function () { call('lpPing', [slug]).catch(function () { }); }, 1500); }
+var spotQ = (new URLSearchParams(location.search)).get('utm_content') || '';
+if (window.LP_CONFIG) { render(window.LP_CONFIG); if (!preview) setTimeout(function () { call('lpPing', [slug, spotQ]).catch(function () { }); }, 1500); }
 else if (!slug) closed('This page link is not complete.');
-else call('getLandingPage', [slug, preview]).then(render).catch(function (e) { closed(e.message); });
+else call('getLandingPage', [slug, preview, spotQ]).then(render).catch(function (e) { closed(e.message); });
 })();
 </script>
 </body>
