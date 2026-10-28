@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
  
-window.AKBAR_BUILD = '28 Oct 2026 · v135';
+window.AKBAR_BUILD = '28 Oct 2026 · v136';
 
 
 (function () {
@@ -23070,7 +23070,7 @@ ${p.status !== 'Live' ? '<div class="fin-alert warm" style="margin-top:12px;">Th
   const shut = () => { bg.remove(); document.removeEventListener('keydown', esc2, true); };
   document.addEventListener('keydown', esc2, true);
   const xb = bg.querySelector('[data-x]'); if (xb) { xb.type = 'button'; xb.addEventListener('click', ev => { ev.preventDefault(); ev.stopPropagation(); shut(); }); }
-  bg.addEventListener('click', e => { if (e.target === bg || e.target.closest('[data-x]')) shut(); const c = e.target.closest('[data-copy]'); if (c) { navigator.clipboard.writeText($(c.dataset.copy).textContent).then(() => toast('Copied')).catch(() => toast('Select the link and copy it', 'error')); } });
+  bg.addEventListener('click', e => { if (e.target.closest('[data-x]')) shut(); const c = e.target.closest('[data-copy]'); if (c) { navigator.clipboard.writeText($(c.dataset.copy).textContent).then(() => toast('Copied')).catch(() => toast('Select the link and copy it', 'error')); } });
 }
 function editor(p) {
   const d = L.data; p = p || { status: 'Draft', branchMode: 'fixed', fields: 'country,level,intake', theme: 'red', color: '#F22F3D', ctaText: 'Get my free counselling' };
@@ -23117,7 +23117,7 @@ function editor(p) {
 <div class="s10-actions" style="padding:12px 16px;border-top:1px solid var(--border);"><button class="um-btn" id="lpSavePrev">Save &amp; preview</button><button class="um-btn primary" id="lpSave">Save</button></div></div>`;
   document.body.appendChild(bg);
   const shut = () => bg.remove();
-  bg.addEventListener('click', e => { if (e.target === bg || e.target.closest('[data-x]')) shut(); });
+  bg.addEventListener('click', e => { if (e.target.closest('[data-x]')) shut(); }); 
   const slugify = s => String(s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
   let slugTouched = !!p.slug;
   const note = () => { $('lpSlugNote').textContent = BASE + '?p=' + (slugify($('lpSlug').value) || '…'); };
@@ -23680,13 +23680,12 @@ function modal(title, html, width) {
   let bg = $('pbModalBg');
   if (!bg) { bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'pbModalBg'; bg.style.zIndex = '20800';
     bg.innerHTML = '<div class="cmdk-box" id="pbModalBox" role="dialog" aria-modal="true" aria-labelledby="pbModalTitle"><div class="preview-modal-header"><span id="pbModalTitle" style="font-size:14px;font-weight:800;flex:1;"></span><button class="counselor-save-btn" id="pbModalClose">Close</button></div><div class="sx-modal-body" id="pbModalBody"></div></div>';
-    document.body.appendChild(bg); bg.addEventListener('click', e => { if (e.target === bg) closeModal(); }); $('pbModalClose').onclick = closeModal; }
+    document.body.appendChild(bg); $('pbModalClose').onclick = closeModal; } 
   $('pbModalBox').style.maxWidth = (width || 600) + 'px'; $('pbModalBox').style.maxHeight = '92vh'; $('pbModalBox').style.overflow = 'auto';
   $('pbModalTitle').textContent = title; $('pbModalBody').innerHTML = html; bg.classList.add('open');
   return $('pbModalBody');
 }
 function closeModal() { const bg = $('pbModalBg'); if (bg) bg.classList.remove('open'); }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { const bg = $('pbModalBg'); if (bg && bg.classList.contains('open')) { closeModal(); e.stopPropagation(); } } }, true);
 
 
 document.addEventListener('click', e => {
@@ -26253,13 +26252,12 @@ function modal(title, html, width) {
   let bg = $('evModalBg');
   if (!bg) { bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'evModalBg'; bg.style.zIndex = '20800';
     bg.innerHTML = '<div class="cmdk-box" id="evModalBox" role="dialog" aria-modal="true" aria-labelledby="evModalTitle"><div class="preview-modal-header"><span id="evModalTitle" style="font-size:14px;font-weight:800;flex:1;"></span><button class="counselor-save-btn" id="evModalClose" type="button">Close</button></div><div class="sx-modal-body" id="evModalBody"></div></div>';
-    document.body.appendChild(bg); bg.addEventListener('click', e => { if (e.target === bg) closeModal(); }); $('evModalClose').onclick = closeModal; }
+    document.body.appendChild(bg); $('evModalClose').onclick = closeModal; } 
   $('evModalBox').style.maxWidth = (width || 600) + 'px'; $('evModalBox').style.maxHeight = '92vh'; $('evModalBox').style.overflow = 'auto';
   $('evModalTitle').textContent = title; $('evModalBody').innerHTML = html; bg.classList.add('open');
   return $('evModalBody');
 }
 function closeModal() { const bg = $('evModalBg'); if (bg) bg.classList.remove('open'); }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { const bg = $('evModalBg'); if (bg && bg.classList.contains('open')) { closeModal(); e.stopPropagation(); } } }, true);
 document.addEventListener('click', e => {
   const it = e.target.closest('[data-ev-view]'); if (it) { e.preventDefault(); e.stopPropagation(); open(); return; }
   const nav = e.target.closest('#sidebar .nav-item, #sidebar .lead-set-item'); if (nav && isOpen()) close();
