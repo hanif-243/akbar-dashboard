@@ -23023,7 +23023,7 @@ function draw() {
 <div class="lp-link">${esc(linkNow(p))}</div>
 <div class="sx-sub" style="margin:0;">${p.branchMode === 'choose' ? 'Visitor chooses: ' + esc(p.branches) : '→ ' + esc(p.branch)}${p.country ? ' · ' + esc(p.country) : ''}${p.intake ? ' · ' + esc(p.intake) : ''}</div>
 <div class="lp-nums"><div><b>${p.views}</b><span>views</span></div><div><b>${p.leads}</b><span>leads</span></div><div><b>${p.conversion == null ? '—' : p.conversion + '%'}</b><span>convert</span></div><div><b>${p.leads7}</b><span>last 7 days</span></div></div>
-<div class="lp-acts"><button class="um-btn" data-lp-edit="${esc(p.id)}">✎ Edit</button><a class="um-btn" href="${esc(linkNow(p) + '&preview=' + p.id)}" target="_blank" rel="noopener">👁 Preview</a><button class="um-btn" data-lp-ad="${esc(p.id)}">🔗 Ad link</button><button class="um-btn" data-lp-dup="${esc(p.id)}" title="Copy this page, e.g. for another branch">📋 Duplicate</button>
+<div class="lp-acts"><button class="um-btn" data-lp-edit="${esc(p.id)}">✎ Edit</button><a class="um-btn" href="${esc(linkNow(p) + '&preview=' + p.id)}" target="_blank" rel="noopener">👁 Preview</a><button class="um-btn" data-lp-ad="${esc(p.id)}">🔗 Ad link</button><button class="um-btn" data-lp-qr="${esc(p.id)}" title="QR code for posters, standees and flyers">🔳 QR</button><button class="um-btn" data-lp-dup="${esc(p.id)}" title="Copy this page, e.g. for another branch">📋 Duplicate</button>
 ${p.status === 'Live' ? `<button class="um-btn" data-lp-st="Paused" data-id="${esc(p.id)}">⏸ Pause</button>` : `<button class="um-btn primary" data-lp-st="Live" data-id="${esc(p.id)}">▶ Publish</button>`}
 <button class="um-btn" data-lp-st="Archived" data-id="${esc(p.id)}" title="Hide this page (its leads stay)" style="color:var(--red);">Archive</button></div></div>`).join('')}</div>`) +
     (d.recent.length ? `<div class="sx-card" style="margin-top:14px;"><h3 style="margin:0 0 8px;">Latest form fills</h3><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>When</th><th>Page</th><th>Name</th><th>Phone</th><th>Branch</th><th>Result</th><th>Ad</th><th>Meta</th></tr></thead><tbody>
@@ -23031,6 +23031,7 @@ ${d.recent.map(s => `<tr><td style="white-space:nowrap;">${esc(s.at ? new Date(s
   body.querySelectorAll('[data-lp-edit]').forEach(b => b.onclick = () => editor(d.pages.find(p => p.id === b.dataset.lpEdit)));
   body.querySelectorAll('[data-lp-dup]').forEach(b => b.onclick = () => { const src = d.pages.find(p => p.id === b.dataset.lpDup); if (src) editor(Object.assign({}, src, { id: '', title: src.title + ' (copy)', slug: src.slug + '-copy', status: 'Draft' })); }); 
   body.querySelectorAll('[data-lp-ad]').forEach(b => b.onclick = () => adLink(d.pages.find(p => p.id === b.dataset.lpAd)));
+  body.querySelectorAll('[data-lp-qr]').forEach(b => b.onclick = () => { const pg = d.pages.find(p => p.id === b.dataset.lpQr); if (pg && window.akQrModal) window.akQrModal(pg.title, linkNow(pg) + '&utm_source=qr', pg.slug, pg.status); });
   body.querySelectorAll('[data-lp-st]').forEach(b => b.onclick = () => {
     const st = b.dataset.lpSt; if (st === 'Archived' && !confirm('Archive this page? The link stops working; its leads stay in the dashboard.')) return;
     b.disabled = true; run('setLandingPageStatus', b.dataset.id, st).then(() => { toast(st === 'Live' ? 'Published — the link works now' : st === 'Paused' ? 'Paused — visitors see "offer ended"' : 'Archived'); load(); }).catch(e => { b.disabled = false; toast(errText(e), 'error'); });
@@ -26090,7 +26091,7 @@ function drawList() {
   const nb = $('evNew'); if (nb) nb.onclick = () => eventForm({});
   const cb = $('evCmp'); if (cb) cb.onclick = compare;
   body().innerHTML = d.events.length ? `<div class="ev-grid">${d.events.map(e => `<button class="ev-card" data-ev="${esc(e.id)}"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;"><div class="t">${esc(e.name)}</div>${chip(e.status)}</div>
-<div class="m">📅 ${esc(fd(e.date))}${e.time ? ' · ' + esc(e.time) : ''}<br>📍 ${esc([e.venue, e.city].filter(Boolean).join(', ') || '—')} · ${esc(e.branch)} branch</div>
+<div class="m">📅 ${esc(fd(e.date))}${e.time ? ' · ' + esc(e.time) : ''}<br>📍 ${esc([e.venue, e.city].filter(Boolean).join(', ') || '—')} · ${esc(e.branch)} branch<br>📄 ${esc(e.pageTitle || e.page || '—')}${e.pageStatus && e.pageStatus !== 'Live' ? ' <b style="color:var(--red);">(' + esc(e.pageStatus) + ')</b>' : ''}</div>
 <div class="ev-nums"><div><b>${e.scans}</b><span>Scans</span></div><div><b>${e.registrations}</b><span>Registered</span></div><div><b>${e.attended}</b><span>Attended</span></div><div><b>${e.registrations ? Math.round(e.attended / e.registrations * 100) + '%' : '—'}</b><span>Show-up</span></div></div></button>`).join('')}</div>`
     : `<div class="sx-card sx-empty">No events yet.${d.canCreate ? ' Click “＋ New event” — you get a registration page and a QR code for every standee, flyer and booth.' : ''}</div>`;
   body().querySelectorAll('[data-ev]').forEach(b => b.onclick = () => openEvent(b.dataset.ev));
@@ -26099,6 +26100,7 @@ function eventForm(e) {
   const d = E.list;
   const b = modal(e.id ? '✎ ' + e.name : '＋ New event', `<div class="ev-form">
 <div class="full"><label for="evN">Event name</label><input id="evN" value="${esc(e.name || '')}" placeholder="e.g. Kochi Study Abroad Expo"></div>
+<div class="full"><label for="evPg">Landing page people register on (your existing page — its design stays as it is)</label><select id="evPg"><option value="">Choose a page…</option>${(d.pages || []).map(pg => `<option value="${esc(pg.slug)}" ${e.page === pg.slug ? 'selected' : ''}>${esc(pg.title)} · ${esc(pg.status)}${pg.branch ? ' · ' + esc(pg.branch) : ''}</option>`).join('')}</select></div>
 <div><label for="evD">Date</label><input type="date" id="evD" value="${esc(e.date || '')}"></div><div><label for="evT">Time</label><input id="evT" value="${esc(e.time || '')}" placeholder="10 am – 5 pm"></div>
 <div><label for="evV">Venue</label><input id="evV" value="${esc(e.venue || '')}" placeholder="Hotel / college / hall"></div><div><label for="evC">City</label><input id="evC" value="${esc(e.city || '')}"></div>
 <div><label for="evB">Nearest branch (gets the leads)</label><select id="evB">${d.branches.map(x => `<option ${e.branch === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div>
@@ -26107,16 +26109,16 @@ function eventForm(e) {
 <div class="full"><label for="evM">Google Maps link (optional)</label><input id="evM" value="${esc(e.mapLink || '')}" placeholder="https:\x2F\x2Fmaps.app.goo.gl\x2F…"><\x2Fdiv>
 <div class="full"><label for="evSp">QR spots — one per line (each gets its own QR code, so you see which creative works)<\x2Flabel><textarea id="evSp">${esc(e.spots || 'Standee at entrance\nFlyer\nBooth table\nInstagram story')}</textarea></div>
 <div class="full"><label for="evNo">Notes (team only)</label><textarea id="evNo" style="min-height:60px;">${esc(e.notes || '')}</textarea></div></div>
-<div class="sx-sub" style="margin-top:8px;">Saving creates (or updates) the event's registration page and switches it on while registration is open. Closing the event pauses the page.</div>
+<div class="sx-sub" style="margin-top:8px;">Your page is not changed. The QR codes add an event tag and a spot tag to its link, so every sign-up from them is counted for this event (and goes to the branch you pick here), while the same page keeps working for your ads.</div>
 <div id="evErr" class="fin-alert" style="display:none;margin-top:8px;"></div><div class="sx-modal-actions">${e.id ? '<button class="um-btn" id="evDel" style="margin-right:auto;color:var(--red);">Remove event</button>' : ''}<button class="um-btn primary" id="evSave">${e.id ? 'Save' : 'Create event'}</button></div>`, 680);
   $('evSave').onclick = () => {
     const btn = $('evSave'); btn.disabled = true; btn.textContent = 'Saving…';
-    run('saveEvent', { id: e.id || '', name: $('evN').value, date: $('evD').value, time: $('evT').value, venue: $('evV').value, city: $('evC').value, branch: $('evB').value, status: $('evS').value,
+    run('saveEvent', { id: e.id || '', page: $('evPg').value, name: $('evN').value, date: $('evD').value, time: $('evT').value, venue: $('evV').value, city: $('evC').value, branch: $('evB').value, status: $('evS').value,
       target: $('evTg').value, cost: $('evCo').value, mapLink: $('evM').value, spots: $('evSp').value, notes: $('evNo').value })
-      .then(r => { closeModal(); toast(e.id ? 'Saved' : 'Event created — the page and QR codes are ready'); E.list = null; loadList(); openEvent(r.id, 'qr'); })
+      .then(r => { closeModal(); toast(e.id ? 'Saved' : 'Event created — the QR codes are ready'); E.list = null; loadList(); openEvent(r.id, 'qr'); })
       .catch(er => { btn.disabled = false; btn.textContent = e.id ? 'Save' : 'Create event'; const x = $('evErr'); x.textContent = errMsg(er); x.style.display = 'block'; });
   };
-  const del = $('evDel'); if (del) del.onclick = () => { if (!confirm('Remove this event? Its page is paused; registrations stay in the sheet.')) return; run('deleteEvent', e.id).then(() => { closeModal(); E.cur = null; E.list = null; drawFrame(); loadList(); }).catch(er => toast(errMsg(er), 'error')); };
+  const del = $('evDel'); if (del) del.onclick = () => { if (!confirm('Remove this event? Your landing page is not touched; registrations stay in the sheet.')) return; run('deleteEvent', e.id).then(() => { closeModal(); E.cur = null; E.list = null; drawFrame(); loadList(); }).catch(er => toast(errMsg(er), 'error')); };
 }
 
 
@@ -26135,7 +26137,7 @@ function loadDetail() {
 function drawDetail() {
   const d = E.detail, ev = d.event;
   $('evTitle').textContent = '🎪 ' + ev.name;
-  $('evSub').innerHTML = `${esc(fd(ev.date))}${ev.time ? ' · ' + esc(ev.time) : ''} · ${esc([ev.venue, ev.city].filter(Boolean).join(', '))} · leads go to <b>${esc(ev.branch)}</b> ${chip(ev.status)}`;
+  $('evSub').innerHTML = `${esc(fd(ev.date))}${ev.time ? ' · ' + esc(ev.time) : ''} · ${esc([ev.venue, ev.city].filter(Boolean).join(', '))} · page: <b>${esc(ev.pageTitle || ev.page)}</b> · leads go to <b>${esc(ev.branch)}</b> ${chip(ev.status)}`;
   const tabs = [['report', '📊 Report'], ['regs', '👥 Registrations (' + d.registrations.length + ')'], ['qr', '🔳 QR codes & links']];
   body().innerHTML = `<div class="sx-tabs">${tabs.map(t => `<button class="sx-tab ${E.tab === t[0] ? 'active' : ''}" data-evt="${t[0]}">${t[1]}</button>`).join('')}${d.canEdit ? '<span style="flex:1"></span><button class="um-btn" id="evEdit" style="margin-bottom:6px;">✎ Edit event</button>' : ''}</div><div id="evTab"></div>`;
   body().querySelectorAll('[data-evt]').forEach(b => b.onclick = () => { E.tab = b.dataset.evt; drawDetail(); });
@@ -26232,9 +26234,9 @@ function qrCanvas(text, px) {
 }
 function drawQr() {
   const ev = E.detail.event, L = ev.links, sc = {}; E.detail.report.bySpot.forEach(s => { sc[s.spot] = s; });
-  $('evTab').innerHTML = `<div class="sx-card"><h3>Registration page</h3><div class="ev-link">${esc(L.page)}</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><a class="um-btn" href="${esc(L.page)}" target="_blank" rel="noopener">👁 Open page</a><button class="um-btn" data-copy="${esc(L.page)}">Copy link</button></div>
+  $('evTab').innerHTML = `<div class="sx-card"><h3>Registration page: ${esc(ev.pageTitle || L.pageSlug)}</h3>${ev.pageStatus !== 'Live' ? `<div class="fin-alert warm" style="margin:6px 0 10px;">This landing page is <b>${esc(ev.pageStatus)}</b> — people who scan will see “not published”. Open Marketing → Landing Pages and click ▶ Publish before you print.</div>` : ''}<div class="ev-link">${esc(L.page)}</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><a class="um-btn" href="${esc(L.page)}" target="_blank" rel="noopener">👁 Open page</a><button class="um-btn" data-copy="${esc(L.page)}">Copy link</button></div>
 <h3 style="margin-top:16px;">Share on WhatsApp / Instagram</h3><div class="ev-link">${esc(L.whatsapp)}</div><button class="um-btn" data-copy="${esc(L.whatsapp)}">Copy share link</button>
-${ev.status === 'Closed' ? '<div class="fin-alert warm" style="margin-top:10px;">This event is closed — its page shows “This offer has ended”. Edit the event to reopen registration.</div>' : ''}</div>
+${ev.status === 'Closed' ? '<div class="fin-alert warm" style="margin-top:10px;">This event is closed — new sign-ups from its QR codes are still saved, but no longer counted as this event once you remove it.</div>' : ''}</div>
 <div class="sx-sub" style="margin:4px 0 10px;">One QR per spot: print each on its own standee / flyer / table card. The report then shows which one people scanned and registered from. Download is a high-resolution PNG for print.</div>
 <div class="ev-qrs">${L.spots.map((s, i) => `<div class="ev-qr"><div data-qr="${i}"></div><div class="n">${esc(s.name)}</div><div class="s">${(sc[s.name] || {}).scans || 0} scans · ${(sc[s.name] || {}).registrations || 0} registered</div><div class="acts"><button class="um-btn primary" data-dl="${i}">⬇ PNG</button><button class="um-btn" data-copy="${esc(s.url)}">Copy link</button></div></div>`).join('')}</div>`;
   L.spots.forEach((s, i) => { const el = $('evTab').querySelector(`[data-qr="${i}"]`); if (el) el.appendChild(qrCanvas(s.url, 400)); });
@@ -26264,6 +26266,14 @@ document.addEventListener('click', e => {
 }, true);
 document.addEventListener('keydown', e => { const it = e.target.closest && e.target.closest('[data-ev-view]'); if (it && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(); } });
 window.openEvents = open;
+window.akQrModal = function (title, url, key, status) {
+  const b = modal('🔳 QR code — ' + title, `${status && status !== 'Live' ? '<div class="fin-alert warm" style="margin-bottom:10px;">This page is not live yet — click ▶ Publish before you print the QR.</div>' : ''}<div style="text-align:center;" id="lpQrBox"></div><div class="ev-link">${esc(url)}</div>
+<div class="sx-sub">Scans from this QR show as source “qr” on the leads. For an event with its own report and a QR per standee / flyer, use Owner → Events &amp; QR.</div>
+<div class="sx-modal-actions"><button class="um-btn" id="lpQrCopy">Copy link</button><button class="um-btn primary" id="lpQrDl">⬇ Download PNG</button></div>`, 460);
+  const cv = qrCanvas(url, 600); cv.style.width = '260px'; cv.style.height = 'auto'; cv.style.borderRadius = '12px'; $('lpQrBox').appendChild(cv);
+  $('lpQrCopy').onclick = () => { try { navigator.clipboard.writeText(url).then(() => toast('Copied'), () => prompt('Copy:', url)); } catch (e) { prompt('Copy:', url); } };
+  $('lpQrDl').onclick = () => { const big = qrCanvas(url, 1600), a = document.createElement('a'); a.href = big.toDataURL('image/png'); a.download = (key || 'landing-page') + '-qr.png'; document.body.appendChild(a); a.click(); a.remove(); };
+};
 })();
 </script>
 
