@@ -12306,7 +12306,6 @@ if (!bg) {
 bg = document.createElement('div');
 bg.id = id; bg.className = 'cmdk-backdrop at-mbg';
 bg.innerHTML = `<div class="cmdk-box at-mbox" role="dialog" aria-modal="true"></div>`;
-bg.addEventListener('mousedown', e => { if (e.target === bg) closeModal(id); });
 $('appTeamView').appendChild(bg);
 }
 const box = bg.firstElementChild;
@@ -12972,7 +12971,6 @@ if (!bg) {
 bg = document.createElement('div');
 bg.id = id; bg.className = 'cmdk-backdrop at-mbg';
 bg.innerHTML = '<div class="cmdk-box at-mbox" role="dialog" aria-modal="true"></div>';
-bg.addEventListener('mousedown', e => { if (e.target === bg) bg.classList.remove('open'); });
 document.body.appendChild(bg);
 }
 const box = bg.firstElementChild;
@@ -13085,7 +13083,6 @@ if (!bg) {
 bg = document.createElement('div');
 bg.id = 'reassignBg'; bg.className = 'cmdk-backdrop at-mbg';
 bg.innerHTML = '<div class="cmdk-box at-mbox" role="dialog" aria-modal="true" style="max-width:600px;"></div>';
-bg.addEventListener('mousedown', e => { if (e.target === bg) bg.classList.remove('open'); });
 document.body.appendChild(bg);
 }
 const box = bg.firstElementChild;
@@ -13508,7 +13505,6 @@ bg.innerHTML = `<div class="cmdk-box" style="max-width:540px;" role="dialog" ari
 <div class="preview-modal-header"><span id="sxPortalTitle" style="font-size:13px;font-weight:700;flex:1;">Student portal</span><button class="counselor-save-btn" id="sxPortalClose">Close</button></div>
 <div class="sx-modal-body" id="sxPortalBody"></div></div>`;
 document.body.appendChild(bg);
-bg.addEventListener('click', e => { if (e.target === bg) closeModal(); });
 $('sxPortalClose').onclick = closeModal;
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && bg.classList.contains('open')) { closeModal(); e.stopPropagation(); } }, true);
 return bg;
@@ -13646,7 +13642,6 @@ bg.innerHTML = `<div class="cmdk-box" style="max-width:640px;" role="dialog" ari
 <div class="preview-modal-header"><span id="baTitle" style="font-size:13px;font-weight:700;flex:1;">Assign bulk leads to counsellors</span><button class="counselor-save-btn" id="baClose">Close</button></div>
 <div class="ba-body" id="baBody"></div></div>`;
 document.body.appendChild(bg);
-bg.addEventListener('click', e => { if (e.target === bg && !BA.busy) bg.classList.remove('open'); });
 $('baClose').onclick = () => { if (!BA.busy) bg.classList.remove('open'); };
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && bg.classList.contains('open') && !BA.busy) { bg.classList.remove('open'); e.stopPropagation(); } }, true);
 return bg;
@@ -13974,7 +13969,6 @@ bg.innerHTML = `<div class="cmdk-box" id="s10ModalBox" role="dialog" aria-modal=
 <div class="preview-modal-header"><span id="s10ModalTitle" style="font-size:13px;font-weight:700;flex:1;"></span><button class="counselor-save-btn" id="s10ModalClose">Close</button></div>
 <div class="s10-body" id="s10ModalBody"></div></div>`;
 document.body.appendChild(bg);
-bg.addEventListener('click', e => { if (e.target === bg) closeModal(); });
 $('s10ModalClose').onclick = closeModal;
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && bg.classList.contains('open')) { closeModal(); e.stopPropagation(); } }, true);
 }
@@ -14678,7 +14672,6 @@ bg = document.createElement('div');
 bg.className = 'cmdk-backdrop'; bg.id = 'finModalBg';
 bg.innerHTML = `<div class="cmdk-box" id="finModalBox" role="dialog" aria-modal="true" aria-labelledby="finModalTitle"><div class="preview-modal-header"><span id="finModalTitle" style="font-size:13px;font-weight:700;flex:1;"></span><button class="counselor-save-btn" id="finModalClose">Close</button></div><div class="s10-body" id="finModalBody"></div></div>`;
 document.body.appendChild(bg);
-bg.addEventListener('click', e => { if (e.target === bg) closeModal(); });
 $('finModalClose').onclick = closeModal;
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && bg.classList.contains('open')) { closeModal(); e.stopPropagation(); } }, true);
 }
@@ -15282,7 +15275,6 @@ if (!bg) {
 bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'hrModalBg';
 bg.innerHTML = `<div class="cmdk-box" id="hrModalBox" role="dialog" aria-modal="true" aria-labelledby="hrModalTitle"><div class="preview-modal-header"><span id="hrModalTitle" style="font-size:13px;font-weight:700;flex:1;"></span><button class="counselor-save-btn" id="hrModalClose">Close</button></div><div class="s10-body" id="hrModalBody"></div></div>`;
 document.body.appendChild(bg);
-bg.addEventListener('click', e => { if (e.target === bg) closeModal(); });
 $('hrModalClose').onclick = closeModal;
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && bg.classList.contains('open')) { closeModal(); e.stopPropagation(); } }, true);
 }
@@ -16349,7 +16341,6 @@ bg.innerHTML = `<div class="cmdk-box" style="max-width:580px;" role="dialog" ari
 <div class="preview-modal-header"><span id="commTitle" style="font-size:15px;font-weight:800;flex:1;color:var(--ink);">Add Commission</span><button class="counselor-save-btn" id="commClose" aria-label="Close">Close</button></div>
 <div class="s10-body" id="commBody"></div></div>`;
 document.body.appendChild(bg);
-bg.addEventListener('click', e => { if (e.target === bg) closeAddCommissionModal(); });
 $('commClose').onclick = closeAddCommissionModal;
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && bg.classList.contains('open')) { closeAddCommissionModal(); e.stopPropagation(); } }, true);
 }
@@ -16758,7 +16749,6 @@ if (!bg) {
 bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'eaModalBg';
 bg.innerHTML = `<div class="cmdk-box" id="eaModalBox" role="dialog" aria-modal="true" aria-labelledby="eaModalTitle"><div class="preview-modal-header"><span id="eaModalTitle" style="font-size:14px;font-weight:800;flex:1;"></span><button class="counselor-save-btn" id="eaModalClose">Close</button></div><div class="s10-body" id="eaModalBody" style="max-height:80vh;"></div></div>`;
 document.body.appendChild(bg);
-bg.addEventListener('click', e => { if (e.target === bg) close(); });
 $('eaModalClose').onclick = close;
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && bg.classList.contains('open')) { close(); e.stopPropagation(); } }, true);
 }
@@ -18194,7 +18184,6 @@ if (!bg) {
 bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = k + 'Bg';
 bg.innerHTML = `<div class="cmdk-box" id="${k}Box" role="dialog" aria-modal="true" aria-labelledby="${k}Title"><div class="preview-modal-header"><span id="${k}Title" style="font-size:14px;font-weight:800;flex:1;"></span><button class="counselor-save-btn" id="${k}Close">Close</button></div><div class="s10-body" id="${k}Body"></div></div>`;
 document.body.appendChild(bg);
-bg.addEventListener('click', e => { if (e.target === bg) closeModal(layer); });
 $(k + 'Close').onclick = () => closeModal(layer);
 }
 $(k + 'Box').style.maxWidth = (width || 640) + 'px';
@@ -19584,7 +19573,6 @@ if (!bg) {
 bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = k + 'Bg';
 bg.innerHTML = `<div class="cmdk-box" id="${k}Box" role="dialog" aria-modal="true" aria-labelledby="${k}Title"><div class="preview-modal-header"><span id="${k}Title" style="font-size:14px;font-weight:800;flex:1;"></span><button class="counselor-save-btn" id="${k}Close">Close</button></div><div class="s10-body" id="${k}Body"></div></div>`;
 document.body.appendChild(bg);
-bg.addEventListener('click', e => { if (e.target === bg) closeModal(layer); });
 $(k + 'Close').onclick = () => closeModal(layer);
 }
 $(k + 'Box').style.maxWidth = (width || 640) + 'px';
@@ -20157,7 +20145,6 @@ if (!bg) {
 bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'lqBg';
 bg.innerHTML = '<div class="cmdk-box" style="max-width:980px;" role="dialog" aria-modal="true" aria-labelledby="lqTitle"><div class="preview-modal-header"><span id="lqTitle" style="font-size:14px;font-weight:800;flex:1;">📡 Lead quality</span><button class="counselor-save-btn" id="lqClose">Close</button></div><div class="s10-body" id="lqBody"></div></div>';
 document.body.appendChild(bg);
-bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
 $('lqClose').onclick = () => bg.classList.remove('open');
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && bg.classList.contains('open')) { bg.classList.remove('open'); e.stopPropagation(); } }, true);
 }
@@ -20351,7 +20338,6 @@ if (!bg) {
 bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'maMBg';
 bg.innerHTML = `<div class="cmdk-box" id="maMBox" role="dialog" aria-modal="true" aria-labelledby="maMTitle"><div class="preview-modal-header"><span id="maMTitle" style="font-size:14px;font-weight:800;flex:1;"></span><button class="counselor-save-btn" id="maMClose">Close</button></div><div class="s10-body" id="maMBody"></div></div>`;
 document.body.appendChild(bg);
-bg.addEventListener('click', e => { if (e.target === bg) closeModal(); });
 $('maMClose').onclick = closeModal;
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && bg.classList.contains('open')) { closeModal(); e.stopPropagation(); } }, true);
 }
@@ -21037,7 +21023,7 @@ function setStatus(id, status) { run('setStudentQuestionStatus', id, status).the
 function reply(q) {
 if (!q) return;
 let bg = $('sqMBg');
-if (!bg) { bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'sqMBg'; document.body.appendChild(bg); bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); }); }
+if (!bg) { bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'sqMBg'; document.body.appendChild(bg); }
 bg.innerHTML = `<div class="cmdk-box" style="max-width:560px;" role="dialog" aria-modal="true"><div class="preview-modal-header"><span style="font-size:14px;font-weight:800;flex:1;">Reply to ${esc(q.student)}</span><button class="counselor-save-btn" id="sqX">Close</button></div><div class="s10-body">
 <div class="sx-sub" style="margin-bottom:6px;">${esc(q.topic)} · asked ${esc(when(q.askedAt))}</div><div style="background:var(--canvas);border-radius:10px;padding:10px 12px;white-space:pre-wrap;font-size:13.5px;">${esc(q.question)}</div>
 <label class="f" for="sqTxt">Your reply — the student sees it in their portal</label><textarea id="sqTxt" style="min-height:140px;">${esc(q.reply || '')}</textarea>
@@ -21967,7 +21953,7 @@ function modal(title, html, width) {
   let bg = $('tdModalBg');
   if (!bg) { bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'tdModalBg';
     bg.innerHTML = '<div class="cmdk-box" id="tdModalBox" role="dialog" aria-modal="true" aria-labelledby="tdModalTitle"><div class="preview-modal-header"><span id="tdModalTitle" style="font-size:14px;font-weight:800;flex:1;"></span><button class="counselor-save-btn" id="tdModalClose">Close</button></div><div class="s10-body" id="tdModalBody"></div></div>';
-    document.body.appendChild(bg); bg.addEventListener('click', e => { if (e.target === bg) closeM(); }); $('tdModalClose').onclick = closeM; }
+    document.body.appendChild(bg); $('tdModalClose').onclick = closeM; }
   $('tdModalBox').style.maxWidth = (width || 600) + 'px'; $('tdModalTitle').textContent = title; $('tdModalBody').innerHTML = html; bg.classList.add('open');
   return $('tdModalBody');
 }
@@ -22513,7 +22499,7 @@ function modal(title, html, width) {
   let bg = $('ownModalBg');
   if (!bg) { bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'ownModalBg';
     bg.innerHTML = '<div class="cmdk-box" id="ownModalBox" role="dialog" aria-modal="true" aria-labelledby="ownModalTitle"><div class="preview-modal-header"><span id="ownModalTitle" style="font-size:14px;font-weight:800;flex:1;"></span><button class="counselor-save-btn" id="ownModalClose">Close</button></div><div class="s10-body" id="ownModalBody"></div></div>';
-    document.body.appendChild(bg); bg.addEventListener('click', e => { if (e.target === bg) closeModal(); }); $('ownModalClose').onclick = closeModal; }
+    document.body.appendChild(bg); $('ownModalClose').onclick = closeModal; }
   $('ownModalBox').style.maxWidth = (width || 600) + 'px'; $('ownModalTitle').textContent = title; $('ownModalBody').innerHTML = html; bg.classList.add('open');
   return $('ownModalBody');
 }
@@ -22666,7 +22652,7 @@ function openView(key, label) {
   let bg = document.getElementById('akViewBg');
   if (!bg) {
     bg = document.createElement('div'); bg.id = 'akViewBg'; bg.className = 'cmdk-backdrop'; document.body.appendChild(bg);
-    bg.addEventListener('click', e => { if (e.target === bg || e.target.closest('[data-vt-x]')) bg.classList.remove('open'); });
+    bg.addEventListener('click', e => { if (e.target.closest('[data-vt-x]')) bg.classList.remove('open'); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && bg.classList.contains('open')) { bg.classList.remove('open'); e.stopPropagation(); } }, true);
   }
   bg.innerHTML = '<div class="cmdk-box" role="dialog" aria-modal="true" aria-label="' + esc(label) + '"><div class="preview-modal-header"><span style="font-size:14px;font-weight:800;flex:1;">👁 ' + esc(label) + '</span><button class="counselor-save-btn" data-vt-x>Close</button></div><div class="s10-body" id="akViewBody"><div class="skeleton" style="height:220px;"></div></div></div>';
