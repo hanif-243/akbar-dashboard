@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
  
-window.AKBAR_BUILD = '28 Oct 2026 · v138';
+window.AKBAR_BUILD = '29 Oct 2026 · v139';
 
 
 (function () {
@@ -6928,10 +6928,21 @@ function leadPopRestore(k) {
   k.open.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('open'); });
   if (k.focus) { const el = document.getElementById(k.focus.id); if (el) { el.focus({ preventScroll: true }); try { if (k.focus.s != null) el.setSelectionRange(k.focus.s, k.focus.e); } catch (e) {   } } }
 }
+
+setInterval(() => { const app = document.querySelector('.app'); if (app && app.style.display !== 'none' && !document.body.classList.contains('lead-pop-open') && document.querySelector('#tableBody tr.detail-row.lead-pop')) document.body.classList.add('lead-pop-open'); }, 800);
 function leadPopUp(prevFor, prevScroll) {
   let bg = document.getElementById('leadPopBg');
   if (!bg) { bg = document.createElement('div'); bg.id = 'leadPopBg'; bg.className = 'lead-pop-bg'; bg.addEventListener('click', closeLeadPop); document.body.appendChild(bg); }
   const tr = document.querySelector('#tableBody tr.detail-row');
+  
+  
+  const app = document.querySelector('.app');
+  if (tr && app && app.style.display === 'none') {
+    if (prevFor === tr.dataset.detailFor) { tr.classList.add('lead-pop'); document.body.classList.remove('lead-pop-open'); return; }
+    ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'b2bDbView', 'archView', 'ownView', 'lpView', 'pbView', 'evView', 'telecallerApp']
+      .forEach(v => { const el = document.getElementById(v); if (el && el.style.display === 'block') el.style.display = 'none'; });
+    app.style.display = '';
+  }
   document.body.classList.toggle('lead-pop-open', !!tr);
   if (!tr) return;
   
@@ -15706,7 +15717,11 @@ body().querySelectorAll('[data-pf]').forEach(b => b.onclick = () => reviewDetail
 
 function openMaterial(m, d) {
 run('openTrainingMaterial', m.id).catch(() => {});
-if (m.type === 'Video' && m.youtubeId) {
+if (m.type === 'Video' && !m.youtubeId && m.driveId) {
+modal(m.title, `<div class="hr-yt"><iframe src="https:\x2F\x2Fdrive.google.com\x2Ffile\x2Fd/${esc(m.driveId)}/preview" title="${esc(m.title)}" allow="autoplay; fullscreen" allowfullscreen></iframe></div>
+${m.description ? `<div class="sx-sub" style="margin-top:8px;">${esc(m.description)}</div>` : ''}<div class="s10-actions"><a class="um-btn" href="${esc(m.url)}" target="_blank" rel="noopener">Open in Drive</a><button class="um-btn primary" id="tmDone" ${m.completed ? 'disabled' : ''}>${m.completed ? 'Completed ✓' : 'Mark complete'}</button></div>`, 820);
+$('tmDone').onclick = () => markDone(m.id);
+} else if (m.type === 'Video' && m.youtubeId) {
 modal(m.title, `<div class="hr-yt"><iframe src="https:\x2F\x2Fwww.youtube.com\x2Fembed/${esc(m.youtubeId)}?rel=0" title="${esc(m.title)}" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
 ${m.description ? `<div class="sx-sub" style="margin-top:8px;">${esc(m.description)}</div>` : ''}<div class="s10-actions"><a class="um-btn" href="${esc(m.url)}" target="_blank" rel="noopener">Open on YouTube</a><button class="um-btn primary" id="tmDone" ${m.completed ? 'disabled' : ''}>${m.completed ? '✓ Completed' : 'Mark complete'}</button></div>`, 820);
 $('tmDone').onclick = () => markDone(m.id);
@@ -15717,13 +15732,36 @@ function materialEditor(d, m) {
 const x = m || { type: 'Video', category: d.categories[0], branch: 'All', role: 'All', active: true };
 modal(m ? 'Edit training material' : 'Add training material', `<div class="fin-form">${field('Title', `<input type="text" id="tmTitle" value="${esc(x.title || '')}">`, true)}
 ${field('Category', `<select id="tmCat">${opts(d.categories, x.category)}</select>`)}${field('Type', `<select id="tmType">${opts(['Video', 'Document', 'Link'], x.type)}</select>`)}
-${field('Link', `<input type="text" id="tmUrl" value="${esc(x.url || '')}" placeholder="YouTube \x2F Google Drive \x2F any https:\x2F\x2F link">`, true)}
+${field('Link', `<div style="display:flex;gap:8px;align-items:center;"><input type="text" id="tmUrl" value="${esc(x.url || '')}" placeholder="YouTube \x2F Google Drive \x2F any https:\x2F\x2F link" style="flex:1;min-width:0;"><button type="button" class="um-btn primary" id="tmUp" style="white-space:nowrap;">⬆ Upload video<\x2Fbutton><input type="file" id="tmFile" accept="video\x2F*" hidden><\x2Fdiv><div class="sx-sub" id="tmUpMsg" style="margin:4px 0 0;"><\x2Fdiv>`, true)}
 <div class="full" id="tmPrev"></div>
 ${field('Branch', `<select id="tmBranch">${opts(['All'].concat(d.branches), x.branch)}</select>`)}${field('Role', `<select id="tmRole">${opts(['All'].concat(d.roles), x.role)}</select>`)}
 ${field('Description', `<textarea id="tmDesc" style="min-height:60px;">${esc(x.description || '')}</textarea>`, true)}${field('Active', `<label style="font-size:13px;"><input type="checkbox" id="tmActive" ${x.active ? 'checked' : ''}> Visible to staff</label>`)}</div>
 <div class="s10-actions" style="justify-content:space-between;">${m ? '<button class="um-btn danger" id="tmDel">Delete</button>' : '<span></span>'}<button class="um-btn primary" id="tmSave">Save</button></div>`, 640);
 const prev = () => { const id = (/(?:youtu\.be\/|v=|embed\/|shorts\/)([A-Za-z0-9_-]{11})/.exec($('tmUrl').value) || [])[1]; $('tmPrev').innerHTML = $('tmType').value === 'Video' ? (id ? `<img src="https:\x2F\x2Fimg.youtube.com\x2Fvi/${id}/mqdefault.jpg" alt="" style="width:200px;border-radius:8px;margin-top:6px;"><div class="sx-sub">Video ID ${id}</div>` : '<div class="sx-sub">Paste a YouTube link to see the thumbnail.</div>') : ''; };
-$('tmUrl').oninput = prev; $('tmType').onchange = prev; prev();
+$('tmUrl').oninput = prev; $('tmType').onchange = () => { $('tmUp').style.display = $('tmType').value === 'Video' ? '' : 'none'; prev(); }; $('tmType').onchange();
+
+$('tmUp').onclick = () => $('tmFile').click();
+$('tmFile').onchange = async () => {
+  const file = $('tmFile').files[0]; if (!file) return;
+  const b = $('tmUp'), msg = $('tmUpMsg'), save = $('tmSave');
+  b.disabled = true; save.disabled = true;
+  try {
+    const st = await run('startTrainingVideoUpload', { name: file.name, mimeType: file.type || 'video/mp4', size: file.size });
+    let off = 0, r = null;
+    while (off < file.size) {
+      msg.textContent = 'Uploading ' + Math.round(off * 100 / file.size) + '% of ' + (file.size / 1048576).toFixed(0) + ' MB — keep this window open…';
+      const buf = new Uint8Array(await file.slice(off, Math.min(off + st.chunk, file.size)).arrayBuffer());
+      let bin = ''; for (let i = 0; i < buf.length; i += 32768) bin += String.fromCharCode.apply(null, buf.subarray(i, i + 32768));
+      let tries = 0;
+      for (;;) { try { r = await run('sendTrainingVideoChunk', st.uploadId, off, btoa(bin)); break; } catch (e) { if (++tries >= 3) throw e; await new Promise(z => setTimeout(z, 2000 * tries)); } }
+      off = r.done ? file.size : r.next;
+    }
+    $('tmUrl').value = r.url; prev();
+    if (!$('tmTitle').value.trim()) $('tmTitle').value = file.name.replace(/\.[^.]+$/, '');
+    msg.textContent = r.shared === 'private' ? '✓ Uploaded — but Google Drive would not share it, so only people with access to the Drive folder can watch it.' : '✓ Uploaded' + (r.shared === 'company' ? ' (watchable by company Google accounts)' : '') + ' — press Save.';
+  } catch (e) { msg.textContent = ''; showToast(errMsg(e), 'error'); }
+  finally { b.disabled = false; save.disabled = false; $('tmFile').value = ''; }
+};
 $('tmSave').onclick = () => run(m ? 'updateTrainingMaterial' : 'addTrainingMaterial', { id: m ? m.id : '', title: $('tmTitle').value, category: $('tmCat').value, type: $('tmType').value, url: $('tmUrl').value, branch: $('tmBranch').value, role: $('tmRole').value, description: $('tmDesc').value, active: $('tmActive').checked })
 .then(nd => { closeModal(); showToast('Saved', 'success'); HR.cache.training = nd; renderTraining(nd); }).catch(e => showToast(errMsg(e), 'error'));
 const del = $('tmDel'); if (del) del.onclick = () => { if (confirm('Delete this material?')) run('deleteTrainingMaterial', m.id).then(nd => { closeModal(); HR.cache.training = nd; renderTraining(nd); }).catch(e => showToast(errMsg(e), 'error')); };
@@ -15736,7 +15774,7 @@ body().innerHTML = `
 <div class="sx-card"><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;"><b>My progress</b><span class="sx-sub" style="margin:0;">${p.completed} of ${p.total} materials completed</span><div class="hr-bar" style="flex:1;min-width:160px;"><i style="width:${p.pct}%"></i></div><b>${p.pct}%</b>${d.canEdit ? '<button class="um-btn primary" id="tmAdd">+ Add Material</button>' : ''}</div></div>
 <div class="s10-chips">${[''].concat(d.categories).map(c => `<button class="s10-chip ${f.category === c ? 'on' : ''}" data-tm-cat="${esc(c)}">${esc(c || 'All')}</button>`).join('')}</div>
 ${list.length ? `<div class="hr-mat">${list.map(m => `<div class="card" style="${m.active ? '' : 'opacity:.55'}">
-<div class="thumb" data-tm-open="${esc(m.id)}" style="${m.type === 'Video' && m.youtubeId ? `background-image:url('https:\x2F\x2Fimg.youtube.com\x2Fvi/${esc(m.youtubeId)}/mqdefault.jpg')` : ''}">${m.type === 'Video' ? '<span class="play">▶</span>' : icon[m.type]}</div>
+<div class="thumb" data-tm-open="${esc(m.id)}" style="${m.type === 'Video' && m.youtubeId ? `background-image:url('https:\x2F\x2Fimg.youtube.com\x2Fvi/${esc(m.youtubeId)}/mqdefault.jpg')` : m.type === 'Video' && m.driveId ? `background-image:url('https:\x2F\x2Fdrive.google.com\x2Fthumbnail?id=${esc(m.driveId)}&sz=w480')` : ''}">${m.type === 'Video' ? '<span class="play">▶</span>' : icon[m.type]}</div>
 <div class="b"><div style="font-weight:700;">${esc(m.title)}</div><div class="sx-sub">${esc(m.category)} · ${esc(m.type)}${m.branch !== 'All' ? ' · ' + esc(m.branch) : ''}${m.role !== 'All' ? ' · ' + esc(m.role) : ''}</div>
 ${m.description ? `<div class="sx-sub" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${esc(m.description)}</div>` : ''}
 <div style="margin-top:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">${m.completed ? st('Completed') : `<button class="um-btn primary s10-mini" data-tm-done="${esc(m.id)}">Mark complete</button>`}<button class="um-btn s10-mini" data-tm-open="${esc(m.id)}">${m.type === 'Video' ? 'Watch' : 'Open'}</button>${d.canEdit ? `<button class="um-btn s10-mini" data-tm-edit="${esc(m.id)}">Edit</button>` : ''}<span class="sx-sub" style="margin-left:auto;">${m.views || 0} views</span></div></div></div>`).join('')}</div>`
