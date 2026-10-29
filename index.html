@@ -23908,8 +23908,10 @@ setTimeout(notice, 8000);
       var t0 = 0, dur = Math.min(2600, 900 + Math.abs(target - from) * 1.6);
       (function step(now) { if (!t0) t0 = now; var k = Math.min(1, (now - t0) / dur); S.at = from + (target - from) * ease(k); place(S.at); if (k < 1 && box.isConnected) requestAnimationFrame(step); })(performance.now());
     };
-    if ('IntersectionObserver' in window) { var io = new IntersectionObserver(function (en) { if (en[0].isIntersecting) { io.disconnect(); setTimeout(go, 150); } }, { threshold: 0.35 }); io.observe(box); }
+    var seen = false;
+    if ('IntersectionObserver' in window) { var io = new IntersectionObserver(function (en) { seen = true; if (en[0].isIntersecting) { io.disconnect(); setTimeout(go, 150); } }, { threshold: 0.35 }); io.observe(box); }
     else go();
+    setTimeout(function () { if (!seen && !S.flown) { S.flown = true; S.at = target; place(target); } }, 2500);
   }
   window.akFlight = function (box, stages, current, o) {
     if (!box || !stages || !stages.length) return;
