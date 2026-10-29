@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
  
-window.AKBAR_BUILD = '29 Oct 2026 · v139';
+window.AKBAR_BUILD = '29 Oct 2026 · v140';
 
 
 (function () {
@@ -6952,6 +6952,7 @@ function leadPopUp(prevFor, prevScroll) {
   td.setAttribute('role', 'dialog'); td.setAttribute('aria-modal', 'true'); td.setAttribute('aria-label', 'Lead ' + (r.name || ''));
   if (!td.querySelector('.lead-pop-bar')) td.insertAdjacentHTML('afterbegin', '<div class="lead-pop-bar"><div><b>' + escapeHtml(r.name || 'Lead') + '</b><span>' + escapeHtml([r.phone, r.branch, r.counselor ? 'Counsellor: ' + r.counselor : '', r.status].filter(Boolean).join(' · ')) + '</span></div><button class="um-btn" data-lead-pop-close>✕ Close</button></div>');
   const x = td.querySelector('[data-lead-pop-close]'); if (x) x.onclick = e => { e.stopPropagation(); closeLeadPop(); };
+  if (window.akLeadFlight) try { window.akLeadFlight(td, id, r); } catch (e) {   }
   if (prevFor === id && prevScroll) td.scrollTop = prevScroll; else if (prevFor !== id) td.scrollTop = 0;
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('lead-pop-open') && !document.querySelector('.cmdk-backdrop.open')) closeLeadPop(); });
@@ -7433,11 +7434,17 @@ bellFilterActive = !bellFilterActive;
 render();
 });
 
-function toggleTheme() {
+function toggleTheme(ev) {
 const html = document.documentElement;
 const isDark = html.getAttribute('data-theme') === 'dark';
-html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-safeStorageSet('leadops-theme', isDark ? 'light' : 'dark');
+const flip = () => { html.setAttribute('data-theme', isDark ? 'light' : 'dark'); safeStorageSet('leadops-theme', isDark ? 'light' : 'dark'); };
+const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (!document.startViewTransition || calm) { flip(); return; }
+const b = document.getElementById('themeToggle').getBoundingClientRect(), x = ev && ev.clientX ? ev.clientX : b.left + b.width / 2, y = ev && ev.clientY ? ev.clientY : b.top + b.height / 2;
+const r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+document.startViewTransition(flip).ready.then(() => {
+  html.animate({ clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)', 'circle(' + r + 'px at ' + x + 'px ' + y + 'px)'] }, { duration: 620, easing: 'cubic-bezier(.4,0,.2,1)', pseudoElement: '::view-transition-new(root)' });
+}).catch(() => {});
 }
 document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 
@@ -12390,10 +12397,11 @@ const pendingDays = r.appDate ? daysBetween(r.appDate, todayIST()) : null;
 const mgr = ((AT.dash && AT.dash.meta.managers) || {})[r.branch] || null;
 const sla = pending && pendingDays !== null && pendingDays > 7 ? `<div class="at-sla"><span class="grow">⚠ Pending for ${pendingDays} days — past the 7-day window.</span>
 <button class="um-btn danger" id="atEscalate" ${mgr && mgr.phone ? '' : `disabled title="No manager phone set for ${esc(r.branch)} in the Branches sheet"`}>Escalate on WhatsApp</button></div>` : '';
+setTimeout(() => { if (window.akAppFlight) try { window.akAppFlight(r); } catch (e) {   } }, 0);
 const box = openModal('atDetailBg', {
 title: esc(r.id) + ' · ' + esc(r.student), subtitle: esc([r.branch, r.country, r.university].filter(Boolean).join(' · ')), width: 760,
 headActions: `<button class="um-btn" id="atDetailVisa" title="Hand this student to the visa team">🛂 Send to visa</button><button class="um-btn" id="atDetailCond" title="The university gave a condition — tell the branch manager and counsellor">⚑ Condition</button><button class="um-btn" id="atDetailReqDocs" title="Ask the counsellor for documents (list by country)">📄 Request docs</button><button class="um-btn" id="atDetailAnother" title="Same student, another university">＋ Another university</button><button class="um-btn" id="atDetailKey" title="Deadlines, offer letter and CAS with expiry reminders">📅 Dates &amp; offer/CAS</button><button class="um-btn" id="atDetailDocs">📎 Documents</button>${window._isSuperAdmin ? '<button class="um-btn danger" id="atDetailDel" title="Super Admins: delete this application (a full copy is kept)">🗑 Delete</button>' : ''}<button class="um-btn primary" id="atDetailEdit">Edit</button>`,
-body: `${sla}<div class="at-student-apps" id="atStudentApps"><div class="card-section-title">This student's applications</div><div class="skeleton" style="height:40px;"></div></div><div id="atAppReqs"></div><div class="at-2col" style="margin-bottom:0;">
+body: `<div id="atFlight" style="margin:-2px 0 12px;"></div>${sla}<div class="at-student-apps" id="atStudentApps"><div class="card-section-title">This student's applications</div><div class="skeleton" style="height:40px;"></div></div><div id="atAppReqs"></div><div class="at-2col" style="margin-bottom:0;">
 <div><div class="at-detail-grid">
 ${field('Student', esc(r.student))}${field('Student ID', esc(r.studentId))}
 ${field('Branch', esc(r.branch))}${field('Counsellor', esc(r.counsellor))}
@@ -23803,6 +23811,199 @@ const notice = () => {
   }).catch(() => {});
 };
 setTimeout(notice, 8000);
+})();
+</script>
+
+
+<style>
+.akf-lead { padding: 6px 20px 0; }
+.akf-lead .akf-cap { display: flex; align-items: baseline; gap: 8px; font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.akf-lead .akf-cap b { color: var(--red); letter-spacing: 0; text-transform: none; font-size: 12.5px; }
+#atFlight .akf-cap { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+#atFlight .akf-cap b { color: var(--red); letter-spacing: 0; text-transform: none; font-size: 12.5px; margin-left: 6px; }
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+#loginScreen { background: radial-gradient(70% 55% at 75% 0%, rgba(242,47,61,.28), transparent 70%), radial-gradient(55% 45% at 10% 15%, rgba(245,165,36,.12), transparent 70%), linear-gradient(180deg, #171525 0%, #201E2C 100%) !important; overflow: hidden; }
+#loginScreen .login-card { position: relative; z-index: 2; }
+.ak-waves { position: absolute; left: 0; right: 0; bottom: 0; height: 34vh; pointer-events: none; z-index: 1; overflow: hidden; }
+.ak-waves svg { position: absolute; bottom: 0; left: 0; width: 200%; height: 100%; }
+.ak-waves .w1 { animation: akWave 26s linear infinite; opacity: .55; }
+.ak-waves .w2 { animation: akWave 17s linear infinite reverse; opacity: .4; bottom: -8px; }
+.ak-waves .w3 { animation: akWave 34s linear infinite; opacity: .3; bottom: -18px; }
+@keyframes akWave { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .ak-waves svg { animation: none !important; } }
+</style>
+<script>
+
+
+(function () {
+  if (window.akFlight) return;
+  var NS = 'http:' + '/' + '/www.w3.org/2000/svg', uid = 0;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var css = '.akf{position:relative;width:100%;margin:6px 0 2px;-webkit-user-select:none;user-select:none}' +
+    '.akf svg{display:block;width:100%;overflow:visible}' +
+    '.akf .rt{fill:none;stroke:var(--border,#E7E9F0);stroke-width:2.5;stroke-dasharray:2 8;stroke-linecap:round}' +
+    '.akf .dn{fill:none;stroke-width:3.5;stroke-linecap:round}' +
+    '.akf .nd{fill:var(--card,#fff);stroke:var(--border,#E7E9F0);stroke-width:2.5;transition:fill .35s,stroke .35s}' +
+    '.akf .st.done .nd{fill:var(--red,#F22F3D);stroke:var(--red,#F22F3D)}' +
+    '.akf .st.now .nd{stroke:var(--red,#F22F3D);stroke-width:3}' +
+    '.akf .pl{fill:var(--red,#F22F3D);opacity:0;transform-box:fill-box;transform-origin:center}' +
+    '.akf .st.now .pl{animation:akfPulse 1.9s ease-out infinite}' +
+    '@keyframes akfPulse{0%{opacity:.4;transform:scale(.7)}100%{opacity:0;transform:scale(2.6)}}' +
+    '.akf text{fill:var(--muted,#6B7280);font-weight:600;font-family:inherit;transition:fill .35s}' +
+    '.akf .st.done text,.akf .st.now text{fill:var(--ink,#12172B)}' +
+    '.akf .st.now .lb{font-weight:800}' +
+    '.akf text.dt{font-weight:500;fill:var(--muted,#6B7280)!important}' +
+    '.akf .plane path{fill:var(--ink,#12172B)}.akf .plane circle{fill:var(--red,#F22F3D);opacity:.16}' +
+    '@media (prefers-reduced-motion:reduce){.akf .st.now .pl{animation:none}}';
+  function style() { if (document.getElementById('akfCss')) return; var s = document.createElement('style'); s.id = 'akfCss'; s.textContent = css; document.head.appendChild(s); }
+  function el(tag, attrs, parent) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+  function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+  function draw(box) {
+    var S = box._akf, n = S.stages.length, w = Math.max(240, Math.round(box.clientWidth || 600));
+    if (n < 2) return;
+    var narrow = w < 520, fs = narrow ? 10.5 : (S.compact ? 12 : 12.5), amp = narrow ? 15 : (S.compact ? 16 : 22), lineH = fs + 3;
+    var hasDates = S.dates.some(function (d) { return d; });
+    var room = fs + 12 + (hasDates ? lineH : 0), h = Math.round(2 * (amp + room + 4)), mid = h / 2, pad = narrow ? 30 : 46;
+    var pts = S.stages.map(function (_, i) { return { x: pad + i * (w - 2 * pad) / (n - 1), y: mid + (i % 2 ? amp : -amp) }; });
+    var d = 'M' + pts[0].x + ' ' + pts[0].y;
+    for (var i = 1; i < n; i++) { var a = pts[i - 1], b = pts[i], dx = (b.x - a.x) / 2; d += ' C' + (a.x + dx) + ' ' + a.y + ' ' + (b.x - dx) + ' ' + b.y + ' ' + b.x + ' ' + b.y; }
+    box.innerHTML = '';
+    var svg = el('svg', { viewBox: '0 0 ' + w + ' ' + h, width: w, height: h, role: 'img', 'aria-label': 'Journey: ' + S.stages[S.current] + ' (step ' + (S.current + 1) + ' of ' + n + ')' }, box);
+    var gid = 'akfG' + (++uid), defs = el('defs', {}, svg), lg = el('linearGradient', { id: gid, x1: 0, x2: 1 }, defs);
+    el('stop', { offset: 0, 'stop-color': '#F22F3D' }, lg); el('stop', { offset: 1, 'stop-color': '#F5A524' }, lg);
+    var base = el('path', { d: d, 'class': 'rt' }, svg), done = el('path', { d: d, 'class': 'dn', stroke: 'url(#' + gid + ')' }, svg);
+    var L = base.getTotalLength(), probe = el('path', { d: '' }, svg), stops = [0];
+    var dd = 'M' + pts[0].x + ' ' + pts[0].y;
+    for (i = 1; i < n; i++) { a = pts[i - 1]; b = pts[i]; dx = (b.x - a.x) / 2; dd += ' C' + (a.x + dx) + ' ' + a.y + ' ' + (b.x - dx) + ' ' + b.y + ' ' + b.x + ' ' + b.y; probe.setAttribute('d', dd); stops.push(probe.getTotalLength()); }
+    svg.removeChild(probe);
+    done.style.strokeDasharray = L; done.style.strokeDashoffset = L;
+    var nodes = pts.map(function (p, i) {
+      var g = el('g', { 'class': 'st' }, svg), up = i % 2 === 0;
+      el('circle', { 'class': 'pl', cx: p.x, cy: p.y, r: 7 }, g);
+      el('circle', { 'class': 'nd', cx: p.x, cy: p.y, r: narrow ? 5.5 : 6.5 }, g);
+      var ty = up ? p.y - 14 - (S.dates[i] ? lineH : 0) : p.y + 14 + fs;
+      var t = el('text', { 'class': 'lb', x: p.x, y: ty, 'text-anchor': i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle', 'font-size': fs }, g);
+      if (i === 0) t.setAttribute('x', Math.max(2, p.x - 12)); if (i === n - 1) t.setAttribute('x', Math.min(w - 2, p.x + 12));
+      t.textContent = S.stages[i];
+      if (S.dates[i]) { var t2 = el('text', { 'class': 'dt', x: t.getAttribute('x'), y: ty + lineH, 'text-anchor': t.getAttribute('text-anchor'), 'font-size': fs - 1.5 }, g); t2.textContent = S.dates[i]; }
+      return g;
+    });
+    var plane = el('g', { 'class': 'plane' }, svg);
+    el('circle', { r: narrow ? 13 : 16 }, plane);
+    el('path', { d: 'M-13 0 L9 -2.5 L14 0 L9 2.5 Z M-3 -1 L-9 -11 L-5 -11 L5 -1 Z M-3 1 L-9 11 L-5 11 L5 1 Z M-12 -1 L-15 -5 L-13 -5 L-9 -1 Z M-12 1 L-15 5 L-13 5 L-9 1 Z', transform: narrow ? 'scale(.8)' : '' }, plane);
+    var target = stops[S.current], finished = S.complete && S.current === n - 1;
+    function place(len) {
+      var p = base.getPointAtLength(len), q = base.getPointAtLength(Math.min(L, len + 1.5)), r = base.getPointAtLength(Math.max(0, len - 1.5));
+      var ang = len >= L - 0.5 ? Math.atan2(p.y - r.y, p.x - r.x) : Math.atan2(q.y - p.y, q.x - p.x);
+      plane.setAttribute('transform', 'translate(' + p.x.toFixed(1) + ' ' + p.y.toFixed(1) + ') rotate(' + (ang * 180 / Math.PI).toFixed(1) + ')');
+      done.style.strokeDashoffset = L - len;
+      nodes.forEach(function (g, i) { var reached = stops[i] <= len + 0.5; g.setAttribute('class', 'st' + (i === S.current && Math.abs(len - target) < 0.5 && !finished ? ' now' : reached && (i < S.current || finished) ? ' done' : '')); });
+    }
+    S.place = place; S.L = L; S.target = target;
+    var from = S.at == null ? 0 : Math.min(S.at, L);
+    if (S.instant || reduce || S.flown) { S.at = target; place(target); return; }
+    place(from);
+    var go = function () {
+      if (S.flown) return; S.flown = true;
+      var t0 = 0, dur = Math.min(2600, 900 + Math.abs(target - from) * 1.6);
+      (function step(now) { if (!t0) t0 = now; var k = Math.min(1, (now - t0) / dur); S.at = from + (target - from) * ease(k); place(S.at); if (k < 1 && box.isConnected) requestAnimationFrame(step); })(performance.now());
+    };
+    if ('IntersectionObserver' in window) { var io = new IntersectionObserver(function (en) { if (en[0].isIntersecting) { io.disconnect(); setTimeout(go, 150); } }, { threshold: 0.35 }); io.observe(box); }
+    else go();
+  }
+  window.akFlight = function (box, stages, current, o) {
+    if (!box || !stages || !stages.length) return;
+    o = o || {}; style();
+    box.classList.add('akf');
+    box._akf = { stages: stages, current: Math.max(0, Math.min(stages.length - 1, Number(current) || 0)), dates: o.dates || [], compact: !!o.compact, complete: !!o.complete, instant: !!o.instant, at: null, flown: false };
+    draw(box);
+    if ('ResizeObserver' in window && !box._akfRo) {
+      var lastW = box.clientWidth;
+      box._akfRo = new ResizeObserver(function () { var cw = box.clientWidth; if (Math.abs(cw - lastW) > 16 && box._akf) { lastW = cw; box._akf.instant = box._akf.flown || box._akf.instant; draw(box); } });
+      box._akfRo.observe(box);
+    }
+  };
+})();
+
+(function () {
+ 
+const LEAD_STAGES = ['New lead', 'Contacted', 'Qualified', 'Applied', 'Deposit', 'Visa', 'Enrolled'];
+const seen = {};
+function leadStage(id, r) {
+  const c = typeof convById !== 'undefined' && convById ? convById[id] : '';
+  const ct = String(c && typeof c === 'object' ? (c.type || '') : (c || ''));
+  if (ct.indexOf('Enrolled') !== -1) return 6;
+  if (ct.indexOf('Visa') !== -1) return 5;
+  if (ct.indexOf('Deposit') !== -1) return 4;
+  if (ct.indexOf('Application') !== -1) return 3;
+  const st = String(r.status || '');
+  if (st === 'Hot' || st === 'Warm') return 2;
+  if (st && st !== 'Pending' && st !== 'New') return 1;
+  return 0;
+}
+window.akLeadFlight = function (td, id, r) {
+  if (!window.akFlight || !td || String(r.status || '') === 'Junk') return;
+  const stg = leadStage(id, r);
+  let box = td.querySelector('.akf-lead');
+  if (box && box.dataset.k === id + ':' + stg) return;
+  if (!box) { box = document.createElement('div'); box.className = 'akf-lead'; const bar = td.querySelector('.lead-pop-bar'); if (bar) bar.insertAdjacentElement('afterend', box); else td.insertAdjacentElement('afterbegin', box); }
+  box.dataset.k = id + ':' + stg;
+  box.innerHTML = '<div class="akf-cap">Journey <b>' + LEAD_STAGES[stg] + '</b></div><div class="akf-route"></div>';
+  window.akFlight(box.querySelector('.akf-route'), LEAD_STAGES, stg, { compact: true, complete: stg === 6, instant: seen[id] === stg });
+  seen[id] = stg;
+};
+ 
+window.akAppFlight = function (r) {
+  const box = document.getElementById('atFlight'); if (!box || !window.akFlight) return;
+  const st = String(r.status || ''), vs = String(r.visaStatus || '');
+  let i = 0;
+  if (st.indexOf('Document') !== -1 || st.indexOf('Ready') !== -1) i = 1;
+  if (r.submittedDate || st.indexOf('Submitted') !== -1 || st.indexOf('Under Review') !== -1) i = 2;
+  if (r.offerDate || st.indexOf('Offer') !== -1) i = 3;
+  if (st.indexOf('Deposit') !== -1 || st.indexOf('CAS') !== -1 || st.indexOf('I-20') !== -1) i = 4;
+  if (vs || r.visaDate || st.indexOf('Visa') !== -1) i = 5;
+  if (st.indexOf('Enrolled') !== -1) i = 6;
+  const MO = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const sd = v => { if (!v) return ''; const d = new Date(String(v).length === 10 ? v + 'T00:00:00' : v); return isNaN(d) ? '' : d.getDate() + ' ' + MO[d.getMonth()]; };
+  const names = ['Filed', 'Documents', 'Submitted', 'Offer', 'Deposit', 'Visa', 'Enrolled'];
+  box.innerHTML = '<div class="akf-cap">Journey<b>' + names[i] + (i === 5 && vs ? ' · ' + escapeHtml(vs) : '') + '</b></div><div class="akf-route"></div>';
+  window.akFlight(box.querySelector('.akf-route'), names, i, { dates: [sd(r.appDate), '', sd(r.submittedDate), sd(r.offerDate), '', sd(r.visaDate), ''], complete: i === 6 });
+};
+ 
+const shown = {};
+const NUM = /^([^\d-]{0,3})(-?[\d,]+(?:\.\d+)?)(\s?[%A-Za-z]{0,3})$/;
+let queued = false;
+function countAll() {
+  queued = false;
+  document.querySelectorAll('.sx-kpi .n, .stat-card .n, .ceo-kpi .n, .ins-kpi .n').forEach(n => {
+    if (n.dataset.akc || !n.isConnected || n.children.length) return;
+    const t = n.textContent.trim(), m = NUM.exec(t); n.dataset.akc = '1';
+    if (!m) return;
+    const card = n.parentElement, lab = card ? (card.querySelector('.l') || {}).textContent || '' : '', view = n.closest('[id$="View"]');
+    const key = (view ? view.id : 'main') + '|' + lab.trim();
+    const to = Number(m[2].replace(/,/g, '')), dec = (m[2].split('.')[1] || '').length, comma = m[2].indexOf(',') !== -1;
+    if (!isFinite(to) || !lab) return;
+    const from = shown[key]; shown[key] = to;
+    if (from === to || Math.abs(to) < 2 && from === undefined) return;
+    const a = from === undefined ? 0 : from, t0 = performance.now(), dur = from === undefined ? 900 : 600;
+    const fmt = v => (comma ? v.toLocaleString('en-IN', { minimumFractionDigits: dec, maximumFractionDigits: dec }) : v.toFixed(dec));
+    (function step(now) {
+      if (!n.isConnected || n.dataset.akc !== '1') return;
+      const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      n.textContent = m[1] + fmt(a + (to - a) * e) + m[3];
+      if (k < 1) requestAnimationFrame(step); else n.textContent = t;
+    })(t0);
+  });
+}
+if (!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) && 'MutationObserver' in window) {
+  new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(countAll); } }).observe(document.body, { childList: true, subtree: true });
+}
+ 
+const ls = document.getElementById('loginScreen');
+if (ls && !ls.querySelector('.ak-waves')) {
+  const wave = (cls, fill, amp, y) => { let d = 'M0 ' + y; for (let x = 0; x <= 2880; x += 40) d += ' L' + x + ' ' + (y + Math.sin(x / 1440 * Math.PI * 4) * amp).toFixed(1); return '<svg class="' + cls + '" viewBox="0 0 2880 300" preserveAspectRatio="none" aria-hidden="true"><path d="' + d + ' L2880 300 L0 300 Z" fill="' + fill + '"/></svg>'; };
+  ls.insertAdjacentHTML('beforeend', '<div class="ak-waves">' + wave('w1', 'rgba(242,47,61,.22)', 22, 120) + wave('w2', 'rgba(245,165,36,.14)', 16, 160) + wave('w3', 'rgba(255,255,255,.06)', 12, 200) + '</div>');
+}
 })();
 </script>
 
