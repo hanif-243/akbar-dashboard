@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
  
-window.AKBAR_BUILD = '30 Oct 2026 · v141';
+window.AKBAR_BUILD = '30 Oct 2026 · v142';
 
 
 (function () {
@@ -21036,7 +21036,7 @@ if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
 const root = $('sqView'); root.style.display = 'block';
 root.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-title">💬 Student Questions</h1><div class="sx-sub">Questions students ask from their portal link · their pre-departure checklist</div></div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="um-btn" id="sqRefresh">↻ Refresh</button><button class="um-btn" id="sqBack">← Back to dashboard</button></div></div>
-<div class="sx-tabs" role="tablist"><button class="sx-tab ${S.tab === 'questions' ? 'active' : ''}" data-sq-tab="questions" role="tab">Questions</button><button class="sx-tab ${S.tab === 'predep' ? 'active' : ''}" data-sq-tab="predep" role="tab">Pre-departure checklist</button></div>
+<div class="sx-tabs" role="tablist"><button class="sx-tab ${S.tab === 'questions' ? 'active' : ''}" data-sq-tab="questions" role="tab">Questions</button><button class="sx-tab ${S.tab === 'predep' ? 'active' : ''}" data-sq-tab="predep" role="tab">Pre-departure checklist</button><button class="sx-tab ${S.tab === 'escal' ? 'active' : ''}" data-sq-tab="escal" role="tab">🚩 Escalations <span class="sq-badge" id="sqEscB"></span></button><button class="sx-tab ${S.tab === 'slots' ? 'active' : ''}" data-sq-tab="slots" role="tab">📅 Slot requests <span class="sq-badge" id="sqSlotB"></span></button><button class="sx-tab ${S.tab === 'offices' ? 'active' : ''}" data-sq-tab="offices" role="tab">📍 Branches &amp; offices</button></div>
 <div id="sqBody"><div class="sx-card"><div class="skeleton" style="height:200px;"></div></div></div></div>`;
 $('sqBack').onclick = close; $('sqRefresh').onclick = load;
 root.querySelectorAll('[data-sq-tab]').forEach(b => b.onclick = () => { S.tab = b.dataset.sqTab; root.querySelectorAll('[data-sq-tab]').forEach(x => x.classList.toggle('active', x === b)); render(); });
@@ -21046,11 +21046,73 @@ load();
 function close() { const root = $('sqView'); if (!root || root.style.display !== 'block') return; root.style.display = 'none'; root.innerHTML = ''; const app = document.querySelector('.app'); if (app) app.style.display = ''; }
 function load() {
 if (S.loading) return; S.loading = true;
+run('getStudentApp2Staff').then(d2 => { S.d2 = d2; app2Badges(); if (['escal', 'slots', 'offices'].indexOf(S.tab) !== -1) render(); }).catch(e => { S.d2 = { error: errMsg(e) }; if (['escal', 'slots', 'offices'].indexOf(S.tab) !== -1) render(); });
 run('getStudentQuestions', {}).then(d => { S.loading = false; S.data = d; badge(d.open); render(); })
 .catch(e => { S.loading = false; const b = $('sqBody'); if (b) b.innerHTML = `<div class="sx-card sx-empty">Couldn't load: ${esc(errMsg(e))}</div>`; });
 }
+
+function app2Badges() { const d2 = S.d2 || {}; [['sqEscB', d2.openEsc], ['sqSlotB', d2.openSlots]].forEach(x => { const el = $(x[0]); if (el) { el.textContent = x[1] || ''; el.classList.toggle('on', !!x[1]); } }); }
+function app2Set(d2, msg) { S.d2 = d2; app2Badges(); render(); if (msg) toast(msg); }
+function renderApp2(b) {
+const d2 = S.d2;
+if (!d2) { b.innerHTML = '<div class="sx-card"><div class="skeleton" style="height:180px;"></div></div>'; return; }
+if (d2.error) { b.innerHTML = `<div class="sx-card sx-empty">Couldn't load: ${esc(d2.error)}</div>`; return; }
+if (S.tab === 'escal') {
+  const list = d2.escalations.filter(x => !S.branch || x.branch === S.branch);
+  b.innerHTML = `<div class="sx-sub" style="margin:0 0 10px;">Concerns students raise from their app. They go to the branch manager first; still open after ${d2.escHours} hours → they move up to the Super Admins (marked ⏫). The student sees the status and what you wrote.</div>` +
+    (list.length ? list.map(x => `<div class="sq-q"><div class="top"><b>${esc(x.student)}</b><span>${esc(x.branch)} · ${esc(x.counsellor || 'no counsellor')}</span><span>· ${esc(x.category)} · ${esc(when(x.raisedAt))}</span>${x.level === 'Super Admin' ? '<span class="sq-pill" style="background:rgba(242,47,61,.12);color:var(--red);">⏫ Super Admin</span>' : ''}<span class="sq-pill ${x.status === 'Resolved' ? 'Answered' : 'Open'}">${esc(x.status)}</span></div>
+<div class="qq">${esc(x.details)}</div>${x.resolution ? `<div class="rep"><small>${esc(x.resolvedBy || 'Note')}${x.resolvedAt ? ' · ' + esc(when(x.resolvedAt)) : ''}</small>${esc(x.resolution)}</div>` : ''}
+<div class="act">${x.phone ? `<a class="um-btn" href="tel:${esc(x.phone)}">📞 Call ${esc(x.phone)}</a>` : ''}${x.status === 'Open' ? `<button class="um-btn" data-es="${esc(x.id)}" data-st="In progress">Mark in progress</button>` : ''}${x.status !== 'Resolved' ? `<button class="um-btn primary" data-es="${esc(x.id)}" data-st="Resolved">Resolve…</button>` : `<button class="um-btn" data-es="${esc(x.id)}" data-st="Open">Reopen</button>`}</div></div>`).join('') : '<div class="sx-card sx-empty">No concerns raised. 🎉</div>');
+  b.querySelectorAll('[data-es]').forEach(x => x.onclick = () => {
+    const st = x.dataset.st; let note = '';
+    if (st === 'Resolved') { note = prompt('What did you do to fix it? (the student sees this)'); if (note === null) return; }
+    run('updateStudentEscalation', x.dataset.es, st, note || '').then(d => app2Set(d, st === 'Resolved' ? 'Resolved — the student can see it' : 'Updated')).catch(e => toast(errMsg(e), 'error'));
+  });
+} else if (S.tab === 'slots') {
+  const list = d2.slots.filter(x => !S.branch || x.branch === S.branch);
+  b.innerHTML = `<div class="sx-sub" style="margin:0 0 10px;">Counselling slots students asked for in their app. Confirm or decline — the student sees it instantly, and you can send them a WhatsApp.</div>` +
+    (list.length ? `<div class="sx-card"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>When</th><th>Student</th><th>How</th><th>Note</th><th>Counsellor</th><th>Status</th><th></th></tr></thead><tbody>${list.map(x => `<tr><td><b>${esc(x.date)}</b> ${esc(x.time)}</td><td>${esc(x.student)}<div class="sx-sub">${esc(x.branch)} · ${esc(x.phone)}</div></td><td>${esc(x.mode)}</td><td>${esc(x.note || '—')}${x.reply ? `<div class="sx-sub">↳ ${esc(x.reply)}</div>` : ''}</td><td>${esc(x.counsellor || '—')}</td><td><span class="sq-pill ${x.status === 'Confirmed' ? 'Answered' : x.status === 'Requested' ? 'Open' : ''}">${esc(x.status)}</span></td><td style="white-space:nowrap;">${x.status === 'Requested' ? `<button class="um-btn primary" data-sl="${esc(x.id)}" data-st="Confirmed">Confirm</button> <button class="um-btn" data-sl="${esc(x.id)}" data-st="Declined">Decline</button>` : x.status === 'Confirmed' ? `<button class="um-btn" data-sl="${esc(x.id)}" data-st="Cancelled">Cancel</button>` : ''}</td></tr>`).join('')}</tbody></table></div></div>` : '<div class="sx-card sx-empty">No slot requests yet.</div>');
+  b.querySelectorAll('[data-sl]').forEach(x => x.onclick = () => {
+    const st = x.dataset.st, msg = prompt(st === 'Confirmed' ? 'Note for the student (optional) — e.g. the meeting link or office floor' : st === 'Declined' ? 'Suggest another time (optional)' : 'Reason (optional)') ;
+    if (msg === null) return;
+    run('decideStudentSlot', x.dataset.sl, st, msg).then(d => { app2Set(d, st + ' — the student can see it'); if (d.waLink && confirm('Send the student a WhatsApp too?')) window.open(d.waLink, '_blank', 'noopener'); }).catch(e => toast(errMsg(e), 'error'));
+  });
+} else {
+  const list = d2.offices;
+  b.innerHTML = `<div class="sx-sub" style="margin:0 0 10px;">The offices students see under “Find an office” in their app (India and abroad). Only add real, current addresses.${d2.canEditOffices ? '' : ' Only Super Admins can edit this list.'}</div>` +
+    (d2.canEditOffices ? '<div style="margin-bottom:10px;"><button class="um-btn primary" id="offAdd">＋ Add office</button></div>' : '') +
+    (list.length ? `<div class="sx-card"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Office</th><th>Region</th><th>Address</th><th>Phone</th><th>In app</th>${d2.canEditOffices ? '<th></th>' : ''}</tr></thead><tbody>${list.map(o => `<tr><td><b>${esc(o.name)}</b><div class="sx-sub">${esc([o.city, o.country].filter(Boolean).join(', '))}</div></td><td>${esc(o.region)}</td><td style="max-width:280px;white-space:pre-wrap;">${esc(o.address || '—')}</td><td>${esc(o.phone || '—')}</td><td>${o.active !== false ? '✓' : '—'}</td>${d2.canEditOffices ? `<td style="white-space:nowrap;"><button class="um-btn" data-off="${esc(o.id)}">Edit</button> <button class="um-btn" data-offdel="${esc(o.id)}">Remove</button></td>` : ''}</tr>`).join('')}</tbody></table></div></div>` : '<div class="sx-card sx-empty">No offices yet — add your branches in India and abroad.</div>');
+  const add = $('offAdd'); if (add) add.onclick = () => officeForm(null);
+  b.querySelectorAll('[data-off]').forEach(x => x.onclick = () => officeForm(list.find(o => o.id === x.dataset.off)));
+  b.querySelectorAll('[data-offdel]').forEach(x => x.onclick = () => { if (!confirm('Remove this office from the student app? (kept in the sheet as removed)')) return; run('deleteOffice', x.dataset.offdel).then(d => app2Set(d, 'Removed')).catch(e => toast(errMsg(e), 'error')); });
+}
+}
+function officeForm(o) {
+o = o || { region: 'India', active: true };
+let bg = $('sqMBg');
+if (!bg) { bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'sqMBg'; document.body.appendChild(bg); }
+const f = (id, label, v, ph, full) => `<div class="${full ? 'full' : ''}"><label class="f" for="${id}">${label}</label><input type="text" id="${id}" value="${esc(v || '')}" placeholder="${esc(ph || '')}"></div>`;
+bg.innerHTML = `<div class="cmdk-box" style="max-width:620px;max-height:92vh;overflow:auto;" role="dialog" aria-modal="true"><div class="preview-modal-header"><span style="font-size:14px;font-weight:800;flex:1;">${o.id ? 'Edit office' : 'Add office'}</span><button class="counselor-save-btn" id="offX">Close</button></div><div class="s10-body"><div class="fin-form">
+${f('ofName', 'Office name *', o.name, 'Akbar Study Abroad — Kochi', true)}
+<div><label class="f" for="ofReg">Region</label><select id="ofReg"><option ${o.region !== 'Abroad' ? 'selected' : ''}>India</option><option ${o.region === 'Abroad' ? 'selected' : ''}>Abroad</option></select></div>
+${f('ofCity', 'City', o.city, 'Kochi')}${f('ofCountry', 'Country', o.country, 'India')}
+<div class="full"><label class="f" for="ofAddr">Address</label><textarea id="ofAddr" style="min-height:70px;">${esc(o.address || '')}</textarea></div>
+${f('ofPhone', 'Phone', o.phone, '+91 …')}${f('ofWa', 'WhatsApp number', o.whatsapp, '919876543210')}${f('ofEmail', 'Email', o.email, '')}${f('ofHours', 'Opening hours', o.hours, 'Mon–Sat, 10 am – 6 pm')}
+${f('ofMap', 'Google Maps link', o.mapLink, 'https:\x2F\x2Fmaps.app.goo.gl\x2F…', true)}${f('ofSvc', 'Services (optional)', o.services, 'Counselling · Visa · Forex', true)}
+${f('ofSort', 'Order in the list (1 = first)', o.sort, '1')}<div><label class="f">Show in the student app</label><label style="font-size:13px;"><input type="checkbox" id="ofAct" ${o.active !== false ? 'checked' : ''}> Visible</label></div>
+</div><div class="s10-actions"><button class="um-btn primary" id="ofSave">Save office</button></div></div></div>`;
+bg.classList.add('open');
+$('offX').onclick = () => bg.classList.remove('open');
+$('ofSave').onclick = () => {
+  const btn = $('ofSave'); btn.disabled = true; btn.textContent = 'Saving…';
+  run('saveOffice', { id: o.id || '', name: $('ofName').value, region: $('ofReg').value, city: $('ofCity').value, country: $('ofCountry').value, address: $('ofAddr').value, phone: $('ofPhone').value, whatsapp: $('ofWa').value,
+    email: $('ofEmail').value, hours: $('ofHours').value, mapLink: $('ofMap').value.trim(), services: $('ofSvc').value, sort: $('ofSort').value, active: $('ofAct').checked })
+    .then(d => { bg.classList.remove('open'); app2Set(d, 'Office saved — students see it in their app'); }).catch(e => { btn.disabled = false; btn.textContent = 'Save office'; toast(errMsg(e), 'error'); });
+};
+}
 function render() {
 const b = $('sqBody'), d = S.data; if (!b || !d) return;
+if (['escal', 'slots', 'offices'].indexOf(S.tab) !== -1) { renderApp2(b); return; }
 const brSel = d.branches.length > 1 ? `<select id="sqBr" aria-label="Branch"><option value="">All branches</option>${d.branches.map(x => `<option ${x === S.branch ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>` : '';
 if (S.tab === 'predep') {
 const list = d.predeparture.filter(p => !S.branch || p.branch === S.branch);
