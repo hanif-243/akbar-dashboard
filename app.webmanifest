@@ -1,0 +1,42 @@
+{
+  "name": "Lead Ops — Akbar Study Abroad",
+  "short_name": "Lead Ops",
+  "description": "Leads, follow-ups, calls, applications and visas for the Akbar team",
+  "id": "./",
+  "start_url": "./?source=app",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#201E2C",
+  "theme_color": "#201E2C",
+  "icons": [
+    {
+      "src": "portal/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "portal/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "portal/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Calling queue",
+      "url": "./?source=app#calls"
+    },
+    {
+      "name": "Follow-ups",
+      "url": "./?source=app#followups"
+    }
+  ]
+}

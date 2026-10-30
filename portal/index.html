@@ -47,6 +47,24 @@ label { display: block; font-weight: 600; font-size: 13px; margin: 0 0 6px; }
 @keyframes s { to { transform: rotate(360deg); } }
 .sub { color: rgba(255,255,255,.7); font-size: 14px; margin-top: 16px; text-align: center; }
 .foot { color: rgba(255,255,255,.5); font-size: 12px; margin-top: 22px; text-align: center; }
+/* PREMIUM LOADING (30 Oct 2026) */
+body { background: radial-gradient(70% 50% at 80% 0%, rgba(242,47,61,.35), transparent 70%), radial-gradient(60% 40% at 0% 100%, rgba(245,165,36,.16), transparent 70%), linear-gradient(170deg, #1A1830, #241F38 55%, #2E1C33); background-attachment: fixed; }
+.ld { width: 100%; max-width: 360px; text-align: center; animation: ldIn .5s ease both; }
+@keyframes ldIn { from { opacity: 0; transform: translateY(10px); } }
+.ld-route { width: 100%; height: 120px; overflow: visible; }
+.ld-route .arc { fill: none; stroke: rgba(255,255,255,.22); stroke-width: 2; stroke-dasharray: 2 8; stroke-linecap: round; }
+.ld-route .trail { fill: none; stroke: url(#ldG); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 360; stroke-dashoffset: 360; animation: ldTrail 2.6s cubic-bezier(.45,.05,.3,1) infinite; }
+.ld-route .pin { fill: #F6C77A; } .ld-route .pin2 { fill: rgba(255,255,255,.35); }
+.ld-plane { offset-path: path('M30 95 C 110 10, 250 10, 330 95'); offset-rotate: auto; animation: ldFly 2.6s cubic-bezier(.45,.05,.3,1) infinite; }
+@keyframes ldFly { from { offset-distance: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } to { offset-distance: 100%; opacity: 0; } }
+@keyframes ldTrail { from { stroke-dashoffset: 360; } 60% { stroke-dashoffset: 0; } to { stroke-dashoffset: 0; opacity: 0; } }
+.ld-step { font-size: 17px; font-weight: 700; margin-top: 8px; min-height: 24px; transition: opacity .3s; }
+.ld-bar { height: 4px; border-radius: 4px; background: rgba(255,255,255,.12); overflow: hidden; margin: 14px auto 0; width: 70%; }
+.ld-bar i { display: block; height: 100%; width: 40%; border-radius: 4px; background: linear-gradient(90deg, #F22F3D, #F6C77A); animation: ldBar 1.4s ease-in-out infinite; }
+@keyframes ldBar { from { transform: translateX(-100%); } to { transform: translateX(260%); } }
+.ld-tip { margin: 26px auto 0; max-width: 320px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 12px 14px; font-size: 13px; line-height: 1.5; color: rgba(255,255,255,.85); text-align: left; min-height: 64px; transition: opacity .35s; backdrop-filter: blur(8px); }
+.ld-tip b { display: block; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: #F6C77A; margin-bottom: 3px; }
+@media (prefers-reduced-motion: reduce) { .ld-plane, .ld-route .trail, .ld-bar i { animation: none; } }
 </style>
 </head>
 <body>
@@ -58,7 +76,7 @@ label { display: block; font-weight: 600; font-size: 13px; margin: 0 0 6px; }
 (function () {
 'use strict';
 var API = 'https://script.google.com/macros/s/AKfycbzM25HLBhuI36dn-uUgdTUoXiiTXABMBNDuaBMGjC_SUUU9eueVPn35lFowwBIqb1XNTw/exec';
-var KEY = 'akbar_student_session';
+var KEY = 'akbar_student_session', CACHE = 'akbar_app_copy';
 var PAGE_FNS = ['getStudentPortalData', 'submitStudentDocument', 'submitStudentFeedback', 'getStudentPortalExtras', 'setStudentChecklistItem', 'askStudentQuestion', 'studentUploadRequested', 'raiseStudentEscalation', 'requestStudentSlot', 'bookIeltsSeat', 'cancelIeltsSeat', 'requestTravelService'];
 var view = document.getElementById('view');
 var state = { phone: '', sent: '', mode: 'login', info: null, su: {} };
@@ -82,7 +100,27 @@ function nice(e) {
   if (m === 'SERVER_ERROR') return 'Something went wrong — please try again in a minute.';
   return m.replace(/^Error:\s*/, '');
 }
-function loading(t) { view.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;"><div class="spin"></div><div class="sub">' + esc(t || 'Loading your journey…') + '</div></div>'; }
+// PREMIUM LOADING (30 Oct 2026): the plane flies the route, the step text moves on, and a study-abroad tip rotates
+var LD_STEPS = ['Finding your application…', 'Checking your documents…', 'Getting your visa updates…', 'Lining up your next steps…', 'Almost there…'];
+var LD_TIPS = ['Carry your passport, visa and offer letter in your hand luggage — never in checked bags.', 'Many universities offer free airport pickup — book it as soon as you have your flight.',
+  'Scan every important document and keep a copy online in case anything gets lost.', 'Start your accommodation search early — the best rooms near campus go first.',
+  'Ask your counsellor anything in the app — answers stay saved for you.', 'Keep some local currency for your first few days, plus a forex card.', 'Check your baggage allowance before you pack — excess baggage is expensive at the airport.'];
+var ldTimer = null;
+function loading(t) {
+  clearInterval(ldTimer);
+  var i = 0, k = Math.floor(Math.random() * LD_TIPS.length);
+  view.innerHTML = '<div class="ld" role="status" aria-live="polite"><svg class="ld-route" viewBox="0 0 360 120" aria-hidden="true"><defs><linearGradient id="ldG" x1="0" x2="1"><stop offset="0" stop-color="#F22F3D"/><stop offset="1" stop-color="#F6C77A"/></linearGradient></defs>' +
+    '<path class="arc" d="M30 95 C 110 10, 250 10, 330 95"/><path class="trail" d="M30 95 C 110 10, 250 10, 330 95"/><circle class="pin" cx="30" cy="95" r="5"/><circle class="pin2" cx="330" cy="95" r="5"/>' +
+    '<g class="ld-plane"><path d="M-13 0 L9 -2.5 L14 0 L9 2.5 Z M-3 -1 L-9 -11 L-5 -11 L5 -1 Z M-3 1 L-9 11 L-5 11 L5 1 Z" fill="#fff"/></g></svg>' +
+    '<div class="ld-step" id="ldStep">' + esc(t || LD_STEPS[0]) + '</div><div class="ld-bar"><i></i></div><div class="ld-tip" id="ldTip"><b>Tip</b>' + esc(LD_TIPS[k]) + '</div></div>';
+  if (t) return;
+  ldTimer = setInterval(function () {
+    var st = document.getElementById('ldStep'), tp = document.getElementById('ldTip');
+    if (!st) { clearInterval(ldTimer); return; }
+    i = Math.min(i + 1, LD_STEPS.length - 1); st.textContent = LD_STEPS[i];
+    if (i % 2 === 0 && tp) { k = (k + 1) % LD_TIPS.length; tp.style.opacity = 0; setTimeout(function () { tp.innerHTML = '<b>Tip</b>' + esc(LD_TIPS[k]); tp.style.opacity = 1; }, 300); }
+  }, 1700);
+}
 
 function phoneView(msg, bad) {
   state.mode = 'login';
@@ -193,15 +231,39 @@ function shim(signedIn, demo) {
     'var app=document.getElementById("app");(app&&app.parentNode?app.parentNode:document.body).insertBefore(f,document.getElementById("sxNav")||null);' +
     'var ib=document.getElementById("akInstall");if(ib){if(window.__akInstall)ib.style.display="inline-block";ib.onclick=function(){if(window.__akInstall){window.__akInstall.prompt();window.__akInstall=null;ib.style.display="none"}}}' +
     'var su=document.getElementById("akSignup");if(su)su.onclick=function(){location.replace(location.pathname+"#signup")};var hm=document.getElementById("akHome");if(hm)hm.onclick=function(){location.replace(location.pathname)};' +
-    'var ob=document.getElementById("akOut");if(ob)ob.onclick=function(){var s=null;try{s=localStorage.getItem(KEY);localStorage.removeItem(KEY)}catch(e){}' +
+    'var ob=document.getElementById("akOut");if(ob)ob.onclick=function(){var s=null;try{s=localStorage.getItem(KEY);localStorage.removeItem(KEY);localStorage.removeItem("akbar_app_copy")}catch(e){}' +
     'fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({fn:"studentLogout",args:[s]})}).catch(function(){}).then(function(){location.replace(location.pathname)})}});' +
     '})();<\/script>';
 }
-function writePage(html, signedIn, demo) {
+function writePage(html, signedIn, demo, staleSig) {
+  clearInterval(ldTimer);
+  if (staleSig) { var bi = html.lastIndexOf('</body>'), inj = '<script>(' + bgRefresh.toString() + ')(' + JSON.stringify(API) + ',' + JSON.stringify(KEY) + ',' + JSON.stringify(CACHE) + ',' + JSON.stringify(staleSig) + ')<\/script>'; html = bi === -1 ? html + inj : html.slice(0, bi) + inj + html.slice(bi); }
   html = html.replace(/<link rel="manifest"[^>]*>/i, '<link rel="manifest" href="manifest.json">').replace(/<base target="_top">/i, '');
   html = html.replace(/<link rel="apple-touch-icon"[^>]*>/i, '<link rel="apple-touch-icon" href="apple-touch-icon.png">');
   html = html.replace('<head>', '<head>' + shim(signedIn, demo));
   document.open(); document.write(html); document.close();
+}
+// runs INSIDE the opened page when it came from the saved copy: fetch the latest, save it, and swap only if something changed
+function bgRefresh(API, KEY, CACHE, SIG) {
+  var touched = false, s = null;
+  ['pointerdown', 'keydown', 'scroll'].forEach(function (ev) { window.addEventListener(ev, function () { touched = true; }, { once: true, passive: true }); });
+  try { s = localStorage.getItem(KEY); } catch (e) { return; }
+  if (!s) return;
+  var pill = function (txt, act) {
+    var p = document.createElement('button'); p.type = 'button'; p.textContent = txt;
+    p.setAttribute('style', 'position:fixed;left:50%;top:max(14px,env(safe-area-inset-top));transform:translateX(-50%);z-index:60;border:0;border-radius:999px;padding:10px 16px;font:700 13px system-ui,sans-serif;color:#fff;background:#F22F3D;box-shadow:0 12px 26px -10px rgba(242,47,61,.7);cursor:pointer');
+    p.onclick = act; document.body.appendChild(p); return p;
+  };
+  fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: 'studentAppOpen', args: [s] }) })
+    .then(function (r) { return r.text(); }).then(function (t) {
+      var j = JSON.parse(t);
+      if (!j.ok) { if (j.e === 'SIGNED_OUT' || j.e === 'ACCESS_OFF') { try { localStorage.removeItem(CACHE); localStorage.removeItem(KEY); } catch (e) { /* ignore */ } location.reload(); } return; }
+      try { sessionStorage.setItem('ak_fresh', String(Date.now())); } catch (e) { /* ignore */ }
+      if (j.v.sig === SIG) return;
+      try { localStorage.setItem(CACHE, JSON.stringify({ k: s, t: Date.now(), sig: j.v.sig, html: j.v.html })); } catch (e) { /* phone storage full: the next open loads normally */ }
+      if (!touched) { location.reload(); return; }
+      pill('✨ New updates — tap to refresh', function () { location.reload(); });
+    }).catch(function () { /* offline: keep the saved copy */ });
 }
 function openPortal(token, signedIn) {
   loading();
@@ -221,11 +283,19 @@ function start() {
   if (m) { try { history.replaceState(null, '', location.pathname); } catch (e) { /* ignore */ } try { sessionStorage.setItem('akbar_link_token', m[1]); } catch (e) { /* ignore */ } }
   var s = get(KEY);
   if (s) {
+    // INSTANT OPEN (30 Oct 2026): show the copy saved on this phone straight away; the page checks for changes in the background
+    var c = null; try { c = JSON.parse(get(CACHE) || 'null'); } catch (e) { c = null; }
+    var force = false, fresh = false; try { force = sessionStorage.getItem('ak_force') === '1'; sessionStorage.removeItem('ak_force'); fresh = Date.now() - Number(sessionStorage.getItem('ak_fresh') || 0) < 90000; } catch (e) { force = false; }
+    if (!force && c && c.k === s && c.html && Date.now() - c.t < 30 * 864e5) { writePage(c.html, true, false, fresh ? '' : (c.sig || 'x')); return; }
     loading();
-    call('studentAppSession', [s]).then(function (r) { openPortal(r.token, true); }).catch(function (e) {
+    call('studentAppOpen', [s]).then(function (r) {
+      set(CACHE, JSON.stringify({ k: s, t: Date.now(), sig: r.sig, html: r.html })); try { sessionStorage.setItem('ak_fresh', String(Date.now())); } catch (e) { /* ignore */ }
+      writePage(String(r.html || ''), true, false, '');
+    }).catch(function (e) {
       var msg = String(e && e.message);
-      if (msg === 'SIGNED_OUT') { set(KEY, null); phoneView('Please sign in again.'); }
-      else if (msg === 'ACCESS_OFF') { set(KEY, null); phoneView(nice(e), true); }
+      if (msg === 'SIGNED_OUT') { set(KEY, null); set(CACHE, null); phoneView('Please sign in again.'); }
+      else if (msg === 'ACCESS_OFF') { set(KEY, null); set(CACHE, null); phoneView(nice(e), true); }
+      else if (c && c.k === s && c.html) { writePage(c.html, true, false, ''); }
       else { view.innerHTML = '<div class="card"><h1>No connection</h1><p>' + esc(nice(e)) + '</p><button class="btn" id="re">Try again</button></div>'; document.getElementById('re').onclick = start; }
     });
     return;
