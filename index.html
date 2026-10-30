@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
  
-window.AKBAR_BUILD = '30 Oct 2026 · v144';
+window.AKBAR_BUILD = '30 Oct 2026 · v145';
 
 
 (function () {
@@ -21044,7 +21044,7 @@ if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
 const root = $('sqView'); root.style.display = 'block';
 root.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-title">💬 Student Questions</h1><div class="sx-sub">Questions students ask from their portal link · their pre-departure checklist</div></div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="um-btn" id="sqRefresh">↻ Refresh</button><button class="um-btn" id="sqBack">← Back to dashboard</button></div></div>
-<div class="sx-tabs" role="tablist"><button class="sx-tab ${S.tab === 'questions' ? 'active' : ''}" data-sq-tab="questions" role="tab">Questions</button><button class="sx-tab ${S.tab === 'predep' ? 'active' : ''}" data-sq-tab="predep" role="tab">Pre-departure checklist</button><button class="sx-tab ${S.tab === 'escal' ? 'active' : ''}" data-sq-tab="escal" role="tab">🚩 Escalations <span class="sq-badge" id="sqEscB"></span></button><button class="sx-tab ${S.tab === 'slots' ? 'active' : ''}" data-sq-tab="slots" role="tab">📅 Slot requests <span class="sq-badge" id="sqSlotB"></span></button><button class="sx-tab ${S.tab === 'offices' ? 'active' : ''}" data-sq-tab="offices" role="tab">📍 Branches &amp; offices</button></div>
+<div class="sx-tabs" role="tablist"><button class="sx-tab ${S.tab === 'questions' ? 'active' : ''}" data-sq-tab="questions" role="tab">Questions</button><button class="sx-tab ${S.tab === 'predep' ? 'active' : ''}" data-sq-tab="predep" role="tab">Pre-departure checklist</button><button class="sx-tab ${S.tab === 'escal' ? 'active' : ''}" data-sq-tab="escal" role="tab">🚩 Escalations <span class="sq-badge" id="sqEscB"></span></button><button class="sx-tab ${S.tab === 'slots' ? 'active' : ''}" data-sq-tab="slots" role="tab">📅 Slot requests <span class="sq-badge" id="sqSlotB"></span></button><button class="sx-tab ${S.tab === 'offices' ? 'active' : ''}" data-sq-tab="offices" role="tab">📍 Branches &amp; offices</button><button class="sx-tab ${S.tab === 'short' ? 'active' : ''}" data-sq-tab="short" role="tab">🏛️ Shortlists</button><button class="sx-tab ${S.tab === 'ratings' ? 'active' : ''}" data-sq-tab="ratings" role="tab">⭐ Ratings</button></div>
 <div id="sqBody"><div class="sx-card"><div class="skeleton" style="height:200px;"></div></div></div></div>`;
 $('sqBack').onclick = close; $('sqRefresh').onclick = load;
 root.querySelectorAll('[data-sq-tab]').forEach(b => b.onclick = () => { S.tab = b.dataset.sqTab; root.querySelectorAll('[data-sq-tab]').forEach(x => x.classList.toggle('active', x === b)); render(); });
@@ -21118,9 +21118,45 @@ $('ofSave').onclick = () => {
     .then(d => { bg.classList.remove('open'); app2Set(d, 'Office saved — students see it in their app'); }).catch(e => { btn.disabled = false; btn.textContent = 'Save office'; toast(errMsg(e), 'error'); });
 };
 }
+
+function renderB2(b) {
+if (!S.b2) { b.innerHTML = '<div class="sx-card"><div class="skeleton" style="height:180px;"></div></div>'; run('getStudentShortlistAdmin', S.b2q || '').then(d => { S.b2 = d; render(); }).catch(e => { b.innerHTML = `<div class="sx-card sx-empty">${esc(errMsg(e))}</div>`; }); return; }
+const d = S.b2;
+if (S.tab === 'ratings') {
+  b.innerHTML = `<div class="sx-sub" style="margin:0 0 10px;">Students tap 👍 / 👎 under every reply in their app. A 👎 (2★ or less) alerts the branch manager straight away.</div>
+<div class="sx-card"><h3 style="margin-top:0;">By counsellor</h3>${d.byCounsellor.length ? `<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Counsellor</th><th class="num">Ratings</th><th class="num">Average</th><th class="num">👎</th></tr></thead><tbody>${d.byCounsellor.map(c => `<tr><td><b>${esc(c.counsellor)}</b></td><td class="num">${c.n}</td><td class="num">${'★'.repeat(Math.round(c.avg))} ${c.avg}</td><td class="num">${c.low}</td></tr>`).join('')}</tbody></table></div>` : '<div class="sx-empty">No ratings yet.</div>'}</div>
+${d.ratings.length ? `<div class="sx-card"><h3 style="margin-top:0;">Latest</h3>${d.ratings.slice(0, 50).map(r => `<div class="sq-q"><div class="top"><b>${esc(r.student)}</b><span>${esc(r.branch)} · ${esc(r.counsellor || '—')}</span><span>· ${esc(r.about)} · ${esc(when(r.at))}</span><span class="sq-pill ${Number(r.stars) >= 4 ? 'Answered' : 'Open'}">${'★'.repeat(Number(r.stars) || 0)}</span></div>${r.comment ? `<div class="qq">${esc(r.comment)}</div>` : ''}</div>`).join('')}</div>` : ''}`;
+  return;
+}
+const pick = S.b2lead || '', stu = d.students.find(x => x.leadId === pick), rows = d.shortlist.filter(x => x.leadId === pick);
+b.innerHTML = `<div class="sx-sub" style="margin:0 0 10px;">Add universities for a student — they see them in their app, ❤️ their favourites and tap “Apply to my favourites”. Only students who have the student app are listed.</div>
+<div class="sx-filters"><input type="search" id="slQ" placeholder="Search student name or phone" value="${esc(S.b2q || '')}" style="min-width:220px;"><select id="slS" aria-label="Student"><option value="">Choose a student…</option>${d.students.map(x => `<option value="${esc(x.leadId)}" ${x.leadId === pick ? 'selected' : ''}>${esc(x.name)} · ${esc(x.branch)}</option>`).join('')}</select>${stu ? '<button class="um-btn primary" id="slAdd">＋ Add university</button>' : ''}</div>
+${stu ? (rows.length ? rows.map(x => `<div class="sq-q"><div class="top"><b>${esc(x.university)}</b><span>${esc([x.course, x.country, x.intake].filter(Boolean).join(' · '))}</span>${x.fav ? '<span class="sq-pill Answered">❤️ student’s favourite</span>' : ''}</div>${x.tuition || x.note ? `<div class="qq">${x.tuition ? 'Tuition: ' + esc(String(x.tuition).replace(/^'/, '')) + '\n' : ''}${esc(x.note || '')}</div>` : ''}<div class="act"><button class="um-btn" data-sl-edit="${esc(x.id)}">Edit</button><button class="um-btn" data-sl-del="${esc(x.id)}">Remove</button></div></div>`).join('') : '<div class="sx-card sx-empty">No universities yet for this student.</div>') : '<div class="sx-card sx-empty">Choose a student to see or build their shortlist.</div>'}`;
+const q = $('slQ'); if (q) q.onkeydown = e => { if (e.key === 'Enter') { S.b2q = q.value.trim(); S.b2 = null; render(); } };
+const ss = $('slS'); if (ss) ss.onchange = () => { S.b2lead = ss.value; render(); };
+const add = $('slAdd'); if (add) add.onclick = () => slForm(null);
+b.querySelectorAll('[data-sl-edit]').forEach(x => x.onclick = () => slForm(rows.find(r => r.id === x.dataset.slEdit)));
+b.querySelectorAll('[data-sl-del]').forEach(x => x.onclick = () => { if (!confirm('Remove this university from the student’s shortlist?')) return; run('deleteShortlistItem', x.dataset.slDel).then(n => { S.b2 = n; render(); toast('Removed'); }).catch(e => toast(errMsg(e), 'error')); });
+}
+function slForm(x) {
+x = x || {};
+let bg = $('sqMBg');
+if (!bg) { bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'sqMBg'; document.body.appendChild(bg); }
+const f = (id, label, v, ph, full) => `<div class="${full ? 'full' : ''}"><label class="f" for="${id}">${label}</label><input type="text" id="${id}" value="${esc(String(v || '').replace(/^'/, ''))}" placeholder="${esc(ph || '')}"></div>`;
+bg.innerHTML = `<div class="cmdk-box" style="max-width:600px;max-height:92vh;overflow:auto;" role="dialog" aria-modal="true"><div class="preview-modal-header"><span style="font-size:14px;font-weight:800;flex:1;">${x.id ? 'Edit university' : 'Add university'}</span><button class="counselor-save-btn" id="slX">Close</button></div><div class="s10-body"><div class="fin-form">
+${f('slU', 'University *', x.university, 'University of Leeds', true)}${f('slCo', 'Course', x.course, 'MSc Data Science', true)}${f('slCt', 'Country', x.country, 'United Kingdom')}${f('slI', 'Intake', x.intake, 'Jan 2027')}
+${f('slT', 'Tuition / year', x.tuition, '£24,500')}${f('slL', 'Course link', x.link, 'https:\x2F\x2F…')}<div class="full"><label class="f" for="slN">Why it fits (the student sees this)</label><textarea id="slN">${esc(x.note || '')}</textarea></div>
+</div><div class="s10-actions"><button class="um-btn primary" id="slSave">Save</button></div></div></div>`;
+bg.classList.add('open');
+$('slX').onclick = () => bg.classList.remove('open');
+$('slSave').onclick = () => { const btn = $('slSave'); btn.disabled = true;
+  run('saveShortlistItem', { id: x.id || '', leadId: S.b2lead, university: $('slU').value, course: $('slCo').value, country: $('slCt').value, intake: $('slI').value, tuition: $('slT').value, link: $('slL').value.trim(), note: $('slN').value })
+    .then(n => { S.b2 = n; bg.classList.remove('open'); render(); toast('Saved — the student sees it in their app'); }).catch(e => { btn.disabled = false; toast(errMsg(e), 'error'); }); };
+}
 function render() {
 const b = $('sqBody'), d = S.data; if (!b || !d) return;
 if (['escal', 'slots', 'offices'].indexOf(S.tab) !== -1) { renderApp2(b); return; }
+if (S.tab === 'short' || S.tab === 'ratings') { renderB2(b); return; }
 const brSel = d.branches.length > 1 ? `<select id="sqBr" aria-label="Branch"><option value="">All branches</option>${d.branches.map(x => `<option ${x === S.branch ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>` : '';
 if (S.tab === 'predep') {
 const list = d.predeparture.filter(p => !S.branch || p.branch === S.branch);
