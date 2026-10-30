@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
  
-window.AKBAR_BUILD = '30 Oct 2026 · v142';
+window.AKBAR_BUILD = '30 Oct 2026 · v143';
 
 
 (function () {
@@ -4553,6 +4553,14 @@ Akbar Study Abroad</textarea>
 <div class="nav-group-divider"></div>
 <div class="nav-group own-group" data-group="owners">
 <div class="nav-label">Owner</div>
+<div class="nav-item own-mgr" data-td-view="travel" role="button" tabindex="0" title="Flights, forex, insurance and family travel requests from the student app — Akbar Travels">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 13.5l7-1.5 4.5-8 2 .5-2 8 5.5-1 1.5-2 1.5.5-1 4-4 1-5.5 1-2 7-2 .5 0-7.5-5 1z"/></svg>
+<span>Travel Desk</span>
+</div>
+<div class="nav-item own-mgr" data-td-view="ielts" role="button" tabindex="0" title="Free IELTS demo classes and demo lessons students book in their app">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>
+<span>IELTS classes</span>
+</div>
 <div class="nav-item own-mgr" data-ev-view="events" role="button" tabindex="0" title="Event registration pages, QR codes per creative, attendance and the event report">
 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg>
 <span>Events &amp; QR</span>
@@ -6939,7 +6947,7 @@ function leadPopUp(prevFor, prevScroll) {
   const app = document.querySelector('.app');
   if (tr && app && app.style.display === 'none') {
     if (prevFor === tr.dataset.detailFor) { tr.classList.add('lead-pop'); document.body.classList.remove('lead-pop-open'); return; }
-    ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'b2bDbView', 'archView', 'ownView', 'lpView', 'pbView', 'evView', 'telecallerApp']
+    ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'b2bDbView', 'archView', 'ownView', 'lpView', 'pbView', 'evView', 'telecallerApp', 'tdView']
       .forEach(v => { const el = document.getElementById(v); if (el && el.style.display === 'block') el.style.display = 'none'; });
     app.style.display = '';
   }
@@ -7294,7 +7302,7 @@ if (setAsked !== (window._leadSet || 'main')) return;
 loader.classList.remove('active');
 
 
-const akAway = home => ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'b2bDbView', 'archView', 'ownView', 'lpView', 'pbView', 'evView', 'telecallerApp']
+const akAway = home => ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'b2bDbView', 'archView', 'ownView', 'lpView', 'pbView', 'evView', 'telecallerApp', 'tdView']
   .some(id => { if (id === home) return false; const el = document.getElementById(id); return !!(el && el.style.display === 'block'); });
 if (response && (response.isTelecaller || response.isAppExecutive || response.isB2BTeam || response.isVisaExecutive) && akAway(response.isTelecaller ? 'telecallerApp' : response.isAppExecutive ? 'appTeamView' : response.isB2BTeam ? 'b2bView' : 'visaView')) return;
 if (response && response.isTelecaller) { initTelecallerDashboard(response); return; }
@@ -26648,6 +26656,163 @@ window.akQrModal = function (title, url, key, status) {
 };
 })();
 </script>
+
+
+<style>
+#tdView { min-height: 100vh; background: var(--canvas); }
+.td-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px; }
+@media (max-width: 760px) { .td-kpis { grid-template-columns: 1fr 1fr; } }
+.td-row { display: grid; grid-template-columns: 1.3fr 1fr .9fr .8fr auto; gap: 10px; align-items: center; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; }
+@media (max-width: 900px) { .td-row { grid-template-columns: 1fr; } }
+.td-row b { display: block; } .td-row .sx-sub { margin: 2px 0 0; white-space: pre-wrap; }
+.td-st { display: inline-block; font-size: 11px; font-weight: 800; border-radius: 999px; padding: 3px 10px; background: var(--canvas); color: var(--muted); }
+.td-st.New { background: rgba(47,87,184,.12); color: #2F57B8; } .td-st.Contacted { background: rgba(217,138,31,.14); color: #8a5410; } .td-st.Quote { background: rgba(124,58,237,.12); color: #6D28D9; }
+.td-st.Booked { background: rgba(31,157,99,.14); color: var(--ok); } .td-st.Lost { background: var(--canvas); color: var(--muted); }
+.ie-adm { display: grid; grid-template-columns: 110px 1fr auto; gap: 12px; align-items: center; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; }
+.ie-adm .d { font-weight: 800; } .ie-adm .d small { display: block; color: var(--muted); font-weight: 600; }
+.ie-adm details { grid-column: 1 / -1; } .ie-adm summary { cursor: pointer; font-size: 12.5px; color: var(--muted); font-weight: 700; }
+.ie-seat { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid var(--border); font-size: 13px; } .ie-seat span { flex: 1; }
+</style>
+<script>
+(function () {
+const T = { tab: 'travel', data: null, ie: null, f: { status: 'open', type: '' } };
+const $ = id => document.getElementById(id);
+const esc = v => escapeHtml(v == null ? '' : String(v));
+const run = (fn, ...args) => promisifyRun(fn, window._authToken || '', ...args);
+const errMsg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
+const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t || 'success'); };
+const inr = n => '₹' + Math.round(Number(n) || 0).toLocaleString('en-IN');
+const when = s => { const d = new Date(s); return !s || isNaN(d) ? '' : d.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }); };
+const fd = s => { const d = new Date(String(s).length === 10 ? s + 'T00:00:00' : s); return isNaN(d) ? (s || '') : d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }); };
+const VIEWS = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'b2bDbView', 'archView', 'ownView', 'lpView', 'pbView', 'evView', 'telecallerApp', 'tdView'];
+function root() { let r = $('tdView'); if (!r) { r = document.createElement('div'); r.id = 'tdView'; r.style.display = 'none'; const ev = $('evView') || $('sqView'); (ev && ev.parentNode ? ev.parentNode : document.body).appendChild(r); } return r; }
+const isOpen = () => { const r = $('tdView'); return !!(r && r.style.display === 'block'); };
+function open(tab) {
+  if (tab) T.tab = tab;
+  const app = document.querySelector('.app'); if (app) app.style.display = 'none';
+  VIEWS.forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
+  if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
+  const r = root(); r.style.display = 'block';
+  const tr = T.tab === 'travel';
+  r.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-title">${tr ? '✈️ Travel Desk' : '🎓 IELTS demo classes'}</h1><div class="sx-sub">${tr ? 'Flights, forex, insurance and family travel students ask for in their app — every one is a sale for Akbar Travels' : 'Free demo classes students book in their app (online or at a branch) + recorded demo lessons'}</div></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="um-btn" id="tdSwitch">${tr ? '🎓 IELTS classes' : '✈️ Travel Desk'}</button><button class="um-btn" id="tdRefresh">↻ Refresh</button><button class="um-btn" id="tdBack">← Back to dashboard</button></div></div>
+<div id="tdBody"><div class="sx-card"><div class="skeleton" style="height:220px;"></div></div></div></div>`;
+  $('tdBack').onclick = close; $('tdRefresh').onclick = load; $('tdSwitch').onclick = () => open(tr ? 'ielts' : 'travel');
+  window.scrollTo(0, 0); load();
+}
+function close() { const r = $('tdView'); if (r) { r.style.display = 'none'; r.innerHTML = ''; } const app = document.querySelector('.app'); if (app) app.style.display = ''; }
+function load() {
+  const b = $('tdBody');
+  if (T.tab === 'travel') run('getTravelDesk').then(d => { T.data = d; drawTravel(); }).catch(e => { if (b) b.innerHTML = `<div class="sx-card sx-empty">${esc(errMsg(e))}</div>`; });
+  else run('getIeltsAdmin').then(d => { T.ie = d; drawIelts(); }).catch(e => { if (b) b.innerHTML = `<div class="sx-card sx-empty">${esc(errMsg(e))}</div>`; });
+}
+function drawTravel() {
+  const d = T.data, b = $('tdBody'); if (!b || !d) return;
+  const open = ['New', 'Contacted', 'Quote sent'];
+  const list = d.requests.filter(x => (T.f.status === 'all' || (T.f.status === 'open' ? open.indexOf(x.status) !== -1 : x.status === T.f.status)) && (!T.f.type || x.type === T.f.type));
+  b.innerHTML = `<div class="td-kpis"><div class="sx-kpi"><div class="n">${d.totals.open}</div><div class="l">Open requests</div></div><div class="sx-kpi"><div class="n">${inr(d.totals.pipeline)}</div><div class="l">Quotes sent (pipeline)</div></div><div class="sx-kpi"><div class="n">${d.totals.booked}</div><div class="l">Booked</div></div><div class="sx-kpi"><div class="n">${inr(d.totals.value)}</div><div class="l">Booked value</div></div></div>
+<div class="sx-filters"><select id="tdSt" aria-label="Status"><option value="open" ${T.f.status === 'open' ? 'selected' : ''}>Open (new · contacted · quoted)</option>${d.statuses.map(s => `<option ${T.f.status === s ? 'selected' : ''}>${esc(s)}</option>`).join('')}<option value="all" ${T.f.status === 'all' ? 'selected' : ''}>All</option></select>
+<select id="tdTy" aria-label="Service"><option value="">All services</option>${d.types.map(t => `<option ${T.f.type === t ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>${d.canSettings ? '<button class="um-btn" id="tdSet">⚙ Travel Desk settings</button>' : ''}</div>
+${d.canSettings && !d.settings.emails ? '<div class="fin-alert warm" style="margin-bottom:10px;">No Travel Desk email set yet — add the Akbar Travels team email in ⚙ settings so every new request reaches them instantly.</div>' : ''}
+${list.length ? list.map(x => `<div class="td-row"><div><b>${esc(x.type)}</b><div class="sx-sub">${esc(x.summary)}</div></div><div><b>${esc(x.student)}</b><div class="sx-sub">${esc(x.phone)} · ${esc(x.branch)}<br>Counsellor: ${esc(x.counsellor || '—')}<br>${esc(when(x.createdAt))}</div></div>
+<div><span class="td-st ${esc(String(x.status).split(' ')[0])}">${esc(x.status)}</span>${x.quote ? `<div class="sx-sub">Quote ${inr(x.quote)}</div>` : ''}${x.bookedValue ? `<div class="sx-sub">Booked ${inr(x.bookedValue)}</div>` : ''}${x.handledBy ? `<div class="sx-sub">By ${esc(x.handledBy)}</div>` : ''}</div>
+<div class="sx-sub" style="white-space:pre-wrap;">${esc(x.notes || '')}</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${x.phone ? `<a class="um-btn" href="tel:${esc(x.phone)}">📞<\x2Fa><a class="um-btn sx-wa" href="https:\x2F\x2Fwa.me/${esc(String(x.phone).replace(/\D/g, '').replace(/^(\d{10})$/, '91$1'))}?text=${encodeURIComponent('Hi ' + String(x.student || '').split(' ')[0] + ', this is Akbar Travels about your ' + x.type.toLowerCase() + ' request from the Akbar Study Abroad app.')}" target="_blank" rel="noopener">💬</a>` : ''}<button class="um-btn primary" data-td="${esc(x.id)}">Update</button></div></div>`).join('') : '<div class="sx-card sx-empty">Nothing here yet — requests appear as soon as students tap “Fly with Akbar” in their app.</div>'}`;
+  $('tdSt').onchange = e => { T.f.status = e.target.value; drawTravel(); };
+  $('tdTy').onchange = e => { T.f.type = e.target.value; drawTravel(); };
+  const st = $('tdSet'); if (st) st.onclick = settings;
+  b.querySelectorAll('[data-td]').forEach(x => x.onclick = () => edit(d.requests.find(r => r.id === x.dataset.td)));
+}
+function modal(title, html, width) {
+  let bg = $('tdModalBg');
+  if (!bg) { bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'tdModalBg'; bg.style.zIndex = '20800';
+    bg.innerHTML = '<div class="cmdk-box" id="tdModalBox" role="dialog" aria-modal="true"><div class="preview-modal-header"><span id="tdModalTitle" style="font-size:14px;font-weight:800;flex:1;"></span><button class="counselor-save-btn" id="tdModalClose">Close</button></div><div class="s10-body" id="tdModalBody"></div></div>';
+    document.body.appendChild(bg); $('tdModalClose').onclick = closeModal; } 
+  $('tdModalBox').style.maxWidth = (width || 560) + 'px'; $('tdModalBox').style.maxHeight = '92vh'; $('tdModalBox').style.overflow = 'auto';
+  $('tdModalTitle').textContent = title; $('tdModalBody').innerHTML = html; bg.classList.add('open');
+  return $('tdModalBody');
+}
+function closeModal() { const bg = $('tdModalBg'); if (bg) bg.classList.remove('open'); }
+function edit(x) {
+  if (!x) return;
+  modal('Update ' + x.id + ' · ' + x.type, `<div style="background:var(--canvas);border-radius:10px;padding:10px 12px;font-size:13px;white-space:pre-wrap;margin-bottom:10px;"><b>${esc(x.student)}</b> · ${esc(x.phone)}\n${esc(x.summary)}</div>
+<div class="fin-form"><div><label class="f" for="tdS">Status</label><select id="tdS">${T.data.statuses.map(s => `<option ${s === x.status ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></div>
+<div><label class="f" for="tdQ">Quote (₹)</label><input type="number" id="tdQ" value="${esc(x.quote || '')}"></div><div><label class="f" for="tdV">Booked value (₹)</label><input type="number" id="tdV" value="${esc(x.bookedValue || '')}"></div>
+<div><label class="f" for="tdH">Handled by</label><input type="text" id="tdH" value="${esc(x.handledBy || '')}"></div><div class="full"><label class="f" for="tdN">Notes</label><textarea id="tdN" style="min-height:80px;">${esc(x.notes || '')}</textarea></div></div>
+<div class="s10-actions"><button class="um-btn primary" id="tdSave">Save</button></div>`, 560);
+  $('tdSave').onclick = () => { const b = $('tdSave'); b.disabled = true;
+    run('updateTravelReq', x.id, { status: $('tdS').value, quote: $('tdQ').value, bookedValue: $('tdV').value, handledBy: $('tdH').value, notes: $('tdN').value }).then(d => { T.data = d; closeModal(); drawTravel(); toast('Saved — the student sees the new status'); }).catch(e => { b.disabled = false; toast(errMsg(e), 'error'); }); };
+}
+function settings() {
+  const s = T.data.settings || {};
+  modal('⚙ Travel Desk settings', `<div class="fin-form"><div class="full"><label class="f" for="tdE">Travel Desk emails (Akbar Travels team) — every new request is emailed here</label><input type="text" id="tdE" value="${esc(s.emails || '')}" placeholder="travel@akbartravels.com, desk2@…"></div>
+<div class="full"><label class="f" for="tdU">Dashboard logins that can open the Travel Desk (usernames, comma separated) — Super Admins and branch managers always can</label><input type="text" id="tdU" value="${esc(s.users || '')}" placeholder="username1, username2"></div></div>
+<div class="s10-actions"><button class="um-btn primary" id="tdSS">Save settings</button></div>`, 560);
+  $('tdSS').onclick = () => run('saveTravelDeskSettings', { emails: $('tdE').value, users: $('tdU').value }).then(d => { T.data = d; closeModal(); drawTravel(); toast('Settings saved'); }).catch(e => toast(errMsg(e), 'error'));
+}
+function drawIelts() {
+  const d = T.ie, b = $('tdBody'); if (!b || !d) return;
+  const up = d.sessions.filter(s => !s.past), past = d.sessions.filter(s => s.past);
+  const row = s => `<div class="ie-adm"><div class="d">${esc(fd(s.date))}<small>${esc(s.time)} · ${esc(s.mins)} min</small></div><div><b>${esc(s.title)}</b><div class="sx-sub">${s.kind === 'Online' ? '🎥 Online' : '🏢 ' + esc(s.branch)} · ${esc(s.module)}${s.trainer ? ' · ' + esc(s.trainer) : ''} · <b>${s.list.length}</b>${s.seats ? ' / ' + s.seats : ''} booked${s.active ? '' : ' · hidden'}${s.kind === 'Online' && !s.meetLink && !s.past ? ' · <span style="color:var(--red)">add the Meet link</span>' : ''}</div></div>
+<div style="display:flex;gap:6px;"><button class="um-btn" data-ie-edit="${esc(s.id)}">Edit</button><button class="um-btn" data-ie-del="${esc(s.id)}">Remove</button></div>
+${s.list.length ? `<details><summary>Students (${s.list.length})</summary>${s.list.map(x => `<div class="ie-seat"><span><b>${esc(x.student)}</b> · ${esc(x.phone)} · ${esc(x.branch)}</span><span class="td-st ${x.status === 'Attended' ? 'Booked' : x.status === 'No-show' ? 'Lost' : 'New'}">${esc(x.status)}</span><button class="um-btn" data-seat="${esc(x.id)}" data-st="Attended">✓ Attended</button><button class="um-btn" data-seat="${esc(x.id)}" data-st="No-show">No-show</button></div>`).join('')}</details>` : ''}</div>`;
+  b.innerHTML = `<div class="sx-filters"><button class="um-btn primary" id="ieAdd">＋ New demo class</button>${d.canVideos ? '<button class="um-btn" id="ieVid">＋ Demo lesson video</button>' : ''}<span class="sx-sub">Students see classes for the next 3 weeks and can book a seat. Online classes: add the Google Meet link — booked students see the Join button.</span></div>
+<h3 style="margin:14px 0 8px;">Upcoming (${up.length})</h3>${up.length ? up.map(row).join('') : '<div class="sx-card sx-empty">No upcoming demo classes — add one so students can book.</div>'}
+<h3 style="margin:18px 0 8px;">Demo lesson videos (${d.videos.length})</h3>${d.videos.length ? d.videos.map(v => `<div class="ie-adm"><div class="d">${esc(v.module)}<small>${v.mins ? esc(v.mins) + ' min' : ''}</small></div><div><b>${esc(v.title)}</b><div class="sx-sub">${esc(v.url)}${v.active === false ? ' · hidden' : ''}</div></div><div>${d.canVideos ? `<button class="um-btn" data-iv-del="${esc(v.id)}">Remove</button>` : ''}</div></div>`).join('') : '<div class="sx-card sx-empty">No demo videos yet.</div>'}
+${past.length ? `<h3 style="margin:18px 0 8px;">Past classes</h3>${past.slice(0, 20).map(row).join('')}` : ''}`;
+  $('ieAdd').onclick = () => sessionForm(null);
+  const v = $('ieVid'); if (v) v.onclick = videoForm;
+  b.querySelectorAll('[data-ie-edit]').forEach(x => x.onclick = () => sessionForm(d.sessions.find(s => s.id === x.dataset.ieEdit)));
+  b.querySelectorAll('[data-ie-del]').forEach(x => x.onclick = () => { if (!confirm('Remove this class? Students who booked will no longer see it.')) return; run('deleteIeltsSession', x.dataset.ieDel).then(n => { T.ie = n; drawIelts(); toast('Removed'); }).catch(e => toast(errMsg(e), 'error')); });
+  b.querySelectorAll('[data-seat]').forEach(x => x.onclick = () => run('markIeltsSeat', x.dataset.seat, x.dataset.st).then(n => { T.ie = n; drawIelts(); toast('Marked ' + x.dataset.st); }).catch(e => toast(errMsg(e), 'error')));
+  b.querySelectorAll('[data-iv-del]').forEach(x => x.onclick = () => { if (!confirm('Remove this video from the student app?')) return; run('deleteIeltsVideo', x.dataset.ivDel).then(n => { T.ie = n; drawIelts(); }).catch(e => toast(errMsg(e), 'error')); });
+}
+function sessionForm(s) {
+  const d = T.ie; s = s || { kind: 'Online', mins: 60, seats: 25, module: 'All modules', title: 'IELTS — free demo class', active: true };
+  modal(s.id ? 'Edit demo class' : 'New demo class', `<div class="fin-form"><div class="full"><label class="f" for="ieT">Title</label><input type="text" id="ieT" value="${esc(s.title || '')}"></div>
+<div><label class="f" for="ieK">Where</label><select id="ieK"><option value="Online" ${s.kind === 'Online' ? 'selected' : ''}>Online (Google Meet)</option><option value="Branch" ${s.kind === 'Branch' ? 'selected' : ''}>At a branch</option></select></div>
+<div id="ieBrW"><label class="f" for="ieB">Branch</label><select id="ieB">${d.branches.map(x => `<option ${x === s.branch ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div>
+<div><label class="f" for="ieD">Date</label><input type="date" id="ieD" value="${esc(s.date || '')}"></div><div><label class="f" for="ieH">Time</label><input type="time" id="ieH" value="${esc(s.time || '11:00')}"></div>
+<div><label class="f" for="ieM">Minutes</label><input type="number" id="ieM" value="${esc(s.mins || 60)}"></div><div><label class="f" for="ieS">Seats (blank = no limit)</label><input type="number" id="ieS" value="${esc(s.seats || '')}"></div>
+<div><label class="f" for="ieMod">Module</label><select id="ieMod">${d.modules.map(x => `<option ${x === s.module ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div><div><label class="f" for="ieTr">Trainer</label><input type="text" id="ieTr" value="${esc(s.trainer || '')}"></div>
+<div class="full" id="ieLW"><label class="f" for="ieL">Google Meet link</label><input type="text" id="ieL" value="${esc(s.meetLink || '')}" placeholder="https:\x2F\x2Fmeet.google.com\x2F…"><\x2Fdiv>
+<div class="full"><label class="f" for="ieN">Notes for students (optional)<\x2Flabel><textarea id="ieN">${esc(s.notes || '')}</textarea></div>
+<div><label class="f">Visible to students</label><label style="font-size:13px;"><input type="checkbox" id="ieA" ${s.active !== false ? 'checked' : ''}> Show in the app</label></div></div>
+<div class="s10-actions"><button class="um-btn primary" id="ieSave">Save class</button></div>`, 620);
+  const kind = () => { const on = $('ieK').value === 'Online'; $('ieLW').style.display = on ? '' : 'none'; $('ieBrW').style.display = on ? 'none' : ''; };
+  $('ieK').onchange = kind; kind();
+  $('ieSave').onclick = () => { const b = $('ieSave'); b.disabled = true;
+    run('saveIeltsSession', { id: s.id || '', title: $('ieT').value, kind: $('ieK').value, branch: $('ieB').value, date: $('ieD').value, time: $('ieH').value, mins: $('ieM').value, seats: $('ieS').value, module: $('ieMod').value, trainer: $('ieTr').value, meetLink: $('ieL').value.trim(), notes: $('ieN').value, active: $('ieA').checked })
+      .then(n => { T.ie = n; closeModal(); drawIelts(); toast('Saved — students can book it in their app'); }).catch(e => { b.disabled = false; toast(errMsg(e), 'error'); }); };
+}
+function videoForm() {
+  const d = T.ie;
+  modal('Demo lesson video', `<div class="fin-form"><div class="full"><label class="f" for="ivT">Title</label><input type="text" id="ivT" placeholder="IELTS Speaking Part 2 — how to plan in 1 minute"></div>
+<div><label class="f" for="ivM">Module</label><select id="ivM">${d.modules.map(x => `<option>${esc(x)}</option>`).join('')}<\x2Fselect><\x2Fdiv><div><label class="f" for="ivMin">Minutes<\x2Flabel><input type="number" id="ivMin"><\x2Fdiv>
+<div class="full"><label class="f" for="ivU">Video<\x2Flabel><div style="display:flex;gap:8px;"><input type="text" id="ivU" placeholder="YouTube \x2F Google Drive link — or upload" style="flex:1;min-width:0;"><button type="button" class="um-btn primary" id="ivUp">⬆ Upload video<\x2Fbutton><input type="file" id="ivF" accept="video\x2F*" hidden><\x2Fdiv><div class="sx-sub" id="ivMsg" style="margin:4px 0 0;"><\x2Fdiv><\x2Fdiv><\x2Fdiv>
+<div class="s10-actions"><button class="um-btn primary" id="ivSave">Save video<\x2Fbutton><\x2Fdiv>`, 600);
+  $('ivUp').onclick = () => $('ivF').click();
+  $('ivF').onchange = async () => {
+    const file = $('ivF').files[0]; if (!file) return; const msg = $('ivMsg'), btn = $('ivUp'); btn.disabled = true; $('ivSave').disabled = true;
+    try {
+      const st = await run('startTrainingVideoUpload', { name: file.name, mimeType: file.type || 'video/mp4', size: file.size }); let off = 0, r = null;
+      while (off < file.size) { msg.textContent = 'Uploading ' + Math.round(off * 100 / file.size) + '% — keep this window open…'; const buf = new Uint8Array(await file.slice(off, Math.min(off + st.chunk, file.size)).arrayBuffer()); let bin = ''; for (let i = 0; i < buf.length; i += 32768) bin += String.fromCharCode.apply(null, buf.subarray(i, i + 32768)); r = await run('sendTrainingVideoChunk', st.uploadId, off, btoa(bin)); off = r.done ? file.size : r.next; }
+      $('ivU').value = r.url; if (!$('ivT').value.trim()) $('ivT').value = file.name.replace(/\.[^.]+$/, ''); msg.textContent = '✓ Uploaded — press Save video.';
+    } catch (e) { msg.textContent = ''; toast(errMsg(e), 'error'); } finally { btn.disabled = false; $('ivSave').disabled = false; $('ivF').value = ''; }
+  };
+  $('ivSave').onclick = () => run('saveIeltsVideo', { title: $('ivT').value, module: $('ivM').value, mins: $('ivMin').value, url: $('ivU').value.trim() }).then(n => { T.ie = n; closeModal(); drawIelts(); toast('Video added to the student app'); }).catch(e => toast(errMsg(e), 'error'));
+}
+document.addEventListener('click', e => {
+  const it = e.target.closest('[data-td-view]'); if (it) { e.preventDefault(); e.stopPropagation(); open(it.dataset.tdView); return; }
+  const nav = e.target.closest('#sidebar .nav-item, #sidebar .lead-set-item'); if (nav && isOpen()) close();
+}, true);
+document.addEventListener('keydown', e => { const it = e.target.closest && e.target.closest('[data-td-view]'); if (it && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(it.dataset.tdView); } });
+ 
+let asked = false;
+setInterval(() => { if (asked || !window._authToken) return; asked = true; run('tdCanAccess').then(r => { if (r && r.ok) document.querySelectorAll('[data-td-view="travel"]').forEach(n => n.classList.add('td-ok')); }).catch(() => { asked = false; }); }, 3000);
+window.openTravelDesk = open;
+})();
+</script>
+<style>.nav-item.td-ok { display: flex !important; }</style>
 
 
 
