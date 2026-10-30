@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
  
-window.AKBAR_BUILD = '29 Oct 2026 · v140';
+window.AKBAR_BUILD = '30 Oct 2026 · v141';
 
 
 (function () {
@@ -4071,7 +4071,7 @@ background: linear-gradient(135deg, #2B2C4A, #1A1B2E); color: #fff; box-shadow: 
 
 <div id="loginScreen">
 <div class="login-card">
-<img class="login-logo" src="https://lh3.googleusercontent.com/d/1YvFCQ2nNiUfMnjZ7jKe5NKLPcLI1WrxF=w320" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='https://drive.google.com/thumbnail?id=1YvFCQ2nNiUfMnjZ7jKe5NKLPcLI1WrxF&sz=w320';}" alt="Akbar Study Abroad" style="width:160px;max-width:75%;height:auto;display:block;margin:0 auto 22px;">
+<img class="login-logo" src="https://hanif-243.github.io/akbar-dashboard/portal/logo.png" alt="Akbar Study Abroad" style="width:170px;max-width:75%;height:auto;display:block;margin:0 auto 22px;background:#201E2C;padding:12px 16px;border-radius:14px;">
 <h2 class="login-title">Lead Ops</h2>
 
 
@@ -16912,7 +16912,7 @@ let host = $('eaPrint');
 if (!host) { host = document.createElement('div'); host.id = 'eaPrint'; document.body.appendChild(host); }
 const f = p.filters, filt = [f.dateFrom || f.dateTo ? 'Period: ' + (f.dateFrom ? fmtDate(f.dateFrom) : 'start') + ' – ' + (f.dateTo ? fmtDate(f.dateTo) : 'today') : '', f.intake ? 'Intake: ' + f.intake : '', f.country ? 'Country: ' + f.country : ''].filter(Boolean).join(' · ');
 const ci = p.columns.indexOf('Total Fees INR'), cc = p.columns.indexOf('Commission Amount');
-host.innerHTML = `<div class="hd"><div><img src="https:\x2F\x2Fdrive.google.com\x2Fthumbnail?id=1YvFCQ2nNiUfMnjZ7jKe5NKLPcLI1WrxF&sz=w320" alt="Akbar Study Abroad" style="height:42px;"><div style="font-size:18px;font-weight:700;margin-top:6px;">${esc(p.title)}</div></div>
+host.innerHTML = `<div class="hd"><div><img src="https:\x2F\x2Fhanif-243.github.io\x2Fakbar-dashboard\x2Fportal\x2Flogo.png" alt="Akbar Study Abroad" style="height:42px;"><div style="font-size:18px;font-weight:700;margin-top:6px;">${esc(p.title)}</div></div>
 <div style="text-align:right;font-size:11px;">Generated ${fmtDate(p.generatedAt)}<br><b>${esc(p.aggregatorName)}</b>${p.contact.name ? '<br>' + esc(p.contact.name) : ''}${p.contact.email ? '<br>' + esc(p.contact.email) : ''}${p.contact.phone ? '<br>' + esc(p.contact.phone) : ''}</div></div>
 ${filt ? `<div style="font-size:11px;margin-bottom:8px;">${esc(filt)}</div>` : ''}${p.headerNote ? `<div style="font-size:12px;margin-bottom:10px;white-space:pre-wrap;">${esc(p.headerNote)}</div>` : ''}
 <table><thead><tr>${p.columns.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${p.rows.map(row => `<tr>${row.map((x, i) => `<td>${cell(p.columns[i], x)}</td>`).join('')}</tr>`).join('')}</tbody>
@@ -23496,15 +23496,15 @@ ${me.isLead || r.startedBy === me.name ? '<button class="um-btn" id="pbRmDel" st
 function waText(r, B, url) {
   const first = String(r.subject || '').trim().split(/\s+/)[0] || 'there';
   const miss = r.items.filter(i => !i.sec && !i.done && i.req !== false), opt = r.items.filter(i => !i.sec && !i.done && i.req === false), done = r.items.filter(i => !i.sec && i.done);
-  const k = Math.round(r.pct / 10), bar = '▰'.repeat(k) + '▱'.repeat(10 - k);
+  const k = Math.round(r.pct / 10), bar = '🟩'.repeat(k) + '⬜'.repeat(10 - k); 
   const what = kindOf(r.kind).l.toLowerCase(), where = [r.country, r.level].filter(Boolean).join(' · ');
   const agent = /^agent/.test(r.kind);
-  return [`*${B.name}*${B.tagline ? ' · _' + B.tagline + '_' : ''}`, '━━━━━━━━━━━━━━━━', `📋 *${kindOf(r.kind).l} checklist*${where ? '  ·  ' + where : ''}`, '',
+  return [`*${B.name}*${B.tagline ? ' · _' + B.tagline + '_' : ''}`, `📋 *${kindOf(r.kind).l} checklist*${where ? '  ·  ' + where : ''}`, '',
     agent ? `Hi ${first}! Here's where this file stands 👇` : `Hi ${first}! 👋 Here's where you are with your ${what} 👇`, '',
     `${bar}  *${r.pct}%*  (${r.done}/${r.total} done)`, '',
     miss.length ? `*📌 Still needed (${miss.length})*\n` + miss.map(i => '⬜ ' + i.t).join('\n') : '🎉 *Everything required is done!*',
-    opt.length ? `\n_If it applies to you:_\n` + opt.map(i => '◽ ' + i.t).join('\n') : '',
-    done.length ? `\n*✅ Done (${done.length})*\n` + done.slice(0, 8).map(i => '✔ ~' + i.t + '~').join('\n') + (done.length > 8 ? `\n…and ${done.length - 8} more` : '') : '',
+    opt.length ? `\n_If it applies to you:_\n` + opt.map(i => '▫️ ' + i.t).join('\n') : '',
+    done.length ? `\n*✅ Done (${done.length})*\n` + done.slice(0, 8).map(i => '✅ ~' + i.t + '~').join('\n') + (done.length > 8 ? `\n…and ${done.length - 8} more` : '') : '',
     '', `👉 *See your live checklist and upload each document here:*\n${url}`, '',
     `_Clear photos or PDFs are fine. Any question — just reply here._`, B.white ? `— ${B.name}` : `— Akbar Study Abroad${r.branch ? ', ' + r.branch : ''}`].filter(x => x !== '').join('\n');
 }
@@ -24009,6 +24009,32 @@ if (ls && !ls.querySelector('.ak-waves')) {
 })();
 </script>
 
+<script>
+
+
+(function () {
+  if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)) return;
+  const toWeb = u => {
+    try {
+      const x = new URL(String(u), location.href);
+      let phone = '';
+      if (x.hostname === 'wa.me') phone = x.pathname.replace(/[^0-9]/g, '');
+      else if (x.hostname === 'api.whatsapp.com' && x.pathname.indexOf('/send') === 0) phone = (x.searchParams.get('phone') || '').replace(/[^0-9]/g, '');
+      else return u;
+      const text = x.searchParams.get('text');
+      return 'https:\x2F\x2Fweb.whatsapp.com\x2Fsend?' + (phone ? 'phone=' + phone + (text ? '&' : '') : '') + (text ? 'text=' + encodeURIComponent(text) : '');
+    } catch (e) { return u; }
+  };
+  window.akWaUrl = toWeb;
+  const open0 = window.open;
+  window.open = function (u) { const a = Array.prototype.slice.call(arguments); if (typeof u === 'string') a[0] = toWeb(u); return open0.apply(window, a); };
+  document.addEventListener('click', e => {
+    const a = e.target.closest && e.target.closest('a[href]'); if (!a) return;
+    const h = a.getAttribute('href') || ''; if (h.indexOf('wa.me/') === -1 && h.indexOf('api.whatsapp.com/send') === -1) return;
+    const w = toWeb(a.href); if (w !== a.href) { a.href = w; if (!a.target) a.target = '_blank'; a.rel = 'noopener'; }
+  }, true);
+})();
+</script>
 
 <script>
 
