@@ -77,7 +77,7 @@ body { background: radial-gradient(70% 50% at 80% 0%, rgba(242,47,61,.35), trans
 'use strict';
 var API = 'https://script.google.com/macros/s/AKfycbzM25HLBhuI36dn-uUgdTUoXiiTXABMBNDuaBMGjC_SUUU9eueVPn35lFowwBIqb1XNTw/exec';
 var KEY = 'akbar_student_session', CACHE = 'akbar_app_copy';
-var PAGE_FNS = ['getStudentPortalData', 'submitStudentDocument', 'submitStudentFeedback', 'getStudentPortalExtras', 'setStudentChecklistItem', 'askStudentQuestion', 'studentUploadRequested', 'raiseStudentEscalation', 'requestStudentSlot', 'bookIeltsSeat', 'cancelIeltsSeat', 'requestTravelService', 'toggleShortlistFav', 'rateStudentService'];
+var PAGE_FNS = ['getStudentPortalData', 'submitStudentDocument', 'submitStudentFeedback', 'getStudentPortalExtras', 'setStudentChecklistItem', 'askStudentQuestion', 'studentUploadRequested', 'raiseStudentEscalation', 'requestStudentSlot', 'bookIeltsSeat', 'cancelIeltsSeat', 'requestTravelService', 'toggleShortlistFav', 'rateStudentService', 'setStudentLoan', 'setCommunityOptIn'];
 var view = document.getElementById('view');
 var state = { phone: '', sent: '', mode: 'login', info: null, su: {} };
 
@@ -188,7 +188,8 @@ function signupView(msg, bad) {
 }
 function sendSignup() {
   var v = function (id) { return String(document.getElementById(id).value || '').trim(); };
-  state.su = { name: v('suN'), phone: v('suP'), email: v('suE'), country: v('suC'), branch: v('suB') };
+  var ref = ''; try { ref = sessionStorage.getItem('ak_ref') || ''; } catch (e) { ref = ''; } // REFER A FRIEND (30 Oct 2026)
+  state.su = { name: v('suN'), phone: v('suP'), email: v('suE'), country: v('suC'), branch: v('suB'), ref: ref };
   var su = state.su;
   if (su.name.length < 2) { show('Enter your full name.', true); return; }
   if (digits(su.phone).length < 10) { show('Enter your 10-digit mobile number.', true); return; }
@@ -278,6 +279,7 @@ function openPortal(token, signedIn) {
 }
 
 function start() {
+  try { var rf = new URLSearchParams(location.search).get('ref'); if (rf && /^AK[A-Z0-9]{6}$/.test(rf)) sessionStorage.setItem('ak_ref', rf); } catch (e) { /* ignore */ }
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () { /* optional */ });
   var h = String(location.hash || ''), m = /[#&]t=([a-f0-9]{32})/.exec(h);
   if (m) { try { history.replaceState(null, '', location.pathname); } catch (e) { /* ignore */ } try { sessionStorage.setItem('akbar_link_token', m[1]); } catch (e) { /* ignore */ } }

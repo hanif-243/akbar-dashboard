@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
  
-window.AKBAR_BUILD = '30 Oct 2026 · v145';
+window.AKBAR_BUILD = '30 Oct 2026 · v146';
 
 
 (function () {
@@ -4557,6 +4557,10 @@ Akbar Study Abroad</textarea>
 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 13.5l7-1.5 4.5-8 2 .5-2 8 5.5-1 1.5-2 1.5.5-1 4-4 1-5.5 1-2 7-2 .5 0-7.5-5 1z"/></svg>
 <span>Travel Desk</span>
 </div>
+<div class="nav-item own-mgr" data-ac-view="1" role="button" tabindex="0" title="Edit what the student app shows: forex, fares, loans, rooms, scholarships, webinars, guides, IELTS mini test, referral reward">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M10 18h4"/></svg>
+<span>App content</span>
+</div>
 <div class="nav-item own-mgr" data-td-view="ielts" role="button" tabindex="0" title="Free IELTS demo classes and demo lessons students book in their app">
 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>
 <span>IELTS classes</span>
@@ -6947,7 +6951,7 @@ function leadPopUp(prevFor, prevScroll) {
   const app = document.querySelector('.app');
   if (tr && app && app.style.display === 'none') {
     if (prevFor === tr.dataset.detailFor) { tr.classList.add('lead-pop'); document.body.classList.remove('lead-pop-open'); return; }
-    ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'b2bDbView', 'archView', 'ownView', 'lpView', 'pbView', 'evView', 'telecallerApp', 'tdView']
+    ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'b2bDbView', 'archView', 'ownView', 'lpView', 'pbView', 'evView', 'telecallerApp', 'tdView', 'acView']
       .forEach(v => { const el = document.getElementById(v); if (el && el.style.display === 'block') el.style.display = 'none'; });
     app.style.display = '';
   }
@@ -7302,7 +7306,7 @@ if (setAsked !== (window._leadSet || 'main')) return;
 loader.classList.remove('active');
 
 
-const akAway = home => ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'b2bDbView', 'archView', 'ownView', 'lpView', 'pbView', 'evView', 'telecallerApp', 'tdView']
+const akAway = home => ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'b2bDbView', 'archView', 'ownView', 'lpView', 'pbView', 'evView', 'telecallerApp', 'tdView', 'acView']
   .some(id => { if (id === home) return false; const el = document.getElementById(id); return !!(el && el.style.display === 'block'); });
 if (response && (response.isTelecaller || response.isAppExecutive || response.isB2BTeam || response.isVisaExecutive) && akAway(response.isTelecaller ? 'telecallerApp' : response.isAppExecutive ? 'appTeamView' : response.isB2BTeam ? 'b2bView' : 'visaView')) return;
 if (response && response.isTelecaller) { initTelecallerDashboard(response); return; }
@@ -26720,7 +26724,7 @@ const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t ||
 const inr = n => '₹' + Math.round(Number(n) || 0).toLocaleString('en-IN');
 const when = s => { const d = new Date(s); return !s || isNaN(d) ? '' : d.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }); };
 const fd = s => { const d = new Date(String(s).length === 10 ? s + 'T00:00:00' : s); return isNaN(d) ? (s || '') : d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }); };
-const VIEWS = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'b2bDbView', 'archView', 'ownView', 'lpView', 'pbView', 'evView', 'telecallerApp', 'tdView'];
+const VIEWS = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'b2bDbView', 'archView', 'ownView', 'lpView', 'pbView', 'evView', 'telecallerApp', 'tdView', 'acView'];
 function root() { let r = $('tdView'); if (!r) { r = document.createElement('div'); r.id = 'tdView'; r.style.display = 'none'; const ev = $('evView') || $('sqView'); (ev && ev.parentNode ? ev.parentNode : document.body).appendChild(r); } return r; }
 const isOpen = () => { const r = $('tdView'); return !!(r && r.style.display === 'block'); };
 function open(tab) {
@@ -26849,6 +26853,95 @@ window.openTravelDesk = open;
 })();
 </script>
 <style>.nav-item.td-ok { display: flex !important; }</style>
+
+
+<script>
+(function () {
+const A = { tab: 'forex', d: null };
+const $ = id => document.getElementById(id);
+const esc = v => escapeHtml(v == null ? '' : String(v));
+const run = (fn, ...args) => promisifyRun(fn, window._authToken || '', ...args);
+const errMsg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
+const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t || 'success'); };
+const VIEWS = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'b2bDbView', 'archView', 'ownView', 'lpView', 'pbView', 'evView', 'telecallerApp', 'tdView', 'acView'];
+
+const K = {
+  forex: ['💱 Forex rates', 'Shown on the student home screen as “Today’s forex”. Update daily.', [['title', 'Currency code *', 'text', 'GBP'], ['subtitle', 'Currency name', 'text', 'British pound'], ['amount', 'Rate in ₹ *', 'text', '112.40'], ['date', 'Rate date', 'date', '']]],
+  fare: ['✈️ Fare deals', 'Students tap “Book this fare” → a Travel Desk request. Old deals hide after their date.', [['title', 'Route *', 'text', 'Kochi → London'], ['subtitle', 'Airline / trip', 'text', 'Emirates · one way'], ['amount', 'Price in ₹', 'text', '42,500'], ['date', 'Travel by / valid until', 'date', ''], ['body', 'Details', 'textarea', 'Includes 2 × 23 kg baggage']]],
+  loanbank: ['🏦 Loan banks', 'Partner banks listed under Education loans.', [['title', 'Bank *', 'text', 'Bank name'], ['subtitle', 'Interest / highlight', 'text', 'from 9.5% p.a.'], ['amount', 'Loan amount', 'text', 'up to ₹1.5 Cr'], ['body', 'Features', 'textarea', 'No collateral up to ₹40 L …'], ['link', 'Link', 'text', 'https:\x2F\x2F…']]],
+  room: ['🏠 Rooms', 'Accommodation students can request near their campus.', [['title', 'Property *', 'text', 'Property name'], ['country', 'Country', 'text', 'United Kingdom'], ['city', 'City', 'text', 'Leeds'], ['subtitle', 'Type · distance', 'text', 'En-suite · 8 min walk to campus'], ['amount', 'Price', 'text', '£180 / week'], ['body', 'Details', 'textarea', ''], ['link', 'Link', 'text', 'https:\x2F\x2F…'], ['image', 'Photo link', 'text', 'https:\x2F\x2F…']]],
+  scholarship: ['🎓 Scholarships', 'Shown with a deadline countdown; students tap “Help me apply”.', [['title', 'Scholarship *', 'text', 'Name'], ['subtitle', 'University / provider', 'text', ''], ['country', 'Country', 'text', ''], ['amount', 'Value', 'text', '£5,000'], ['date', 'Deadline', 'date', ''], ['body', 'Who can apply', 'textarea', ''], ['link', 'Link', 'text', 'https:\x2F\x2F…']]],
+  webinar: ['🎬 Webinars', 'Live talks students can join. Hidden automatically after the date.', [['title', 'Title *', 'text', 'First week in London'], ['subtitle', 'Host', 'text', ''], ['date', 'Date *', 'date', ''], ['time', 'Time', 'time', ''], ['link', 'Join link', 'text', 'https:\x2F\x2Fmeet.google.com\x2F…']]],
+  guide: ['📘 City guides', 'Videos (YouTube / Drive link) or written guides.', [['title', 'Title *', 'text', 'Opening a bank account in Dublin'], ['country', 'Country', 'text', ''], ['city', 'City', 'text', ''], ['subtitle', 'Short line', 'text', ''], ['link', 'Video or article link', 'text', 'https:\x2F\x2F…'], ['image', 'Cover photo link', 'text', ''], ['body', 'Text (if no link)', 'textarea', '']]],
+  mockq: ['📝 IELTS mini test', 'Questions for the 10-question practice test. Each needs 2–4 options and the right answer.', [['title', 'Question *', 'textarea', ''], ['subtitle', 'Section', 'select', 'Grammar|Vocabulary|Reading|Writing|Speaking|Listening'], ['options', 'Options (one per line, 2–4) *', 'textarea', 'Option A\nOption B\nOption C\nOption D'], ['answer', 'Right answer', 'select', 'A|B|C|D'], ['body', 'Explanation', 'textarea', '']]],
+  setting: ['⚙ App settings', 'Text the app uses. “Referral reward” appears on the Invite-a-friend screen (leave blank for no reward).', [['title', 'Setting', 'select', 'Referral reward'], ['body', 'Value', 'textarea', 'e.g. ₹1,000 Amazon voucher when your friend enrols']]]
+};
+function root() { let r = $('acView'); if (!r) { r = document.createElement('div'); r.id = 'acView'; r.style.cssText = 'display:none;min-height:100vh;background:var(--canvas);'; const ev = $('evView') || $('sqView'); (ev && ev.parentNode ? ev.parentNode : document.body).appendChild(r); } return r; }
+const isOpen = () => { const r = $('acView'); return !!(r && r.style.display === 'block'); };
+function open() {
+  const app = document.querySelector('.app'); if (app) app.style.display = 'none';
+  VIEWS.forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
+  if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
+  const r = root(); r.style.display = 'block';
+  r.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-title">📱 Student app content</h1><div class="sx-sub">Everything students see that your team keeps up to date — forex, fares, loans, rooms, scholarships, webinars, guides, the IELTS mini test and settings</div></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="um-btn" id="acRefresh">↻ Refresh</button><button class="um-btn" id="acBack">← Back to dashboard</button></div></div>
+<div class="sx-tabs" id="acTabs">${Object.keys(K).map(k => `<button class="sx-tab ${A.tab === k ? 'active' : ''}" data-ac-tab="${k}">${K[k][0]}</button>`).join('')}<button class="sx-tab ${A.tab === 'loans' ? 'active' : ''}" data-ac-tab="loans">📊 Student loans</button><button class="sx-tab ${A.tab === 'refs' ? 'active' : ''}" data-ac-tab="refs">🎁 Referrals</button></div>
+<div id="acBody"><div class="sx-card"><div class="skeleton" style="height:200px;"></div></div></div></div>`;
+  $('acBack').onclick = close; $('acRefresh').onclick = load;
+  r.querySelectorAll('[data-ac-tab]').forEach(b => b.onclick = () => { A.tab = b.dataset.acTab; r.querySelectorAll('[data-ac-tab]').forEach(x => x.classList.toggle('active', x === b)); draw(); });
+  window.scrollTo(0, 0); load();
+}
+function close() { const r = $('acView'); if (r) { r.style.display = 'none'; r.innerHTML = ''; } const app = document.querySelector('.app'); if (app) app.style.display = ''; }
+function load() { run('getAppContentAdmin').then(d => { A.d = d; draw(); }).catch(e => { const b = $('acBody'); if (b) b.innerHTML = `<div class="sx-card sx-empty">${esc(errMsg(e))}</div>`; }); }
+function draw() {
+  const b = $('acBody'), d = A.d; if (!b || !d) return;
+  if (A.tab === 'loans') {
+    b.innerHTML = `<div class="sx-sub" style="margin:0 0 10px;">Loans students track themselves in the app (bank, amount, stage).</div>${d.loans.length ? `<div class="sx-card"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Student</th><th>Branch</th><th>Bank</th><th>Amount</th><th>Stage</th><th>Updated</th></tr></thead><tbody>${d.loans.map(l => `<tr><td><b>${esc(l.student)}</b></td><td>${esc(l.branch)}</td><td>${esc(l.bank)}</td><td>${esc(l.amount)}</td><td>${esc(l.stage)}</td><td>${esc(String(l.updatedAt).slice(0, 10))}</td></tr>`).join('')}</tbody></table></div></div>` : '<div class="sx-card sx-empty">No student has added a loan yet.</div>'}`;
+    return;
+  }
+  if (A.tab === 'refs') {
+    b.innerHTML = `<div class="sx-sub" style="margin:0 0 10px;">New students who signed up with another student’s invite link. Set the reward text in ⚙ App settings → “Referral reward”, and mark rewards Earned / Paid here.</div>${d.referrals.length ? `<div class="sx-card"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>New student</th><th>Branch</th><th>Referred by</th><th>Code</th><th>Signed up</th><th>Reward</th></tr></thead><tbody>${d.referrals.map(r => `<tr><td><b>${esc(r.name)}</b><div class="sx-sub">${esc(r.phone)}</div></td><td>${esc(r.branch)}</td><td>${esc(r.referrer)}<div class="sx-sub">${esc(r.referrerBranch)}</div></td><td>${esc(r.code)}</td><td>${esc(String(r.at).slice(0, 10))}</td><td>${d.canEdit ? `<select data-rf="${esc(r.id)}">${['Pending', 'Earned', 'Paid'].map(s => `<option ${s === r.status ? 'selected' : ''}>${s}</option>`).join('')}</select>` : esc(r.status)}</td></tr>`).join('')}</tbody></table></div></div>` : '<div class="sx-card sx-empty">No referrals yet.</div>'}`;
+    b.querySelectorAll('[data-rf]').forEach(s => s.onchange = () => run('setReferralStatus', s.dataset.rf, s.value).then(n => { A.d = n; toast('Saved'); }).catch(e => toast(errMsg(e), 'error')));
+    return;
+  }
+  const def = K[A.tab], list = d.items.filter(x => x.kind === A.tab);
+  b.innerHTML = `<div class="sx-sub" style="margin:0 0 10px;">${esc(def[1])}${d.canEdit ? '' : ' Only Super Admins can edit.'}</div>
+<div class="sx-filters">${d.canEdit ? `<button class="um-btn primary" id="acAdd">＋ Add</button>` : ''}${A.tab === 'mockq' && d.canEdit && !list.length ? '<button class="um-btn" id="acSeed">Load 15 starter questions</button>' : ''}<span class="sx-sub">${list.length} item${list.length === 1 ? '' : 's'}</span></div>
+${list.length ? list.map(x => `<div class="sq-q"><div class="top"><b>${esc(x.title)}</b><span>${esc([x.subtitle, x.country, x.city].filter(Boolean).join(' · '))}</span>${x.amount ? `<span>· ${esc(x.amount)}</span>` : ''}${x.date ? `<span>· ${esc(x.date)}${x.time ? ' ' + esc(x.time) : ''}</span>` : ''}<span class="sq-pill ${x.active ? 'Answered' : ''}">${x.active ? 'In app' : 'Hidden'}</span></div>
+${x.body ? `<div class="qq">${esc(x.body)}</div>` : ''}${A.tab === 'mockq' && x.data && x.data.options ? `<div class="sx-sub">${x.data.options.map((o, i) => (i === x.data.answer ? '✅ ' : '◻ ') + esc(o)).join(' · ')}</div>` : ''}
+<div class="sx-sub" style="margin-top:4px;">Updated by ${esc(x.updatedBy || '—')} · ${esc(String(x.updatedAt || '').slice(0, 10))}</div>${d.canEdit ? `<div class="act"><button class="um-btn" data-ac-edit="${esc(x.id)}">Edit</button><button class="um-btn" data-ac-del="${esc(x.id)}">Remove</button></div>` : ''}</div>`).join('') : '<div class="sx-card sx-empty">Nothing yet — add the first one.</div>'}`;
+  const add = $('acAdd'); if (add) add.onclick = () => form(null);
+  const seed = $('acSeed'); if (seed) seed.onclick = () => { seed.disabled = true; run('seedMockQuestions').then(n => { A.d = n; draw(); toast('15 starter questions added — check them before students use them'); }).catch(e => { seed.disabled = false; toast(errMsg(e), 'error'); }); };
+  b.querySelectorAll('[data-ac-edit]').forEach(x => x.onclick = () => form(list.find(i => i.id === x.dataset.acEdit)));
+  b.querySelectorAll('[data-ac-del]').forEach(x => x.onclick = () => { if (!confirm('Remove this from the student app?')) return; run('deleteAppContent', x.dataset.acDel).then(n => { A.d = n; draw(); toast('Removed'); }).catch(e => toast(errMsg(e), 'error')); });
+}
+function form(x) {
+  const def = K[A.tab]; x = x || { active: true };
+  const val = k => k === 'options' ? ((x.data && x.data.options) || []).join('\n') : k === 'answer' ? 'ABCD'.charAt((x.data && x.data.answer) || 0) : (x[k] == null ? '' : x[k]);
+  let bg = $('acModalBg');
+  if (!bg) { bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'acModalBg'; bg.style.zIndex = '20800'; document.body.appendChild(bg); }
+  bg.innerHTML = `<div class="cmdk-box" style="max-width:600px;max-height:92vh;overflow:auto;" role="dialog" aria-modal="true"><div class="preview-modal-header"><span style="font-size:14px;font-weight:800;flex:1;">${x.id ? 'Edit' : 'Add'} — ${esc(def[0])}</span><button class="counselor-save-btn" id="acX">Close</button></div><div class="s10-body"><div class="fin-form">
+${def[2].map(f => `<div class="full"><label class="f" for="ac_${f[0]}">${esc(f[1])}</label>${f[2] === 'textarea' ? `<textarea id="ac_${f[0]}" placeholder="${esc(f[3])}" style="min-height:${f[0] === 'body' ? 90 : 70}px;">${esc(val(f[0]))}</textarea>` : f[2] === 'select' ? `<select id="ac_${f[0]}">${f[3].split('|').map(o => `<option ${o === val(f[0]) ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>` : `<input type="${f[2]}" id="ac_${f[0]}" value="${esc(val(f[0]))}" placeholder="${esc(f[3])}">`}</div>`).join('')}
+<div><label class="f" for="ac_sort">Order (1 = first)</label><input type="number" id="ac_sort" value="${esc(x.sort && x.sort !== 99 ? x.sort : '')}"></div><div><label class="f">Show in the app</label><label style="font-size:13px;"><input type="checkbox" id="ac_active" ${x.active !== false ? 'checked' : ''}> Visible</label></div>
+</div><div class="s10-actions"><button class="um-btn primary" id="acSave">Save</button></div></div></div>`;
+  bg.classList.add('open');
+  $('acX').onclick = () => bg.classList.remove('open');
+  $('acSave').onclick = () => {
+    const p = { id: x.id || '', kind: A.tab, sort: $('ac_sort').value, active: $('ac_active').checked };
+    def[2].forEach(f => { const el = $('ac_' + f[0]); if (el) p[f[0]] = el.value; });
+    if (A.tab === 'mockq') { const opts = String(p.options || '').split('\n').map(s => s.trim()).filter(Boolean).slice(0, 4); if (opts.length < 2) { toast('Add at least 2 options', 'error'); return; } p.data = { options: opts, answer: Math.min(opts.length - 1, 'ABCD'.indexOf(p.answer)) }; delete p.options; delete p.answer; }
+    const btn = $('acSave'); btn.disabled = true;
+    run('saveAppContent', p).then(n => { A.d = n; bg.classList.remove('open'); draw(); toast('Saved — students see it next time they open the app'); }).catch(e => { btn.disabled = false; toast(errMsg(e), 'error'); });
+  };
+}
+document.addEventListener('click', e => {
+  const it = e.target.closest('[data-ac-view]'); if (it) { e.preventDefault(); e.stopPropagation(); open(); return; }
+  const nav = e.target.closest('#sidebar .nav-item, #sidebar .lead-set-item'); if (nav && isOpen()) close();
+}, true);
+document.addEventListener('keydown', e => { const it = e.target.closest && e.target.closest('[data-ac-view]'); if (it && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(); } });
+window.openAppContent = open;
+})();
+</script>
 
 
 <style>
