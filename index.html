@@ -5480,6 +5480,7 @@ ${['Mumbai','Calicut','Kochi','Delhi'].filter(b => b !== r.branch).map(b => `<op
           ${renderAutomationSection(r)}
           </div>
           <div data-dt-panel="timeline" ${dtHidden(r, 'timeline')}>${renderTimelinePanel(r)}</div>
+          <div data-dt-panel="docs" ${dtHidden(r, 'docs')}><div data-ld-lead="${escapeHtml(r.leadId)}" data-ld-branch="${escapeHtml(r.branch)}">${typeof ldBody === 'function' ? ldBody(r.leadId) : ''}</div></div>
         </div>
       </td>
     </tr>
@@ -10709,7 +10710,7 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(fa
 
 function detailTabsBar(r) {
 const cur = dtTabByLead[r.leadId] || 'details';
-return `<div class="dt-tabs" role="tablist">${[['details', 'Details'], ['timeline', 'Timeline'], ['followups', 'Follow-ups']].map(([k, l]) =>
+return `<div class="dt-tabs" role="tablist">${[['details', 'Details'], ['timeline', 'Timeline'], ['followups', 'Follow-ups'], ['docs', 'Documents']].map(([k, l]) =>
 `<button class="dt-tab ${cur === k ? 'active' : ''}" role="tab" aria-selected="${cur === k}" data-dt-tab="${k}" data-dt-lead="${escapeHtml(r.leadId)}">${l}</button>`).join('')}</div>`;
 }
 function dtHidden(r, tab) { return (dtTabByLead[r.leadId] || 'details') === tab ? '' : 'style="display:none;"'; }
@@ -10769,6 +10770,7 @@ inner.querySelectorAll('.dt-tab').forEach(b => { const on = b.dataset.dtTab === 
 inner.querySelectorAll('[data-dt-panel]').forEach(p => { p.style.display = p.dataset.dtPanel === which ? '' : 'none'; });
 }
 if (which === 'timeline') { delete tlCache[id]; hydrateTimelines(); }
+if (which === 'docs') ldLoad(id, (inner && inner.querySelector('[data-ld-branch]') || {}).dataset ? inner.querySelector('[data-ld-branch]').dataset.ldBranch : '');
 return;
 }
 const f = e.target.closest('[data-tl-filter]');
@@ -10778,6 +10780,47 @@ tlFilterByLead[f.dataset.tlFor] = f.dataset.tlFilter;
 document.querySelectorAll(`[data-tl-lead="${CSS.escape(f.dataset.tlFor)}"]`).forEach(x => { x.innerHTML = tlBody(f.dataset.tlFor); });
 }
 });
+
+
+const ldCache = {};
+function ldBody(id) {
+const d = ldCache[id];
+if (!d) return '<div class="skeleton" style="height:16px;margin:10px 0;"></div><div class="skeleton" style="height:120px;"></div>';
+if (d.err) return '<div class="ld-empty">' + escapeHtml(d.err) + '</div>';
+const pct = d.total ? Math.round(d.have / d.total * 100) : 0;
+const pill = st => '<span class="ld-st ' + escapeHtml(st) + '">' + escapeHtml(st) + '</span>';
+const when = at => at ? new Date(at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+const files = d.docs.length ? d.docs.map(x => '<div class="ld-file"><div class="ld-fm"><b>' + escapeHtml(x.type) + '</b><span>' + escapeHtml(x.name) + ' · ' + x.sizeKb + ' KB · ' + escapeHtml(x.fromStudent ? 'student, in the app' : (x.by || 'team')) + (x.at ? ' · ' + when(x.at) : '') + (x.notes && !/via student portal/i.test(x.notes) ? ' · ' + escapeHtml(x.notes) : '') + '</span></div>' + pill(x.status) +
+'<button class="um-btn" data-ld-open="' + escapeHtml(x.fileId) + '" data-ld-for="' + escapeHtml(id) + '">Open</button><button class="um-btn" data-ld-dl="' + escapeHtml(x.fileId) + '" data-ld-for="' + escapeHtml(id) + '">Download</button></div>').join('')
+: '<div class="ld-empty">Nothing uploaded yet. The student can upload from the app (🎓 Student portal), or the application team from Applications → Documents.</div>';
+const missing = d.checklist.filter(c => c.status === 'Missing').map(c => c.type);
+return '<div class="ld-head"><span>' + d.have + ' of ' + d.total + ' required documents · ' + d.verified + ' verified' + (d.rejected ? ' · <b style="color:var(--red)">' + d.rejected + ' rejected</b>' : '') + '</span><div class="ld-track"><i style="width:' + pct + '%"></i></div><span>' + pct + '%</span></div>' +
+(d.apps.length ? '<div class="ld-apps">' + d.apps.map(a => '<button class="ld-app" data-ld-app="' + escapeHtml(a.id) + '">' + escapeHtml(a.id) + ' · ' + escapeHtml(a.university || a.country || '—') + (a.status ? ' · ' + escapeHtml(a.status) : '') + '</button>').join('') + '</div>' : '') +
+files + (missing.length ? '<div class="ld-miss"><b>Still missing:</b> ' + missing.map(escapeHtml).join(', ') + '</div>' : '');
+}
+function ldPaint(id) { document.querySelectorAll('[data-ld-lead="' + CSS.escape(id) + '"]').forEach(x => { x.innerHTML = ldBody(id); }); }
+function ldLoad(id, branch) {
+if (!branch) { const r = (typeof allRows !== 'undefined' ? allRows : []).find(x => x.leadId === id); branch = r ? r.branch : ''; }
+ldPaint(id);
+run('getLeadDocuments', id, branch).then(d => { ldCache[id] = d; d.branch = branch; }).catch(e => { ldCache[id] = { err: errMsg(e) }; }).finally(() => ldPaint(id));
+}
+function ldFile(btn, open) {
+const id = btn.dataset.ldFor, d = ldCache[id] || {}, w = open ? window.open('', '_blank') : null;
+btn.disabled = true;
+run('getLeadDocFile', id, d.branch || '', btn.dataset.ldOpen || btn.dataset.ldDl).then(f => {
+const bin = atob(f.b64), bytes = new Uint8Array(bin.length);
+for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+const url = URL.createObjectURL(new Blob([bytes], { type: f.mime || 'application/octet-stream' }));
+if (w) { w.location.href = url; } else { const a = document.createElement('a'); a.href = url; a.download = f.name || 'document'; document.body.appendChild(a); a.click(); a.remove(); }
+setTimeout(() => URL.revokeObjectURL(url), 60000);
+}).catch(e => { if (w) w.close(); showToast(errMsg(e), 'error'); }).finally(() => { btn.disabled = false; });
+}
+document.addEventListener('click', e => {
+const b = e.target.closest('[data-ld-open],[data-ld-dl]');
+if (b) { e.stopPropagation(); ldFile(b, !!b.dataset.ldOpen); return; }
+const a = e.target.closest('[data-ld-app]');
+if (a && typeof window.atOpenAppDetail === 'function') { e.stopPropagation(); if (typeof window.openAppTeam === 'function') window.openAppTeam({ tab: 'list' }); setTimeout(() => window.atOpenAppDetail(a.dataset.ldApp), 600); }
+}, true);
 
  
 function insGoToLead(leadId, tab) {
@@ -13837,7 +13880,7 @@ body.tc-staff [data-group="visa"], body.tc-staff [data-group="lead-source"], bod
 body.tc-staff #leadsetBanner [data-leadset="main"], body.tc-staff #addLeadBtn, body.tc-staff #monthlyReportBtn,
 body.tc-staff #previewCounselorBtn, body.tc-staff #ceoViewBtn, body.tc-staff #bulkEmailBtn,
 body.tc-staff [data-edit-lead], body.tc-staff [data-delete-lead], body.tc-staff .branch-move-select, body.tc-staff .branch-move-btn,
-body.tc-staff .cv-row, body.tc-staff .auto-section, body.tc-staff [data-dt-tab="timeline"], body.tc-staff [data-sx-portal-lead],
+body.tc-staff .cv-row, body.tc-staff .auto-section, body.tc-staff [data-dt-tab="timeline"], body.tc-staff [data-dt-tab="docs"], body.tc-staff [data-sx-portal-lead],
 body.tc-staff .nav-group-divider { display: none !important; }
 </style>
 <script>
@@ -26989,6 +27032,13 @@ window.openAppContent = open;
 .app-doc-file.at-uploading .meta{color:var(--muted)}.at-up-bar{grid-column:2/-1;height:4px;border-radius:4px;background:rgba(0,0,0,.08);overflow:hidden;align-self:center}
 .at-up-bar i{display:block;height:100%;width:40%;background:var(--red);border-radius:4px;animation:akUpGo 1.1s ease-in-out infinite}.app-doc-file.done .at-up-bar i{width:100%;animation:none;background:var(--ok)}
 @keyframes akUpGo{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}</style>
+<style>
+.ld-head{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--muted);margin:6px 0 12px}.ld-track{flex:1;height:6px;border-radius:6px;background:var(--border);overflow:hidden}.ld-track i{display:block;height:100%;background:var(--ok)}
+.ld-apps{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.ld-app{border:1px solid var(--border);background:var(--card);color:var(--ink);border-radius:8px;padding:5px 10px;font:inherit;font-size:12px;cursor:pointer}
+.ld-file{display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--border)}.ld-fm{flex:1;min-width:0}.ld-fm b{display:block;font-size:13.5px}.ld-fm span{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ld-st{font-size:11.5px;font-weight:600;border-radius:6px;padding:3px 8px;background:var(--canvas);color:var(--muted)}.ld-st.Verified{color:var(--ok)}.ld-st.Rejected{color:var(--red)}
+.ld-empty{font-size:13px;color:var(--muted);padding:12px 0}.ld-miss{font-size:12.5px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)}
+@media (max-width:640px){.ld-file{flex-wrap:wrap}.ld-fm{flex-basis:100%}}</style>
 
 <style>
 #akInstallChip { position: fixed; left: 16px; bottom: 16px; z-index: 9500; display: none; align-items: center; gap: 10px; background: #201E2C; color: #fff; border-radius: 16px; padding: 10px 12px 10px 14px; box-shadow: 0 16px 34px -14px rgba(0,0,0,.6); font-size: 13px; font-weight: 600; animation: akChipIn .5s cubic-bezier(.2,.8,.2,1); max-width: calc(100vw - 32px); }
