@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
  
-window.AKBAR_BUILD = '2 Nov 2026 · v148';
+window.AKBAR_BUILD = '2 Nov 2026 · v149';
 
 
 (function () {
@@ -10809,7 +10809,7 @@ const pct = d.total ? Math.round(d.have / d.total * 100) : 0;
 const pill = (st, fid) => d.canReview ? '<select class="ld-sel ' + escapeHtml(st) + '" data-ld-st="' + escapeHtml(fid) + '" data-ld-for="' + escapeHtml(id) + '" aria-label="Status">' + ['Uploaded', 'Verified', 'Rejected'].map(x => '<option' + (x === st ? ' selected' : '') + '>' + x + '</option>').join('') + '</select>' : '<span class="ld-st ' + escapeHtml(st) + '">' + escapeHtml(st) + '</span>';
 const when = at => at ? new Date(at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
 const files = d.docs.length ? d.docs.map(x => '<div class="ld-file"><div class="ld-fm"><b>' + escapeHtml(x.type) + '</b><span>' + escapeHtml(x.name) + ' · ' + x.sizeKb + ' KB · ' + escapeHtml(x.fromStudent ? 'student, in the app' : (x.by || 'team')) + (x.at ? ' · ' + when(x.at) : '') + (x.notes && !/via student portal/i.test(x.notes) ? ' · ' + escapeHtml(x.notes) : '') + '</span></div>' + pill(x.status, x.fileId) +
-'<button class="um-btn" data-ld-open="' + escapeHtml(x.fileId) + '" data-ld-for="' + escapeHtml(id) + '">Open</button><button class="um-btn" data-ld-dl="' + escapeHtml(x.fileId) + '" data-ld-for="' + escapeHtml(id) + '">Download</button></div>').join('')
+'<button class="um-btn" data-ld-open="' + escapeHtml(x.fileId) + '" data-ld-for="' + escapeHtml(id) + '">View</button><button class="um-btn" data-ld-dl="' + escapeHtml(x.fileId) + '" data-ld-for="' + escapeHtml(id) + '">Download</button></div>').join('')
 : '<div class="ld-empty">Nothing uploaded yet. The student can upload from the app (🎓 Student portal), or the application team from Applications → Documents.</div>';
 const missing = d.checklist.filter(c => c.status === 'Missing').map(c => c.type);
 return '<div class="ld-head"><span>' + d.have + ' of ' + d.total + ' required documents · ' + d.verified + ' verified' + (d.rejected ? ' · <b style="color:var(--red)">' + d.rejected + ' rejected</b>' : '') + '</span><div class="ld-track"><i style="width:' + pct + '%"></i></div><span>' + pct + '%</span></div>' +
@@ -10823,7 +10823,9 @@ ldPaint(id);
 ldRun('getLeadDocuments', id, branch).then(d => { ldCache[id] = d; d.branch = branch; }).catch(e => { ldCache[id] = { err: ldErr(e) }; }).finally(() => ldPaint(id));
 }
 function ldFile(btn, open) {
-const id = btn.dataset.ldFor, d = ldCache[id] || {}, w = open ? window.open('', '_blank') : null;
+const id = btn.dataset.ldFor, d = ldCache[id] || {};
+if (open && typeof window.akDocViewer === 'function') { const f = (d.docs || []).find(x => x.fileId === btn.dataset.ldOpen) || {}; window.akDocViewer((f.type ? f.type + ' · ' : '') + (f.name || 'Document'), () => ldRun('getLeadDocFile', id, d.branch || '', btn.dataset.ldOpen), btn); return; }
+const w = null;
 btn.disabled = true;
 ldRun('getLeadDocFile', id, d.branch || '', btn.dataset.ldOpen || btn.dataset.ldDl).then(f => {
 const bin = atob(f.b64), bytes = new Uint8Array(bin.length);
@@ -12524,7 +12526,7 @@ $('appTeamView').appendChild(bg);
 const box = bg.firstElementChild;
 box.style.maxWidth = (opts.width || 640) + 'px';
 box.dataset.app = opts.dataApp || '';
-box.innerHTML = `<div class="at-mhead"><div style="flex:1;min-width:0;"><div class="t">${opts.title}</div>${opts.subtitle ? `<div class="st">${opts.subtitle}</div>` : ''}</div>${opts.headActions || ''}<button class="icon-btn" data-close aria-label="Close" title="Close">✕</button></div>
+box.innerHTML = `<div class="at-mhead ${opts.hero ? 'hero' : ''}">${opts.hero ? `<span class="at-mav">${opts.hero}</span>` : ''}<div style="flex:1;min-width:0;">${opts.eyebrow ? `<div class="at-meb">${opts.eyebrow}</div>` : ''}<div class="t">${opts.title}</div>${opts.subtitle ? `<div class="st">${opts.subtitle}</div>` : ''}</div><button class="icon-btn" data-close aria-label="Close" title="Close">✕</button>${opts.headActions || ''}</div>
 <div class="at-mbody">${opts.body || ''}</div>${opts.foot ? `<div class="at-mfoot">${opts.foot}</div>` : ''}`;
 box.querySelector('[data-close]').onclick = () => closeModal(id);
 bg.style.zIndex = ++AT.modalZ;
@@ -12591,8 +12593,9 @@ const mgr = ((AT.dash && AT.dash.meta.managers) || {})[r.branch] || null;
 const sla = pending && pendingDays !== null && pendingDays > 7 ? `<div class="at-sla"><span class="grow"><b>Pending ${pendingDays} days</b> · past the 7-day window for submission</span>
 <button class="um-btn danger" id="atEscalate" ${mgr && mgr.phone ? '' : `disabled title="No manager phone set for ${esc(r.branch)} in the Branches sheet"`}>Escalate on WhatsApp</button></div>` : '';
 const box = openModal('atDetailBg', {
-title: esc(r.id) + ' · ' + esc(r.student), dataApp: String(r.row || r.id), subtitle: esc([r.branch, r.country, r.university].filter(Boolean).join(' · ')), width: 760,
-headActions: `<div class="at-hacts"><button class="um-btn primary" id="atDetailEdit">Edit</button><button class="um-btn" id="atDetailDocs">Documents</button><button class="um-btn" id="atDetailKey" title="Deadlines, offer letter and CAS with expiry reminders">Dates, offer &amp; CAS</button><button class="um-btn" id="atDetailReqDocs" title="Ask the counsellor for documents (list by country)">Request documents</button><button class="um-btn" id="atDetailCond" title="The university gave a condition — tell the branch manager and counsellor">Condition</button><button class="um-btn" id="atDetailVisa" title="Hand this student to the visa team">Send to visa</button>${chaseDays(r) !== null || (r.flags.indexOf('S') !== -1 && r.flags.indexOf('O') === -1) ? '<button class="um-btn" id="atDetailChase" title="You chased the university today — the reminder restarts">Chased university today</button>' : ''}<button class="um-btn" id="atDetailAnother" title="Same student, another university">Another university</button>${window._isSuperAdmin ? '<button class="um-btn at-del" id="atDetailDel" title="Super Admins: delete this application (a full copy is kept)">Delete</button>' : ''}</div>`,
+hero: esc(String(r.student || '?').trim().split(/\s+/).slice(0, 2).map(w => w.charAt(0)).join('').toUpperCase()), eyebrow: esc(r.id) + ' · ' + esc(PIPE_LABEL[r.pipe] || r.pipe || ''),
+title: esc(r.student), dataApp: String(r.row || r.id), subtitle: [r.branch, r.country, r.university, (window.akIntake || (x => x))(r.intake)].filter(Boolean).map(x => '<span class="at-mchip">' + esc(x) + '</span>').join(''), width: 800,
+headActions: `<div class="at-hacts"><button class="um-btn primary" id="atDetailEdit">Edit</button><button class="um-btn" id="atDetailDocs">Documents</button><button class="um-btn" id="atDetailKey" title="Deadlines, offer letter and CAS with expiry reminders">Dates, offer &amp; CAS</button><button class="um-btn" id="atDetailReqDocs" title="Ask the counsellor for documents (list by country)">Request documents</button><button class="um-btn" id="atDetailCond" title="The university gave a condition — tell the branch manager and counsellor">Condition</button><button class="um-btn" id="atDetailVisa" title="Hand this student to the visa team">Send to visa</button>${chaseDays(r) !== null || (r.flags.indexOf('S') !== -1 && r.flags.indexOf('O') === -1) ? '<button class="um-btn" id="atDetailChase" title="You chased the university today — the reminder restarts">Chased university today</button>' : ''}<button class="um-btn" id="atDetailAnother" title="Same student, another university">Another university</button>${window._isSuperAdmin ? '<span class="at-hsep"></span><button class="um-btn at-del" id="atDetailDel" title="Super Admins: delete this application (a full copy is kept)">Delete</button>' : ''}</div>`,
 body: `${stepsHtml(r)}${sla}<div class="at-student-apps" id="atStudentApps"><div class="card-section-title">This student's applications</div><div class="skeleton" style="height:40px;"></div></div><div id="atAppReqs"></div><div class="at-2col" style="margin-bottom:0;">
 <div><div class="at-detail-grid">
 ${field('Student', esc(r.student))}${field('Student ID', esc(r.studentId))}
@@ -12890,21 +12893,22 @@ function getUploaderName() { try { return localStorage.getItem('at_uploader') ||
 function setUploaderName(v) { try { localStorage.setItem('at_uploader', v); } catch (e) {   } }
 
 function openStudentDocsModal(appId) {
-const box = openModal('atDocsBg', { title: 'Documents', subtitle: esc(appId), width: 860, body: '<div class="skeleton" style="height:260px;"></div>', dataApp: 'docs:' + appId });
+const box = openModal('atDocsBg', { title: 'Documents', subtitle: esc(appId), eyebrow: 'Student documents', hero: '&nbsp;', width: 860, body: '<div class="skeleton" style="height:260px;"></div>', dataApp: 'docs:' + appId });
 run('getStudentDocuments', appId).then(d => { if (box.dataset.app === 'docs:' + appId) renderDocsModal(box, d); }).catch(err => { box.querySelector('.at-mbody').innerHTML = `<div class="at-empty">${esc(errMsg(err))}</div>`; });
 }
 
 function renderDocsModal(box, d) {
 const a = d.app, p = d.progress;
-box.querySelector('.t').textContent = a.student + ' · ' + a.id;
-box.querySelector('.st').textContent = [a.exec, a.country, a.university, a.course].filter(Boolean).join(' · ');
+box.querySelector('.t').textContent = a.student;
+box.querySelector('.st').innerHTML = [a.id, a.exec, a.country, a.university, a.course].filter(Boolean).map(x => '<span class="at-mchip">' + esc(x) + '</span>').join('');
+{ const av = box.querySelector('.at-mav'); if (av) av.textContent = String(a.student || '?').trim().split(/\s+/).slice(0, 2).map(w => w.charAt(0)).join('').toUpperCase(); }
 const exts = d.allowedExtensions.map(x => '.' + x).join(',');
 const fileRow = (x, showType) => `<div class="app-doc-file" data-file="${esc(x.fileId)}">
 <div>${showType ? `<div class="meta" style="font-weight:600;color:var(--ink);">${esc(x.type)}</div>` : ''}<div class="fn" title="${esc(x.name)}">${esc(x.name)}</div><div class="meta">${x.sizeKb} KB</div></div>
 <div class="meta">${esc(x.by)}<br>${x.at ? esc(new Date(x.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })) : ''}</div>
 <select data-status aria-label="Status" ${d.canReview ? '' : 'disabled title="Only Managers and Super Admins can verify or reject"'}>${['Uploaded', 'Verified', 'Rejected'].map(s => `<option ${s === x.status ? 'selected' : ''}>${s}</option>`).join('')}</select>
 <input data-note placeholder="Note…" value="${esc(x.notes)}" aria-label="Note">
-<div class="acts"><button class="um-btn at-mini" data-dl title="Download">Download</button><button class="um-btn at-mini at-del" data-rm title="Remove">Remove</button></div>
+<div class="acts"><button class="um-btn at-mini" data-view title="View here">View</button><button class="um-btn at-mini" data-dl title="Download">Download</button><button class="um-btn at-mini at-del" data-rm title="Remove">Remove</button></div>
 </div>`;
 const docsFor = type => d.docs.filter(x => x.type.toLowerCase() === type.toLowerCase());
 const requiredLower = d.required.map(x => x.toLowerCase());
@@ -12961,6 +12965,7 @@ run('setDocumentStatus', fileId, st.value, note.value).then(res => { showToast('
 st.onchange = save;
 note.addEventListener('change', save);
 row.querySelector('[data-dl]').onclick = e => downloadDoc(fileId, e.currentTarget);
+row.querySelector('[data-view]').onclick = e => { const b = e.currentTarget; if (typeof window.akDocViewer === 'function') window.akDocViewer(row.querySelector('.fn').textContent, () => run('getDocumentFile', fileId), b); };
 row.querySelector('[data-rm]').onclick = () => {
 if (!confirm('Remove this file? It moves to Drive trash and stays in the log for audit.')) return;
 row.classList.add('at-busy');
@@ -15657,8 +15662,8 @@ const slow = setTimeout(() => { if (HR.tab === tab && HR.state[tab] === 'loading
 FETCH[tab]().then(d => { clearTimeout(slow); HR.state[tab] = 'ready'; HR.cache[tab] = d; if (keep) hrSave(tab, d); if (HR.tab === tab && !(saved && $('hrModalBg') && $('hrModalBg').classList.contains('open'))) RENDER[tab](d); })
 .catch(e => { clearTimeout(slow); HR.state[tab] = 'idle'; if (HR.tab === tab && $('hrBody')) $('hrBody').innerHTML = empty(errMsg(e)); });
 }
-const HR_KEEP = ['team-hub', 'leave'];
-const hrKey = tab => 'akbar_hr_' + tab + '_' + String(localStorage.getItem('lo_token') || '').slice(-10);
+const HR_KEEP = ['team-hub', 'leave', 'attendance'];
+const hrKey = tab => 'akbar_hr_' + tab + (tab === 'attendance' ? '_' + [HR.f.attendance.month, HR.f.attendance.branch || '', HR.f.attendance.who || ''].join('_') : '') + '_' + String(localStorage.getItem('lo_token') || '').slice(-10);
 function hrSaved(tab) { try { const x = JSON.parse(localStorage.getItem(hrKey(tab)) || 'null'); return x && Date.now() - x.at < 864e5 ? x.d : null; } catch (e) { return null; } }
 function hrSave(tab, d) { try { localStorage.setItem(hrKey(tab), JSON.stringify({ at: Date.now(), d: d })); } catch (e) {   } }
 const reload = tab => { HR.state[tab || HR.tab] = 'idle'; HR.state['team-hub'] = 'idle'; if (!tab || tab === HR.tab) go(HR.tab); };
@@ -27293,6 +27298,178 @@ window.openAppContent = open;
 
 .lt-kind { font-size: 11px; color: var(--muted); margin-top: 2px; }
 .lt-kind.none { color: var(--warm); }
+</style>
+
+<div id="akDv" class="ak-dv" role="dialog" aria-modal="true" aria-label="Document"><div class="ak-dv-bar"><div class="ak-dv-t"><small>Document</small><b id="akDvName"></b></div><button class="um-btn" id="akDvDl">Download</button><button class="um-btn" id="akDvX">Close</button></div><div class="ak-dv-body" id="akDvBody"></div></div>
+<div id="akPu" class="ak-pu-bg" role="dialog" aria-modal="true" aria-label="Attendance"><div class="ak-pu"><div class="ak-pu-h"><div><small>Attendance</small><b id="akPuT">Punch in</b><span id="akPuS"></span></div><button class="icon-btn" id="akPuX" aria-label="Close">✕</button></div><div class="ak-pu-b" id="akPuB"></div></div></div>
+<script>
+(function () {
+const $ = id => document.getElementById(id);
+const esc = v => (typeof escapeHtml === 'function' ? escapeHtml(v == null ? '' : v) : String(v == null ? '' : v));
+const call = (fn, ...a) => promisifyRun(fn, window._authToken || '', ...a);
+const err = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
+const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t || 'success'); };
+
+let dvUrl = '', dvFile = null;
+function dvClose() { $('akDv').classList.remove('on'); document.body.style.overflow = ''; setTimeout(() => { $('akDvBody').innerHTML = ''; if (dvUrl) URL.revokeObjectURL(dvUrl); dvUrl = ''; }, 250); }
+window.akDocViewer = function (name, fetcher, btn) {
+if (btn) btn.disabled = true;
+$('akDvName').textContent = name || 'Document';
+$('akDvBody').innerHTML = '<div class="ak-dv-load"><span></span>Opening…</div>';
+$('akDv').classList.add('on'); document.body.style.overflow = 'hidden';
+fetcher().then(f => {
+dvFile = f;
+const bin = atob(f.b64), bytes = new Uint8Array(bin.length);
+for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+if (dvUrl) URL.revokeObjectURL(dvUrl);
+dvUrl = URL.createObjectURL(new Blob([bytes], { type: f.mime || 'application/octet-stream' }));
+const m = String(f.mime || '');
+$('akDvBody').innerHTML = /^image\x2F/.test(m) ? '<div class="ak-dv-img"><img alt="" src="' + dvUrl + '"></div>'
+: /pdf/.test(m) ? '<iframe title="Document" src="' + dvUrl + '#view=FitH"></iframe>'
+: '<div class="ak-dv-load">This file type can’t be shown here. Use Download to open it.</div>';
+}).catch(e => { $('akDvBody').innerHTML = '<div class="ak-dv-load">' + esc(err(e)) + '</div>'; }).finally(() => { if (btn) btn.disabled = false; });
+};
+$('akDvX').onclick = dvClose;
+$('akDvDl').onclick = () => { if (!dvUrl) return; const a = document.createElement('a'); a.href = dvUrl; a.download = (dvFile && dvFile.name) || 'document'; document.body.appendChild(a); a.click(); a.remove(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('akDv').classList.contains('on')) { e.stopPropagation(); dvClose(); } }, true);
+
+
+let P = null;
+const clock = t => t ? new Date(t).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : '';
+const map = p => p.lat !== '' && p.lat != null ? 'https:' + '\x2F\x2Fmaps.google.com\x2F?q=' + p.lat + ',' + p.lng : '';
+function geo() {
+return new Promise(res => {
+if (!navigator.geolocation) return res(null);
+navigator.geolocation.getCurrentPosition(p => res({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy }), () => res(null), { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+});
+}
+function label() {
+if (!P) return 'Punch in';
+const last = P.today.filter(x => x.type === 'In' || x.type === 'Out').pop();
+return P.in ? 'In · ' + clock(last && last.at) : last ? 'Out · ' + clock(last.at) : 'Punch in';
+}
+function paintButtons() { document.querySelectorAll('[data-ak-punch]').forEach(b => { b.classList.toggle('in', !!(P && P.in)); b.querySelector('span').textContent = label(); }); }
+function row(p) {
+const tone = p.where === 'In office' || p.where === 'Field visit' ? 'ok' : p.where === 'Outside office' ? 'warn' : 'mute';
+return '<div class="ak-pu-r"><span class="ak-pu-ty ' + p.type.toLowerCase() + '">' + esc(p.type === 'Visit' ? 'Visit' : 'Punch ' + p.type.toLowerCase()) + '</span><div class="tx"><b>' + esc(p.type === 'Visit' ? p.place : (p.userName && P && P.teamView ? p.userName : clock(p.at))) + '</b><small>' + esc([P && P.teamView ? clock(p.at) : '', p.type === 'Visit' ? clock(p.at) : '', p.distance !== '' && p.distance != null && p.type !== 'Visit' ? (p.distance >= 1000 ? (p.distance / 1000).toFixed(1) + ' km' : p.distance + ' m') + ' from office' : '', p.notes].filter(Boolean).join(' · ')) + '</small></div><span class="ak-pu-w ' + tone + '">' + esc(p.where) + '</span>' + (map(p) ? '<a class="um-btn ak-pu-map" target="_blank" rel="noopener" href="' + map(p) + '">Map</a>' : '') + '</div>';
+}
+function render(msg) {
+if (!P) { $('akPuB').innerHTML = '<div class="ak-dv-load"><span></span>Loading…</div>'; return; }
+const last = P.today.filter(x => x.type === 'In' || x.type === 'Out').pop();
+$('akPuT').textContent = P.in ? 'You are punched in' : 'Punch in';
+$('akPuS').textContent = P.in ? 'Since ' + clock(last.at) + ' · ' + last.where : last ? 'Punched out at ' + clock(last.at) : 'Not punched in today';
+$('akPuB').innerHTML = (msg ? '<div class="ak-pu-msg">' + esc(msg) + '</div>' : '') +
+'<button class="ak-pu-big ' + (P.in ? 'out' : '') + '" id="akPuGo"><span class="ring"></span><b>' + (P.in ? 'Punch out' : 'Punch in') + '</b><small>Your location is read once, when you tap</small></button>' +
+(P.office ? '' : '<div class="ak-pu-note">The office location for ' + esc(P.branch || 'your branch') + ' is not set yet, so punches can’t be checked against it.' + (P.canSetOffice ? '' : ' Ask your manager to set it.') + '</div>') +
+'<div class="ak-pu-sec"><h4>Field visit</h4><div class="ak-pu-visit"><input id="akPuPlace" placeholder="Where are you? e.g. ABC College, agent office" maxlength="120"><button class="um-btn" id="akPuVisit">Check in here</button></div></div>' +
+'<div class="ak-pu-sec"><h4>Today</h4>' + (P.today.length ? P.today.slice().reverse().map(row).join('') : '<div class="ak-pu-none">Nothing yet today</div>') + '</div>' +
+(P.isLead || P.canSetOffice ? '<div class="ak-pu-sec ak-pu-tools">' + (P.isLead ? '<button class="um-btn" id="akPuTeam">Team punches today</button>' : '') + (P.canSetOffice ? '<button class="um-btn" id="akPuOffice">Set ' + esc(P.branch || 'office') + ' office location to where I am</button>' : '') + '</div><div id="akPuTeamL"></div>' : '');
+$('akPuGo').onclick = () => act(P.in ? 'Out' : 'In');
+$('akPuVisit').onclick = () => { const pl = $('akPuPlace').value.trim(); if (!pl) { $('akPuPlace').focus(); return; } act('Visit', pl); };
+const tb = $('akPuTeam'); if (tb) tb.onclick = team;
+const ob = $('akPuOffice'); if (ob) ob.onclick = () => {
+if (!confirm('Save your current position as the ' + (P.branch || '') + ' office? Do this while standing inside the office.')) return;
+ob.disabled = true; ob.textContent = 'Reading location…';
+geo().then(g => { if (!g) throw new Error('Location blocked — allow location for this site and try again.'); return call('setOfficeLocation', P.branch, g); })
+.then(st => { P = st; render('Office location saved'); }).catch(e => { ob.disabled = false; toast(err(e), 'error'); render(); });
+};
+}
+function act(type, place) {
+const btn = type === 'Visit' ? $('akPuVisit') : $('akPuGo');
+if (btn) { btn.disabled = true; btn.classList.add('busy'); }
+geo().then(g => {
+if (!g && !confirm('Location is blocked or unavailable. Save this ' + (type === 'Visit' ? 'check-in' : 'punch') + ' without location?')) throw new Error('cancelled');
+return call('punch', type, g || {}, place || '', '');
+}).then(st => { P = st; paintButtons(); render(type === 'In' ? 'Punched in' : type === 'Out' ? 'Punched out' : 'Checked in at ' + place); toast(type === 'Visit' ? 'Checked in' : 'Punched ' + type.toLowerCase()); })
+.catch(e => { if (btn) { btn.disabled = false; btn.classList.remove('busy'); } if (err(e) !== 'cancelled') toast(err(e), 'error'); });
+}
+function team() {
+const host = $('akPuTeamL'); host.innerHTML = '<div class="ak-dv-load"><span></span>Loading…</div>';
+call('getTeamPunches', '').then(d => { const keep = P; P = Object.assign({}, P, { teamView: true }); host.innerHTML = '<div class="ak-pu-sec"><h4>Team today · ' + d.rows.length + '</h4>' + (d.rows.length ? d.rows.map(row).join('') : '<div class="ak-pu-none">No punches yet</div>') + '</div>'; P = keep; })
+.catch(e => { host.innerHTML = '<div class="ak-pu-none">' + esc(err(e)) + '</div>'; });
+}
+window.akOpenPunch = function () { $('akPu').classList.add('on'); render(); call('getPunchState').then(st => { P = st; paintButtons(); render(); }).catch(e => { $('akPuB').innerHTML = '<div class="ak-pu-none">' + esc(err(e)) + '</div>'; }); };
+$('akPuX').onclick = () => $('akPu').classList.remove('on');
+$('akPu').addEventListener('click', e => { if (e.target === $('akPu')) $('akPu').classList.remove('on'); });
+
+const btnHtml = '<button class="ak-punch" data-ak-punch type="button" title="Punch in / out and field check-ins"><i></i><span>Punch in</span></button>';
+function place() {
+if (!window._authToken) return;
+[['.topbar #clockDisplay', 'afterend'], ['#appTeamView .at-actions', 'afterbegin'], ['#b2bView .sx-top > div:last-child', 'afterbegin'], ['#hrView .sx-top > div:last-child', 'afterbegin']].forEach(([sel, pos]) => {
+const el = document.querySelector(sel); if (!el) return;
+const host = pos === 'afterend' ? el.parentNode : el;
+if (host.querySelector(':scope > [data-ak-punch]')) return;
+el.insertAdjacentHTML(pos, btnHtml); paintButtons();
+});
+}
+document.addEventListener('click', e => { if (e.target.closest('[data-ak-punch]')) { e.preventDefault(); window.akOpenPunch(); } });
+let q = false;
+new MutationObserver(() => { if (q) return; q = true; setTimeout(() => { q = false; place(); }, 300); }).observe(document.body, { childList: true, subtree: true });
+const first = setInterval(() => { if (!window._authToken) return; clearInterval(first); place(); call('getPunchState').then(st => { P = st; paintButtons(); }).catch(() => {}); }, 3000);
+})();
+</script>
+<style>
+
+.ak-dv { position: fixed; inset: 0; z-index: 30000; display: flex; flex-direction: column; background: rgba(9,11,22,.92); backdrop-filter: blur(6px); opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+.ak-dv.on { opacity: 1; pointer-events: auto; }
+.ak-dv-bar { display: flex; align-items: center; gap: 8px; padding: 14px 20px; color: #fff; border-bottom: 1px solid rgba(184,146,90,.35); background: linear-gradient(135deg, #0E1222, #1A2040); }
+.ak-dv-t { flex: 1; min-width: 0; } .ak-dv-t small { display: block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #C9A774; }
+.ak-dv-t b { display: block; font-family: 'Fraunces', serif; font-weight: 500; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ak-dv-bar .um-btn { background: rgba(255,255,255,.07) !important; border: 1px solid rgba(255,255,255,.18) !important; color: #fff !important; box-shadow: none !important; }
+.ak-dv-body { flex: 1; min-height: 0; display: flex; }
+.ak-dv-body iframe { flex: 1; border: 0; background: #fff; }
+.ak-dv-img { flex: 1; overflow: auto; display: grid; place-items: center; padding: 24px; }
+.ak-dv-img img { max-width: 100%; max-height: calc(100vh - 120px); border-radius: 8px; box-shadow: 0 30px 60px -20px rgba(0,0,0,.6); background: #fff; }
+.ak-dv-load { margin: auto; color: rgba(255,255,255,.75); font-size: 14px; display: flex; align-items: center; gap: 10px; }
+.ak-dv-load span { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,.2); border-top-color: #C9A774; animation: akSpin .8s linear infinite; }
+@keyframes akSpin { to { transform: rotate(360deg); } }
+
+#appTeamView .at-mbox .at-mhead { position: relative; overflow: hidden; align-items: center; column-gap: 14px; padding: 22px 24px 18px; background: radial-gradient(600px 200px at 100% -20%, rgba(184,146,90,.22), transparent 60%), linear-gradient(135deg, #0E1222, #182042 70%, #1E2546); }
+#appTeamView .at-mbox .at-mhead::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.07) 48%, transparent 60%); transform: translateX(-100%); animation: akSheen 1.6s cubic-bezier(.22,1,.36,1) .15s 1 forwards; }
+@keyframes akSheen { to { transform: translateX(100%); } }
+.at-mav { width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-family: 'Fraunces', serif; font-size: 19px; color: #F4E6CF; background: linear-gradient(160deg, #2A3256, #151A31); box-shadow: inset 0 0 0 1px rgba(201,167,116,.55), 0 10px 24px -10px rgba(0,0,0,.6); }
+.at-meb { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #C9A774; font-weight: 600; margin-bottom: 4px; }
+#appTeamView .at-mbox .at-mhead .t { font-size: 22px !important; line-height: 1.15; }
+#appTeamView .at-mbox .at-mhead .st { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.at-mchip { font-size: 11.5px; color: rgba(255,255,255,.78); border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 3px 10px; background: rgba(255,255,255,.04); }
+.at-hacts { order: 9; flex: 1 1 100%; display: flex !important; flex-wrap: nowrap !important; overflow-x: auto; scrollbar-width: none; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.08); }
+.at-hacts .um-btn { white-space: nowrap; flex-shrink: 0; }
+.at-hacts .at-del, #appTeamView .at-hacts .at-del { margin-left: 0 !important; }
+.at-hsep { flex: 1 0 12px; }
+#appTeamView .at-mbox .at-mhead [data-close] { align-self: flex-start; }
+
+.ak-punch { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); color: var(--ink); border-radius: 999px; padding: 7px 14px 7px 11px; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.ak-punch i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); box-shadow: 0 0 0 3px rgba(110,107,124,.15); }
+.ak-punch.in i { background: #1F9D63; box-shadow: 0 0 0 3px rgba(31,157,99,.18); }
+.at-top .ak-punch, .sx-top .ak-punch { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); color: #fff; }
+.ak-pu-bg { position: fixed; inset: 0; z-index: 29000; background: rgba(9,11,22,.55); backdrop-filter: blur(4px); display: flex; align-items: flex-start; justify-content: center; padding: 6vh 14px; overflow-y: auto; opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+.ak-pu-bg.on { opacity: 1; pointer-events: auto; }
+.ak-pu { width: 100%; max-width: 520px; background: var(--card); color: var(--ink); border-radius: 22px; overflow: hidden; box-shadow: 0 40px 80px -30px rgba(9,11,22,.6); transform: translateY(8px); transition: transform .3s cubic-bezier(.22,1,.36,1); }
+.ak-pu-bg.on .ak-pu { transform: none; }
+.ak-pu-h { display: flex; align-items: flex-start; gap: 10px; padding: 22px 22px 18px; color: #fff; background: radial-gradient(500px 180px at 100% -20%, rgba(184,146,90,.22), transparent 60%), linear-gradient(135deg, #0E1222, #1A2040); border-bottom: 1px solid rgba(184,146,90,.35); }
+.ak-pu-h > div { flex: 1; } .ak-pu-h small { display: block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #C9A774; font-weight: 600; }
+.ak-pu-h b { display: block; font-family: 'Fraunces', serif; font-weight: 500; font-size: 22px; margin-top: 4px; } .ak-pu-h span { display: block; font-size: 12.5px; color: rgba(255,255,255,.65); margin-top: 4px; }
+.ak-pu-h .icon-btn { color: #fff; opacity: .7; }
+.ak-pu-b { padding: 18px 22px 22px; }
+.ak-pu-big { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; border: 0; cursor: pointer; font: inherit; color: #fff; border-radius: 18px; padding: 22px 16px 18px; background: linear-gradient(160deg, #232A4A, #0E1222); box-shadow: 0 18px 36px -18px rgba(14,18,34,.8); position: relative; }
+.ak-pu-big.out { background: linear-gradient(160deg, #3A1D27, #1A0E14); }
+.ak-pu-big .ring { width: 54px; height: 54px; border-radius: 50%; border: 2px solid rgba(201,167,116,.65); display: grid; place-items: center; }
+.ak-pu-big .ring::after { content: ''; width: 18px; height: 18px; border-radius: 50%; background: #C9A774; }
+.ak-pu-big.out .ring::after { background: #FF8A93; border-radius: 4px; }
+.ak-pu-big.busy .ring { border-top-color: transparent; animation: akSpin .9s linear infinite; }
+.ak-pu-big b { font-family: 'Fraunces', serif; font-weight: 500; font-size: 20px; } .ak-pu-big small { font-size: 12px; color: rgba(255,255,255,.6); }
+.ak-pu-msg { font-size: 13px; font-weight: 600; color: #1F9D63; margin-bottom: 12px; }
+.ak-pu-note { font-size: 12.5px; color: var(--warm); background: var(--warm-bg); border-radius: 10px; padding: 10px 12px; margin-top: 12px; }
+.ak-pu-sec { margin-top: 18px; } .ak-pu-sec h4 { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.ak-pu-visit { display: flex; gap: 8px; } .ak-pu-visit input { flex: 1; min-width: 0; border: 1px solid var(--border); border-radius: 10px; padding: 9px 11px; font: inherit; font-size: 13px; background: var(--card); color: var(--ink); }
+.ak-pu-r { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+.ak-pu-r .tx { flex: 1; min-width: 0; } .ak-pu-r .tx b { display: block; font-size: 13.5px; } .ak-pu-r .tx small { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ak-pu-ty { font-size: 11px; font-weight: 600; border-radius: 6px; padding: 3px 8px; background: var(--canvas); color: var(--ink); white-space: nowrap; }
+.ak-pu-w { font-size: 11.5px; font-weight: 600; white-space: nowrap; } .ak-pu-w.ok { color: #1F9D63; } .ak-pu-w.warn { color: var(--warm); } .ak-pu-w.mute { color: var(--muted); }
+.ak-pu-map { padding: 4px 10px !important; font-size: 11.5px !important; text-decoration: none; }
+.ak-pu-none { font-size: 13px; color: var(--muted); padding: 8px 0; }
+.ak-pu-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 640px) { .topbar .ak-punch span { display: none; } .topbar .ak-punch { padding: 8px; } }
 </style>
 
 <style>
