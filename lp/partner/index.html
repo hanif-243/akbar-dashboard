@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Partner desk · Akbar Study Abroad</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#302D40">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* PARTNER DESK (2 Nov 2026, v154): aggregators and partners see only the requests passed to them and chat with our team */
+:root { --navy: #302D40; --red: #F22F3D; --blue: #3E6BD6; --ink: #1E1B2B; --mut: #6B6878; --line: #E8E7EE; --bg: #F6F6F9; --card: #fff; --ok: #1F8A5B; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 400 14px/1.45 Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.top { background: var(--navy); color: #fff; border-bottom: 3px solid var(--red); }
+.top .in { max-width: 1200px; margin: 0 auto; padding: 20px 24px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.top small { display: block; font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: #FF8A93; }
+.top h1 { margin: 2px 0 0; font: 500 24px/1.2 Fraunces, Georgia, serif; }
+.top p { margin: 4px 0 0; font-size: 13px; color: rgba(255,255,255,.75); }
+.top .sp { flex: 1; }
+.top .stat { text-align: right; } .top .stat b { display: block; font: 600 22px/1 Fraunces, Georgia, serif; font-variant-numeric: tabular-nums; } .top .stat span { font-size: 12px; color: rgba(255,255,255,.7); }
+.btn { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 8px 14px; cursor: pointer; font-weight: 500; }
+.btn:hover { border-color: #C9C7D4; } .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+.btn.pri { background: var(--red); border-color: var(--red); color: #fff; } .btn.pri:hover { background: #D92533; }
+.btn.ghost { background: transparent; color: #fff; border-color: rgba(255,255,255,.3); }
+.btn:disabled { opacity: .55; cursor: default; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 20px 24px 40px; display: grid; grid-template-columns: 360px 1fr; gap: 16px; align-items: start; }
+.list { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.tabs { display: flex; gap: 4px; padding: 8px; border-bottom: 1px solid var(--line); }
+.tabs button { flex: 1; border: 0; background: transparent; border-radius: 8px; padding: 7px; cursor: pointer; color: var(--mut); font-weight: 500; }
+.tabs button.on { background: var(--bg); color: var(--ink); }
+.it { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line); background: transparent; padding: 12px 14px; cursor: pointer; }
+.it:last-child { border-bottom: 0; } .it:hover { background: #FAFAFC; } .it.on { background: #F1F4FC; box-shadow: inset 3px 0 0 var(--blue); }
+.it .r1 { display: flex; gap: 8px; align-items: center; } .it .r1 b { flex: 1; font-weight: 600; }
+.it .r2 { font-size: 12.5px; color: var(--mut); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+.st { font-size: 11.5px; font-weight: 500; border-radius: 999px; padding: 2px 9px; background: var(--bg); color: var(--mut); white-space: nowrap; }
+.st.New { background: #E9EFFC; color: #2F57B8; } .st.Contacted { background: #FDF1E2; color: #8A5410; } .st.Quote { background: #EFEAFB; color: #5B34B8; } .st.Booked { background: #E4F4EC; color: var(--ok); }
+.det { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; min-height: 420px; }
+.det h2 { margin: 0; font: 500 22px/1.25 Fraunces, Georgia, serif; } .det .meta { color: var(--mut); font-size: 13px; margin-top: 4px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 16px 0; }
+.facts div { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; } .facts small { display: block; font-size: 11.5px; color: var(--mut); } .facts b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.sum { white-space: pre-wrap; background: var(--bg); border-radius: 10px; padding: 12px; font-size: 13.5px; }
+.act { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 16px 0 10px; }
+.act label, .msg label { display: block; font-size: 12px; color: var(--mut); margin-bottom: 4px; }
+.act select, .act input, .msg textarea { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; background: #fff; }
+.chat { border: 1px solid var(--line); border-radius: 12px; background: var(--bg); padding: 12px; height: 320px; overflow: auto; display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.m { max-width: 78%; align-self: flex-start; background: #fff; border: 1px solid var(--line); border-radius: 12px 12px 12px 4px; padding: 8px 10px; }
+.m.me { align-self: flex-end; background: var(--navy); border-color: var(--navy); color: #fff; border-radius: 12px 12px 4px 12px; }
+.m .w { font-size: 11px; color: var(--mut); margin-bottom: 2px; } .m.me .w { color: rgba(255,255,255,.7); } .m .t { white-space: pre-wrap; word-break: break-word; }
+.sys { align-self: center; font-size: 11.5px; color: var(--mut); text-align: center; }
+.msg { display: flex; gap: 8px; align-items: flex-end; margin-top: 10px; } .msg > div { flex: 1; } .msg textarea { min-height: 48px; resize: vertical; }
+.empty { color: var(--mut); text-align: center; padding: 48px 16px; }
+.back { display: none; margin-bottom: 12px; }
+.note { font-size: 12px; color: var(--mut); margin-top: 8px; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--ink); color: #fff; border-radius: 10px; padding: 10px 16px; font-size: 13.5px; z-index: 9; }
+.toast.bad { background: var(--red); }
+.skel { height: 14px; border-radius: 6px; background: linear-gradient(90deg, #EEEDF3, #F7F7FA, #EEEDF3); background-size: 200% 100%; animation: sk 1.2s linear infinite; margin: 14px; }
+@keyframes sk { to { background-position: -200% 0; } }
+@media (max-width: 860px) {
+  .wrap { grid-template-columns: 1fr; padding: 16px; } .top .in { padding: 16px; }
+  .wrap.open .list { display: none; } .wrap:not(.open) .det { display: none; } .back { display: inline-block; }
+  .act { grid-template-columns: 1fr 1fr; } .m { max-width: 92%; } .top .stat { text-align: left; }
+}
+@media (prefers-reduced-motion: reduce) { .skel { animation: none; } }
+</style>
+</head>
+<body>
+<header class="top"><div class="in"><div><small>Partner desk · Akbar Study Abroad</small><h1 id="pn">Loading</h1><p id="ps"></p></div><div class="sp"></div><div class="stat"><b id="po">–</b><span>open requests</span></div><button class="btn ghost" id="rf" type="button">Refresh</button></div></header>
+<main class="wrap" id="wr">
+  <section class="list" aria-label="Requests"><div class="tabs" role="tablist"><button type="button" class="on" data-f="open">Open</button><button type="button" data-f="all">All</button></div><div id="ls"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div></section>
+  <section class="det" id="dt" aria-live="polite"><div class="empty">Pick a request on the left.</div></section>
+</main>
+<script>
+(function () {
+  var API = 'https://script.google.com/macros/s/AKfycbzM25HLBhuI36dn-uUgdTUoXiiTXABMBNDuaBMGjC_SUUU9eueVPn35lFowwBIqb1XNTw/exec';
+  var KEY = new URLSearchParams(location.search).get('k') || '';
+  var D = null, cur = '', filt = 'open', timer = 0;
+  function $(id) { return document.getElementById(id); }
+  function esc(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+  function api(fn, args) {
+    return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }), redirect: 'follow' })
+      .then(function (r) { return r.text(); }).then(function (t) { var j; try { j = JSON.parse(t); } catch (e) { throw new Error('Our server is busy. Please try again in a moment.'); } if (!j.ok) throw new Error(j.e || 'Something went wrong'); return j.v; });
+  }
+  function toast(m, bad) { var t = document.createElement('div'); t.className = 'toast' + (bad ? ' bad' : ''); t.setAttribute('role', 'status'); t.textContent = m; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 3800); }
+  function when(s) { var d = new Date(s); return !s || isNaN(d) ? '' : d.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }); }
+  function day(s) { var d = new Date(String(s).length === 10 ? s + 'T00:00:00' : s); return !s || isNaN(d) ? '' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); }
+  function inr(n) { return n ? '₹' + Math.round(Number(n)).toLocaleString('en-IN') : '–'; }
+  var OPEN = ['New', 'Contacted', 'Quote sent'];
+  function fail(e) { $('pn').textContent = 'Partner desk'; $('ls').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; $('dt').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; }
+  function load(keep) {
+    if (!KEY) { fail(new Error('This link is missing its key. Please use the full link Akbar Study Abroad sent you.')); return; }
+    api('partnerDesk', [KEY]).then(function (d) { D = d; head(); list(); if (keep && cur) open(cur, true); }).catch(fail);
+  }
+  function head() {
+    $('pn').textContent = D.partner.name; $('ps').textContent = D.partner.services || '';
+    $('po').textContent = D.requests.filter(function (r) { return OPEN.indexOf(r.status) !== -1; }).length;
+    document.title = D.partner.name + ' · Partner desk';
+  }
+  function list() {
+    var rows = D.requests.filter(function (r) { return filt === 'all' || OPEN.indexOf(r.status) !== -1; });
+    $('ls').innerHTML = rows.length ? rows.map(function (r) {
+      return '<button type="button" class="it' + (r.id === cur ? ' on' : '') + '" data-id="' + esc(r.id) + '"><div class="r1">' + (r.lastMsgSide === 'team' ? '<span class="dot" title="New message from our team"></span>' : '') + '<b>' + esc(r.type) + '</b><span class="st ' + esc(String(r.status).split(' ')[0]) + '">' + esc(r.status) + '</span></div>' +
+        '<div class="r2">' + esc(r.student) + ' · ' + esc(r.branch) + ' · ' + esc(when(r.createdAt)) + '</div></button>';
+    }).join('') : '<div class="empty">' + (filt === 'open' ? 'No open requests right now.' : 'No requests yet.') + '</div>';
+  }
+  function chatHtml(ms) {
+    if (!ms.length) return '<div class="sys" style="margin:auto">No messages yet. Write to our team below.</div>';
+    return ms.map(function (m) {
+      if (m.side === 'system') return '<div class="sys">' + esc(m.text) + ' · ' + esc(when(m.at)) + '</div>';
+      return '<div class="m' + (m.side === 'partner' ? ' me' : '') + '"><div class="w">' + esc(m.side === 'partner' ? 'You' : (m.author || 'Akbar Study Abroad') + ', Akbar Study Abroad') + ' · ' + esc(when(m.at)) + '</div><div class="t">' + esc(m.text) + '</div></div>';
+    }).join('');
+  }
+  function drawChat(ms) { var c = $('ch'); if (!c) return; var end = c.scrollTop + c.clientHeight >= c.scrollHeight - 30; c.innerHTML = chatHtml(ms); if (end) c.scrollTop = c.scrollHeight; }
+  function open(id, quiet) {
+    cur = id; list(); $('wr').classList.add('open');
+    if (!quiet) $('dt').innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
+    api('partnerChat', [KEY, id]).then(function (v) {
+      if (cur !== id) return;
+      if (quiet && $('ch')) { drawChat(v.messages); return; }
+      var r = v.request;
+      $('dt').innerHTML = '<button type="button" class="btn back" id="bk">Back to requests</button><h2>' + esc(r.type) + '</h2><div class="meta">' + esc(r.id) + ' · received ' + esc(when(r.createdAt)) + '</div>' +
+        '<div class="facts"><div><small>Student</small><b>' + esc(r.student) + '</b></div>' + (r.phone ? '<div><small>Phone</small><b><a href="tel:' + esc(r.phone) + '">' + esc(r.phone) + '</a></b></div>' : '') +
+        '<div><small>Branch</small><b>' + esc(r.branch) + '</b></div>' + (r.travelDate ? '<div><small>Date</small><b>' + esc(day(r.travelDate)) + '</b></div>' : '') + (r.travellers ? '<div><small>People</small><b>' + esc(r.travellers) + '</b></div>' : '') +
+        '<div><small>Your quote</small><b>' + inr(r.quote) + '</b></div></div><div class="sum">' + esc(r.summary || 'No details given.') + '</div>' +
+        (r.phone ? '' : '<div class="note">Our team shares the student\'s phone when it is needed. Ask in the chat if you need to call them.</div>') +
+        '<div class="act"><div><label for="as">Status</label><select id="as"><option value="">Keep: ' + esc(r.status) + '</option>' + v.statuses.map(function (s) { return '<option>' + esc(s) + '</option>'; }).join('') + '</select></div>' +
+        '<div><label for="aq">Quote (₹, total)</label><input id="aq" type="number" min="0" inputmode="numeric" value="' + esc(r.quote || '') + '"></div>' +
+        '<div><label for="ab">Booked value (₹)</label><input id="ab" type="number" min="0" inputmode="numeric" value="' + esc(r.bookedValue || '') + '"></div></div>' +
+        '<div class="chat" id="ch"></div><div class="msg"><div><label for="mt">Message to our team</label><textarea id="mt" maxlength="2000" placeholder="Options, documents needed, questions"></textarea></div><button type="button" class="btn pri" id="sd">Send</button></div>';
+      drawChat(v.messages); var c = $('ch'); if (c) c.scrollTop = c.scrollHeight;
+      $('bk').onclick = function () { cur = ''; $('wr').classList.remove('open'); list(); };
+      $('sd').onclick = function () { send(id); };
+    }).catch(function (e) { $('dt').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; });
+  }
+  function send(id) {
+    var b = $('sd'), q = $('aq').value, bv = $('ab').value, st = $('as').value, t = $('mt').value.trim();
+    var r = (D.requests.filter(function (x) { return x.id === id; })[0]) || {};
+    var upd = { status: st };
+    if (q && Number(q) !== Number(r.quote)) upd.quote = q;
+    if (bv && Number(bv) !== Number(r.bookedValue)) upd.bookedValue = bv;
+    if (!t && !st && !upd.quote && !upd.bookedValue) { toast('Type a message or change the status or quote.', true); return; }
+    b.disabled = true; b.textContent = 'Sending';
+    api('partnerReply', [KEY, id, t, upd]).then(function (v) {
+      b.disabled = false; b.textContent = 'Send'; $('mt').value = ''; toast('Sent to Akbar Study Abroad');
+      D.requests = D.requests.map(function (x) { return x.id === id ? v.request : x; }); head(); list(); open(id);
+    }).catch(function (e) { b.disabled = false; b.textContent = 'Send'; toast(e.message, true); });
+  }
+  document.addEventListener('click', function (e) {
+    var it = e.target.closest && e.target.closest('.it'); if (it) { open(it.getAttribute('data-id')); return; }
+    var f = e.target.closest && e.target.closest('[data-f]'); if (f) { filt = f.getAttribute('data-f'); document.querySelectorAll('[data-f]').forEach(function (x) { x.classList.toggle('on', x === f); }); list(); }
+  });
+  $('rf').onclick = function () { load(true); };
+  timer = setInterval(function () { if (document.visibilityState === 'visible' && D) load(true); }, 30000);
+  load(false);
+})();
+</script>
+</body>
+</html>

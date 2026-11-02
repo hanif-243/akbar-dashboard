@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
  
-window.AKBAR_BUILD = '2 Nov 2026 · v152';
+window.AKBAR_BUILD = '2 Nov 2026 · v154';
 
 
 (function () {
@@ -26971,6 +26971,23 @@ window.akQrModal = function (title, url, key, status) {
 .ie-adm .d { font-weight: 800; } .ie-adm .d small { display: block; color: var(--muted); font-weight: 600; }
 .ie-adm details { grid-column: 1 / -1; } .ie-adm summary { cursor: pointer; font-size: 12.5px; color: var(--muted); font-weight: 700; }
 .ie-seat { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid var(--border); font-size: 13px; } .ie-seat span { flex: 1; }
+.td-pt { margin-top: 4px; } .td-new { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 600; color: #fff; background: #F22F3D; border-radius: 999px; padding: 1px 8px; }
+.td-chat-hd { background: var(--canvas); border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-bottom: 10px; }
+.td-assign { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; }
+.td-assign-r { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; } .td-assign-r select { flex: 1; min-width: 180px; }
+.td-share { display: inline-flex; gap: 6px; align-items: center; font-size: 12.5px; color: var(--muted); margin-right: 12px; }
+.td-chat { height: 300px; overflow: auto; border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: var(--canvas); display: flex; flex-direction: column; gap: 8px; }
+.td-chat-empty { margin: auto; color: var(--muted); font-size: 13px; text-align: center; max-width: 320px; }
+.td-msg { max-width: 78%; align-self: flex-start; background: var(--card); border: 1px solid var(--border); border-radius: 12px 12px 12px 4px; padding: 8px 10px; }
+.td-msg.me { align-self: flex-end; background: #302D40; border-color: #302D40; color: #fff; border-radius: 12px 12px 4px 12px; }
+.td-msg .who { font-size: 11px; color: var(--muted); margin-bottom: 2px; } .td-msg.me .who { color: rgba(255,255,255,.7); }
+.td-msg .tx { font-size: 13.5px; white-space: pre-wrap; word-break: break-word; }
+.td-sys { align-self: center; font-size: 11.5px; color: var(--muted); text-align: center; }
+.td-send { display: flex; gap: 8px; margin-top: 10px; align-items: flex-end; } .td-send textarea { flex: 1; min-height: 44px; }
+.td-pr { display: flex; gap: 12px; align-items: center; border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 8px; background: var(--card); }
+.td-pr > div:first-child { flex: 1; min-width: 0; } .td-pr.off { opacity: .6; } .td-pr-a { display: flex; gap: 6px; flex-wrap: wrap; }
+.td-svcs { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; font-size: 13px; } .td-svcs label { display: flex; gap: 6px; align-items: center; }
+@media (max-width: 640px) { .td-pr { flex-direction: column; align-items: stretch; } .td-msg { max-width: 92%; } }
 </style>
 <script>
 (function () {
@@ -26993,7 +27010,7 @@ function open(tab) {
   if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
   const r = root(); r.style.display = 'block';
   const tr = T.tab === 'travel';
-  r.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-title">${tr ? '✈️ Travel Desk' : '🎓 IELTS demo classes'}</h1><div class="sx-sub">${tr ? 'Flights, forex, insurance and family travel students ask for in their app — every one is a sale for Akbar Travels' : 'Free demo classes students book in their app (online or at a branch) + recorded demo lessons'}</div></div>
+  r.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-title">${tr ? '✈️ Travel Desk' : '🎓 IELTS demo classes'}</h1><div class="sx-sub">${tr ? 'Flights, forex, loans, accommodation and family travel students ask for in their app — pass each one to a partner and chat with them here' : 'Free demo classes students book in their app (online or at a branch) + recorded demo lessons'}</div></div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="um-btn" id="tdSwitch">${tr ? '🎓 IELTS classes' : '✈️ Travel Desk'}</button><button class="um-btn" id="tdRefresh">↻ Refresh</button><button class="um-btn" id="tdBack">← Back to dashboard</button></div></div>
 <div id="tdBody"><div class="sx-card"><div class="skeleton" style="height:220px;"></div></div></div></div>`;
   $('tdBack').onclick = close; $('tdRefresh').onclick = load; $('tdSwitch').onclick = () => open(tr ? 'ielts' : 'travel');
@@ -27011,15 +27028,17 @@ function drawTravel() {
   const list = d.requests.filter(x => (T.f.status === 'all' || (T.f.status === 'open' ? open.indexOf(x.status) !== -1 : x.status === T.f.status)) && (!T.f.type || x.type === T.f.type));
   b.innerHTML = `<div class="td-kpis"><div class="sx-kpi"><div class="n">${d.totals.open}</div><div class="l">Open requests</div></div><div class="sx-kpi"><div class="n">${inr(d.totals.pipeline)}</div><div class="l">Quotes sent (pipeline)</div></div><div class="sx-kpi"><div class="n">${d.totals.booked}</div><div class="l">Booked</div></div><div class="sx-kpi"><div class="n">${inr(d.totals.value)}</div><div class="l">Booked value</div></div></div>
 <div class="sx-filters"><select id="tdSt" aria-label="Status"><option value="open" ${T.f.status === 'open' ? 'selected' : ''}>Open (new · contacted · quoted)</option>${d.statuses.map(s => `<option ${T.f.status === s ? 'selected' : ''}>${esc(s)}</option>`).join('')}<option value="all" ${T.f.status === 'all' ? 'selected' : ''}>All</option></select>
-<select id="tdTy" aria-label="Service"><option value="">All services</option>${d.types.map(t => `<option ${T.f.type === t ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>${d.canSettings ? '<button class="um-btn" id="tdSet">⚙ Travel Desk settings</button>' : ''}</div>
+<select id="tdTy" aria-label="Service"><option value="">All services</option>${d.types.map(t => `<option ${T.f.type === t ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select><button class="um-btn" id="tdPt">Partners</button>${d.canSettings ? '<button class="um-btn" id="tdSet">⚙ Travel Desk settings</button>' : ''}</div>
 ${d.canSettings && !d.settings.emails ? '<div class="fin-alert warm" style="margin-bottom:10px;">No Travel Desk email set yet — add the Akbar Travels team email in ⚙ settings so every new request reaches them instantly.</div>' : ''}
 ${list.length ? list.map(x => `<div class="td-row"><div><b>${esc(x.type)}</b><div class="sx-sub">${esc(x.summary)}</div></div><div><b>${esc(x.student)}</b><div class="sx-sub">${esc(x.phone)} · ${esc(x.branch)}<br>Counsellor: ${esc(x.counsellor || '—')}<br>${esc(when(x.createdAt))}</div></div>
-<div><span class="td-st ${esc(String(x.status).split(' ')[0])}">${esc(x.status)}</span>${x.quote ? `<div class="sx-sub">Quote ${inr(x.quote)}</div>` : ''}${x.bookedValue ? `<div class="sx-sub">Booked ${inr(x.bookedValue)}</div>` : ''}${x.handledBy ? `<div class="sx-sub">By ${esc(x.handledBy)}</div>` : ''}</div>
-<div class="sx-sub" style="white-space:pre-wrap;">${esc(x.notes || '')}</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${x.phone ? `<a class="um-btn" href="tel:${esc(x.phone)}">📞<\x2Fa><a class="um-btn sx-wa" href="https:\x2F\x2Fwa.me/${esc(String(x.phone).replace(/\D/g, '').replace(/^(\d{10})$/, '91$1'))}?text=${encodeURIComponent('Hi ' + String(x.student || '').split(' ')[0] + ', this is Akbar Travels about your ' + x.type.toLowerCase() + ' request from the Akbar Study Abroad app.')}" target="_blank" rel="noopener">💬</a>` : ''}<button class="um-btn primary" data-td="${esc(x.id)}">Update</button></div></div>`).join('') : '<div class="sx-card sx-empty">Nothing here yet — requests appear as soon as students tap “Fly with Akbar” in their app.</div>'}`;
+<div><span class="td-st ${esc(String(x.status).split(' ')[0])}">${esc(x.status)}</span>${x.quote ? `<div class="sx-sub">Quote ${inr(x.quote)}</div>` : ''}${x.bookedValue ? `<div class="sx-sub">Booked ${inr(x.bookedValue)}</div>` : ''}${x.handledBy ? `<div class="sx-sub">By ${esc(x.handledBy)}</div>` : ''}${x.partner ? `<div class="sx-sub td-pt">Partner: <b>${esc(x.partner)}</b>${x.lastMsgSide === 'partner' ? '<span class="td-new">Partner replied</span>' : ''}</div>` : ''}</div>
+<div class="sx-sub" style="white-space:pre-wrap;">${esc(x.notes || '')}</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${x.phone ? `<a class="um-btn" href="tel:${esc(x.phone)}">📞<\x2Fa><a class="um-btn sx-wa" href="https:\x2F\x2Fwa.me/${esc(String(x.phone).replace(/\D/g, '').replace(/^(\d{10})$/, '91$1'))}?text=${encodeURIComponent('Hi ' + String(x.student || '').split(' ')[0] + ', this is Akbar Travels about your ' + x.type.toLowerCase() + ' request from the Akbar Study Abroad app.')}" target="_blank" rel="noopener">💬</a>` : ''}<button class="um-btn" data-tdc="${esc(x.id)}">${x.partner ? 'Chat' : 'Pass to partner'}</button><button class="um-btn primary" data-td="${esc(x.id)}">Update</button></div></div>`).join('') : '<div class="sx-card sx-empty">Nothing here yet — requests appear as soon as students tap “Fly with Akbar” in their app.</div>'}`;
   $('tdSt').onchange = e => { T.f.status = e.target.value; drawTravel(); };
   $('tdTy').onchange = e => { T.f.type = e.target.value; drawTravel(); };
   const st = $('tdSet'); if (st) st.onclick = settings;
   b.querySelectorAll('[data-td]').forEach(x => x.onclick = () => edit(d.requests.find(r => r.id === x.dataset.td)));
+  b.querySelectorAll('[data-tdc]').forEach(x => x.onclick = () => chat(x.dataset.tdc));
+  $('tdPt').onclick = partners;
 }
 function modal(title, html, width) {
   let bg = $('tdModalBg');
@@ -27030,7 +27049,7 @@ function modal(title, html, width) {
   $('tdModalTitle').textContent = title; $('tdModalBody').innerHTML = html; bg.classList.add('open');
   return $('tdModalBody');
 }
-function closeModal() { const bg = $('tdModalBg'); if (bg) bg.classList.remove('open'); }
+function closeModal() { chatStop(); const bg = $('tdModalBg'); if (bg) bg.classList.remove('open'); }
 function edit(x) {
   if (!x) return;
   modal('Update ' + x.id + ' · ' + x.type, `<div style="background:var(--canvas);border-radius:10px;padding:10px 12px;font-size:13px;white-space:pre-wrap;margin-bottom:10px;"><b>${esc(x.student)}</b> · ${esc(x.phone)}\n${esc(x.summary)}</div>
@@ -27047,6 +27066,65 @@ function settings() {
 <div class="full"><label class="f" for="tdU">Dashboard logins that can open the Travel Desk (usernames, comma separated) — Super Admins and branch managers always can</label><input type="text" id="tdU" value="${esc(s.users || '')}" placeholder="username1, username2"></div></div>
 <div class="s10-actions"><button class="um-btn primary" id="tdSS">Save settings</button></div>`, 560);
   $('tdSS').onclick = () => run('saveTravelDeskSettings', { emails: $('tdE').value, users: $('tdU').value }).then(d => { T.data = d; closeModal(); drawTravel(); toast('Settings saved'); }).catch(e => toast(errMsg(e), 'error'));
+}
+ 
+let chatTimer = 0;
+function chatStop() { if (chatTimer) { clearInterval(chatTimer); chatTimer = 0; } }
+function chatLines(msgs) {
+  if (!msgs.length) return '<div class="td-chat-empty">No messages yet. Pass the request to a partner, then write to them here.</div>';
+  return msgs.map(m => m.side === 'system' ? `<div class="td-sys">${esc(m.text)} · ${esc(when(m.at))}</div>`
+    : `<div class="td-msg ${m.side === 'team' ? 'me' : ''}"><div class="who">${esc(m.author || (m.side === 'team' ? 'Our team' : 'Partner'))} · ${esc(when(m.at))}</div><div class="tx">${esc(m.text)}</div></div>`).join('');
+}
+function chat(id) {
+  const x = T.data.requests.find(r => r.id === id); if (!x) return;
+  const pts = T.data.partners || [], fit = pts.filter(p => String(p.services || '').split(', ').indexOf(x.type) !== -1), list = fit.length ? fit : pts;
+  const body = modal(x.id + ' · ' + x.type, `<div class="td-chat-hd"><b>${esc(x.student)}</b> · ${esc(x.branch)}<div class="sx-sub" style="white-space:pre-wrap;">${esc(x.summary)}</div></div>
+<div class="td-assign"><label class="f" for="tdcP">Partner</label><div class="td-assign-r"><select id="tdcP"><option value="">Not passed to a partner</option>${list.map(p => `<option value="${esc(p.id)}" ${p.id === x.partnerId ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select>
+<label class="td-share"><input type="checkbox" id="tdcS" ${x.sharePhone ? 'checked' : ''}> Share student name and phone</label><button class="um-btn" id="tdcA">Save partner</button></div>
+${pts.length ? (fit.length ? '' : '<div class="sx-sub">No partner is set up for this service yet, so all partners are listed.</div>') : '<div class="sx-sub">No partners yet. Add them under Partners.</div>'}</div>
+<div class="td-chat" id="tdcL"><div class="skeleton" style="height:120px;"></div></div>
+<div class="td-send"><textarea id="tdcT" rows="2" maxlength="2000" placeholder="${x.partner ? 'Message ' + esc(x.partner) : 'Pass to a partner first'}" ${x.partner ? '' : 'disabled'}></textarea><button class="um-btn primary" id="tdcGo" ${x.partner ? '' : 'disabled'}>Send</button></div>`, 640);
+  const draw = r => { const l = $('tdcL'); if (!l) return; const atEnd = l.scrollTop + l.clientHeight >= l.scrollHeight - 30; l.innerHTML = chatLines(r.messages); if (atEnd) l.scrollTop = l.scrollHeight; };
+  const pull = () => { if (!$('tdcL') || !$('tdModalBg').classList.contains('open')) { chatStop(); return; } run('getServiceChat', x.id).then(draw).catch(() => {}); };
+  run('getServiceChat', x.id).then(r => { draw(r); const l = $('tdcL'); if (l) l.scrollTop = l.scrollHeight; }).catch(e => { $('tdcL').innerHTML = `<div class="td-chat-empty">${esc(errMsg(e))}</div>`; });
+  chatStop(); chatTimer = setInterval(pull, 20000);
+  $('tdcA').onclick = () => { const btn = $('tdcA'); btn.disabled = true;
+    run('assignServicePartner', x.id, $('tdcP').value, $('tdcS').checked).then(d => { T.data = d; drawTravel(); chat(x.id); toast($('tdcP') && $('tdcP').value ? 'Passed to the partner — they get an email with their desk link' : 'Partner removed'); }).catch(e => { btn.disabled = false; toast(errMsg(e), 'error'); }); };
+  $('tdcGo').onclick = () => { const t = $('tdcT').value.trim(); if (!t) return; const btn = $('tdcGo'); btn.disabled = true;
+    run('sendServiceChat', x.id, t).then(r => { $('tdcT').value = ''; btn.disabled = false; draw(r); const l = $('tdcL'); if (l) l.scrollTop = l.scrollHeight; }).catch(e => { btn.disabled = false; toast(errMsg(e), 'error'); }); };
+  return body;
+}
+function partners() {
+  chatStop();
+  modal('Partners', '<div class="skeleton" style="height:160px;"></div>', 720);
+  run('getServicePartners').then(drawPartners).catch(e => { $('tdModalBody').innerHTML = `<div class="sx-card sx-empty">${esc(errMsg(e))}</div>`; });
+}
+function drawPartners(d) {
+  const b = $('tdModalBody'); if (!b) return;
+  b.innerHTML = `<div class="sx-sub" style="margin-bottom:10px;">Aggregators and partners for loans, forex, accommodation, insurance and flights. Each one gets a private link where they see only the requests you pass them, send quotes and chat with your team.</div>
+${d.partners.length ? d.partners.map(p => `<div class="td-pr${p.active ? '' : ' off'}"><div><b>${esc(p.name)}</b>${p.active ? '' : ' <span class="td-st Lost">Switched off</span>'}<div class="sx-sub">${esc(p.services || 'No services picked')}</div><div class="sx-sub">${esc([p.contact, p.email, p.phone].filter(Boolean).join(' · '))}${p.lastSeen ? ' · last opened ' + esc(when(p.lastSeen)) : ' · not opened yet'}</div></div>
+<div class="td-pr-a">${p.link ? `<button class="um-btn" data-pl="${esc(p.link)}">Copy link</button>` : ''}${d.canEdit ? `<button class="um-btn" data-pe="${esc(p.id)}">Edit</button>` : ''}</div></div>`).join('') : '<div class="sx-card sx-empty">No partners yet.</div>'}
+${d.canEdit ? '<div class="s10-actions"><button class="um-btn primary" id="tdPAdd">Add partner</button></div>' : '<div class="sx-sub">Only Super Admins add partners and see their links.</div>'}`;
+  b.querySelectorAll('[data-pl]').forEach(x => x.onclick = () => { try { navigator.clipboard.writeText(x.dataset.pl).then(() => toast('Link copied — send it to the partner only')); } catch (e) { window.prompt('Copy the partner link', x.dataset.pl); } });
+  b.querySelectorAll('[data-pe]').forEach(x => x.onclick = () => partnerForm(d, d.partners.find(p => p.id === x.dataset.pe)));
+  const add = $('tdPAdd'); if (add) add.onclick = () => partnerForm(d, null);
+}
+function partnerForm(d, p) {
+  p = p || { active: true, services: '' };
+  const have = String(p.services || '').split(', ');
+  const b = $('tdModalBody');
+  b.innerHTML = `<div class="fin-form"><div><label class="f" for="tpN">Partner name</label><input type="text" id="tpN" value="${esc(p.name || '')}" placeholder="Company name"></div>
+<div><label class="f" for="tpC">Contact person</label><input type="text" id="tpC" value="${esc(p.contact || '')}"></div>
+<div><label class="f" for="tpE">Email (new requests are emailed here)</label><input type="email" id="tpE" value="${esc(p.email || '')}"></div>
+<div><label class="f" for="tpP">Phone</label><input type="text" id="tpP" value="${esc(p.phone || '')}"></div>
+<div class="full"><label class="f">Services they handle</label><div class="td-svcs">${d.types.map(t => `<label><input type="checkbox" data-sv="${esc(t)}" ${have.indexOf(t) !== -1 ? 'checked' : ''}> ${esc(t)}</label>`).join('')}</div></div>
+<div class="full"><label class="td-share"><input type="checkbox" id="tpA" ${p.active !== false ? 'checked' : ''}> Active (their link works)</label>${p.id ? '<label class="td-share"><input type="checkbox" id="tpK"> Make a new private link (the old link stops working)</label>' : ''}</div></div>
+<div class="s10-actions"><button class="um-btn" id="tpBack">Back</button><button class="um-btn primary" id="tpSave">Save partner</button></div>`;
+  $('tpBack').onclick = () => drawPartners(d);
+  $('tpSave').onclick = () => { const btn = $('tpSave'); btn.disabled = true;
+    const sv = [...b.querySelectorAll('[data-sv]')].filter(x => x.checked).map(x => x.dataset.sv).join(', ');
+    run('saveServicePartner', { id: p.id || '', name: $('tpN').value, contact: $('tpC').value, email: $('tpE').value, phone: $('tpP').value, services: sv, active: $('tpA').checked, newKey: !!($('tpK') && $('tpK').checked) })
+      .then(r => { drawPartners(r); toast('Partner saved'); run('getTravelDesk').then(x => { T.data = x; drawTravel(); }).catch(() => {}); }).catch(e => { btn.disabled = false; toast(errMsg(e), 'error'); }); };
 }
 function drawIelts() {
   const d = T.ie, b = $('tdBody'); if (!b || !d) return;
