@@ -250,7 +250,7 @@ function openDemo() {
 }
 
 function shim(signedIn, demo) {
-  return '<script>(function(){var API=' + JSON.stringify(API) + ',KEY=' + JSON.stringify(KEY) + ',OK=' + JSON.stringify(PAGE_FNS) + ',DEMO=' + (demo ? 'true' : 'false') + ';' +
+  return '<script>(function(){var API=' + JSON.stringify(API) + ',KEY=' + JSON.stringify(KEY) + ',OK=' + JSON.stringify(PAGE_FNS) + ',DEMO=' + (demo ? 'true' : 'false') + ';window.DEMO=DEMO;' +
     'function run(){var ok=null,fail=null,r={withSuccessHandler:function(f){ok=f;return r},withFailureHandler:function(f){fail=f;return r},withUserObject:function(){return r}};' +
     'OK.forEach(function(fn){r[fn]=function(){if(DEMO){setTimeout(function(){fail&&fail(new Error("This is a demo — create your free account to use this."))},60);return}var a=[].slice.call(arguments);fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({fn:fn,args:a})})' +
     '.then(function(x){return x.text()}).then(function(t){var j;try{j=JSON.parse(t)}catch(e){throw new Error("Google was busy — please try again.")}if(j.ok){ok&&ok(j.v)}else{throw new Error(j.e||"SERVER_ERROR")}})' +
