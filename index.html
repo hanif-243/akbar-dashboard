@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
  
-window.AKBAR_BUILD = '2 Nov 2026 · v155';
+window.AKBAR_BUILD = '2 Nov 2026 · v156';
 
 
 (function () {
@@ -27067,10 +27067,12 @@ function shell() {
   let bg = $('tcqBg');
   if (!bg) {
     bg = document.createElement('div'); bg.id = 'tcqBg';
-    bg.innerHTML = '<div class="tcq" role="dialog" aria-modal="true" aria-labelledby="tcqT"><div class="tcq-hd"><div><small>Branch manager</small><h2 id="tcqT">Telecaller check</h2></div><div class="sp"></div><span id="tcqBr"></span><button class="um-btn" id="tcqRf">Refresh</button><button class="um-btn" id="tcqX">Close</button></div><div class="tcq-bd" id="tcqB"></div></div>';
+    bg.innerHTML = '<div class="tcq" role="dialog" aria-modal="true" aria-labelledby="tcqT"><div class="tcq-hd"><div><small>Branch manager</small><h2 id="tcqT">Telecaller check</h2></div><div class="sp"></div><span id="tcqBr"></span><button class="um-btn" id="tcqMail">Email me this day</button><button class="um-btn" id="tcqRf">Refresh</button><button class="um-btn" id="tcqX">Close</button></div><div class="tcq-bd" id="tcqB"></div></div>';
     document.body.appendChild(bg);
     $('tcqX').onclick = () => bg.classList.remove('open');
     $('tcqRf').onclick = load;
+    $('tcqMail').onclick = () => { const btn = $('tcqMail'), sp = span(); if (sp[0] !== sp[1]) { if (typeof showToast === 'function') showToast('Pick Today or Yesterday to email one day', 'error'); return; } btn.disabled = true;
+      run('emailTelecallerCheck', R.branch, sp[0]).then(r => { btn.disabled = false; if (typeof showToast === 'function') showToast('Sent to ' + r.to, 'success'); }).catch(e => { btn.disabled = false; if (typeof showToast === 'function') showToast(errMsg(e), 'error'); }); };
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && bg.classList.contains('open')) bg.classList.remove('open'); });
   }
   return bg;
@@ -27092,7 +27094,7 @@ function draw() {
   const pct = (n, of) => of ? Math.round(n / of * 100) + '%' : '–';
   const rng = [['today', 'Today'], ['yesterday', 'Yesterday'], ['week', 'Last 7 days'], ['month', 'Last 30 days']];
   let h = `<div class="tcq-rng">${rng.map(r => `<button data-rg="${r[0]}" class="${R.range === r[0] ? 'on' : ''}">${r[1]}</button>`).join('')}</div>
-<div class="tcq-note">A call counts only when it is started from Lead Ops: tapping the phone number in the dashboard or on the Start calling screen. Lead Ops then measures how long the telecaller was away on the phone. A number typed into a separate phone cannot be seen, so it shows as <b>no call from Lead Ops</b>; ask telecallers to always call by tapping the number. "Too fast" means a lead was updated less than ${d.rapidSecs} seconds after the previous lead, which leaves no time for a call.${d.trackingSince ? ' Tracking started ' + esc(day(d.trackingSince)) + '.' : ' Tracking starts now: the numbers fill in as telecallers work.'}</div>
+<div class="tcq-note">A call counts only when it is started from Lead Ops: tapping the phone number in the dashboard or on the Start calling screen. Lead Ops then measures how long the telecaller was away on the phone. A number typed into a separate phone cannot be seen, so it shows as <b>no call from Lead Ops</b>; ask telecallers to always call by tapping the number. "Too fast" means a lead was updated less than ${d.rapidSecs} seconds after the previous lead, which leaves no time for a call.${d.trackingSince ? ' Tracking started ' + esc(day(d.trackingSince)) + '.' : ' Tracking starts now: The numbers fill in as telecallers work.'} Each branch manager also gets this report by email at 8 PM every day.</div>
 <div class="tcq-sum"><div><b>${T.worked || 0}</b><span>Leads worked</span></div><div class="good"><b>${T.talked || 0}</b><span>Called and talked ${d.talkSecs} s or more · ${pct(T.talked, T.worked)}</span></div><div><b>${(T.dialled || 0) + (T.claimed || 0)}</b><span>Dialled, short or no answer</span></div><div class="${T.noCall ? 'bad' : ''}"><b>${T.noCall || 0}</b><span>Remark only, no call · ${pct(T.noCall, T.worked)}</span></div><div class="${T.rapid ? 'bad' : ''}"><b>${T.rapid || 0}</b><span>Updated too fast</span></div></div>`;
   if (!d.team.length) { b.innerHTML = h + '<div class="tcq-empty">No telecallers in this branch. Telecaller logins are added under Users.</div>'; bind(); return; }
   h += `<div class="tcq-wrap"><table class="tcq-t"><thead><tr><th>Telecaller</th><th class="n">Leads worked</th><th class="n">Talked</th><th class="n">Dialled</th><th class="n">Said spoke, under ${d.talkSecs} s</th><th class="n">Remark only</th><th class="n">Too fast</th><th class="n">Time on calls</th><th>Mix</th><th>Active</th></tr></thead><tbody>
