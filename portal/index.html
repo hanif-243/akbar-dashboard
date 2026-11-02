@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
 <link rel="preconnect" href="https://script.google.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500&display=swap" rel="stylesheet">
 <style>
 :root { --navy: #302D40; --red: #F22F3D; --canvas: #F3F4FA; --ink: #12172B; --muted: #6B7280; --border: #E7E9F0; }
 * { box-sizing: border-box; }
@@ -74,6 +74,78 @@ body { background: radial-gradient(70% 50% at 80% 0%, rgba(242,47,61,.35), trans
 .ld-tip b { display: block; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: #F6C77A; margin-bottom: 3px; }
 @media (max-width: 370px) { .fb-c { width: 19px; height: 28px; font-size: 16px; line-height: 28px; } .fb-r small { width: 30px; } }
 @media (prefers-reduced-motion: reduce) { .fb-c.f, .ld-bar i, .fb-h i { animation: none; } .fb-pass { animation: none; clip-path: none; } }
+/* GUEST HOME + UNIVERSITY FINDER (v159) */
+.shell:has(.gh), .shell:has(.uf) { justify-content: flex-start; }
+.shell:has(.gh) #logo, .shell:has(.uf) #logo { display: none; }
+.shell:has(.gh) { padding-top: 0; }
+#view:has(.gh), #view:has(.uf) { width: 100%; max-width: 480px; display: flex; flex-direction: column; align-items: center; }
+.gh { position: relative; overflow: hidden; isolation: isolate; width: calc(100% + 40px); margin: 0 -20px; min-height: 430px; padding: max(22px, env(safe-area-inset-top)) 24px 70px; border-radius: 0 0 36px 36px;
+  background: radial-gradient(70% 60% at 100% 0%, rgba(242,47,61,.55), transparent 70%), radial-gradient(60% 60% at 0% 100%, rgba(62,107,214,.25), transparent 70%), linear-gradient(160deg, #1A1830 0%, #2E2440 55%, #4A1E33 100%); }
+.gh-map { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; }
+.gh-plane { position: absolute; right: -40px; top: 78px; width: 190px; height: 190px; transform: rotate(-24deg); z-index: -1; filter: drop-shadow(0 18px 24px rgba(0,0,0,.45)); animation: ghFly 7s ease-in-out infinite alternate; }
+@keyframes ghFly { to { transform: rotate(-21deg) translate(-6px, -8px); } }
+.gh-in { position: relative; text-align: left; }
+.gh-logo { height: 36px; display: block; margin-bottom: 44px; }
+.gh-eb { font-size: 10.5px; letter-spacing: .18em; font-weight: 700; color: #F6C77A; }
+.gh h1 { font-family: Fraunces, Georgia, serif; font-weight: 500; font-size: 38px; line-height: 1.04; margin: 10px 0 0; max-width: 260px; }
+.gh p { color: rgba(255,255,255,.78); font-size: 15px; line-height: 1.45; margin: 12px 0 0; max-width: 270px; }
+.gh-go { margin-top: 22px; border: 0; border-radius: 14px; background: #fff; color: #302D40; font: inherit; font-weight: 700; font-size: 16px; padding: 14px 20px; cursor: pointer; min-height: 50px; box-shadow: 0 16px 30px -14px rgba(0,0,0,.6); }
+.gh-go span { color: #F22F3D; margin-left: 6px; }
+.gh-fine { font-size: 12px; color: rgba(255,255,255,.6); margin-top: 10px; }
+.gh-card { margin-top: -40px; position: relative; }
+.uf { width: 100%; max-width: 480px; text-align: left; }
+.uf-top { display: flex; align-items: center; gap: 10px; padding: 6px 0 10px; }
+.uf-top b { flex: 1; font-size: 15px; }
+.uf-top span { font-size: 12.5px; color: rgba(255,255,255,.6); font-variant-numeric: tabular-nums; }
+.uf-back { width: 40px; height: 40px; border-radius: 12px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.08); color: #fff; font-size: 24px; line-height: 1; cursor: pointer; }
+.uf-prog { position: relative; height: 4px; border-radius: 4px; background: rgba(255,255,255,.14); margin: 6px 4px 22px; }
+.uf-prog i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: #F6C77A; transition: width .4s ease; }
+.uf-prog svg { position: absolute; top: -9px; width: 22px; height: 22px; fill: #F6C77A; transition: left .4s ease; }
+.uf-card h1 { font-family: Fraunces, Georgia, serif; font-weight: 500; font-size: 24px; }
+.uf-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 6px; }
+.uf-chip { border: 1.5px solid var(--border); background: #fff; color: var(--ink); border-radius: 12px; padding: 10px 14px; font: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer; min-height: 44px; text-align: left; }
+.uf-chip small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
+.uf-chip.on { border-color: #302D40; background: #302D40; color: #fff; }
+.uf-chip.on small { color: rgba(255,255,255,.7); }
+.uf-card label { margin-top: 14px; }
+.uf-conv { font-size: 13px; color: var(--muted); margin-top: 8px; }
+.uf-note { font-size: 14px; color: var(--muted); background: #F6F5FA; border-radius: 12px; padding: 12px; }
+.uf-lab { font-weight: 600; font-size: 13px; margin: 18px 0 6px; color: var(--ink); }
+.uf-bud b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+.uf-bud input[type=range] { width: 100%; margin: 12px 0 2px; accent-color: #F22F3D; }
+.uf-r { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+.uf-chk { display: flex !important; align-items: center; gap: 8px; font-weight: 500 !important; margin-top: 10px !important; }
+.uf-sum { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin: 0 4px 14px; }
+.uf-sum b { font-family: Fraunces, Georgia, serif; font-weight: 500; font-size: 34px; }
+.uf-sum span { color: rgba(255,255,255,.75); font-size: 14px; }
+.uf-sum .link { color: #F6C77A; margin: 0 0 0 auto; }
+.uf-res { background: #fff; color: var(--ink); border-radius: 20px; padding: 16px 18px; margin-bottom: 12px; box-shadow: 0 20px 50px -30px rgba(0,0,0,.6); }
+.uf-rh { display: flex; gap: 10px; align-items: flex-start; }
+.uf-rh div { flex: 1; min-width: 0; }
+.uf-rh b { display: block; font-size: 16px; }
+.uf-rh span { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+.uf-heart { width: 40px; height: 40px; border-radius: 12px; border: 1.5px solid var(--border); background: #fff; color: #F22F3D; font-size: 20px; cursor: pointer; flex-shrink: 0; }
+.uf-heart.on { background: #FDECEE; border-color: #F9C5CA; }
+.uf-fig { display: flex; gap: 18px; margin-top: 12px; flex-wrap: wrap; }
+.uf-fig small { display: block; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.uf-fig b { display: block; font-size: 15px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.uf-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.uf-tags span { font-size: 12px; padding: 4px 9px; border-radius: 99px; background: #F2F1F7; color: #302D40; font-weight: 500; }
+.uf-tags .uf-band { font-weight: 700; color: #fff; }
+.uf-band.safe { background: #1F8A5B !important; }
+.uf-band.good { background: #3E6BD6 !important; }
+.uf-band.reach { background: #B4532A !important; }
+.uf-chk2 { font-size: 11.5px; color: var(--muted); margin-top: 10px; }
+.uf-lock { position: relative; border-radius: 20px; overflow: hidden; margin-bottom: 12px; background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.04)); border: 1px solid rgba(255,255,255,.14); }
+.uf-lock-in { padding: 20px 18px; text-align: center; }
+.uf-lock-in b { font-family: Fraunces, Georgia, serif; font-weight: 500; font-size: 22px; }
+.uf-lock-in p { color: rgba(255,255,255,.78); font-size: 14px; line-height: 1.45; margin: 6px 0 0; }
+.uf-lock-in .link { color: #fff; }
+.uf-cta { margin-bottom: 12px; }
+.uf-foot { font-size: 12px; color: rgba(255,255,255,.55); text-align: center; margin: 8px 8px 20px; line-height: 1.5; }
+.uf-done { text-align: center; margin-top: 30px; }
+.uf-tick { width: 56px; height: 56px; border-radius: 50%; background: #E7F6EE; color: #1F8A5B; font-size: 28px; line-height: 56px; margin: 0 auto 12px; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .gh-plane { animation: none; } .uf-prog i, .uf-prog svg { transition: none; } }
 </style>
 </head>
 <body>
@@ -86,7 +158,7 @@ body { background: radial-gradient(70% 50% at 80% 0%, rgba(242,47,61,.35), trans
 'use strict';
 var API = 'https://script.google.com/macros/s/AKfycbzM25HLBhuI36dn-uUgdTUoXiiTXABMBNDuaBMGjC_SUUU9eueVPn35lFowwBIqb1XNTw/exec';
 var KEY = 'akbar_student_session', CACHE = 'akbar_app_copy';
-var PAGE_FNS = ['getStudentPortalData', 'submitStudentDocument', 'submitStudentFeedback', 'getStudentPortalExtras', 'setStudentChecklistItem', 'askStudentQuestion', 'studentUploadRequested', 'raiseStudentEscalation', 'requestStudentSlot', 'bookIeltsSeat', 'cancelIeltsSeat', 'requestTravelService', 'toggleShortlistFav', 'rateStudentService', 'setStudentLoan', 'setCommunityOptIn', 'stuFlightFares', 'getFlyTogether', 'setFlyTogether'];
+var PAGE_FNS = ['uniFinderOptions', 'uniFinderMatch', 'uniFinderSave', 'getStudentPortalData', 'submitStudentDocument', 'submitStudentFeedback', 'getStudentPortalExtras', 'setStudentChecklistItem', 'askStudentQuestion', 'studentUploadRequested', 'raiseStudentEscalation', 'requestStudentSlot', 'bookIeltsSeat', 'cancelIeltsSeat', 'requestTravelService', 'toggleShortlistFav', 'rateStudentService', 'setStudentLoan', 'setCommunityOptIn', 'stuFlightFares', 'getFlyTogether', 'setFlyTogether'];
 var view = document.getElementById('view');
 var state = { phone: '', sent: '', mode: 'login', info: null, su: {} };
 
@@ -155,17 +227,167 @@ function loading(t) {
   }, 1700);
 }
 
+// ---- GUEST HOME + UNIVERSITY FINDER (v159) ----
+var GW = [[[24, 30], [55, 62]], [[16, 24], [25, 31], [50, 66]], [[3, 8], [12, 25], [25, 31], [38, 41], [42, 70]], [[2, 10], [10, 26], [26, 30], [32, 33], [37, 42], [42, 71]], [[4, 9], [11, 16], [20, 24], [36, 42], [42, 70]],
+  [[10, 25], [34, 35], [37, 45], [45, 64], [68, 68]], [[11, 24], [25, 26], [35, 46], [47, 64], [64, 64]], [[12, 22], [35, 44], [47, 62], [64, 65]], [[12, 21], [34, 36], [38, 45], [45, 60], [61, 61], [63, 64]], [[12, 20], [34, 48], [48, 60], [62, 63]],
+  [[13, 18], [32, 42], [43, 50], [50, 60]], [[14, 17], [32, 47], [49, 60], [60, 60]], [[15, 18], [20, 21], [32, 47], [50, 53], [55, 58]], [[17, 19], [32, 45], [51, 53], [56, 57], [60, 60]], [[19, 24], [33, 46], [51, 52], [56, 57]],
+  [[20, 26], [37, 45], [56, 56], [59, 60]], [[20, 27], [38, 44], [55, 57], [58, 61]], [[20, 29], [38, 44], [57, 59], [63, 66]], [[21, 29], [38, 44], [62, 64]], [[22, 28], [38, 45], [60, 66]], [[22, 28], [39, 43], [45, 45], [59, 66]],
+  [[22, 27], [39, 42], [59, 66]], [[22, 26], [39, 42], [59, 66]], [[21, 25], [59, 61], [64, 65], [70, 70]], [[21, 24], [65, 65], [69, 70]], [[21, 23], [69, 69]], [[21, 22]]];
+var JET = 'M45 24c0-1.6-2.4-2.6-5.6-2.6H30.5L20.6 6.4h-3.4l4.6 15H11.2L7.4 15H4.8l2 9-2 9h2.6l3.8-6.4h10.6l-4.6 15h3.4l9.9-15h8.9C42.6 26.6 45 25.6 45 24z';
+function dotMap(vb, color, op) {
+  var g = '';
+  GW.forEach(function (row, r) { row.forEach(function (a) { for (var c = a[0]; c <= a[1]; c++) for (var p = 0; p < 4; p++) g += '<circle cx="' + (c * 5 + (p % 2) * 2.5 + 1.25) + '" cy="' + (r * 5 + Math.floor(p / 2) * 2.5 + 1.25) + '" r=".55"/>'; }); });
+  return '<svg class="gh-map" viewBox="' + vb + '" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="' + color + '" opacity="' + op + '">' + g + '</g></svg>';
+}
+var silverDefs = '<defs><linearGradient id="ghSilver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".55" stop-color="#DCDDE6"/><stop offset="1" stop-color="#9EA1B4"/></linearGradient></defs>';
+function guestHero() {
+  return '<div class="gh">' + dotMap('110 -40 240 220', '#FFB7BE', '.26') +
+    '<svg class="gh-plane" viewBox="0 0 48 48" aria-hidden="true">' + silverDefs + '<path d="' + JET + '" fill="url(#ghSilver)"/></svg>' +
+    '<div class="gh-in"><img src="logo.png" alt="Akbar Study Abroad" class="gh-logo"><div class="gh-eb">STUDY ABROAD, MADE CLEAR</div>' +
+    '<h1>Your future<br>starts here</h1><p>Find universities that fit your marks and budget in about 2 minutes.</p>' +
+    '<button class="gh-go" id="ufGo" type="button">Find my university <span aria-hidden="true">→</span></button><div class="gh-fine">Free · no sign-up to start</div></div></div>';
+}
+
+var UF = { step: 0, a: { level: '', field: '', countries: [], marksType: '%', marksRaw: '', marks: null, backlogs: 0, english: '', englishScore: null, budget: 2000000, noBudget: false, intake: '', priorities: [] }, picks: [], opts: null, res: null };
+function ufLoad() { try { var v = JSON.parse(get('ak_uf') || 'null'); if (v && v.a) { UF.a = Object.assign(UF.a, v.a); UF.picks = v.picks || []; } } catch (e) { /* fresh start */ } }
+function ufSave() { set('ak_uf', JSON.stringify({ a: UF.a, picks: UF.picks })); }
+function ufWho() { return get(KEY) || ''; }
+function ufAnswers() {
+  var a = UF.a;
+  return { level: a.level, field: a.field, countries: a.countries, marks: a.marks, backlogs: a.backlogs, english: a.english, englishScore: a.englishScore, budget: a.noBudget ? 0 : a.budget, intake: a.intake === 'Not sure' ? '' : a.intake, priorities: a.priorities };
+}
+var UF_STEPS = ['level', 'field', 'countries', 'marks', 'english', 'budget'];
+function finderStart() {
+  ufLoad(); UF.step = 0; UF.res = null;
+  if (UF.opts) { ufStep(); return; }
+  loading('Opening the University Finder…');
+  call('uniFinderOptions', [ufWho()]).then(function (o) { UF.opts = o; ufStep(); }).catch(function (e) { phoneView(nice(e), true); });
+}
+function ufChips(list, cur, multi, key) {
+  return '<div class="uf-chips">' + list.map(function (x) {
+    var v = typeof x === 'string' ? x : x.v, lab = typeof x === 'string' ? esc(x) : x.l, on = multi ? cur.indexOf(v) !== -1 : cur === v;
+    return '<button type="button" class="uf-chip' + (on ? ' on' : '') + '" data-k="' + key + '" data-v="' + esc(v) + '" aria-pressed="' + on + '">' + lab + '</button>';
+  }).join('') + '</div>';
+}
+function ufTop(title, n) {
+  var pct = n == null ? 100 : Math.round((n + 0.5) / UF_STEPS.length * 100);
+  return '<div class="uf-top"><button type="button" class="uf-back" id="ufBack" aria-label="Back">‹</button><b>' + esc(title) + '</b><span>' + (n == null ? '' : (n + 1) + ' / ' + UF_STEPS.length) + '</span></div>' +
+    '<div class="uf-prog"><i style="width:' + pct + '%"></i><svg viewBox="0 0 48 48" style="left:calc(' + pct + '% - 11px)" aria-hidden="true"><path d="' + JET + '"/></svg></div>';
+}
+function ufStep(msg) {
+  var a = UF.a, o = UF.opts, k = UF_STEPS[UF.step], q = '', help = '', body = '', can = true;
+  if (k === 'level') { q = 'What do you want to study?'; help = 'Pick your next degree.'; body = ufChips([{ v: 'UG', l: 'Bachelor’s <small>after 12th</small>' }, { v: 'PG', l: 'Master’s <small>after your degree</small>' }], a.level, false, 'level'); can = !!a.level; }
+  if (k === 'field') { q = 'Which subject area?'; help = 'Choose the closest one.'; body = ufChips(o.fields, a.field, false, 'field'); can = !!a.field; }
+  if (k === 'countries') {
+    q = 'Where would you like to study?'; help = 'Pick one or more. Leave empty and we look everywhere.';
+    body = o.countries.length ? ufChips(o.countries.map(function (c) { return { v: c.name, l: esc(c.name) + ' <small>' + c.n + '</small>' }; }), a.countries, true, 'countries') : '<div class="uf-note">Our university list is being updated. Carry on and a counsellor will build your list.</div>';
+  }
+  if (k === 'marks') {
+    q = 'Your marks'; help = a.level === 'UG' ? 'Your 12th marks (or expected).' : 'Your degree marks so far.';
+    var conv = a.marks != null ? '<div class="uf-conv">That is about <b>' + a.marks + '%</b>' + (a.marksType !== '%' ? ' (we use CGPA × ' + (a.marksType === '10' ? '9.5' : '25') + ')' : '') + '</div>' : '';
+    body = ufChips([{ v: '%', l: 'Percentage' }, { v: '10', l: 'CGPA out of 10' }, { v: '4', l: 'GPA out of 4' }], a.marksType, false, 'marksType') +
+      '<label for="ufM">' + (a.marksType === '%' ? 'Percentage' : 'CGPA') + '</label><div class="in"><input id="ufM" class="plain" type="text" inputmode="decimal" maxlength="5" value="' + esc(a.marksRaw) + '" placeholder="' + (a.marksType === '%' ? '72' : a.marksType === '10' ? '7.6' : '3.2') + '"></div>' + '<div id="ufConv">' + conv + '</div>' +
+      '<label for="ufBk" style="margin-top:14px">Backlogs (arrears)</label><div class="in"><input id="ufBk" class="plain" type="number" inputmode="numeric" min="0" max="60" value="' + esc(a.backlogs) + '"></div>';
+    can = a.marks != null;
+  }
+  if (k === 'english') {
+    q = 'English test'; help = 'Not taken one yet? That is fine.';
+    body = ufChips([{ v: 'IELTS', l: 'IELTS' }, { v: 'PTE', l: 'PTE' }, { v: 'Not yet', l: 'Not taken yet' }, { v: 'MOI', l: 'English medium letter' }], a.english, false, 'english');
+    if (a.english === 'IELTS') { var sc = []; for (var x = 4.5; x <= 9; x += 0.5) sc.push(x); body += '<label for="ufEs" style="margin-top:14px">Overall IELTS band</label><div class="in"><select id="ufEs"><option value="">Choose</option>' + sc.map(function (v) { return '<option' + (a.englishScore === v ? ' selected' : '') + '>' + v.toFixed(1) + '</option>'; }).join('') + '</select></div>'; }
+    if (a.english === 'PTE') body += '<label for="ufEs" style="margin-top:14px">Overall PTE score</label><div class="in"><input id="ufEs" class="plain" type="number" inputmode="numeric" min="10" max="90" value="' + esc(a.englishScore == null ? '' : a.englishScore) + '"></div>';
+    can = !!a.english;
+  }
+  if (k === 'budget') {
+    q = 'Budget and start date'; help = 'Tuition per year, in rupees.';
+    var L = Math.round(a.budget / 100000);
+    body = '<div class="uf-bud"><b id="ufBv">' + (a.noBudget ? 'No fixed budget' : '₹' + L + ' lakh / year') + '</b><input id="ufB" type="range" min="3" max="60" step="1" value="' + L + '"' + (a.noBudget ? ' disabled' : '') + ' aria-label="Budget in lakh per year"><div class="uf-r"><span>₹3L</span><span>₹60L</span></div>' +
+      '<label class="uf-chk"><input type="checkbox" id="ufNb"' + (a.noBudget ? ' checked' : '') + '> No fixed budget</label></div>' +
+      '<div class="uf-lab">When do you want to start?</div>' + ufChips((o.intakes || []).concat(['Not sure']), a.intake, false, 'intake') +
+      '<div class="uf-lab">What matters most?</div>' + ufChips(o.priorities, a.priorities, true, 'priorities');
+  }
+  view.innerHTML = '<div class="uf">' + ufTop('University Finder', UF.step) + '<div class="card uf-card"><h1>' + esc(q) + '</h1><p>' + esc(help) + '</p>' + body +
+    '<button class="btn" id="ufNext"' + (can ? '' : ' disabled') + '>' + (UF.step === UF_STEPS.length - 1 ? 'Show my matches' : 'Next') + '</button><div class="msg bad" id="msg">' + esc(msg || '') + '</div></div></div>';
+  document.getElementById('ufBack').onclick = function () { if (UF.step === 0) ufExit(); else { UF.step--; ufStep(); } };
+  Array.prototype.forEach.call(view.querySelectorAll('.uf-chip'), function (b) {
+    b.onclick = function () {
+      var key = b.getAttribute('data-k'), v = b.getAttribute('data-v');
+      if (key === 'countries' || key === 'priorities') { var arr = a[key], i = arr.indexOf(v); if (i === -1) arr.push(v); else arr.splice(i, 1); }
+      else if (key === 'marksType') { a.marksType = v; a.marksRaw = ''; a.marks = null; }
+      else if (key === 'english') { a.english = v; a.englishScore = null; }
+      else a[key] = v;
+      ufSave(); ufStep();
+    };
+  });
+  var m = document.getElementById('ufM');
+  if (m) m.oninput = function () {
+    a.marksRaw = m.value.replace(/[^\d.]/g, '').slice(0, 5); var n = Number(a.marksRaw), max = a.marksType === '%' ? 100 : Number(a.marksType);
+    a.marks = a.marksRaw && n > 0 && n <= max ? Math.round(a.marksType === '%' ? n : a.marksType === '10' ? n * 9.5 : n * 25) : null;
+    document.getElementById('ufConv').innerHTML = a.marks != null && a.marksType !== '%' ? '<div class="uf-conv">That is about <b>' + a.marks + '%</b> (we use CGPA × ' + (a.marksType === '10' ? '9.5' : '25') + ')</div>' : '';
+    document.getElementById('ufNext').disabled = a.marks == null; ufSave();
+  };
+  var bk = document.getElementById('ufBk'); if (bk) bk.oninput = function () { a.backlogs = Math.max(0, Math.min(60, Math.round(Number(bk.value) || 0))); ufSave(); };
+  var es = document.getElementById('ufEs'); if (es) es.oninput = es.onchange = function () { var n = Number(es.value); a.englishScore = es.value && n > 0 ? n : null; ufSave(); };
+  var br = document.getElementById('ufB'); if (br) br.oninput = function () { a.budget = Number(br.value) * 100000; document.getElementById('ufBv').textContent = '₹' + br.value + ' lakh / year'; ufSave(); };
+  var nb = document.getElementById('ufNb'); if (nb) nb.onchange = function () { a.noBudget = nb.checked; ufSave(); ufStep(); };
+  document.getElementById('ufNext').onclick = function () { if (UF.step < UF_STEPS.length - 1) { UF.step++; ufStep(); } else ufRun(); };
+}
+function ufExit() { if (get(KEY)) location.reload(); else phoneView(); }
+function ufRun() {
+  loading('Matching universities…');
+  call('uniFinderMatch', [ufWho(), ufAnswers()]).then(function (r) { UF.res = r; ufResults(); }).catch(function (e) { ufStep(nice(e)); });
+}
+function lakh(n) { return n ? '₹' + (Math.round(n / 10000) / 10).toString() + 'L' : '—'; }
+function ufCard(x) {
+  var id = x.university + ' · ' + x.course, on = UF.picks.indexOf(id) !== -1;
+  return '<div class="uf-res"><div class="uf-rh"><div><b>' + esc(x.university) + '</b><span>' + esc([x.course, [x.city, x.country].filter(Boolean).join(', ')].filter(Boolean).join(' · ')) + '</span></div>' +
+    '<button type="button" class="uf-heart' + (on ? ' on' : '') + '" data-pick="' + esc(id) + '" aria-pressed="' + on + '" aria-label="Save">' + (on ? '♥' : '♡') + '</button></div>' +
+    '<div class="uf-fig"><div><small>First year</small><b>' + lakh(x.fee) + '</b></div>' + (x.scholarship ? '<div><small>Scholarship</small><b>' + (x.schMax ? 'up to ' + lakh(x.schMax) : 'Available') + '</b></div>' : '') +
+    (x.intakes.length ? '<div><small>Intake</small><b>' + esc(x.intakes.slice(0, 2).join(', ')) + '</b></div>' : '') + '</div>' +
+    '<div class="uf-tags">' + (x.band ? '<span class="uf-band ' + esc(x.band.toLowerCase()) + '">' + esc(x.band) + '</span>' : '') + x.tags.map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('') + '</div>' +
+    (x.checked ? '<div class="uf-chk2">Fees checked ' + esc(x.checked) + '</div>' : '') + '</div>';
+}
+function ufResults() {
+  var r = UF.res, signed = r.signedIn, h = '';
+  h += '<div class="uf">' + ufTop('Your matches', null) + '<div class="uf-sum"><b>' + r.total + '</b><span>' + (r.total === 1 ? 'university matches' : 'universities match') + ' your answers</span><button type="button" class="link" id="ufEdit">Change answers</button></div>';
+  if (!r.total) h += '<div class="card"><h1>No exact matches yet</h1><p>Try more countries or a higher budget. Or send your answers to a counsellor and they will build your list.</p><button class="btn" id="ufAsk">Get a counsellor’s shortlist</button></div>';
+  h += r.items.map(ufCard).join('');
+  if (r.locked) h += '<div class="uf-lock"><div class="uf-lock-in"><b>' + (r.total - r.items.length) + ' more matches</b><p>Create your free account to see all of them and get your shortlist checked by a counsellor.</p><button class="btn" id="ufMore">See all my matches</button><button class="link" id="ufSignin">I have an account</button></div></div>';
+  if (r.total && signed) h += '<div class="card uf-cta"><h1>Want a counsellor to check it?</h1><p>We send your answers' + (UF.picks.length ? ' and your ' + UF.picks.length + ' saved universities' : '') + ' to your counsellor. Their picks appear in your app.</p><button class="btn" id="ufAsk">Get my shortlist checked</button></div>';
+  h += '<div class="uf-foot">Fees come from Akbar’s university list. Safe / Good / Reach shows only where we hold the university’s entry requirements.</div></div>';
+  view.innerHTML = h;
+  document.getElementById('ufBack').onclick = function () { UF.step = UF_STEPS.length - 1; ufStep(); };
+  document.getElementById('ufEdit').onclick = function () { UF.step = 0; ufStep(); };
+  Array.prototype.forEach.call(view.querySelectorAll('[data-pick]'), function (b) { b.onclick = function () { var id = b.getAttribute('data-pick'), i = UF.picks.indexOf(id); if (i === -1) UF.picks.push(id); else UF.picks.splice(i, 1); ufSave(); var on = i === -1; b.classList.toggle('on', on); b.textContent = on ? '♥' : '♡'; b.setAttribute('aria-pressed', on); }; });
+  var more = document.getElementById('ufMore'); if (more) more.onclick = function () { set('ak_uf_send', '1'); state.su.src = 'finder'; signupView(); };
+  var si = document.getElementById('ufSignin'); if (si) si.onclick = function () { set('ak_uf_send', '1'); phoneView(); };
+  var ask = document.getElementById('ufAsk'); if (ask) ask.onclick = function () {
+    if (!signed) { set('ak_uf_send', '1'); state.su.src = 'finder'; signupView(); return; }
+    ask.disabled = true; ask.textContent = 'Sending…';
+    call('uniFinderSave', [ufWho(), ufAnswers(), UF.picks]).then(function () {
+      view.innerHTML = '<div class="uf"><div class="card uf-done"><div class="uf-tick">✓</div><h1>Sent to your counsellor</h1><p>They will check your list and add their picks under “Universities picked for you” in your app.</p><button class="btn" id="ufHome">Back to my app</button></div></div>';
+      document.getElementById('ufHome').onclick = function () { location.reload(); };
+    }).catch(function (e) { ask.disabled = false; ask.textContent = 'Get my shortlist checked'; alert(nice(e)); });
+  };
+}
+// after sign-up / sign-in: send the finder answers once, then open the app
+function ufAfterLogin(token) {
+  if (get('ak_uf_send') !== '1') return Promise.resolve();
+  set('ak_uf_send', null); ufLoad();
+  return call('uniFinderSave', [token, ufAnswers(), UF.picks]).catch(function () { /* the student can send it again from the finder */ });
+}
+
 function phoneView(msg, bad) {
   state.mode = 'login';
-  view.innerHTML = '<div class="card"><h1>Welcome 👋</h1><p>Already talking to Akbar Study Abroad? Sign in with your mobile number.</p>' +
+  view.innerHTML = guestHero() + '<div class="card gh-card"><h1>Welcome 👋</h1><p>Already talking to Akbar Study Abroad? Sign in with your mobile number.</p>' +
     '<label for="ph">Mobile number</label><div class="in"><span>+91</span><input id="ph" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="14" placeholder="98470 12345" value="' + esc(state.phone) + '"></div>' +
     '<button class="btn" id="go">Send my code</button><button class="link" id="have">I already have a code</button><div class="msg ' + (bad ? 'bad' : '') + '" id="msg">' + esc(msg || '') + '</div>' +
     '<div class="or">new to Akbar?</div><button class="btn2" id="new">✨ Create your free account</button><button class="btn2" id="demo" style="border-color:var(--border);color:var(--ink)">👀 Explore the app first</button></div>' +
     '<div class="foot">Your study abroad journey · Akbar Study Abroad</div>';
   document.getElementById('new').onclick = function () { signupView(); };
   document.getElementById('demo').onclick = openDemo;
+  document.getElementById('ufGo').onclick = finderStart;
   var ph = document.getElementById('ph');
-  ph.focus();
+  if (msg) ph.focus();
   ph.onkeydown = function (e) { if (e.key === 'Enter') send(); };
   document.getElementById('go').onclick = send;
   document.getElementById('have').onclick = function () { state.phone = ph.value; if (digits(state.phone).length < 10) { show('Enter your mobile number first.', true); return; } state.sent = 'counsellor'; codeView(); };
@@ -197,7 +419,7 @@ function verify() {
   if (digits(cd.value).length !== 6) { show('Enter all 6 digits.', true); return; }
   b.disabled = true; b.textContent = 'Checking…'; show('');
   call(state.mode === 'signup' ? 'studentSignupVerify' : 'studentLoginVerify', [state.phone, cd.value, navigator.userAgent.slice(0, 120)]).then(function (r) {
-    set(KEY, r.session); openPortal(r.token, true);
+    set(KEY, r.session); ufAfterLogin(r.token).then(function () { openPortal(r.token, true); });
   }).catch(function (e) { b.disabled = false; b.textContent = state.mode === 'signup' ? 'Create my account' : 'Sign in'; cd.value = ''; show(nice(e), true); });
 }
 
@@ -207,7 +429,8 @@ function signupView(msg, bad) {
   var su = state.su, info = state.info;
   if (!info) { loading('One moment…'); call('getStudentAppInfo', []).then(function (r) { state.info = r; signupView(msg, bad); }).catch(function (e) { phoneView(nice(e), true); }); return; }
   var opt = function (list, cur, blank) { return '<option value="">' + esc(blank) + '</option>' + list.map(function (x) { return '<option' + (x === cur ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join(''); };
-  view.innerHTML = '<div class="card"><h1>Create your account ✨</h1><p>Free. Your counsellor will contact you, and you can follow your whole journey here.</p>' +
+  if (!su.country && get('ak_uf_send') === '1') { ufLoad(); var fc = (UF.a.countries || []).filter(function (c) { return info.countries.indexOf(c) !== -1; })[0]; if (fc) su.country = fc; }
+  view.innerHTML = '<div class="card"><h1>' + (get('ak_uf_send') === '1' ? 'See all your matches' : 'Create your account ✨') + '</h1><p>' + (get('ak_uf_send') === '1' ? 'Free. We show every match and send your list to a counsellor to check.' : 'Free. Your counsellor will contact you, and you can follow your whole journey here.') + '</p>' +
     '<label for="suN">Full name</label><div class="in"><input id="suN" class="plain" type="text" autocomplete="name" maxlength="80" value="' + esc(su.name || '') + '"></div>' +
     '<label for="suP" style="margin-top:12px">Mobile number</label><div class="in"><span>+91</span><input id="suP" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="14" placeholder="98470 12345" value="' + esc(su.phone || state.phone || '') + '"></div>' +
     '<label for="suE" style="margin-top:12px">Email (your code is sent here)</label><div class="in"><input id="suE" class="plain" type="email" autocomplete="email" maxlength="120" value="' + esc(su.email || '') + '"></div>' +
@@ -222,7 +445,7 @@ function signupView(msg, bad) {
 function sendSignup() {
   var v = function (id) { return String(document.getElementById(id).value || '').trim(); };
   var ref = ''; try { ref = sessionStorage.getItem('ak_ref') || ''; } catch (e) { ref = ''; } // REFER A FRIEND (30 Oct 2026)
-  state.su = { name: v('suN'), phone: v('suP'), email: v('suE'), country: v('suC'), branch: v('suB'), ref: ref };
+  state.su = { name: v('suN'), phone: v('suP'), email: v('suE'), country: v('suC'), branch: v('suB'), ref: ref, src: get('ak_uf_send') === '1' ? 'finder' : '' };
   var su = state.su;
   if (su.name.length < 2) { show('Enter your full name.', true); return; }
   if (digits(su.phone).length < 10) { show('Enter your 10-digit mobile number.', true); return; }
@@ -315,6 +538,8 @@ function start() {
   try { var rf = new URLSearchParams(location.search).get('ref'); if (rf && /^AK[A-Z0-9]{6}$/.test(rf)) sessionStorage.setItem('ak_ref', rf); } catch (e) { /* ignore */ }
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () { /* optional */ });
   var h = String(location.hash || ''), m = /[#&]t=([a-f0-9]{32})/.exec(h);
+  var fz = false; try { fz = sessionStorage.getItem('ak_finder') === '1'; sessionStorage.removeItem('ak_finder'); } catch (e) { fz = false; }
+  if (fz || /#finder/.test(h)) { if (/#finder/.test(h)) { try { history.replaceState(null, '', location.pathname); } catch (e) { /* ignore */ } } finderStart(); return; }
   if (m) { try { history.replaceState(null, '', location.pathname); } catch (e) { /* ignore */ } try { sessionStorage.setItem('akbar_link_token', m[1]); } catch (e) { /* ignore */ } }
   var s = get(KEY);
   if (s) {
