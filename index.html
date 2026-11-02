@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
  
-window.AKBAR_BUILD = '2 Nov 2026 · v154';
+window.AKBAR_BUILD = '2 Nov 2026 · v155';
 
 
 (function () {
@@ -21710,7 +21710,7 @@ function draw() {
 <h2>${esc(l.name || 'No name')}</h2><div class="cq-phone">${esc(clean(l.phone) || 'No phone')}</div>
 <div class="cq-facts">${facts.map(f => `<span><b>${esc(f[0])}</b>${esc(f[1])}</span>`).join('')}</div>
 ${(l.history || []).length ? `<div class="cq-prev"><b>Earlier calls</b>${l.history.map(h => `<div>• ${esc(new Date(h.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }))} — ${esc(h.result)}${h.by ? ' (' + esc(h.by) + ')' : ''}${h.notes ? ': ' + esc(h.notes) : ''}</div>`).join('')}</div>` : ''}${l.remark ? `<div class="cq-prev">${esc(l.remark)}</div>` : ''}
-<div class="cq-callrow">${digits(l.phone) ? `<a class="cq-call" id="cqCall" href="tel:${esc(digits(l.phone).length === 10 ? '+91' + digits(l.phone) : '+' + digits(l.phone))}">📞 Call<\x2Fa><a class="um-btn" target="_blank" rel="noopener" href="https:\x2F\x2Fwa.me/${esc(digits(l.phone).length === 10 ? '91' + digits(l.phone) : digits(l.phone))}">WhatsApp</a>` : ''}${typeof window.pbBtn === 'function' && l.leadId ? window.pbBtn({ subjectType: 'lead', subjectId: (C.branch || l.branch || '') + ':' + l.leadId, subject: l.name, phone: l.phone, branch: C.branch || l.branch, country: l.country, kinds: ['newLead'] }, '📋 First-call checklist') : ''}
+<div class="cq-callrow" data-ak-lead="${esc(l.leadId)}" data-ak-branch="${esc(C.branch)}" data-ak-name="${esc(l.name || '')}">${digits(l.phone) ? `<a class="cq-call" id="cqCall" href="tel:${esc(digits(l.phone).length === 10 ? '+91' + digits(l.phone) : '+' + digits(l.phone))}">📞 Call<\x2Fa><a class="um-btn" target="_blank" rel="noopener" href="https:\x2F\x2Fwa.me/${esc(digits(l.phone).length === 10 ? '91' + digits(l.phone) : digits(l.phone))}">WhatsApp</a>` : ''}${typeof window.pbBtn === 'function' && l.leadId ? window.pbBtn({ subjectType: 'lead', subjectId: (C.branch || l.branch || '') + ':' + l.leadId, subject: l.name, phone: l.phone, branch: C.branch || l.branch, country: l.country, kinds: ['newLead'] }, '📋 First-call checklist') : ''}
 <span class="cq-timer ${C.timerId ? 'on' : ''}" id="cqTimer">${clock()}</span><button class="um-btn" id="cqTimerBtn">${C.timerId ? '⏸ Stop timer' : '⏱ Start timer'}</button></div>
 <label class="f" style="font-size:12px;font-weight:700;color:var(--muted);">Call result</label>
 <div class="cq-results">${R.map(r => `<button type="button" class="${cls(r)} ${r.result === C.result ? 'on' : ''}" data-cq-res="${esc(r.result)}">${esc(r.result)}</button>`).join('')}</div>
@@ -26957,6 +26957,175 @@ window.akQrModal = function (title, url, key, status) {
 </script>
 
 
+<style>
+
+#tcqBg { position: fixed; inset: 0; z-index: 20700; background: rgba(30,27,43,.45); display: none; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow: auto; }
+#tcqBg.open { display: flex; }
+.tcq { width: 100%; max-width: 1180px; background: var(--card); border-radius: 16px; overflow: hidden; box-shadow: 0 30px 80px -30px rgba(0,0,0,.45); }
+.tcq-hd { background: #302D40; color: #fff; border-bottom: 3px solid #F22F3D; padding: 18px 22px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.tcq-hd small { display: block; font-size: 10.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: #FF8A93; }
+.tcq-hd h2 { margin: 2px 0 0; font: 500 22px/1.2 'Fraunces', Georgia, serif; color: #fff; }
+.tcq-hd .sp { flex: 1; }
+.tcq-hd .um-btn { background: rgba(255,255,255,.06) !important; border: 1px solid rgba(255,255,255,.25) !important; color: #fff !important; box-shadow: none !important; }
+.tcq-hd select { background: rgba(255,255,255,.08); color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 8px; padding: 6px 8px; }
+.tcq-hd select option { color: #1E1B2B; }
+.tcq-bd { padding: 18px 22px 24px; }
+.tcq-rng { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.tcq-rng button { border: 1px solid var(--border); background: var(--card); border-radius: 999px; padding: 6px 14px; cursor: pointer; font-weight: 500; color: var(--muted); }
+.tcq-rng button.on { background: #302D40; border-color: #302D40; color: #fff; }
+.tcq-note { font-size: 12.5px; color: var(--muted); background: var(--canvas); border-radius: 10px; padding: 10px 12px; margin-bottom: 14px; line-height: 1.5; }
+.tcq-sum { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 10px; margin-bottom: 16px; }
+.tcq-sum div { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+.tcq-sum b { display: block; font: 600 26px/1.1 'Fraunces', Georgia, serif; font-variant-numeric: tabular-nums; color: var(--ink); }
+.tcq-sum span { font-size: 12px; color: var(--muted); }
+.tcq-sum .bad b { color: #F22F3D; } .tcq-sum .good b { color: #1F8A5B; }
+.tcq-t { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.tcq-t th { text-align: left; font-size: 11.5px; font-weight: 600; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.tcq-t td { padding: 10px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+.tcq-t th.n, .tcq-t td.n { text-align: right; }
+.tcq-t tbody tr { cursor: pointer; } .tcq-t tbody tr:hover { background: var(--canvas); } .tcq-t tbody tr.on { background: rgba(62,107,214,.08); }
+.tcq-t td.bad { color: #F22F3D; font-weight: 600; } .tcq-t td.good { color: #1F8A5B; font-weight: 600; }
+.tcq-bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--canvas); min-width: 90px; }
+.tcq-bar i { display: block; height: 100%; } .tcq-bar .g { background: #1F8A5B; } .tcq-bar .d { background: #3E6BD6; } .tcq-bar .c { background: #E5A33A; } .tcq-bar .r { background: #F22F3D; }
+.tcq-det { margin-top: 18px; }
+.tcq-det h3 { margin: 0 0 8px; font: 500 18px/1.3 'Fraunces', Georgia, serif; }
+.tcq-f { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.tcq-f button { border: 1px solid var(--border); background: var(--card); border-radius: 999px; padding: 4px 12px; cursor: pointer; font-size: 12.5px; color: var(--muted); }
+.tcq-f button.on { border-color: #3E6BD6; color: #3E6BD6; background: rgba(62,107,214,.06); }
+.tcq-l { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 6px; background: var(--card); }
+.tcq-l summary { list-style: none; cursor: pointer; padding: 10px 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.tcq-l summary::-webkit-details-marker { display: none; }
+.tcq-l summary b { flex: 1; min-width: 160px; font-weight: 600; }
+.tcq-l summary .dt { font-size: 12px; color: var(--muted); }
+.tcq-p { font-size: 11.5px; font-weight: 500; border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+.tcq-p.talked { background: #E4F4EC; color: #1F8A5B; } .tcq-p.dialled { background: #E9EFFC; color: #2F57B8; } .tcq-p.claimed { background: #FDF1E2; color: #8A5410; } .tcq-p.noCall { background: #FDE8EA; color: #C81A2C; } .tcq-p.whatsapp { background: var(--canvas); color: var(--muted); }
+.tcq-p.fast { background: #F22F3D; color: #fff; }
+.tcq-tl { padding: 0 12px 10px 12px; font-size: 12.5px; color: var(--muted); }
+.tcq-tl div { padding: 3px 0; border-top: 1px dashed var(--border); } .tcq-tl div span { display: inline-block; min-width: 74px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.tcq-empty { text-align: center; color: var(--muted); padding: 30px 10px; }
+@media (max-width: 760px) { .tcq-sum { grid-template-columns: 1fr 1fr; } .tcq-wrap { overflow-x: auto; } .tcq-t { min-width: 760px; } #tcqBg { padding: 0; } .tcq { border-radius: 0; } }
+</style>
+<script>
+(function () {
+ 
+const $ = id => document.getElementById(id);
+const esc = v => escapeHtml(v == null ? '' : String(v));
+const run = (fn, ...args) => promisifyRun(fn, window._authToken || '', ...args);
+const errMsg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
+const PK = 'ak_dial_pending_v1';
+let pend = null, pendTimer = 0;
+function leadFor(a, tail) {
+  const box = a.closest('[data-ak-lead]');
+  if (box && box.dataset.akLead) return { leadId: box.dataset.akLead, branch: box.dataset.akBranch || '', leadName: box.dataset.akName || '' };
+  const rows = typeof allRows !== 'undefined' && Array.isArray(allRows) ? allRows : [];
+  const tr = a.closest('[data-lead-id]'), id = tr ? tr.getAttribute('data-lead-id') : '';
+  const r = (id && rows.find(x => x.leadId === id)) || (tail ? rows.find(x => String(x.phone || '').replace(/\D/g, '').slice(-10) === tail) : null);
+  return r ? { leadId: r.leadId, branch: r.branch || '', leadName: r.name || '' } : null;
+}
+function send(item) { if (window._authToken) run('logDialTap', item).catch(() => {}); }
+function flush(known) {
+  if (!pend) return;
+  const p = pend; pend = null; clearTimeout(pendTimer);
+  try { localStorage.removeItem(PK); } catch (e) { }
+  p.awaySec = known === false ? null : (p.left ? Math.round((Date.now() - p.at) / 1000) : 0);
+  delete p.left; send(p);
+}
+function save() { try { localStorage.setItem(PK, JSON.stringify(pend)); } catch (e) { } }
+try { const old = JSON.parse(localStorage.getItem(PK) || 'null'); if (old && old.at) { pend = old; setTimeout(() => flush(false), 4000); } } catch (e) { }
+document.addEventListener('click', e => {
+  const a = e.target.closest && e.target.closest('a[href^="tel:"], a[href*="wa.me/"], a[href*="whatsapp.com/send"]');
+  if (!a || !window._authToken) return;
+  const href = a.getAttribute('href') || '', wa = href.indexOf('tel:') !== 0;
+  let tail = '';
+  if (wa) { const m = href.match(new RegExp('(?:wa[.]me[/]|phone=)([0-9]{8,15})')); tail = m ? m[1].slice(-10) : ''; } else tail = href.slice(4).replace(/\D/g, '').slice(-10);
+  const lead = leadFor(a, tail.length === 10 ? tail : '');
+  const item = Object.assign({ kind: wa ? 'whatsapp' : 'dial', at: Date.now() }, lead || { leadId: '', branch: '', leadName: '' });
+  if (!item.leadId) return;
+  if (wa) { send(item); return; }
+  if (pend) flush();
+  pend = Object.assign(item, { left: false }); save();
+  pendTimer = setTimeout(() => { if (pend && !pend.left) flush(); }, 10000);
+}, true);
+const away = () => { if (pend && !pend.left) { pend.left = true; save(); clearTimeout(pendTimer); } };
+const back = () => { if (pend && pend.left) flush(); };
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') away(); else back(); });
+window.addEventListener('blur', away);
+window.addEventListener('focus', back);
+
+ 
+const R = { branch: '', range: 'today', data: null, sel: '', vf: '' };
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+function span() {
+  const t = new Date(), d = n => { const x = new Date(t); x.setDate(x.getDate() - n); return ymd(x); };
+  return { today: [d(0), d(0)], yesterday: [d(1), d(1)], week: [d(6), d(0)], month: [d(29), d(0)] }[R.range];
+}
+const dur = s => { s = Math.round(Number(s) || 0); if (!s) return '0 min'; const h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60); return h ? h + ' h ' + m + ' min' : (m ? m + ' min' : s + ' s'); };
+const hm = iso => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }); };
+const day = v => { const d = new Date(String(v).length === 10 ? v + 'T00:00:00' : v); return isNaN(d) ? '' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }); };
+function shell() {
+  let bg = $('tcqBg');
+  if (!bg) {
+    bg = document.createElement('div'); bg.id = 'tcqBg';
+    bg.innerHTML = '<div class="tcq" role="dialog" aria-modal="true" aria-labelledby="tcqT"><div class="tcq-hd"><div><small>Branch manager</small><h2 id="tcqT">Telecaller check</h2></div><div class="sp"></div><span id="tcqBr"></span><button class="um-btn" id="tcqRf">Refresh</button><button class="um-btn" id="tcqX">Close</button></div><div class="tcq-bd" id="tcqB"></div></div>';
+    document.body.appendChild(bg);
+    $('tcqX').onclick = () => bg.classList.remove('open');
+    $('tcqRf').onclick = load;
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && bg.classList.contains('open')) bg.classList.remove('open'); });
+  }
+  return bg;
+}
+function open() { shell().classList.add('open'); load(); }
+window.openTelecallerCheck = open;
+function load() {
+  const b = $('tcqB'); if (!b) return;
+  b.innerHTML = '<div class="skeleton" style="height:90px;margin-bottom:12px;"></div><div class="skeleton" style="height:220px;"></div>';
+  const sp = span();
+  run('getTelecallerCheck', R.branch, sp[0], sp[1]).then(d => { R.data = d; R.branch = d.branch; if (!d.team.some(p => p.username === R.sel)) R.sel = d.team.length ? d.team[0].username : ''; draw(); })
+    .catch(e => { b.innerHTML = `<div class="tcq-empty">${esc(errMsg(e))}</div>`; });
+}
+function draw() {
+  const d = R.data, b = $('tcqB'); if (!d || !b) return;
+  $('tcqBr').innerHTML = d.branches.length > 1 ? `<select id="tcqBs" aria-label="Branch">${d.branches.map(x => `<option ${x === d.branch ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>` : `<span style="color:rgba(255,255,255,.8);font-size:13px;">${esc(d.branch)}</span>`;
+  const bs = $('tcqBs'); if (bs) bs.onchange = () => { R.branch = bs.value; R.sel = ''; load(); };
+  const T = d.team.reduce((a, p) => { ['worked', 'talked', 'dialled', 'claimed', 'noCall', 'rapid', 'talkSec'].forEach(k => { a[k] = (a[k] || 0) + (p[k] || 0); }); return a; }, {});
+  const pct = (n, of) => of ? Math.round(n / of * 100) + '%' : '–';
+  const rng = [['today', 'Today'], ['yesterday', 'Yesterday'], ['week', 'Last 7 days'], ['month', 'Last 30 days']];
+  let h = `<div class="tcq-rng">${rng.map(r => `<button data-rg="${r[0]}" class="${R.range === r[0] ? 'on' : ''}">${r[1]}</button>`).join('')}</div>
+<div class="tcq-note">A call counts only when it is started from Lead Ops: tapping the phone number in the dashboard or on the Start calling screen. Lead Ops then measures how long the telecaller was away on the phone. A number typed into a separate phone cannot be seen, so it shows as <b>no call from Lead Ops</b>; ask telecallers to always call by tapping the number. "Too fast" means a lead was updated less than ${d.rapidSecs} seconds after the previous lead, which leaves no time for a call.${d.trackingSince ? ' Tracking started ' + esc(day(d.trackingSince)) + '.' : ' Tracking starts now: the numbers fill in as telecallers work.'}</div>
+<div class="tcq-sum"><div><b>${T.worked || 0}</b><span>Leads worked</span></div><div class="good"><b>${T.talked || 0}</b><span>Called and talked ${d.talkSecs} s or more · ${pct(T.talked, T.worked)}</span></div><div><b>${(T.dialled || 0) + (T.claimed || 0)}</b><span>Dialled, short or no answer</span></div><div class="${T.noCall ? 'bad' : ''}"><b>${T.noCall || 0}</b><span>Remark only, no call · ${pct(T.noCall, T.worked)}</span></div><div class="${T.rapid ? 'bad' : ''}"><b>${T.rapid || 0}</b><span>Updated too fast</span></div></div>`;
+  if (!d.team.length) { b.innerHTML = h + '<div class="tcq-empty">No telecallers in this branch. Telecaller logins are added under Users.</div>'; bind(); return; }
+  h += `<div class="tcq-wrap"><table class="tcq-t"><thead><tr><th>Telecaller</th><th class="n">Leads worked</th><th class="n">Talked</th><th class="n">Dialled</th><th class="n">Said spoke, under ${d.talkSecs} s</th><th class="n">Remark only</th><th class="n">Too fast</th><th class="n">Time on calls</th><th>Mix</th><th>Active</th></tr></thead><tbody>
+${d.team.map(p => { const w = p.worked || 1, seg = (n, c) => n ? `<i class="${c}" style="width:${n / w * 100}%"></i>` : '';
+  return `<tr data-tp="${esc(p.username)}" class="${p.username === R.sel ? 'on' : ''}"><td><b>${esc(p.name)}</b></td><td class="n">${p.worked}</td><td class="n ${p.talked ? 'good' : ''}">${p.talked}</td><td class="n">${p.dialled}</td><td class="n ${p.claimed ? 'bad' : ''}">${p.claimed}</td><td class="n ${p.noCall ? 'bad' : ''}">${p.noCall}${p.worked ? ' <small style="color:var(--muted);font-weight:400;">' + pct(p.noCall, p.worked) + '</small>' : ''}</td><td class="n ${p.rapid ? 'bad' : ''}">${p.rapid}</td><td class="n">${dur(p.talkSec)}</td>
+<td><div class="tcq-bar" title="green talked · blue dialled · amber said spoke under ${d.talkSecs} s · red remark only">${seg(p.talked, 'g')}${seg(p.dialled, 'd')}${seg(p.claimed, 'c')}${seg(p.noCall, 'r')}</div></td><td style="white-space:nowrap;color:var(--muted);">${p.first ? esc(hm(p.first)) + ' – ' + esc(hm(p.last)) : 'No activity'}</td></tr>`; }).join('')}</tbody></table></div>`;
+  const p = d.team.find(x => x.username === R.sel);
+  if (p) {
+    const F = [['', 'All'], ['noCall', 'Remark only'], ['claimed', 'Said spoke, under ' + d.talkSecs + ' s'], ['fast', 'Too fast'], ['dialled', 'Dialled'], ['talked', 'Talked']];
+    const list = p.leads.filter(l => !R.vf || (R.vf === 'fast' ? l.rapid : l.verdict === R.vf));
+    h += `<div class="tcq-det"><h3>${esc(p.name)} · lead by lead</h3><div class="tcq-f">${F.map(f => `<button data-vf="${f[0]}" class="${R.vf === f[0] ? 'on' : ''}">${f[1]}</button>`).join('')}</div>
+${list.length ? list.slice(0, 200).map(l => `<details class="tcq-l"><summary><b>${esc(l.name || l.leadId)}</b><span class="dt">${esc(day(l.date))}</span>${l.rapid ? '<span class="tcq-p fast">Too fast</span>' : ''}<span class="tcq-p ${esc(l.verdict)}">${esc(l.label)}</span>${l.phoneSec ? `<span class="dt">${esc(dur(l.phoneSec))} on the phone</span>` : ''}</summary>
+<div class="tcq-tl">${l.timeline.map(t => `<div><span>${esc(hm(t.at))}</span>${esc(t.text)}</div>`).join('')}</div></details>`).join('') + (list.length > 200 ? `<div class="tcq-empty">Showing 200 of ${list.length}.</div>` : '') : '<div class="tcq-empty">Nothing in this group.</div>'}</div>`;
+  }
+  b.innerHTML = h; bind();
+}
+function bind() {
+  const b = $('tcqB');
+  b.querySelectorAll('[data-rg]').forEach(x => x.onclick = () => { R.range = x.dataset.rg; load(); });
+  b.querySelectorAll('[data-tp]').forEach(x => x.onclick = () => { R.sel = x.dataset.tp; R.vf = ''; draw(); });
+  b.querySelectorAll('[data-vf]').forEach(x => x.onclick = () => { R.vf = x.dataset.vf; draw(); });
+}
+function addBtn() {
+  const banner = $('leadsetBanner'); if (!banner || $('tcqBtn')) return;
+  const mgr = !!window._isSuperAdmin || (!document.body.classList.contains('tc-staff') && typeof viewerBranch !== 'undefined' && !!viewerBranch && typeof viewerCounselor !== 'undefined' && !viewerCounselor);
+  if (!mgr) return;
+  const b = document.createElement('button'); b.className = 'um-btn'; b.id = 'tcqBtn'; b.type = 'button'; b.textContent = 'Telecaller check';
+  b.title = 'What each telecaller called, and what only got a remark';
+  b.onclick = open; banner.insertBefore(b, banner.querySelector('[data-leadset="main"]') || null);
+}
+setInterval(addBtn, 2000);
+})();
+</script>
 <style>
 #tdView { min-height: 100vh; background: var(--canvas); }
 .td-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px; }
