@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
  
-window.AKBAR_BUILD = '2 Nov 2026 · v151';
+window.AKBAR_BUILD = '2 Nov 2026 · v152';
 
 
 (function () {
@@ -6979,7 +6979,12 @@ function leadPopUp(prevFor, prevScroll) {
   tr.classList.add('lead-pop');
   const td = tr.firstElementChild, id = tr.dataset.detailFor, r = findRowByLeadId(id) || {};
   td.setAttribute('role', 'dialog'); td.setAttribute('aria-modal', 'true'); td.setAttribute('aria-label', 'Lead ' + (r.name || ''));
-  if (!td.querySelector('.lead-pop-bar')) td.insertAdjacentHTML('afterbegin', '<div class="lead-pop-bar"><div><b>' + escapeHtml(r.name || 'Lead') + '</b><span>' + escapeHtml([r.phone, r.branch, r.counselor ? 'Counsellor: ' + r.counselor : '', r.status].filter(Boolean).join(' · ')) + '</span></div><button class="um-btn" data-lead-pop-close>✕ Close</button></div>');
+  if (!td.querySelector('.lead-pop-bar')) {
+    const nm = String(r.name || 'Lead').trim().toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    const ini = nm.split(' ').filter(Boolean).slice(0, 2).map(w => w.charAt(0)).join('').toUpperCase();
+    const chips = [r.phone, r.branch, r.counselor ? 'Counsellor: ' + r.counselor : '', r.status].filter(Boolean).map(x => '<em>' + escapeHtml(x) + '</em>').join('');
+    td.insertAdjacentHTML('afterbegin', '<div class="lead-pop-bar"><span class="lp-av">' + escapeHtml(ini || '?') + '</span><div><small>Lead · ' + escapeHtml(r.leadId || id || '') + '</small><b>' + escapeHtml(nm) + '</b><p>' + chips + '</p></div><button class="um-btn" data-lead-pop-close>Close</button></div>');
+  }
   const x = td.querySelector('[data-lead-pop-close]'); if (x) x.onclick = e => { e.stopPropagation(); closeLeadPop(); };
   if (window.akLeadFlight) try { window.akLeadFlight(td, id, r); } catch (e) {   }
   if (prevFor === id && prevScroll) td.scrollTop = prevScroll; else if (prevFor !== id) td.scrollTop = 0;
@@ -24306,14 +24311,16 @@ function leadStage(id, r) {
   return 0;
 }
 window.akLeadFlight = function (td, id, r) {
-  if (!window.akFlight || !td || String(r.status || '') === 'Junk') return;
-  const stg = leadStage(id, r);
+  if (!td) return;
+  if (String(r.status || '') === 'Junk') { const old = td.querySelector('.akf-lead'); if (old) old.remove(); return; }
+  const stg = leadStage(id, r), n = LEAD_STAGES.length;
   let box = td.querySelector('.akf-lead');
   if (box && box.dataset.k === id + ':' + stg) return;
   if (!box) { box = document.createElement('div'); box.className = 'akf-lead'; const bar = td.querySelector('.lead-pop-bar'); if (bar) bar.insertAdjacentElement('afterend', box); else td.insertAdjacentElement('afterbegin', box); }
   box.dataset.k = id + ':' + stg;
-  box.innerHTML = '<div class="akf-cap">Journey <b>' + LEAD_STAGES[stg] + '</b></div><div class="akf-route"></div>';
-  window.akFlight(box.querySelector('.akf-route'), LEAD_STAGES, stg, { compact: true, complete: stg === 6, instant: seen[id] === stg });
+  const fin = stg === n - 1, again = seen[id] === stg;
+  box.innerHTML = '<div class="akj' + (again ? ' still' : '') + '"><div class="akj-h"><span class="akj-k">Journey</span><b>' + LEAD_STAGES[stg] + '</b><span class="akj-n">' + (fin ? 'Enrolled · journey complete' : 'Stage ' + (stg + 1) + ' of ' + n + ' · Next: ' + LEAD_STAGES[stg + 1]) + '</span></div>' +
+    '<ol class="akj-r">' + LEAD_STAGES.map((x, k) => '<li class="' + (k < stg || fin ? 'done' : k === stg ? 'cur' : '') + '" style="--d:' + (k * 70) + 'ms"><i><em></em></i><span>' + x + '</span></li>').join('') + '</ol></div>';
   seen[id] = stg;
 };
  
@@ -27466,7 +27473,7 @@ paint();
 
 (function () {
 const RX = new RegExp('[\\u{1F000}-\\u{1FAFF}\\u{2600}-\\u{27BF}\\u{2B00}-\\u{2BFF}\\u{2190}-\\u{21FF}\\u{FE0F}\\u{200D}\\u{2300}-\\u{23FF}]', 'gu');
-const SEL = '.sx-wrap > .sx-top .sx-title, .sx-wrap > .sx-top .um-btn, .sx-tabs .sx-tab, .at-tabs .at-tab, .sx-wrap .sx-card > h3';
+const SEL = '.sx-wrap > .sx-top .sx-title, .sx-wrap > .sx-top .um-btn, .sx-tabs .sx-tab, .at-tabs .at-tab, .sx-wrap .sx-card > h3, .lead-pop .lead-manage .um-btn';
 function clean(root) {
 (root.querySelectorAll ? root : document).querySelectorAll(SEL).forEach(el => {
 if (el.dataset.akClean) return; el.dataset.akClean = '1';
@@ -27824,6 +27831,38 @@ note.push('file ok');
 .ak-vi-pin { background: var(--hn-red); }
 #appTeamView .app-kpi-grid > .at-kpi:first-child { background: linear-gradient(135deg, #2A2738, var(--hn-navy)) !important; background-image: linear-gradient(135deg, #2A2738, var(--hn-navy)) !important; box-shadow: none !important; }
 @media (max-width: 700px) { .at-top, .sx-wrap > .sx-top { padding: 20px 18px 16px !important; } .at-top .at-title, .sx-wrap > .sx-top .sx-title { font-size: 26px !important; } }
+
+
+#tableBody tr.detail-row.lead-pop .lead-pop-bar { background: linear-gradient(135deg, #2A2738 0%, #302D40 55%, #3A3650 100%); border-bottom: 3px solid #F22F3D; padding: 18px 22px; gap: 14px; color: #fff; align-items: center; }
+.lead-pop-bar .lp-av { width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0; display: grid; place-items: center; background: #3A3650; color: #fff; font-family: 'Fraunces', serif; font-size: 18px; box-shadow: inset 0 -3px 0 #F22F3D, 0 0 0 1px rgba(255,255,255,.12); }
+.lead-pop-bar small { font-size: 10.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #FF8A93; }
+#tableBody tr.detail-row.lead-pop .lead-pop-bar b { font-family: 'Fraunces', serif; font-weight: 500; font-size: 24px; color: #fff; letter-spacing: -.01em; }
+.lead-pop-bar p { margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.lead-pop-bar p em { font-style: normal; font-size: 11.5px; color: rgba(255,255,255,.85); border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.05); border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
+.lead-pop-bar .um-btn[data-lead-pop-close] { background: rgba(255,255,255,.06) !important; border: 1px solid rgba(255,255,255,.25) !important; color: #fff !important; box-shadow: none !important; align-self: flex-start; }
+.lead-pop-bar .um-btn[data-lead-pop-close]:hover { background: rgba(255,255,255,.14) !important; }
+.akf-lead { padding: 18px 22px 8px !important; }
+.akj-h { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.akj-k { font-size: 10.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+.akj-h b { font-family: 'Fraunces', serif; font-weight: 500; font-size: 20px; color: var(--ink); }
+.akj-n { margin-left: auto; font-size: 12px; color: var(--muted); }
+.akj-r { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.akj-r li { min-width: 0; position: relative; }
+.akj-r i { display: block; height: 6px; border-radius: 3px; background: #E7E9F0; overflow: hidden; }
+[data-theme="dark"] .akj-r i { background: #232840; }
+.akj-r em { display: block; height: 100%; width: 100%; border-radius: inherit; transform-origin: left; transform: scaleX(0); }
+.akj-r li.done em { background: #302D40; transform: scaleX(1); animation: akjFill .55s cubic-bezier(.22,1,.36,1) var(--d) both; }
+[data-theme="dark"] .akj-r li.done em { background: #8A90C6; }
+.akj-r li.cur em { background: #F22F3D; transform: scaleX(.5); animation: akjHalf .7s cubic-bezier(.22,1,.36,1) var(--d) both; }
+.akj-r span { display: block; margin-top: 8px; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.akj-r li.done span { color: var(--ink); }
+.akj-r li.cur span { color: #F22F3D; font-weight: 600; }
+.akj-r li.cur span::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #F22F3D; margin-right: 6px; vertical-align: 1px; box-shadow: 0 0 0 3px rgba(242,47,61,.15); }
+.akj.still em { animation: none !important; }
+@keyframes akjFill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes akjHalf { from { transform: scaleX(0); } to { transform: scaleX(.5); } }
+@media (max-width: 640px) { .akj-r { gap: 3px; padding-bottom: 4px; } .akj-r li:not(.cur) span { visibility: hidden; } .akj-r li.cur span { overflow: visible; } .akj-n { margin-left: 0; width: 100%; } .lead-pop-bar .lp-av { display: none; } }
+@media (prefers-reduced-motion: reduce) { .akj-r em { animation: none !important; } }
 </style>
 
 <style>
