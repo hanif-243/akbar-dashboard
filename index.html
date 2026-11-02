@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
  
-window.AKBAR_BUILD = '2 Nov 2026 · v147';
+window.AKBAR_BUILD = '2 Nov 2026 · v148';
 
 
 (function () {
@@ -5048,7 +5048,7 @@ Log out
 <th>Phone</th>
 <th>Branch</th>
 <th>Source</th>
-<th>Time</th>
+<th>Last update</th>
 <th>Alert</th>
 <th>Status</th>
 </tr>
@@ -5145,6 +5145,21 @@ if (hrs < 24) return hrs + 'h ago';
 return Math.floor(hrs / 24) + 'd ago';
 }
 
+
+const LT_MON = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+function leadLastTouch(r) {
+let best = { ms: Date.parse(r.createdAt || '') || 0, kind: 'Created' };
+const st = Date.parse(r.statusSetAt || '') || 0; if (st > best.ms) best = { ms: st, kind: 'Status' };
+const re = /\[(\d{1,2}) ([A-Za-z]{3})[a-z]* (\d{4}),? (\d{1,2}):(\d{2}) ?([ap]m)?/gi; let m;
+const txt = String(r.remark || '');
+while ((m = re.exec(txt))) {
+const mo = LT_MON.indexOf(m[2].toLowerCase()); if (mo === -1) continue;
+let h = Number(m[4]); if (m[6]) h = (h % 12) + (/p/i.test(m[6]) ? 12 : 0);
+const t = new Date(Number(m[3]), mo, Number(m[1]), h, Number(m[5])).getTime();
+if (t > best.ms && t <= Date.now() + 36e5) best = { ms: t, kind: 'Remark' };
+}
+return best;
+}
 function minsSince(iso) {
 if (!iso) return Infinity;
 return Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
@@ -6666,7 +6681,8 @@ applyDateRange(null, null);
 function slaCell(r) {
 if (r.notifiedAt) {
 
-return `<span class="mono">${timeAgo(r.createdAt)}</span>`;
+const lt = leadLastTouch(r);
+return lt.ms ? `<span class="mono" title="${lt.kind === 'Created' ? 'No remark yet' : 'Last ' + lt.kind.toLowerCase()} · ${escapeHtml(new Date(lt.ms).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }))}">${timeAgo(new Date(lt.ms).toISOString())}</span><div class="lt-kind ${lt.kind === 'Created' ? 'none' : ''}">${lt.kind === 'Created' ? 'No remark yet' : lt.kind === 'Remark' ? 'Last remark' : 'Status changed'}</div>` : `<span class="mono">${timeAgo(r.createdAt)}</span>`;
 }
 const elapsed = minsSince(r.createdAt);
 const remaining = 15 - elapsed;
@@ -10783,41 +10799,62 @@ document.querySelectorAll(`[data-tl-lead="${CSS.escape(f.dataset.tlFor)}"]`).for
 
 
 const ldCache = {};
+const ldRun = (fn, ...args) => promisifyRun(fn, window._authToken || '', ...args);
+const ldErr = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
 function ldBody(id) {
 const d = ldCache[id];
 if (!d) return '<div class="skeleton" style="height:16px;margin:10px 0;"></div><div class="skeleton" style="height:120px;"></div>';
 if (d.err) return '<div class="ld-empty">' + escapeHtml(d.err) + '</div>';
 const pct = d.total ? Math.round(d.have / d.total * 100) : 0;
-const pill = st => '<span class="ld-st ' + escapeHtml(st) + '">' + escapeHtml(st) + '</span>';
+const pill = (st, fid) => d.canReview ? '<select class="ld-sel ' + escapeHtml(st) + '" data-ld-st="' + escapeHtml(fid) + '" data-ld-for="' + escapeHtml(id) + '" aria-label="Status">' + ['Uploaded', 'Verified', 'Rejected'].map(x => '<option' + (x === st ? ' selected' : '') + '>' + x + '</option>').join('') + '</select>' : '<span class="ld-st ' + escapeHtml(st) + '">' + escapeHtml(st) + '</span>';
 const when = at => at ? new Date(at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
-const files = d.docs.length ? d.docs.map(x => '<div class="ld-file"><div class="ld-fm"><b>' + escapeHtml(x.type) + '</b><span>' + escapeHtml(x.name) + ' · ' + x.sizeKb + ' KB · ' + escapeHtml(x.fromStudent ? 'student, in the app' : (x.by || 'team')) + (x.at ? ' · ' + when(x.at) : '') + (x.notes && !/via student portal/i.test(x.notes) ? ' · ' + escapeHtml(x.notes) : '') + '</span></div>' + pill(x.status) +
+const files = d.docs.length ? d.docs.map(x => '<div class="ld-file"><div class="ld-fm"><b>' + escapeHtml(x.type) + '</b><span>' + escapeHtml(x.name) + ' · ' + x.sizeKb + ' KB · ' + escapeHtml(x.fromStudent ? 'student, in the app' : (x.by || 'team')) + (x.at ? ' · ' + when(x.at) : '') + (x.notes && !/via student portal/i.test(x.notes) ? ' · ' + escapeHtml(x.notes) : '') + '</span></div>' + pill(x.status, x.fileId) +
 '<button class="um-btn" data-ld-open="' + escapeHtml(x.fileId) + '" data-ld-for="' + escapeHtml(id) + '">Open</button><button class="um-btn" data-ld-dl="' + escapeHtml(x.fileId) + '" data-ld-for="' + escapeHtml(id) + '">Download</button></div>').join('')
 : '<div class="ld-empty">Nothing uploaded yet. The student can upload from the app (🎓 Student portal), or the application team from Applications → Documents.</div>';
 const missing = d.checklist.filter(c => c.status === 'Missing').map(c => c.type);
 return '<div class="ld-head"><span>' + d.have + ' of ' + d.total + ' required documents · ' + d.verified + ' verified' + (d.rejected ? ' · <b style="color:var(--red)">' + d.rejected + ' rejected</b>' : '') + '</span><div class="ld-track"><i style="width:' + pct + '%"></i></div><span>' + pct + '%</span></div>' +
 (d.apps.length ? '<div class="ld-apps">' + d.apps.map(a => '<button class="ld-app" data-ld-app="' + escapeHtml(a.id) + '">' + escapeHtml(a.id) + ' · ' + escapeHtml(a.university || a.country || '—') + (a.status ? ' · ' + escapeHtml(a.status) : '') + '</button>').join('') + '</div>' : '') +
-files + (missing.length ? '<div class="ld-miss"><b>Still missing:</b> ' + missing.map(escapeHtml).join(', ') + '</div>' : '');
+files + (missing.length ? '<div class="ld-miss"><b>Still missing:</b> ' + missing.map(escapeHtml).join(', ') + (d.phone ? '<div style="margin-top:8px;"><button class="um-btn sx-wa" data-ld-wa="' + escapeHtml(id) + '">Ask for these on WhatsApp</button></div>' : '') + '</div>' : '');
 }
 function ldPaint(id) { document.querySelectorAll('[data-ld-lead="' + CSS.escape(id) + '"]').forEach(x => { x.innerHTML = ldBody(id); }); }
 function ldLoad(id, branch) {
 if (!branch) { const r = (typeof allRows !== 'undefined' ? allRows : []).find(x => x.leadId === id); branch = r ? r.branch : ''; }
 ldPaint(id);
-run('getLeadDocuments', id, branch).then(d => { ldCache[id] = d; d.branch = branch; }).catch(e => { ldCache[id] = { err: errMsg(e) }; }).finally(() => ldPaint(id));
+ldRun('getLeadDocuments', id, branch).then(d => { ldCache[id] = d; d.branch = branch; }).catch(e => { ldCache[id] = { err: ldErr(e) }; }).finally(() => ldPaint(id));
 }
 function ldFile(btn, open) {
 const id = btn.dataset.ldFor, d = ldCache[id] || {}, w = open ? window.open('', '_blank') : null;
 btn.disabled = true;
-run('getLeadDocFile', id, d.branch || '', btn.dataset.ldOpen || btn.dataset.ldDl).then(f => {
+ldRun('getLeadDocFile', id, d.branch || '', btn.dataset.ldOpen || btn.dataset.ldDl).then(f => {
 const bin = atob(f.b64), bytes = new Uint8Array(bin.length);
 for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
 const url = URL.createObjectURL(new Blob([bytes], { type: f.mime || 'application/octet-stream' }));
 if (w) { w.location.href = url; } else { const a = document.createElement('a'); a.href = url; a.download = f.name || 'document'; document.body.appendChild(a); a.click(); a.remove(); }
 setTimeout(() => URL.revokeObjectURL(url), 60000);
-}).catch(e => { if (w) w.close(); showToast(errMsg(e), 'error'); }).finally(() => { btn.disabled = false; });
+}).catch(e => { if (w) w.close(); showToast(ldErr(e), 'error'); }).finally(() => { btn.disabled = false; });
 }
+document.addEventListener('change', e => {
+const sl = e.target.closest('[data-ld-st]'); if (!sl) return;
+e.stopPropagation();
+const id = sl.dataset.ldFor, d = ldCache[id] || {};
+sl.disabled = true;
+ldRun('setLeadDocStatus', id, d.branch || '', sl.dataset.ldSt, sl.value).then(res => { res.branch = d.branch; ldCache[id] = res; showToast('Marked ' + sl.value, 'success'); ldPaint(id); })
+.catch(err => { sl.disabled = false; showToast(ldErr(err), 'error'); });
+}, true);
 document.addEventListener('click', e => {
 const b = e.target.closest('[data-ld-open],[data-ld-dl]');
 if (b) { e.stopPropagation(); ldFile(b, !!b.dataset.ldOpen); return; }
+const wa = e.target.closest('[data-ld-wa]');
+if (wa) {
+e.stopPropagation();
+const d = ldCache[wa.dataset.ldWa] || {}, link = typeof waLink === 'function' ? waLink(d.phone) : null;
+if (!link) { showToast('No valid phone number on this lead', 'error'); return; }
+const miss = (d.checklist || []).filter(c => c.status === 'Missing').map(c => '• ' + c.type).join('\n');
+const first = String(d.name || '').trim().split(/\s+/)[0] || 'there', me = String(window._viewerName || '').trim();
+const t = 'Hi ' + first + ', this is ' + (me ? me + ' from ' : '') + 'Akbar Study Abroad. To move your application forward we still need these documents:\n' + miss + '\n\nYou can upload them in the Akbar app: ' + (d.portalUrl || '') + '\nOr just send them to me here. Thank you';
+window.open(link + '?text=' + encodeURIComponent(t), '_blank');
+return;
+}
 const a = e.target.closest('[data-ld-app]');
 if (a && typeof window.atOpenAppDetail === 'function') { e.stopPropagation(); if (typeof window.openAppTeam === 'function') window.openAppTeam({ tab: 'list' }); setTimeout(() => window.atOpenAppDetail(a.dataset.ldApp), 600); }
 }, true);
@@ -11881,10 +11918,11 @@ const AT = {
 filters: EMPTY_FILTERS(), tab: 'dashboard', execMode: false, loadSeq: 0,
 dash: null, list: { rows: [], total: 0, capped: false, listKey: '', page: 1, q: '' },
 perf: { q: '', sort: 'total', dir: 'desc' }, docs: { data: null, q: '', incompleteOnly: false },
-insights: null, insTab: 'forecast', modalZ: 21000, req: { status: 'open', data: null }
+insights: null, insTab: 'forecast', modalZ: 21000, req: { status: 'open', data: null },
+cache: {}, cacheKeys: [], sel: new Set(), dueMap: {}, queue: null 
 };
-const TABS = [['dashboard', 'Dashboard'], ['list', 'Applications'], ['requests', 'Requests'], ['performance', 'Performance'], ['docs', 'Student Docs'], ['insights', 'Insights']]; 
-const VIEW_TO_TAB = { 'app-dashboard': 'dashboard', 'app-list': 'list', 'app-requests': 'requests', 'app-performance': 'performance', 'app-docs': 'docs', 'app-insights': 'insights' };
+const TABS = [['dashboard', 'Dashboard'], ['queue', 'My queue'], ['list', 'Applications'], ['requests', 'Requests'], ['performance', 'Performance'], ['docs', 'Student Docs'], ['insights', 'Insights']]; 
+const VIEW_TO_TAB = { 'app-queue': 'queue', 'app-dashboard': 'dashboard', 'app-list': 'list', 'app-requests': 'requests', 'app-performance': 'performance', 'app-docs': 'docs', 'app-insights': 'insights' };
 const PIPE_LABEL = { new: 'New', docsPending: 'Docs Pending', ready: 'Ready', submitted: 'Submitted', offer: 'Offer', deposit: 'Deposit', cas: 'CAS', visaApplied: 'Visa Applied', visaApproved: 'Visa Approved', closed: 'Closed' };
 const STATUS_STAGES = [['pending', 'Pending'], ['submitted', 'Submitted'], ['offer', 'Offer'], ['visaApplied', 'Visa applied'], ['visa', 'Visa approved'], ['visaRefused', 'Visa refused'], ['closed', 'Closed']];
 const STATUS_SUGGESTIONS = ['New', 'Documents Pending', 'Ready to Submit', 'Submitted', 'Under Review', 'Offer Received', 'Deposit Paid', 'CAS Issued', 'I-20 Issued', 'Visa Applied', 'Enrolled', 'On Hold', 'Deferred', 'Not Interested', 'Withdrawn', 'Rejected', 'Cancelled'];
@@ -11941,12 +11979,12 @@ const f = AT.filters;
 const presets = [['all', 'All time'], ['today', 'Today'], ['thisWeek', 'This week'], ['thisMonth', 'This month'], ['lastMonth', 'Last month'], ['custom', 'Custom']];
 return `<div class="at-wrap">
 <div class="at-top">
-<div><h1 class="at-title">🎓 Applications</h1><div class="ins-sub" id="atSub">Loading…</div></div>
+<div><div class="at-eyebrow">Akbar Study Abroad · Application desk</div><h1 class="at-title">Applications</h1><div class="ins-sub" id="atSub">Loading…</div></div>
 <div class="at-actions">
 <button class="um-btn primary" id="atAddBtn">+ Add Application</button>
-<button class="um-btn" id="atExportBtn">⬇ Export CSV</button>
-<button class="um-btn" id="atTargetsBtn" style="display:none;">🎯 Targets</button>
-<button class="um-btn" id="atRefreshBtn">↻ Refresh</button>
+<button class="um-btn" id="atExportBtn">Export CSV</button>
+<button class="um-btn" id="atTargetsBtn" style="display:none;">Targets</button>
+<button class="um-btn" id="atRefreshBtn">Refresh</button>
 <button class="um-btn" id="atBackBtn">${AT.execMode ? 'Log out' : '← Back to dashboard'}</button>
 </div>
 </div>
@@ -12024,19 +12062,39 @@ const seq = ++AT.loadSeq;
 const loader = $('topLoader'); if (loader) loader.classList.add('active');
 const f = apiFilters();
 const calls = [run('getApplicationDashboard', f)];
-if (AT.tab === 'list') calls.push(run('getFilteredApplications', f, AT.list.listKey, false));
+if (AT.tab === 'list' || AT.tab === 'queue') calls.push(run('getFilteredApplications', f, AT.tab === 'list' ? AT.list.listKey : '', false), run('getAppDeadlines', '', ''));
+if (AT.tab === 'queue') calls.push(run('getAppRequests', { status: 'open' }));
 if (AT.tab === 'docs') calls.push(run('getApplicationsOverview', f));
 if (AT.tab === 'insights') calls.push(run('getApplicationInsights', f));
 if (AT.tab === 'requests') calls.push(run('getAppRequests', { status: AT.req.status }));
 if (AT.tab !== 'requests') run('getAppRequests', {}).then(reqBadge).catch(() => {}); 
-Promise.all(calls).then(([dash, extra]) => {
-if (seq !== AT.loadSeq) return;
+
+const ck = JSON.stringify([AT.tab, f, AT.list.listKey, AT.req.status]);
+const apply = res => {
+const [dash, extra, x2, x3] = res;
 AT.dash = dash;
-if (AT.tab === 'list') Object.assign(AT.list, { rows: extra.rows || [], total: extra.total || 0, capped: !!extra.capped });
+if (AT.tab === 'list' || AT.tab === 'queue') {
+Object.assign(AT.list, { rows: extra.rows || [], total: extra.total || 0, capped: !!extra.capped });
+AT.dueMap = {};
+((x2 && x2.rows) || []).filter(d => !d.done).forEach(d => { const k = String(d.appId || '').toLowerCase(); if (!AT.dueMap[k] || d.date < AT.dueMap[k].date) AT.dueMap[k] = d; });
+if (AT.tab === 'queue') AT.queue = { dl: (x2 && x2.rows) || [], reqs: (x3 && x3.rows) || [] };
+}
 if (AT.tab === 'docs') AT.docs.data = extra;
 if (AT.tab === 'insights') AT.insights = extra;
 if (AT.tab === 'requests') { AT.req.data = extra; reqBadge(extra); }
 renderHeader(); renderFilters(); renderTab();
+};
+const sigOf = res => JSON.stringify(res, (k, v) => k === 'loadedAt' || k === 'age' ? undefined : v);
+const hit = AT.cache[ck];
+if (hit) { try { apply(hit.res); } catch (e) {   } }
+Promise.all(calls).then(res => {
+if (seq !== AT.loadSeq) return;
+const sig = sigOf(res);
+AT.cache[ck] = { res: res, sig: sig };
+AT.cacheKeys = AT.cacheKeys.filter(k => k !== ck).concat(ck);
+if (AT.cacheKeys.length > 30) delete AT.cache[AT.cacheKeys.shift()];
+if (hit && hit.sig === sig) { renderHeader(); return; }
+apply(res);
 }).catch(err => {
 if (seq !== AT.loadSeq) return;
 const body = $('atBody'); if (body) body.innerHTML = `<div class="at-card at-empty">${esc(errMsg(err))}</div>`;
@@ -12081,6 +12139,7 @@ $('atfStatus').innerHTML = `<option value="">All statuses</option><optgroup labe
 
 function renderTab() {
 if (AT.tab === 'dashboard') renderAppDashboard(AT.dash);
+else if (AT.tab === 'queue') renderQueue();
 else if (AT.tab === 'list') renderAppList(AT.list);
 else if (AT.tab === 'performance') renderAppPerformance(AT.dash);
 else if (AT.tab === 'docs') renderAppDocs(AT.docs.data);
@@ -12258,6 +12317,79 @@ if (r.age === null || r.age === undefined) return '<span class="at-age">—</spa
 const late = r.flags.indexOf('P') !== -1 && r.age > 7;
 return `<span class="at-age ${late ? 'late' : ''}" title="${late ? 'Pending for more than 7 days' : 'Days since performance date'}">${r.age}d</span>`;
 }
+
+
+function stepsHtml(r) {
+const st = [['Filed', r.appDate], ['Documents', ''], ['Submitted', r.submittedDate], ['Offer', r.offerDate], ['Deposit', r.depositDate], ['Visa', r.visaDate], ['Enrolled', '']];
+const at = { new: 0, docsPending: 1, ready: 1, submitted: 2, offer: 3, deposit: 4, cas: 4, visaApplied: 5, visaApproved: 5, closed: -1 }[r.pipe];
+let cur = at === undefined ? 0 : at;
+if (r.pipe === 'visaApproved') cur = 6;
+if (/enrol/i.test(r.status || '')) cur = 7;
+const closed = r.pipe === 'closed';
+return `<ol class="at-steps ${closed ? 'closed' : ''}">${st.map((x, i) => `<li class="${i < cur ? 'done' : i === cur ? 'cur' : ''}"><span class="nd"></span><b>${x[0]}</b><small>${x[1] ? fmtDate(x[1]) : i === cur ? (closed ? 'Closed' : 'Now') : '&nbsp;'}</small></li>`).join('')}</ol>`;
+}
+function dueChip(r) {
+const d = AT.dueMap[String(r.id || '').toLowerCase()]; if (!d || d.days > 30) return '';
+const w = d.days < 0 ? (-d.days) + 'd overdue' : d.days === 0 ? 'today' : 'in ' + d.days + 'd';
+return `<div class="at-due ${d.days <= 3 ? 'late' : ''}" title="${esc(d.type + ' · ' + fmtDate(d.date) + (d.notes ? ' · ' + d.notes : ''))}">${esc(d.type)} ${w}</div>`;
+}
+function chaseDays(r) {
+if (r.flags.indexOf('S') === -1 || r.flags.indexOf('O') !== -1 || r.flags.indexOf('C') !== -1) return null;
+const base = [r.submittedDate, r.lastChased].filter(Boolean).sort().pop(); if (!base) return null;
+const n = daysBetween(base, todayIST()); return n >= 5 ? n : null;
+}
+function chaseChip(r) { const n = chaseDays(r); return n === null ? '' : `<div class="at-chase" title="Submitted, no offer yet and no chase in ${n} days">Chase uni · ${n}d</div>`; }
+function bulkBarHtml() {
+const o = (AT.dash && AT.dash.options) || {}, sel = (id, label, list) => `<select id="${id}" aria-label="${label}"><option value="">${label}</option>${list.filter(Boolean).map(x => `<option>${esc(x)}</option>`).join('')}</select>`;
+return `<div class="at-bulk ${AT.sel.size ? 'on' : ''}" id="atBulk"><b id="atBulkN">${AT.sel.size} selected</b>
+${sel('atBkStatus', 'Set status', Array.from(new Set(STATUS_SUGGESTIONS.concat(o.status || []))))}
+${user().isExec ? '' : sel('atBkExec', 'Set executive', o.executive || [])}
+${sel('atBkOffer', 'Set offer', OFFER_OPTIONS)}${sel('atBkVisa', 'Set visa', VISA_OPTIONS)}${sel('atBkDep', 'Set deposit', ['Not paid', 'Paid', 'Refunded'])}
+<button class="um-btn primary" id="atBkGo">Apply</button><button class="link-ghost" id="atBkClear">Clear</button></div>`;
+}
+function bindBulk(slice, redraw) {
+const all = $('atCkAll'); if (!all) return;
+const sync = () => { const b = $('atBulk'); if (b) b.classList.toggle('on', AT.sel.size > 0); const n = $('atBulkN'); if (n) n.textContent = AT.sel.size + ' selected'; all.checked = slice.length > 0 && slice.every(r => AT.sel.has(r.row)); };
+all.onchange = () => { slice.forEach(r => all.checked ? AT.sel.add(r.row) : AT.sel.delete(r.row)); redraw(); };
+$('atBody').querySelectorAll('[data-ck]').forEach(c => c.onchange = () => { const n = Number(c.dataset.ck); c.checked ? AT.sel.add(n) : AT.sel.delete(n); c.closest('tr').classList.toggle('sel', c.checked); sync(); });
+sync();
+$('atBkClear').onclick = () => { AT.sel.clear(); redraw(); };
+$('atBkGo').onclick = () => {
+const v = id => ($(id) || {}).value || '';
+const ch = { status: v('atBkStatus'), exec: v('atBkExec'), offerStatus: v('atBkOffer'), visaStatus: v('atBkVisa'), depositStatus: v('atBkDep') };
+Object.keys(ch).forEach(k => { if (!ch[k]) delete ch[k]; });
+if (!Object.keys(ch).length) { showToast('Pick what to change first', 'error'); return; }
+const items = (AT.list.rows || []).filter(r => AT.sel.has(r.row)).map(r => ({ id: r.id, row: r.row }));
+if (!confirm('Change ' + items.length + ' application' + (items.length === 1 ? '' : 's') + ':\n' + Object.keys(ch).map(k => '• ' + k + ' → ' + ch[k]).join('\n'))) return;
+const btn = $('atBkGo'); btn.disabled = true; btn.textContent = 'Saving…';
+run('bulkUpdateApplications', items, ch).then(res => {
+showToast('Updated ' + res.done + ' application' + (res.done === 1 ? '' : 's') + (res.failed.length ? ' · ' + res.failed.length + ' not changed' : ''), res.failed.length ? 'error' : 'success');
+if (res.failed.length) alert('Not changed:\n' + res.failed.join('\n'));
+AT.sel.clear(); AT.cache = {}; AT.cacheKeys = []; load();
+}).catch(e => { btn.disabled = false; btn.textContent = 'Apply'; showToast(errMsg(e), 'error'); });
+};
+}
+function renderQueue() {
+const rows = AT.list.rows || [], q = AT.queue || { dl: [], reqs: [] };
+const has = (r, f) => r.flags.indexOf(f) !== -1;
+const byAge = (a, b) => (b.age || 0) - (a.age || 0);
+const buckets = [
+['Submit to the university', 'Pending — not submitted yet, oldest first', rows.filter(r => has(r, 'P')).sort(byAge), r => ageChip(r)],
+['Chase the university', 'Submitted 5+ days ago, no offer and no chase since', rows.filter(r => chaseDays(r) !== null).sort((a, b) => chaseDays(b) - chaseDays(a)), r => chaseChip(r)],
+['Offer in — collect the deposit', 'Offer received, deposit not marked paid', rows.filter(r => r.pipe === 'offer'), r => `<span class="at-pill offer">${esc(r.offerStatus || 'Offer')}</span>`],
+['Deposit paid — CAS and visa', 'Get the CAS / CoE and hand over to the visa team', rows.filter(r => r.pipe === 'deposit' || r.pipe === 'cas'), r => pipePill(r)]
+];
+const dl = q.dl.filter(d => !d.done && d.days <= 7).sort((a, b) => a.days - b.days);
+const card = (title, sub, list, chip) => `<div class="at-card at-q"><div class="at-q-h"><div><h3>${title}</h3><div class="sub">${sub}</div></div><span class="at-q-n">${list.length}</span></div>
+${list.length ? list.slice(0, 8).map(r => `<button class="at-q-row" data-open="${esc(r.id)}" data-row="${r.row}"><span class="av">${esc(String(r.student || '?').trim().charAt(0).toUpperCase())}</span><span class="tx"><b>${esc(r.student)}</b><small>${esc([r.id, r.university || r.country, (window.akIntake || (x => x))(r.intake)].filter(Boolean).join(' · '))}</small></span>${chip(r)}</button>`).join('') + (list.length > 8 ? `<div class="sub" style="margin-top:6px;">+ ${list.length - 8} more in the Applications tab</div>` : '') : '<div class="at-q-clear">All clear</div>'}</div>`;
+$('atBody').innerHTML = `<div class="at-q-sum">${buckets.map(b => `<div><b>${b[2].length}</b><span>${b[0]}</span></div>`).join('')}<div><b>${dl.length}</b><span>Deadlines this week</span></div><div><b>${q.reqs.length}</b><span>Open requests</span></div></div>
+<div class="at-q-grid">${buckets.map(b => card(b[0], b[1], b[2], b[3])).join('')}
+<div class="at-card at-q"><div class="at-q-h"><div><h3>Deadlines</h3><div class="sub">Overdue and the next 7 days</div></div><span class="at-q-n">${dl.length}</span></div>
+${dl.length ? dl.slice(0, 10).map(d => `<button class="at-q-row" data-open="${esc(d.appId)}"><span class="av">${esc(String(d.student || '?').charAt(0).toUpperCase())}</span><span class="tx"><b>${esc(d.student || d.appId)}</b><small>${esc([d.type, d.university, fmtDate(d.date)].filter(Boolean).join(' · '))}</small></span><span class="at-due ${d.days <= 3 ? 'late' : ''}">${d.days < 0 ? (-d.days) + 'd overdue' : d.days === 0 ? 'today' : 'in ' + d.days + 'd'}</span></button>`).join('') : '<div class="at-q-clear">Nothing due</div>'}</div>
+<div class="at-card at-q"><div class="at-q-h"><div><h3>Open requests</h3><div class="sub">Conditions and document requests waiting</div></div><span class="at-q-n">${q.reqs.length}</span></div>
+${q.reqs.length ? q.reqs.slice(0, 8).map(x => `<button class="at-q-row" data-open="${esc(x.appId)}"><span class="av">${x.kind === 'Condition' ? 'C' : 'D'}</span><span class="tx"><b>${esc(x.student)}</b><small>${esc(x.title)}</small></span>${x.overdue ? '<span class="at-due late">overdue</span>' : ''}</button>`).join('') : '<div class="at-q-clear">No open requests</div>'}</div></div>`;
+$('atBody').querySelectorAll('[data-open]').forEach(b => b.onclick = () => openAppDetail(b.dataset.open, rowPick(rows, b) || null));
+}
 function pipePill(r) { return `<span class="at-pill pipe-${esc(r.pipe)}">${esc(PIPE_LABEL[r.pipe] || r.pipe)}</span>`; }
 
 function renderAppList(data) {
@@ -12273,23 +12405,26 @@ $('atBody').innerHTML = `
 ${lkLabel ? `<span class="at-chip-lk">${esc(lkLabel)}<button id="atClearLk" title="Show all" aria-label="Clear">✕</button></span>` : ''}
 <span class="grow"></span>
 <span style="font-size:12.5px;color:var(--muted);">${rows.length} application${rows.length === 1 ? '' : 's'} matching filters${data.capped ? ' · first 1000 loaded (use filters or Export CSV)' : ''}</span>
-<button class="um-btn primary" id="atListAdd">+ Add Application</button>
+<button class="um-btn primary" id="atListAdd">Add application</button>
 </div>
-<div class="at-card"><div class="at-scroll">${slice.length ? `<table class="at-table"><thead><tr><th>App ID</th><th>Student</th><th>Branch</th><th>Executive</th><th>Country</th><th>University</th><th>Intake</th><th>Status</th><th>Offer</th><th>Visa</th><th>Perf date</th><th>Age</th></tr></thead><tbody>
-${slice.map(r => `<tr class="clickable" data-open="${esc(r.id)}" data-row="${r.row}">
-<td class="num">${esc(r.id)}</td><td><div class="strong">${esc(r.student)}</div>${r.studentId ? `<div class="muted">${esc(r.studentId)}</div>` : ''}</td>
+${bulkBarHtml()}
+<div class="at-card"><div class="at-scroll">${slice.length ? `<table class="at-table"><thead><tr><th class="at-ck"><input type="checkbox" id="atCkAll" aria-label="Select all on this page"></th><th>App ID</th><th>Student</th><th>Branch</th><th>Executive</th><th>Country</th><th>University</th><th>Intake</th><th>Status</th><th>Offer</th><th>Visa</th><th>Perf date</th><th>Age</th></tr></thead><tbody>
+${slice.map(r => `<tr class="clickable ${AT.sel.has(r.row) ? 'sel' : ''}" data-open="${esc(r.id)}" data-row="${r.row}">
+<td class="at-ck"><input type="checkbox" data-ck="${r.row}" ${AT.sel.has(r.row) ? 'checked' : ''} aria-label="Select ${esc(r.student)}"></td>
+<td class="num">${esc(r.id)}</td><td><div class="at-who"><span class="at-av">${esc(String(r.student || '?').trim().split(/\s+/).slice(0, 2).map(w => w.charAt(0)).join('').toUpperCase())}</span><div><div class="strong">${esc(r.student)}</div>${r.studentId ? `<div class="muted">${esc(r.studentId)}</div>` : ''}</div></div></td>
 <td>${esc(r.branch)}</td><td>${r.exec ? `<button class="at-link" data-exec-open="${esc(r.exec)}">${esc(r.exec)}</button>` : '<span class="muted">—</span>'}</td>
 <td>${esc(r.country || '—')}</td><td>${esc(r.university || '—')}</td><td>${esc((window.akIntake || (x => x))(r.intake) || '—')}</td>
 <td>${pipePill(r)}${r.status ? `<div class="muted" style="margin-top:3px;">${esc(r.status)}</div>` : ''}</td>
 <td>${esc(r.offerStatus || '—')}</td><td>${esc(r.visaStatus || '—')}</td>
-<td class="num" title="${r.submittedDate ? 'Submitted date' : 'Application date'}">${fmtDate(r.pd)}</td><td>${ageChip(r)}</td></tr>`).join('')}
+<td class="num" title="${r.submittedDate ? 'Submitted date' : 'Application date'}">${fmtDate(r.pd)}</td><td>${ageChip(r)}${dueChip(r)}${chaseChip(r)}</td></tr>`).join('')}
 </tbody></table>` : '<div class="at-empty">No applications match. Try clearing filters, or click “+ Add Application”.</div>'}</div>
 ${rows.length > PAGE_SIZE ? `<div class="at-pager"><span>Page ${L.page} of ${pages}</span><button class="um-btn" id="atPrev" ${L.page <= 1 ? 'disabled' : ''}>← Prev</button><button class="um-btn" id="atNext" ${L.page >= pages ? 'disabled' : ''}>Next →</button></div>` : ''}
 </div>`;
 bindCommon($('atBody'));
 $('atListAdd').onclick = () => openAddApp();
 const clr = $('atClearLk'); if (clr) clr.onclick = () => { L.listKey = ''; load(); };
-$('atBody').querySelectorAll('tr[data-open]').forEach(tr => tr.onclick = () => openAppDetail(tr.dataset.open, rowPick(L.rows, tr)));
+$('atBody').querySelectorAll('tr[data-open]').forEach(tr => tr.onclick = e => { if (e.target.closest('.at-ck')) return; openAppDetail(tr.dataset.open, rowPick(L.rows, tr)); });
+bindBulk(slice, () => renderAppList(data));
 const prev = $('atPrev'), next = $('atNext');
 if (prev) prev.onclick = () => { L.page--; renderAppList(data); window.scrollTo(0, 0); };
 if (next) next.onclick = () => { L.page++; renderAppList(data); window.scrollTo(0, 0); };
@@ -12388,6 +12523,7 @@ $('appTeamView').appendChild(bg);
 }
 const box = bg.firstElementChild;
 box.style.maxWidth = (opts.width || 640) + 'px';
+box.dataset.app = opts.dataApp || '';
 box.innerHTML = `<div class="at-mhead"><div style="flex:1;min-width:0;"><div class="t">${opts.title}</div>${opts.subtitle ? `<div class="st">${opts.subtitle}</div>` : ''}</div>${opts.headActions || ''}<button class="icon-btn" data-close aria-label="Close" title="Close">✕</button></div>
 <div class="at-mbody">${opts.body || ''}</div>${opts.foot ? `<div class="at-mfoot">${opts.foot}</div>` : ''}`;
 box.querySelector('[data-close]').onclick = () => closeModal(id);
@@ -12452,13 +12588,12 @@ return html;
 const pending = r.flags.indexOf('P') !== -1;
 const pendingDays = r.appDate ? daysBetween(r.appDate, todayIST()) : null;
 const mgr = ((AT.dash && AT.dash.meta.managers) || {})[r.branch] || null;
-const sla = pending && pendingDays !== null && pendingDays > 7 ? `<div class="at-sla"><span class="grow">⚠ Pending for ${pendingDays} days — past the 7-day window.</span>
+const sla = pending && pendingDays !== null && pendingDays > 7 ? `<div class="at-sla"><span class="grow"><b>Pending ${pendingDays} days</b> · past the 7-day window for submission</span>
 <button class="um-btn danger" id="atEscalate" ${mgr && mgr.phone ? '' : `disabled title="No manager phone set for ${esc(r.branch)} in the Branches sheet"`}>Escalate on WhatsApp</button></div>` : '';
-setTimeout(() => { if (window.akAppFlight) try { window.akAppFlight(r); } catch (e) {   } }, 0);
 const box = openModal('atDetailBg', {
-title: esc(r.id) + ' · ' + esc(r.student), subtitle: esc([r.branch, r.country, r.university].filter(Boolean).join(' · ')), width: 760,
-headActions: `<button class="um-btn" id="atDetailVisa" title="Hand this student to the visa team">🛂 Send to visa</button><button class="um-btn" id="atDetailCond" title="The university gave a condition — tell the branch manager and counsellor">⚑ Condition</button><button class="um-btn" id="atDetailReqDocs" title="Ask the counsellor for documents (list by country)">📄 Request docs</button><button class="um-btn" id="atDetailAnother" title="Same student, another university">＋ Another university</button><button class="um-btn" id="atDetailKey" title="Deadlines, offer letter and CAS with expiry reminders">📅 Dates &amp; offer/CAS</button><button class="um-btn" id="atDetailDocs">📎 Documents</button>${window._isSuperAdmin ? '<button class="um-btn danger" id="atDetailDel" title="Super Admins: delete this application (a full copy is kept)">🗑 Delete</button>' : ''}<button class="um-btn primary" id="atDetailEdit">Edit</button>`,
-body: `<div id="atFlight" style="margin:-2px 0 12px;"></div>${sla}<div class="at-student-apps" id="atStudentApps"><div class="card-section-title">This student's applications</div><div class="skeleton" style="height:40px;"></div></div><div id="atAppReqs"></div><div class="at-2col" style="margin-bottom:0;">
+title: esc(r.id) + ' · ' + esc(r.student), dataApp: String(r.row || r.id), subtitle: esc([r.branch, r.country, r.university].filter(Boolean).join(' · ')), width: 760,
+headActions: `<div class="at-hacts"><button class="um-btn primary" id="atDetailEdit">Edit</button><button class="um-btn" id="atDetailDocs">Documents</button><button class="um-btn" id="atDetailKey" title="Deadlines, offer letter and CAS with expiry reminders">Dates, offer &amp; CAS</button><button class="um-btn" id="atDetailReqDocs" title="Ask the counsellor for documents (list by country)">Request documents</button><button class="um-btn" id="atDetailCond" title="The university gave a condition — tell the branch manager and counsellor">Condition</button><button class="um-btn" id="atDetailVisa" title="Hand this student to the visa team">Send to visa</button>${chaseDays(r) !== null || (r.flags.indexOf('S') !== -1 && r.flags.indexOf('O') === -1) ? '<button class="um-btn" id="atDetailChase" title="You chased the university today — the reminder restarts">Chased university today</button>' : ''}<button class="um-btn" id="atDetailAnother" title="Same student, another university">Another university</button>${window._isSuperAdmin ? '<button class="um-btn at-del" id="atDetailDel" title="Super Admins: delete this application (a full copy is kept)">Delete</button>' : ''}</div>`,
+body: `${stepsHtml(r)}${sla}<div class="at-student-apps" id="atStudentApps"><div class="card-section-title">This student's applications</div><div class="skeleton" style="height:40px;"></div></div><div id="atAppReqs"></div><div class="at-2col" style="margin-bottom:0;">
 <div><div class="at-detail-grid">
 ${field('Student', esc(r.student))}${field('Student ID', esc(r.studentId))}
 ${field('Branch', esc(r.branch))}${field('Counsellor', esc(r.counsellor))}
@@ -12467,7 +12602,7 @@ ${field('University', esc(r.university))}${field('Course', esc(r.course))}
 ${field('Intake', esc((window.akIntake || (x => x))(r.intake)))}${field('Stage', pipePill(r))}
 ${field('Application Status', esc(r.status))}${field('Offer Status', esc(r.offerStatus))}
 ${field('Initial Deposit', esc([r.depositStatus, r.depositAmount ? rupeesSafe(r.depositAmount) : '', r.depositDate ? fmtDate(r.depositDate) : ''].filter(Boolean).join(' · ')))}${field('Visa Status', esc(r.visaStatus))}
-${field('Application Fee', r.fee ? rupeesSafe(r.fee) : '')}
+${field('Application Fee', r.fee ? rupeesSafe(r.fee) : '')}${field('Last chased university', r.lastChased ? fmtDate(r.lastChased) : '')}
 ${field('Last updated', r.lastUpdated ? esc(new Date(r.lastUpdated).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })) : '')}${field('Created', r.createdAt ? esc(new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })) : '')}${field('Submitted by', esc(r.createdBy || (/^B2B ·/.test(r.remarks || '') ? 'B2B team' : '')))}
 ${field('Remarks', esc(r.remarks).replace(/\n/g, '<br>'), true)}
 </div></div>
@@ -12475,6 +12610,9 @@ ${field('Remarks', esc(r.remarks).replace(/\n/g, '<br>'), true)}
 </div>`
 });
 box.querySelector('#atDetailEdit').onclick = () => openEditApp(r);
+const liveBox = () => box.dataset.app === String(r.row || r.id) && box.parentNode && box.parentNode.classList.contains('open'); 
+{ const ch = box.querySelector('#atDetailChase'); if (ch) ch.onclick = () => { const t = todayIST(); r.lastChased = t; ch.disabled = true; ch.textContent = 'Chased today'; showToast('Noted — reminder restarts from today', 'success');
+run('updateApplication', { id: r.id, row: r.row, lastChased: t }).then(() => { AT.cache = {}; AT.cacheKeys = []; }).catch(e => { ch.disabled = false; ch.textContent = 'Chased university today'; showToast(errMsg(e), 'error'); }); }; }
 { const del = box.querySelector('#atDetailDel'); if (del) del.onclick = () => { 
 const why = prompt('Delete application ' + r.id + ' — ' + r.student + '?\n\nA full copy is kept in the "Deleted Applications" tab.\nReason:', ''); if (why === null) return;
 if (!why.trim()) { showToast('Give a reason to delete', 'error'); return; }
@@ -12482,6 +12620,7 @@ del.disabled = true; run('deleteApplication', r.id, why.trim()).then(() => { clo
 
 box.querySelector('#atDetailAnother').onclick = () => openAppForm(null, { student: r.student, studentId: r.studentId, branch: r.branch, counsellor: r.counsellor, exec: r.exec, country: r.country });
 run('getStudentApplications', r.studentId || '', r.student, r.branch).then(res => {
+  if (!liveBox()) return;
   const host = box.querySelector('#atStudentApps'); if (!host) return;
   const list = res.rows || [];
   host.innerHTML = '<div class="card-section-title">This student\'s applications (' + list.length + ')</div>' + (list.length ? '<div class="at-sa-list">' + list.map(a => '<button class="at-sa-item ' + (a.row === r.row ? 'current' : '') + '" data-sa-open="' + esc(a.id) + '" data-row="' + a.row + '"><b>' + esc(a.university || '—') + '</b><span>' + esc([a.course, a.intake, a.country].filter(Boolean).join(' · ')) + '</span><span class="at-sa-meta">' + esc(a.id) + ' · ' + esc(a.status || '—') + (a.offerStatus ? ' · Offer: ' + esc(a.offerStatus) : '') + (a.visaStatus ? ' · Visa: ' + esc(a.visaStatus) : '') + '</span></button>').join('') + '</div>' : '') +
@@ -12544,7 +12683,7 @@ body.querySelectorAll('tr[data-req]').forEach(tr => tr.onclick = () => openReque
 function loadAppReqs(r) {
 const host = document.getElementById('atAppReqs'); if (!host) return;
 run('getAppRequests', { appId: r.id }).then(res => {
-const h = document.getElementById('atAppReqs'); if (!h) return;
+const h = host; if (!h.isConnected) return;
 const rows = res.rows || [];
 h.innerHTML = rows.length ? `<div class="card-section-title">Requests on this application (${rows.length})</div><div class="at-req-mini">${rows.map(q => `<button class="at-req-item" data-req-open="${esc(q.id)}">${reqKind(q)}<span class="grow">${esc(q.title)}</span>${reqPill(q)}</button>`).join('')}</div>` : '';
 h.querySelectorAll('[data-req-open]').forEach(b => b.onclick = () => openRequest(rows.find(q => q.id === b.dataset.reqOpen)));
@@ -12553,12 +12692,13 @@ h.querySelectorAll('[data-req-open]').forEach(b => b.onclick = () => openRequest
 function openRaiseRequest(r, kind) {
 const isCond = kind === 'Condition';
 const box = openModal('atReqBg', {
-title: isCond ? '⚑ Condition from the university' : '📄 Request documents', subtitle: esc(r.id + ' · ' + r.student + (r.university ? ' · ' + r.university : '')), width: 640,
+title: isCond ? 'Condition from the university' : 'Request documents', subtitle: esc(r.id + ' · ' + r.student + (r.university ? ' · ' + r.university : '')), width: 640, dataApp: 'req:' + r.id + ':' + kind,
 body: '<div class="skeleton" style="height:160px;"></div>',
 foot: `<div class="at-form-msg" id="atReqMsg" style="flex:1;margin:0;"></div><button class="um-btn" data-close-req>Cancel</button><button class="um-btn primary" id="atReqSave" disabled>${isCond ? 'Escalate' : 'Send request'}</button>`
 });
 box.querySelector('[data-close-req]').onclick = () => closeModal('atReqBg');
 run('getAppRequestOptions', r.id).then(o => {
+if (box.dataset.app !== 'req:' + r.id + ':' + kind) return;
 const ck = (d, i) => `<label class="at-req-ck"><input type="checkbox" value="${esc(d)}" data-req-doc id="atReqDoc${i}"> ${esc(d)}</label>`;
 const tell = o.notify.length ? 'Will notify ' + o.notify.join(' and ') + '.' : 'No branch manager or counsellor found for this application — add them so someone is told.';
 box.querySelector('.at-mbody').innerHTML = isCond ? `<div class="at-form-grid">
@@ -12566,13 +12706,13 @@ box.querySelector('.at-mbody').innerHTML = isCond ? `<div class="at-form-grid">
 <div class="um-field"><label>Needed by (deadline)</label><input type="date" id="atReqDue"></div>
 <div class="um-field full"><label>Condition given by the university *</label><textarea id="atReqTitle" class="at-req-ta" placeholder="e.g. IELTS 6.5 overall with no band below 6.0 before 15 Nov"></textarea></div>
 <div class="um-field full"><label>What the counsellor should do (optional)</label><textarea id="atReqDetails" class="at-req-ta" placeholder="e.g. Book the student's IELTS retake and share the date"></textarea></div></div>
-<div class="at-req-tell">🔔 ${esc(tell)}</div>`
+<div class="at-req-tell">${esc(tell)}</div>`
 : `<div class="at-req-docs">${o.countryDocs.length ? `<div class="card-section-title">For ${esc(o.country)}</div><div class="at-req-grid">${o.countryDocs.map((d, i) => ck(d, 'c' + i)).join('')}</div>` : `<div class="sx-sub">No country list for “${esc(o.country || 'this country')}” yet — pick from the common list or type below.</div>`}
 <div class="card-section-title" style="margin-top:10px;">Common documents</div><div class="at-req-grid">${o.commonDocs.map((d, i) => ck(d, 'm' + i)).join('')}</div></div>
 <div class="at-form-grid" style="margin-top:12px;"><div class="um-field"><label>Other document (optional)</label><input id="atReqOther" placeholder="Type any other document"></div>
 <div class="um-field"><label>Needed by</label><input type="date" id="atReqDue"></div>
 <div class="um-field full"><label>Note for the counsellor (optional)</label><textarea id="atReqDetails" class="at-req-ta" placeholder="e.g. Bank statement must be in the sponsor's name, last 6 months"></textarea></div></div>
-<div class="at-req-tell">🔔 ${esc(tell)}</div>`;
+<div class="at-req-tell">${esc(tell)}</div>`;
 const save = box.querySelector('#atReqSave'); save.disabled = false;
 save.onclick = () => {
 const msg = box.querySelector('#atReqMsg');
@@ -12715,7 +12855,12 @@ if (k === 'fee' || k === 'depositAmount' ? Number(p[k] || 0) !== Number(before |
 if (Object.keys(changed).length === 1) { closeModal('atFormBg'); showToast('No changes to save', 'success'); return; }
 changed.row = rec.row;
 call = run('updateApplication', changed);
-} else call = run('addApplication', p);
+} else {
+const nm = x => String(x || '').trim().toLowerCase();
+const dupe = p.university && (AT.list.rows || []).find(x => nm(x.university) === nm(p.university) && (p.studentId ? nm(x.studentId) === nm(p.studentId) : nm(x.student) === nm(p.student)) && x.flags.indexOf('C') === -1);
+if (dupe) { if (!confirm(dupe.id + ' already has ' + dupe.student + ' at ' + dupe.university + '.\n\nAdd another application anyway?')) return; p.allowDuplicate = true; }
+call = run('addApplication', p);
+}
 
 const backup = rec ? Object.assign({}, rec) : null;
 if (rec) {
@@ -12725,10 +12870,12 @@ if ($('atDetailBg') && $('atDetailBg').classList.contains('open')) openAppDetail
 closeModal('atFormBg');
 showToast(rec ? 'Saved ' + rec.id : 'Adding ' + p.student + '…', 'success');
 call.then(res => {
+AT.cache = {}; AT.cacheKeys = [];
 if (!rec) showToast('Added ' + res.id, 'success');
 if (rec && res.row) { Object.assign(rec, res.row); if ($('atDetailBg') && $('atDetailBg').classList.contains('open') && $('atDetailBg').querySelector('.t') && $('atDetailBg').querySelector('.t').textContent.indexOf(rec.id) === 0) openAppDetail(res.id, rec); }
 load();
 }).catch(err => {
+if (!rec && /^Duplicate/.test(errMsg(err)) && confirm(errMsg(err) + '\n\nAdd another application anyway?')) { run('addApplication', Object.assign({}, p, { allowDuplicate: true })).then(res => { showToast('Added ' + res.id, 'success'); load(); }).catch(e => showToast('Not saved: ' + errMsg(e), 'error')); return; }
 showToast('Not saved: ' + errMsg(err), 'error');
 if (rec) { Object.keys(rec).forEach(k => delete rec[k]); Object.assign(rec, backup); }
 if (rec) openAppForm(rec); else openAppForm(null, p);
@@ -12743,8 +12890,8 @@ function getUploaderName() { try { return localStorage.getItem('at_uploader') ||
 function setUploaderName(v) { try { localStorage.setItem('at_uploader', v); } catch (e) {   } }
 
 function openStudentDocsModal(appId) {
-const box = openModal('atDocsBg', { title: 'Documents', subtitle: esc(appId), width: 860, body: '<div class="skeleton" style="height:260px;"></div>' });
-run('getStudentDocuments', appId).then(d => renderDocsModal(box, d)).catch(err => { box.querySelector('.at-mbody').innerHTML = `<div class="at-empty">${esc(errMsg(err))}</div>`; });
+const box = openModal('atDocsBg', { title: 'Documents', subtitle: esc(appId), width: 860, body: '<div class="skeleton" style="height:260px;"></div>', dataApp: 'docs:' + appId });
+run('getStudentDocuments', appId).then(d => { if (box.dataset.app === 'docs:' + appId) renderDocsModal(box, d); }).catch(err => { box.querySelector('.at-mbody').innerHTML = `<div class="at-empty">${esc(errMsg(err))}</div>`; });
 }
 
 function renderDocsModal(box, d) {
@@ -12757,7 +12904,7 @@ const fileRow = (x, showType) => `<div class="app-doc-file" data-file="${esc(x.f
 <div class="meta">${esc(x.by)}<br>${x.at ? esc(new Date(x.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })) : ''}</div>
 <select data-status aria-label="Status" ${d.canReview ? '' : 'disabled title="Only Managers and Super Admins can verify or reject"'}>${['Uploaded', 'Verified', 'Rejected'].map(s => `<option ${s === x.status ? 'selected' : ''}>${s}</option>`).join('')}</select>
 <input data-note placeholder="Note…" value="${esc(x.notes)}" aria-label="Note">
-<div class="acts"><button class="icon-btn" data-dl title="Download" aria-label="Download">⬇</button><button class="icon-btn" data-rm title="Remove" aria-label="Remove" style="color:var(--red);">🗑</button></div>
+<div class="acts"><button class="um-btn at-mini" data-dl title="Download">Download</button><button class="um-btn at-mini at-del" data-rm title="Remove">Remove</button></div>
 </div>`;
 const docsFor = type => d.docs.filter(x => x.type.toLowerCase() === type.toLowerCase());
 const requiredLower = d.required.map(x => x.toLowerCase());
@@ -12842,7 +12989,7 @@ if (zone) zone.appendChild(tmp);
 msg.textContent = ''; msg.className = 'at-form-msg';
 AT.upBusy = (AT.upBusy || 0) + 1;
 const send = b64 => run('uploadDocument', d.app.id, type, file.name, file.type, b64, uploader || window._viewerName || '')
-.then(res => { AT.upBusy--; showToast('Uploaded ' + file.name, 'success'); if (!AT.upBusy) { renderDocsModal(box, res); refreshDocsTab(); } else { tmp.classList.add('done'); tmp.querySelector('.meta').textContent = 'Uploaded'; } })
+.then(res => { AT.upBusy--; showToast('Uploaded ' + file.name, 'success'); if (box.dataset.app !== 'docs:' + d.app.id) return; if (!AT.upBusy) { renderDocsModal(box, res); refreshDocsTab(); } else { tmp.classList.add('done'); tmp.querySelector('.meta').textContent = 'Uploaded'; } })
 .catch(err => { AT.upBusy--; tmp.remove(); fail(file.name + ': ' + errMsg(err)); });
 akShrinkForUpload(file).then(send).catch(() => { AT.upBusy--; tmp.remove(); fail('Could not read the file.'); });
 }
@@ -27039,6 +27186,114 @@ window.openAppContent = open;
 .ld-st{font-size:11.5px;font-weight:600;border-radius:6px;padding:3px 8px;background:var(--canvas);color:var(--muted)}.ld-st.Verified{color:var(--ok)}.ld-st.Rejected{color:var(--red)}
 .ld-empty{font-size:13px;color:var(--muted);padding:12px 0}.ld-miss{font-size:12.5px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)}
 @media (max-width:640px){.ld-file{flex-wrap:wrap}.ld-fm{flex-basis:100%}}</style>
+<style>
+
+:root { --atl-ink: #0E1222; --atl-navy: #161B33; --atl-navy2: #232A4A; --atl-gold: #B8925A; --atl-line: rgba(14,18,34,.08); --atl-tint: rgba(22,27,51,.035); }
+[data-theme="dark"] { --atl-line: rgba(255,255,255,.08); --atl-tint: rgba(255,255,255,.04); }
+.at-top, .sx-wrap > .sx-top {
+  position: relative; overflow: hidden; color: #fff; border-radius: 20px; padding: 26px 28px 24px; margin-bottom: 18px;
+  background: radial-gradient(900px 280px at 100% -10%, rgba(184,146,90,.20), transparent 62%), radial-gradient(700px 240px at -10% 120%, rgba(242,47,61,.10), transparent 60%), linear-gradient(135deg, #0E1222 0%, #161B33 55%, #1E2546 100%);
+  box-shadow: 0 28px 56px -32px rgba(14,18,34,.7);
+}
+.at-top::after, .sx-wrap > .sx-top::after { content: ''; position: absolute; left: 28px; right: 28px; bottom: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(184,146,90,.75), transparent); }
+.at-eyebrow { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(184,146,90,.95); font-weight: 600; margin-bottom: 6px; }
+.at-top .at-title, .sx-wrap > .sx-top .sx-title { color: #fff !important; font-family: 'Fraunces', serif; font-weight: 500; font-size: 32px; letter-spacing: -.015em; }
+.at-top .ins-sub, .sx-wrap > .sx-top .sx-sub { color: rgba(255,255,255,.62) !important; margin-top: 4px; }
+.at-top .um-btn, .sx-wrap > .sx-top .um-btn { background: rgba(255,255,255,.06) !important; border: 1px solid rgba(255,255,255,.16) !important; color: #fff !important; box-shadow: none !important; font-weight: 500; }
+.at-top .um-btn:hover, .sx-wrap > .sx-top .um-btn:hover { background: rgba(255,255,255,.13) !important; }
+.at-top .um-btn.primary, .sx-wrap > .sx-top .um-btn.primary { background: #fff !important; color: var(--atl-ink) !important; border-color: #fff !important; font-weight: 600; }
+#appTeamView .at-wrap > :not(.at-top) .um-btn.primary, #appTeamView .at-mfoot .um-btn.primary, #b2bView .sx-wrap > :not(.sx-top) .um-btn.primary { background: linear-gradient(180deg, #232A4A, #161B33) !important; border-color: #161B33 !important; color: #fff !important; box-shadow: 0 6px 16px -8px rgba(22,27,51,.6) !important; }
+#appTeamView .at-tab.active, .sx-wrap .sx-tab.active { color: var(--ink); border-bottom-color: var(--atl-navy); }
+[data-theme="dark"] #appTeamView .at-tab.active, [data-theme="dark"] .sx-wrap .sx-tab.active { border-bottom-color: var(--atl-gold); }
+#appTeamView .at-filters, .sx-wrap .sx-filters { border: 1px solid var(--atl-line); box-shadow: 0 1px 2px rgba(14,18,34,.04); }
+#appTeamView .at-chip.active { background: var(--atl-navy); border-color: var(--atl-navy); }
+
+#appTeamView .app-kpi-grid > .at-kpi:not(:first-child) { background: var(--card) !important; border: 1px solid var(--atl-line) !important; box-shadow: 0 1px 2px rgba(14,18,34,.04) !important; }
+#appTeamView .app-kpi-grid > .at-kpi:not(:first-child)::before, #appTeamView .app-kpi-grid > .at-kpi:not(:first-child)::after { display: none !important; }
+#appTeamView .app-kpi-grid > .at-kpi:not(:first-child) .l { color: var(--muted) !important; }
+#appTeamView .app-kpi-grid > .at-kpi:not(:first-child) .l::before { display: none !important; }
+#appTeamView .at-kpi .n { font-family: 'Fraunces', serif !important; font-weight: 500 !important; font-size: 30px !important; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+#appTeamView .at-card, .sx-wrap .sx-card { border: 1px solid var(--atl-line); box-shadow: 0 1px 2px rgba(14,18,34,.04); border-radius: 16px; }
+
+#appTeamView .at-table th { font-size: 11px; font-weight: 600; letter-spacing: .06em; color: var(--muted); padding: 12px 10px; background: transparent; }
+#appTeamView .at-table td { padding: 14px 10px; border-bottom-color: var(--atl-line); vertical-align: middle; }
+#appTeamView .at-table tr.clickable:hover td { background: var(--atl-tint); }
+#appTeamView .at-table tr.sel td { background: rgba(184,146,90,.09); }
+#appTeamView .at-table td.num:nth-child(2) { font-size: 12px; color: var(--muted); }
+.at-who { display: flex; align-items: center; gap: 10px; }
+.at-av { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-size: 11.5px; font-weight: 600; letter-spacing: .02em; color: var(--atl-navy); background: linear-gradient(180deg, #EEF0F7, #E3E6F0); box-shadow: inset 0 0 0 1px rgba(22,27,51,.06); }
+[data-theme="dark"] .at-av { color: #DCE0F0; background: linear-gradient(180deg, #2A3152, #20263F); }
+.at-ck { width: 34px; }
+.at-ck input { width: 16px; height: 16px; accent-color: #161B33; cursor: pointer; }
+
+#appTeamView .at-pill { font-weight: 600; font-size: 11px; padding: 3px 9px 3px 8px; border-radius: 999px; box-shadow: inset 0 0 0 1px currentColor; background: transparent !important; }
+#appTeamView .at-pill::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: currentColor; margin-right: 6px; vertical-align: 1px; }
+#appTeamView .at-pill[class*="pipe-"] { opacity: .95; }
+.at-due, .at-chase { display: inline-block; margin-top: 6px; font-size: 11px; font-weight: 600; border-radius: 6px; padding: 2px 7px; white-space: nowrap; color: var(--muted); background: var(--atl-tint); }
+.at-due.late { color: var(--red); background: rgba(242,47,61,.08); }
+.at-chase { color: #8A6A3A; background: rgba(184,146,90,.14); }
+[data-theme="dark"] .at-chase { color: #E2C08E; }
+
+.at-bulk { display: none; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 14px; margin-bottom: 12px; border-radius: 14px; color: #fff; background: linear-gradient(135deg, #0E1222, #1E2546); box-shadow: 0 16px 32px -20px rgba(14,18,34,.8); position: sticky; top: 8px; z-index: 5; }
+.at-bulk.on { display: flex; }
+.at-bulk b { font-weight: 600; margin-right: 6px; }
+.at-bulk select { border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.07); color: #fff; border-radius: 8px; padding: 7px 9px; font: inherit; font-size: 12.5px; }
+.at-bulk select option { color: #111; }
+.at-bulk .um-btn.primary { background: #fff !important; color: var(--atl-ink) !important; border-color: #fff !important; }
+.at-bulk .link-ghost { color: rgba(255,255,255,.75); }
+
+.at-q-sum { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; background: var(--atl-line); border-radius: 16px; overflow: hidden; margin-bottom: 16px; border: 1px solid var(--atl-line); }
+.at-q-sum > div { background: var(--card); padding: 16px 18px; }
+.at-q-sum b { display: block; font-family: 'Fraunces', serif; font-weight: 500; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
+.at-q-sum span { display: block; font-size: 12px; color: var(--muted); margin-top: 8px; }
+.at-q-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.at-q-h { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.at-q-h h3 { font-size: 14px !important; font-weight: 600 !important; margin: 0 0 2px !important; }
+.at-q-n { font-family: 'Fraunces', serif; font-size: 22px; color: var(--muted); }
+.at-q-row { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; font: inherit; color: var(--ink); background: none; border: 0; border-top: 1px solid var(--atl-line); padding: 10px 2px; cursor: pointer; }
+.at-q-row:hover { background: var(--atl-tint); }
+.at-q-row .av { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 600; color: var(--atl-navy); background: #EEF0F7; flex-shrink: 0; }
+[data-theme="dark"] .at-q-row .av { color: #DCE0F0; background: #252B47; }
+.at-q-row .tx { flex: 1; min-width: 0; }
+.at-q-row .tx b { display: block; font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.at-q-row .tx small { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.at-q-row .at-due, .at-q-row .at-chase { margin-top: 0; }
+.at-q-clear { font-size: 13px; color: var(--muted); padding: 14px 0 6px; border-top: 1px solid var(--atl-line); }
+@media (max-width: 1100px) { .at-q-sum { grid-template-columns: repeat(3, minmax(0, 1fr)); } .at-q-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 700px) { .at-q-sum { grid-template-columns: repeat(2, minmax(0, 1fr)); } .at-q-grid { grid-template-columns: 1fr; } .at-top, .sx-wrap > .sx-top { padding: 20px 18px; border-radius: 16px; } .at-top .at-title { font-size: 26px; } }
+
+#appTeamView .at-mbox .at-mhead { background: linear-gradient(135deg, #0E1222, #1A2040); color: #fff; border-bottom: 1px solid rgba(184,146,90,.35); border-radius: inherit; border-bottom-left-radius: 0; border-bottom-right-radius: 0; padding: 20px 22px; flex-wrap: wrap; }
+#appTeamView .at-mbox .at-mhead .t { color: #fff; font-family: 'Fraunces', serif; font-weight: 500; font-size: 20px; }
+#appTeamView .at-mbox .at-mhead .st { color: rgba(255,255,255,.6); }
+#appTeamView .at-mbox .at-mhead [data-close] { color: #fff; opacity: .7; }
+#appTeamView .at-mbox .at-mhead .um-btn { background: rgba(255,255,255,.06) !important; border: 1px solid rgba(255,255,255,.16) !important; color: #fff !important; box-shadow: none !important; font-weight: 500; }
+#appTeamView .at-mbox .at-mhead .um-btn:hover { background: rgba(255,255,255,.13); }
+#appTeamView .at-mbox .at-mhead .um-btn.primary { background: #fff !important; color: var(--atl-ink) !important; border-color: #fff !important; font-weight: 600; box-shadow: none !important; }
+.at-hacts { order: 3; flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.at-hacts .at-del, #appTeamView .at-del { color: #FF8A93 !important; border-color: rgba(255,138,147,.35) !important; margin-left: auto; }
+.at-mbody .at-del { color: var(--red) !important; border-color: rgba(242,47,61,.3) !important; margin-left: 0; }
+.um-btn.at-mini { padding: 4px 9px; font-size: 11.5px; }
+.at-sla { border-radius: 12px; background: rgba(242,47,61,.06); box-shadow: inset 3px 0 0 var(--red); color: var(--ink); }
+
+.at-steps { display: flex; list-style: none; margin: 6px 0 20px; padding: 0; overflow-x: auto; scrollbar-width: none; }
+.at-steps li { flex: 1 0 84px; position: relative; padding-top: 26px; padding-right: 8px; }
+.at-steps li::before { content: ''; position: absolute; top: 8px; left: 18px; right: 0; height: 2px; background: var(--atl-line); }
+.at-steps li:last-child::before { display: none; }
+.at-steps li.done::before { background: var(--atl-navy); }
+[data-theme="dark"] .at-steps li.done::before { background: var(--atl-gold); }
+.at-steps .nd { position: absolute; top: 0; left: 0; width: 18px; height: 18px; border-radius: 50%; background: var(--card); box-shadow: inset 0 0 0 2px var(--border); }
+.at-steps li.done .nd { background: var(--atl-navy); box-shadow: none; }
+.at-steps li.done .nd::after { content: ''; position: absolute; left: 6px; top: 3.5px; width: 4px; height: 8px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+[data-theme="dark"] .at-steps li.done .nd { background: var(--atl-gold); }
+.at-steps li.cur .nd { background: var(--card); box-shadow: inset 0 0 0 5px var(--red), 0 0 0 5px rgba(242,47,61,.12); }
+.at-steps.closed li.cur .nd { box-shadow: inset 0 0 0 5px var(--muted); }
+.at-steps b { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink); }
+.at-steps li:not(.done):not(.cur) b { color: var(--muted); font-weight: 500; }
+.at-steps small { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+.lt-kind { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.lt-kind.none { color: var(--warm); }
+</style>
 
 <style>
 #akInstallChip { position: fixed; left: 16px; bottom: 16px; z-index: 9500; display: none; align-items: center; gap: 10px; background: #201E2C; color: #fff; border-radius: 16px; padding: 10px 12px 10px 14px; box-shadow: 0 16px 34px -14px rgba(0,0,0,.6); font-size: 13px; font-weight: 600; animation: akChipIn .5s cubic-bezier(.2,.8,.2,1); max-width: calc(100vw - 32px); }
