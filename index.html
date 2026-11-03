@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '3 Nov 2026 · v168';
+window.AKBAR_BUILD = '3 Nov 2026 · v168b';
 
 (function () {
   try {
@@ -14094,6 +14094,10 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) chec
 
 <style>
 #cfView { display: none; }
+#cfView [hidden] { display: none !important; }
+.cf-start { text-align: center; padding: 44px 24px; }
+.cf-start h3 { font-size: 17px; margin: 0 0 6px; color: var(--ink); }
+.cf-start p { color: var(--muted); font-size: 13.5px; margin: 0 auto 18px; max-width: 460px; }
 .cf-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: start; }
 @media (max-width: 960px) { .cf-grid { grid-template-columns: minmax(0, 1fr); } }
 .cf-prof { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; }
@@ -14274,7 +14278,7 @@ function build(root) {
 <div class="cf-bar"><div class="sx-sub" id="cfNote" style="margin:0;"></div><div class="cf-sort"><span class="cf-lbl">Sort</span><select id="cfSort"><option value="qs">QS rank</option><option value="fit">Best fit</option><option value="fee">Lowest fee</option><option value="ielts">Lowest IELTS</option><option value="count">Most courses</option></select></div></div>
 <div id="cfList"><div class="sx-card"><div class="skeleton" style="height:180px;"></div></div></div>
 <div id="cfMoreWrap" style="text-align:center;margin:4px 0 12px;" hidden><button class="um-btn" type="button" id="cfMore">Show more universities</button></div>
-<div class="cf-tray" id="cfTray"><span class="t">Shortlist <b id="cfN">0</b></span><span class="l" id="cfTL">Press Shortlist on the courses you want to send.</span>
+<div class="cf-tray" id="cfTray" hidden><span class="t">Shortlist <b id="cfN">0</b></span><span class="l" id="cfTL">Press Shortlist on the courses you want to send.</span>
 <button class="um-btn" type="button" id="cfCopy">Copy for WhatsApp</button><button class="um-btn" type="button" id="cfPdf">Download PDF</button><button class="um-btn" type="button" id="cfSend">Send to student app</button><button class="um-btn" type="button" id="cfApply">Start applications</button><button class="um-btn primary" type="button" id="cfSave">Save to lead</button></div>
 </div></div></div>
 <div data-cf-pane="compare" hidden></div>
@@ -14291,23 +14295,32 @@ function build(root) {
   $('cfSort').onchange = search;
   $('cfMore').onclick = () => { S.limit += 20; search(); };
   $('cfClear').onclick = () => { fill({}); search(); };
-  $('cfCountry').onchange = () => { const c = (S.set.countries || []).find(x => x.country === $('cfCountry').value); if (c && !c.courses) { toast('No course sheet for ' + c.country + ' yet. Directors can add one under Data and rules.', true); $('cfCountry').value = ((S.set.countries || []).find(x => x.courses) || {}).country || ''; } meta(); S.limit = 20; search(); };
+  $('cfCountry').onchange = () => { meta(); S.limit = 20; search(); };
   root.addEventListener('click', onClick);
   $('cfCopy').onclick = copy; $('cfPdf').onclick = pdf; $('cfSave').onclick = save; $('cfSend').onclick = send; $('cfApply').onclick = apply;
   run('getCourseFinderSettings').then(s => { S.set = s; setup(); search(); }).catch(e => { $('cfList').innerHTML = `<div class="sx-card cf-empty">${esc(msg(e))}</div>`; });
 }
 function setup() {
   const s = S.set;
-  $('cfCountry').innerHTML = (s.countries || []).map(c => `<option ${c.courses ? '' : 'disabled'}>${esc(c.country)}</option>`).join('');
+  $('cfCountry').innerHTML = countryOpts(s);
   $('cfLv').innerHTML = (s.levels || []).map(l => `<option>${esc(l)}</option>`).join('');
   $('cfSetTab').hidden = !s.canEdit;
-  const first = (s.countries || []).find(c => c.courses);
-  if (first) $('cfCountry').value = first.country;
+  $('cfCountry').value = ((s.countries || []).find(c => c.courses) || { country: 'United Kingdom' }).country;
   meta();
   fill({ level: 'Postgraduate', keywords: 'business', maxFee: 20000, pct: 60, ielts: 6.5, band: 6, intake: 'Sep' });
 }
+function countryOpts(s) { return (s.countries || []).map(c => `<option value="${esc(c.country)}">${esc(c.country)}${c.courses ? '' : ' (no sheet yet)'}</option>`).join(''); }
+function hasData() { const c = ((S.set && S.set.countries) || []).find(x => x.country === $('cfCountry').value); return !!(c && c.courses); }
+function noData() {
+  const c = $('cfCountry').value || 'this country';
+  ['cfKpis', 'cfNote', 'cfMoreWrap'].forEach(id => { $(id).innerHTML = id === 'cfMoreWrap' ? $(id).innerHTML : ''; });
+  $('cfMoreWrap').hidden = true; document.querySelector('#cfView .cf-bar').hidden = true;
+  $('cfList').innerHTML = `<div class="sx-card cf-start"><h3>No course list for ${esc(c)} yet</h3><p>${S.set.canEdit ? 'Upload the ' + esc(c) + ' course sheet (.xlsx) once. Counsellors can search it straight after.' : 'A director uploads the course sheet once. Ask them to add it under Course finder, Data and rules.'}</p>${S.set.canEdit ? '<button type="button" class="um-btn primary" id="cfGoUp">Upload the course sheet</button>' : ''}</div>`;
+  const g = $('cfGoUp'); if (g) g.onclick = () => tab('settings');
+}
 function meta() {
   const c = (S.set.countries || []).find(x => x.country === $('cfCountry').value) || {}, d = $('cfData');
+  document.querySelector('#cfView .cf-bar').hidden = !c.courses;
   $('cfMeta').textContent = c.courses ? c.courses.toLocaleString('en-GB') + ' courses at ' + c.unis + ' universities in ' + c.country : 'No course sheet uploaded yet';
   d.hidden = !c.courses;
   if (c.courses) d.innerHTML = `<span class="cf-dot"></span><div>Data from <b>${esc(c.file || 'the course sheet')}</b>, added ${esc(fmtDate(c.updated))}.${c.intakeYear ? ` Fees and intakes are listed for <b>${esc(c.intakeYear)}</b>.` : ''} Check the course page before quoting a fee or date to a student.</div>`;
@@ -14350,6 +14363,7 @@ function pickLead() {
 
 function search() {
   if (!S.set) return;
+  if (!hasData()) { noData(); return; }
   const seq = (S.seq = (S.seq || 0) + 1);
   $('cfList').style.opacity = '.55';
   run('searchCourses', profile()).then(r => { if (seq !== S.seq) return; S.res = r; draw(); })
@@ -14402,6 +14416,7 @@ function onClick(e) {
   else if (t.dataset.cfLoad) { const s = S.past[+t.dataset.cfLoad]; if (s) { S.short = s.items.slice(); tray(); toast('Earlier shortlist loaded'); } }
 }
 function tray() {
+  $('cfTray').hidden = !S.short.length;
   $('cfN').textContent = S.short.length;
   $('cfTL').textContent = S.short.length ? S.short.map(s => s.uni + ' — ' + s.degree).join(' · ') : 'Press Shortlist on the courses you want to send.';
 }
@@ -14522,7 +14537,7 @@ function upload() {
   if (f.size > 12e6) { toast('That file is over 12 MB. Remove extra tabs or columns and try again.', true); return; }
   const rd = new FileReader();
   toast('Uploading and reading ' + f.name + '. This can take a minute or two.');
-  rd.onload = () => busy(() => run('uploadCourseSheet', S.upCountry, f.name, String(rd.result).split(',')[1]).then(r => { toast(r.courses ? r.courses.toLocaleString('en-GB') + ' courses loaded for ' + S.upCountry : 'Uploaded'); return run('getCourseFinderSettings').then(s => { const cur = $('cfCountry').value; S.set = s; $('cfCountry').innerHTML = (s.countries || []).map(c => `<option ${c.courses ? '' : 'disabled'}>${esc(c.country)}</option>`).join(''); $('cfCountry').value = (s.countries.find(c => c.country === cur && c.courses) || s.countries.find(c => c.courses) || {}).country || ''; $('cfLv').innerHTML = (s.levels || []).map(l => `<option>${esc(l)}</option>`).join(''); meta(); drawSettings(); search(); }); }).catch(e => toast(msg(e), true)));
+  rd.onload = () => busy(() => run('uploadCourseSheet', S.upCountry, f.name, String(rd.result).split(',')[1]).then(r => { toast(r.courses ? r.courses.toLocaleString('en-GB') + ' courses loaded for ' + S.upCountry : 'Uploaded'); return run('getCourseFinderSettings').then(s => { const cur = $('cfCountry').value; S.set = s; $('cfCountry').innerHTML = countryOpts(s); $('cfCountry').value = (s.countries.find(c => c.country === cur && c.courses) || s.countries.find(c => c.courses) || { country: 'United Kingdom' }).country; $('cfLv').innerHTML = (s.levels || []).map(l => `<option>${esc(l)}</option>`).join(''); meta(); drawSettings(); search(); }); }).catch(e => toast(msg(e), true)));
   rd.readAsDataURL(f);
 }
 
