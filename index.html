@@ -6946,7 +6946,9 @@ tbody.innerHTML = '';
 const hasActiveFilter = !!q || bellFilterActive || (activeBranch !== 'All' && !viewerBranch);
 document.getElementById('emptyStateText').textContent = hasActiveFilter
 ? 'No leads match this filter'
-: 'Nothing here right now — new leads will appear the moment they land';
+: ({ b2b: 'No B2B leads waiting for a call. New ones arrive when the Partner desk shares a student without picking a counsellor — B2B leads that already have a counsellor are in Meta & walk-in.',
+    sulekha: 'No Sulekha leads waiting for a call. New ones arrive from the linked Sulekha sheet or when someone adds a lead with source Sulekha.',
+    bulk: 'No bulk leads waiting. Upload a list or add a lead to fill this list.' }[window._leadSet] || 'Nothing here right now — new leads will appear the moment they land');
 document.getElementById('emptyState').style.display = 'flex';
 return;
 }
