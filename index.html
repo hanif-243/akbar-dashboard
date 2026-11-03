@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
  
-window.AKBAR_BUILD = '3 Nov 2026 · v168d';
+window.AKBAR_BUILD = '3 Nov 2026 · v169';
 
 
 (function () {
@@ -114,7 +114,7 @@ window.AKBAR_BUILD = '3 Nov 2026 · v168d';
     var keyOf = function (fn, args) { return fn + '|' + JSON.stringify(args || []); };
 
 
-    var mem = {}, memOrder = [], navAt = 0, NOMEM = { getAuthState: 1, getAssignPopups: 1, searchCourses: 1, getCourseLeadProfile: 1, getCourseFinderSettings: 1, getDashboardData: 1, getStudentQuestionCount: 1, getMetaAdsToday: 1, getFollowUpBoard: 1, getNextCallLead: 1, getChatState: 1, getChatMessages: 1, getServerBuild: 1, getLandingPages: 1, getStudentReviews: 1, getBranchSources: 1, getViewTabLeads: 1, getCounsellorAvailability: 1, getSecurityStatus: 1 };
+    var mem = {}, memOrder = [], navAt = 0, NOMEM = { getUniDirectory: 1, getFocusPushes: 1, getFocusHome: 1, getMyHandedOver: 1, getAuthState: 1, getAssignPopups: 1, searchCourses: 1, getCourseLeadProfile: 1, getCourseFinderSettings: 1, getDashboardData: 1, getStudentQuestionCount: 1, getMetaAdsToday: 1, getFollowUpBoard: 1, getNextCallLead: 1, getChatState: 1, getChatMessages: 1, getServerBuild: 1, getLandingPages: 1, getStudentReviews: 1, getBranchSources: 1, getViewTabLeads: 1, getCounsellorAvailability: 1, getSecurityStatus: 1 };
     var lastNavEl = null, userAt = 0, NAVSEL = '#sidebar .nav-item, .s10-tab, .sx-tab, .um-tab, .dash-tab, [data-fin-go], [data-dash-tab], [data-fin-view], [data-fin-tab], [data-hr-view], [data-hr-tab], [data-hr-go], [data-ma-go], [data-ma-view], [data-ma-tab], [data-visa-view], [data-vd-tab], [data-mr-tab], [data-um-tab], [data-sx-tab], [data-sq-tab], [data-sq-view], [data-s10-tab], [data-s10-go], [data-mu-view], [data-mou-view], [data-inv-view], [data-en-view], [data-go-tab], [data-b2b-view], [data-b2b-tab], [data-view], [data-own-view], #appTeamBtn, #ceoViewBtn';
     var lastWrite = 0; try { lastWrite = Number(localStorage.getItem('ak_lastwrite')) || 0; } catch (e) {   }
     function markWrite() { lastWrite = Date.now(); try { localStorage.setItem('ak_lastwrite', String(lastWrite)); } catch (e) {   } }
@@ -5518,6 +5518,7 @@ return `
             ${detailField('Ad set', r.adsetName)}
             ${detailField('Campaign', r.campaign)}
           </div>
+          ${typeof window.akFocusStripHtml === 'function' ? window.akFocusStripHtml(r) : ''}
 
           ${dup ? `<div class="dup-note">This phone number appears in: ${escapeHtml((dup.duplicateBranches || []).join(', '))}</div>` : ''}
 
@@ -14634,6 +14635,51 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) chec
 .cf-pill { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: var(--canvas); color: var(--muted); }
 .cf-pill.draft { background: rgba(217,119,6,.13); color: #B45309; }
 .cf-pill.ok { background: rgba(22,163,74,.12); color: #15803D; }
+.cf-route { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+.cf-route.direct { background: var(--atl-navy, #161B33); color: #fff; }
+.cf-route.agg { background: var(--canvas); color: var(--muted); }
+.cf-route.focus { background: rgba(184,146,90,.16); color: #8A6A35; border: 1px solid rgba(184,146,90,.5); }
+[data-theme="dark"] .cf-route.direct { background: #E9E4D8; color: #161B33; } [data-theme="dark"] .cf-route.focus { color: #E3C38B; }
+.cf-fstrip { display: flex; gap: 12px; align-items: flex-start; padding: 10px 16px; background: rgba(184,146,90,.07); border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--ink); }
+.cf-fstrip b { font-weight: 700; }
+.cf-fstrip ul { margin: 4px 0 0; padding-left: 18px; color: var(--muted); }
+.cf-days { font-size: 11.5px; font-weight: 700; color: #B45309; white-space: nowrap; }
+.cf-share { margin-left: auto; }
+.cf-uhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.cf-uhead .grow { flex: 1; min-width: 200px; }
+#cfView .cf-uhead select, #cfView .cf-uhead input { width: auto; }
+.cf-ulist { padding: 0; overflow: hidden; }
+.cf-urow { display: grid; grid-template-columns: 56px minmax(0, 1.4fr) minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 13px 16px; border-top: 1px solid var(--border); font-size: 13px; }
+.cf-urow:first-child { border-top: 0; }
+.cf-urow .nm { font-weight: 700; color: var(--ink); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.cf-urow .m { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.cf-urow .acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 900px) { .cf-urow { grid-template-columns: 48px minmax(0, 1fr); } .cf-urow .acts, .cf-urow .mid { grid-column: 1 / -1; justify-content: flex-start; } }
+.cf-push { margin-bottom: 16px; }
+.cf-push .ph { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+.cf-push .ph h3 { margin: 0; }
+.cf-push .meta { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+.cf-push .pts { margin: 10px 0 0; padding-left: 18px; font-size: 13px; color: var(--ink); }
+.cf-pgrid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px; margin-top: 14px; }
+@media (max-width: 960px) { .cf-pgrid { grid-template-columns: minmax(0, 1fr); } }
+.cf-prog { display: grid; grid-template-columns: 110px minmax(0, 1fr) 120px; gap: 10px; align-items: center; font-size: 12.5px; padding: 6px 0; }
+.cf-prog .bar { height: 8px; border-radius: 8px; background: var(--canvas); overflow: hidden; }
+.cf-prog .bar i { display: block; height: 100%; background: var(--atl-navy, #161B33); border-radius: 8px; }
+[data-theme="dark"] .cf-prog .bar i { background: #C9A96E; }
+.cf-prog .n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--muted); }
+.cf-alert { border-left: 3px solid #B45309; background: rgba(217,119,6,.06); padding: 8px 12px; border-radius: 0 8px 8px 0; font-size: 12.5px; color: var(--ink); margin-top: 8px; }
+.cf-modal .cmdk-box { max-width: 640px; }
+.cf-modal .s10-body { max-height: 70vh; overflow: auto; }
+.cf-chipsel { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.cf-chipsel button { border: 1px solid var(--border); background: var(--card); border-radius: 999px; padding: 4px 10px; font: inherit; font-size: 12px; cursor: pointer; color: var(--ink); }
+.cf-chipsel button.on { background: var(--atl-navy, #161B33); color: #fff; border-color: var(--atl-navy, #161B33); }
+.cf-tpl { width: 100%; min-height: 120px; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 13px; background: var(--card); color: var(--ink); resize: vertical; }
+.cf-stu { border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; max-width: 320px; background: var(--card); }
+.cf-stu .bd { display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; background: #161B33; color: #F3CF8E; margin-bottom: 6px; }
+.cf-ff { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+#cfView textarea, .cf-modal textarea, .cf-modal input[type=text], .cf-modal input[type=number], .cf-modal input[type=date], .cf-modal select { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 8px 11px; font: inherit; font-size: 13px; background: var(--card); color: var(--ink); }
+.cf-modal input, .cf-modal select { height: 38px; }
+.cf-modal label.cf-lbl { display: block; margin: 10px 0 5px; }
 </style>
 <script>
 (function () {
@@ -14678,7 +14724,7 @@ function build(root) {
   root.innerHTML = `<div class="sx-wrap">
 <div class="sx-top"><div><div class="at-eyebrow">Course finder</div><h1 class="sx-title">Course shortlist</h1><div class="sx-sub" id="cfMeta">Universities that fit your student</div></div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><select id="cfCountry" aria-label="Country" style="width:auto;min-width:170px;"></select><button class="um-btn" id="cfBack" type="button">Back to dashboard</button></div></div>
-<div class="sx-tabs" role="tablist"><button class="sx-tab active" data-cf-tab="find" type="button">Find courses</button><button class="sx-tab" data-cf-tab="compare" type="button">Compare <span id="cfCmpN"></span></button>${mgr ? '<button class="sx-tab" data-cf-tab="insights" type="button">Insights</button>' : ''}<button class="sx-tab" data-cf-tab="settings" type="button" id="cfSetTab" hidden>Data and rules</button></div>
+<div class="sx-tabs" role="tablist"><button class="sx-tab active" data-cf-tab="find" type="button">Find courses</button><button class="sx-tab" data-cf-tab="compare" type="button">Compare <span id="cfCmpN"></span></button><button class="sx-tab" data-cf-tab="unis" type="button">Universities</button><button class="sx-tab" data-cf-tab="push" type="button">Focus pushes <span id="cfPushN"></span></button>${mgr ? '<button class="sx-tab" data-cf-tab="insights" type="button">Insights</button>' : ''}<button class="sx-tab" data-cf-tab="settings" type="button" id="cfSetTab" hidden>Data and rules</button></div>
 <div data-cf-pane="find"><div class="cf-grid">
 <form class="sx-card cf-prof" id="cfForm" autocomplete="off">
 <h3>Student profile</h3>
@@ -14697,19 +14743,21 @@ function build(root) {
 <div class="cf-two"><div class="cf-f"><label for="cfIn">Intake</label><select id="cfIn"><option value="">Any month</option>${MONTHS.map(m => `<option>${m}</option>`).join('')}</select></div>
 <div class="cf-f"><label for="cfQs">QS rank within</label><select id="cfQs"><option value="">Any</option><option>100</option><option>200</option><option>300</option><option>500</option><option>800</option><option>1000</option></select></div></div>
 <div class="cf-f"><label for="cfCity">City</label><input type="text" id="cfCity" placeholder="London"></div>
-<div class="cf-checks"><label><input type="checkbox" id="cfSch"> Scholarship available</label><label><input type="checkbox" id="cfSure"> Only courses with a stated minimum %</label><label><input type="checkbox" id="cfFail"> Also show courses the student is not eligible for</label></div>
+<div class="cf-checks"><label><input type="checkbox" id="cfDirect"> Partner universities only</label><label><input type="checkbox" id="cfSch"> Scholarship available</label><label><input type="checkbox" id="cfSure"> Only courses with a stated minimum %</label><label><input type="checkbox" id="cfFail"> Also show courses the student is not eligible for</label></div>
 <button class="um-btn" type="button" id="cfClear">Clear profile</button>
 </form>
 <div style="min-width:0;">
 <div class="cf-data" id="cfData" hidden></div>
 <div class="cf-kpis" id="cfKpis"></div>
-<div class="cf-bar"><div class="sx-sub" id="cfNote" style="margin:0;"></div><div class="cf-sort"><span class="cf-lbl">Sort</span><select id="cfSort"><option value="qs">QS rank</option><option value="fit">Best fit</option><option value="fee">Lowest fee</option><option value="ielts">Lowest IELTS</option><option value="count">Most courses</option></select></div></div>
+<div class="cf-bar"><div class="sx-sub" id="cfNote" style="margin:0;"></div><div class="cf-sort"><span class="cf-lbl">Sort</span><select id="cfSort"><option value="rec">Recommended (partners first)</option><option value="qs">QS rank</option><option value="fit">Best fit</option><option value="fee">Lowest fee</option><option value="ielts">Lowest IELTS</option><option value="count">Most courses</option></select></div></div>
 <div id="cfList"><div class="sx-card"><div class="skeleton" style="height:180px;"></div></div></div>
 <div id="cfMoreWrap" style="text-align:center;margin:4px 0 12px;" hidden><button class="um-btn" type="button" id="cfMore">Show more universities</button></div>
 <div class="cf-tray" id="cfTray"><span class="t">Shortlist <b id="cfN">0</b></span><span class="l" id="cfTL">Press Shortlist on the courses you want to send.</span>
 <button class="um-btn" type="button" id="cfCopy">Copy for WhatsApp</button><button class="um-btn" type="button" id="cfPdf">Download PDF</button><button class="um-btn" type="button" id="cfSend">Send to student app</button><button class="um-btn" type="button" id="cfApply">Start applications</button><button class="um-btn primary" type="button" id="cfSave">Save to lead</button></div>
 </div></div></div>
 <div data-cf-pane="compare" hidden></div>
+<div data-cf-pane="unis" hidden></div>
+<div data-cf-pane="push" hidden></div>
 <div data-cf-pane="insights" hidden></div>
 <div data-cf-pane="settings" hidden></div>
 </div>`;
@@ -14751,6 +14799,8 @@ function tab(t) {
   document.querySelectorAll('#cfView [data-cf-pane]').forEach(p => { p.hidden = p.dataset.cfPane !== t; });
   if (t === 'compare') drawCompare();
   if (t === 'insights') loadInsights();
+  if (t === 'unis') loadUnis();
+  if (t === 'push') loadPushes();
   if (t === 'settings') drawSettings();
 }
 
@@ -14764,7 +14814,7 @@ function setEn(v) { S.en = v; $('cfEnI').classList.toggle('on', v === 'ielts'); 
 function profile() {
   return { country: $('cfCountry').value || 'United Kingdom', level: $('cfLv').value, keywords: $('cfKw').value.trim(), maxFee: $('cfBud').value, pct: $('cfPct').value, english: S.en,
     ielts: $('cfIe').value, band: $('cfBand').value, backlogs: $('cfBl').value, workYears: $('cfWx').value, intake: $('cfIn').value, qsMax: $('cfQs').value,
-    city: $('cfCity').value.trim(), scholarship: $('cfSch').checked, statedPctOnly: $('cfSure').checked, showFail: $('cfFail').checked, sort: $('cfSort').value, limit: S.limit };
+    city: $('cfCity').value.trim(), scholarship: $('cfSch').checked, directOnly: $('cfDirect').checked, statedPctOnly: $('cfSure').checked, showFail: $('cfFail').checked, sort: $('cfSort').value, limit: S.limit };
 }
 
 function pickLead() {
@@ -14801,8 +14851,9 @@ function draw() {
   if (!groups.length) { $('cfList').innerHTML = '<div class="sx-card cf-empty">No course fits this profile. Try a higher fee, fewer course words, or any intake month.</div>'; return; }
   $('cfList').innerHTML = groups.map((g, gi) => `<details class="sx-card cf-uni" ${gi < 2 ? 'open' : ''}><summary>
 <div class="cf-qs ${g.qs == null ? 'na' : ''}"><b>${g.qs == null ? 'n/a' : g.qs}</b>QS</div>
-<div><div class="cf-un">${esc(g.name)}${g.partner ? '<span class="cf-tag">Partner</span>' : ''}</div><div class="cf-uf"><span>${g.minFee === g.maxFee ? gbp(g.minFee) : gbp(g.minFee) + ' – ' + gbp(g.maxFee)}</span>${g.minIe != null ? `<span>IELTS from ${g.minIe}</span>` : ''}<span>${['safe', 'likely', 'ambitious'].filter(x => g.tiers[x]).map(x => g.tiers[x] + ' ' + TIER[x].toLowerCase()).join(' · ')}</span></div></div>
-<div class="cf-cnt">${g.count} course${g.count === 1 ? '' : 's'} ${CHEV}</div></summary>
+<div><div class="cf-un">${esc(g.name)}${g.partner ? '<span class="cf-route direct">Partner</span>' : g.route === 'aggregator' ? `<span class="cf-route agg">Via ${esc(g.aggregator || 'aggregator')}</span>` : ''}${g.focus ? '<span class="cf-route focus">Focus</span>' : ''}${g.focus && g.focus.deadline ? `<span class="cf-days">${esc(daysTo(g.focus.deadline))}</span>` : ''}</div><div class="cf-uf"><span>${g.minFee === g.maxFee ? gbp(g.minFee) : gbp(g.minFee) + ' – ' + gbp(g.maxFee)}</span>${g.minIe != null ? `<span>IELTS from ${g.minIe}</span>` : ''}<span>${['safe', 'likely', 'ambitious'].filter(x => g.tiers[x]).map(x => g.tiers[x] + ' ' + TIER[x].toLowerCase()).join(' · ')}</span></div></div>
+<div class="cf-cnt">${g.partner ? `<button type="button" class="um-btn" data-cf-share="${esc(g.name)}">Share</button>` : ''}${g.count} course${g.count === 1 ? '' : 's'} ${CHEV}</div></summary>
+${g.focus ? `<div class="cf-fstrip"><div><b>Focus push:</b> ${esc(g.focus.title)} · ${esc(daysTo(g.focus.ends, 'push ends'))}${(g.focus.points || []).length ? '<ul>' + g.focus.points.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>' : ''}</div></div>` : ''}
 <div>${g.courses.map(c => course(g, c)).join('')}${g.count > g.courses.length && !S.tierView ? `<div class="cf-more">${g.count - g.courses.length} more here. Add a course word to narrow them down.</div>` : ''}</div></details>`).join('');
 }
 function course(g, c) {
@@ -14824,12 +14875,18 @@ function course(g, c) {
 }
 function find(k) { for (const g of (S.res ? S.res.groups : [])) { const c = g.courses.find(x => x.key === k); if (c) return Object.assign({ uni: g.name, qs: g.qs, partner: g.partner }, c); } return null; }
 function onClick(e) {
-  const t = e.target.closest('[data-cf-k],[data-cf-cmp],[data-cf-ask],[data-cf-tier],[data-cf-load],[data-cf-rm]'); if (!t) return;
+  const t = e.target.closest('[data-cf-k],[data-cf-cmp],[data-cf-ask],[data-cf-tier],[data-cf-load],[data-cf-rm],[data-cf-share],[data-cf-uedit],[data-cf-read],[data-cf-pedit],[data-cf-rep],[data-cf-pend]'); if (!t) return;
   e.preventDefault();
   if (t.dataset.cfK) { const i = S.short.findIndex(s => s.key === t.dataset.cfK); if (i !== -1) S.short.splice(i, 1); else { const c = find(t.dataset.cfK); if (c) S.short.push(c); } tray(); draw(); }
   else if (t.dataset.cfCmp) { const i = S.cmp.findIndex(s => s.key === t.dataset.cfCmp); if (i !== -1) S.cmp.splice(i, 1); else if (S.cmp.length >= 3) toast('Compare holds 3 courses. Remove one first.', true); else { const c = find(t.dataset.cfCmp); if (c) S.cmp.push(c); } $('cfCmpN').textContent = S.cmp.length ? '(' + S.cmp.length + ')' : ''; draw(); }
   else if (t.dataset.cfRm) { S.cmp = S.cmp.filter(s => s.key !== t.dataset.cfRm); $('cfCmpN').textContent = S.cmp.length ? '(' + S.cmp.length + ')' : ''; drawCompare(); }
   else if (t.dataset.cfAsk) ask(find(t.dataset.cfAsk));
+  else if (t.dataset.cfShare) share(t.dataset.cfShare);
+  else if (t.dataset.cfUedit !== undefined) editUni(t.dataset.cfUedit);
+  else if (t.dataset.cfRead) markRead(t.dataset.cfRead);
+  else if (t.dataset.cfPedit !== undefined) editPush(t.dataset.cfPedit);
+  else if (t.dataset.cfRep) repVisit(t.dataset.cfRep);
+  else if (t.dataset.cfPend) endPush(t.dataset.cfPend);
   else if (t.dataset.cfTier !== undefined) { S.tierView = S.tierView === t.dataset.cfTier ? '' : t.dataset.cfTier; draw(); }
   else if (t.dataset.cfLoad) { const s = S.past[+t.dataset.cfLoad]; if (s) { S.short = s.items.slice(); tray(); toast('Earlier shortlist loaded'); } }
 }
@@ -14851,8 +14908,10 @@ function copy() {
   if (!need()) return;
   try { navigator.clipboard.writeText(text()).then(() => toast('Shortlist copied. Paste it in WhatsApp.'), () => toast('Copy did not work in this browser', true)); } catch (e) { toast('Copy did not work in this browser', true); }
 }
-function save() { if (!need(true)) return; busy(() => run('saveCourseShortlist', S.lead.branch, S.lead.leadId, items(), profile()).then(() => { toast('Shortlist saved on the lead'); }).catch(e => toast(msg(e), true))); }
-function send() { if (!need(true)) return; busy(() => run('sendShortlistToStudent', S.lead.branch, S.lead.leadId, items(), profile()).then(r => { toast(r.inApp ? 'Sent. The student sees it in their app.' : 'Saved. The student sees it when they sign in to the app.'); }).catch(e => toast(msg(e), true))); }
+function save() { if (!need(true)) return; nudge(doSave); }
+function doSave() { busy(() => run('saveCourseShortlist', S.lead.branch, S.lead.leadId, items(), profile()).then(() => { toast('Shortlist saved on the lead'); }).catch(e => toast(msg(e), true))); }
+function send() { if (!need(true)) return; nudge(doSend); }
+function doSend() { busy(() => run('sendShortlistToStudent', S.lead.branch, S.lead.leadId, items(), profile()).then(r => { toast(r.inApp ? 'Sent. The student sees it in their app.' : 'Saved. The student sees it when they sign in to the app.'); }).catch(e => toast(msg(e), true))); }
 function apply() {
   if (!need(true)) return;
   if (!confirm('Start ' + S.short.length + ' application' + (S.short.length === 1 ? '' : 's') + ' for ' + S.lead.name + '?')) return;
@@ -14918,6 +14977,7 @@ function loadInsights() {
 <div class="cq-stat"><div class="l">Applications started</div><div class="n">${f.applied || 0}</div><div class="d">${pc(f.applied, f.courses)}</div></div>
 <div class="cq-stat"><div class="l">Enrolled</div><div class="n">${f.enrolled || 0}</div><div class="d">${pc(f.enrolled, f.courses)}</div></div></div>
 <div class="cf-ins"><div class="sx-card"><h3>Most shortlisted universities</h3>${list(r.topUnis || [])}</div><div class="sx-card"><h3>Most shortlisted courses</h3>${list(r.topCourses || [])}</div></div>
+${r.push ? pushInsights(r.push) : ''}
 <div class="sx-card" style="margin-top:16px;"><h3>By counsellor</h3><table class="sx-table"><thead><tr><th>Counsellor</th><th>Branch</th><th style="text-align:right;">Shortlists</th><th style="text-align:right;">Applied</th><th style="text-align:right;">Enrolled</th><th style="text-align:right;">Applied rate</th></tr></thead><tbody>
 ${(r.byCounsellor || []).map(x => `<tr><td>${esc(x.name)}</td><td>${esc(x.branch)}</td><td style="text-align:right;">${x.shortlists}</td><td style="text-align:right;">${x.applied}</td><td style="text-align:right;">${x.enrolled}</td><td style="text-align:right;">${x.courses ? Math.round(x.applied / x.courses * 100) + '%' : '—'}</td></tr>`).join('') || '<tr><td colspan="6" class="cf-empty">No shortlists yet</td></tr>'}</tbody></table></div>`;
   }).catch(e => { p.innerHTML = `<div class="sx-card cf-empty">${esc(msg(e))}</div>`; });
@@ -14936,15 +14996,15 @@ function drawSettings() {
 <div class="cf-srow"><div><b>Bachelor's courses listed as Postgraduate</b><div class="m">Some sheet rows named BA or BSc are labelled Postgraduate.</div></div><select id="cfLvMode" style="width:auto;"><option value="tag" ${s.levelMode !== 'hide' ? 'selected' : ''}>Show with "Check level"</option><option value="hide" ${s.levelMode === 'hide' ? 'selected' : ''}>Hide them</option></select></div>
 <div class="cf-srow"><div><b>Public university finder</b><div class="m">Students on the website see their top 3 from this data before the OTP.</div></div><select id="cfPub" style="width:auto;"><option value="0" ${s.publicFinder ? '' : 'selected'}>Off</option><option value="1" ${s.publicFinder ? 'selected' : ''}>On</option></select></div>
 </div></div>
-<div class="sx-card"><h3>Partner universities</h3><div class="cf-hint">Directors only. Partners get a small tag in the results. Counsellors do not see commission.</div>
-<input type="text" id="cfPq" placeholder="Search universities" style="margin-top:10px;"><div class="cf-plist" id="cfPlist">${(s.uniNames || []).map(n => `<label data-n="${esc(n.toLowerCase())}"><input type="checkbox" value="${esc(n)}" ${partners.has(n) ? 'checked' : ''}> ${esc(n)}</label>`).join('')}</div>
-<div style="display:flex;justify-content:flex-end;margin-top:14px;"><button class="um-btn primary" type="button" id="cfSetSave">Save changes</button></div></div></div>`;
-  $('cfPq').oninput = () => { const q = $('cfPq').value.trim().toLowerCase(); $('cfPlist').querySelectorAll('label').forEach(l => { l.style.display = !q || l.dataset.n.indexOf(q) !== -1 ? '' : 'none'; }); };
+<div class="sx-card"><h3>Direct and partner universities</h3><div class="cf-hint">Set the route, contacts, selling points and files for each university in the Universities tab.</div>
+<div style="display:flex;gap:8px;margin-top:12px;"><button class="um-btn" type="button" id="cfGoUnis">Open Universities</button></div>
+<div style="display:flex;justify-content:flex-end;margin-top:18px;"><button class="um-btn primary" type="button" id="cfSetSave">Save changes</button></div></div></div>`;
+  $('cfGoUnis').onclick = () => tab('unis');
   p.querySelectorAll('[data-cf-up]').forEach(b => b.onclick = () => { S.upCountry = b.dataset.cfUp; $('cfFile').click(); });
   $('cfFile').onchange = upload;
   $('cfSetSave').onclick = () => {
     const ns = { classRule: { c21: Number($('cfR21').value), c22: Number($('cfR22').value), approved: $('cfRok').checked }, levelMode: $('cfLvMode').value, publicFinder: $('cfPub').value === '1',
-      partners: Array.from($('cfPlist').querySelectorAll('input:checked')).map(x => x.value) };
+      partners: s.partners || [] };
     busy(() => run('saveCourseFinderSettings', ns).then(() => { Object.assign(S.set, ns); toast('Saved'); search(); }).catch(e => toast(msg(e), true)));
   };
 }
@@ -14957,6 +15017,217 @@ function upload() {
   rd.onload = () => busy(() => run('uploadCourseSheet', S.upCountry, f.name, String(rd.result).split(',')[1]).then(r => { toast(r.courses ? r.courses.toLocaleString('en-GB') + ' courses loaded for ' + S.upCountry : 'Uploaded'); return run('getCourseFinderSettings').then(s => { const cur = $('cfCountry').value; S.set = s; $('cfCountry').innerHTML = (s.countries || []).map(c => `<option ${c.courses ? '' : 'disabled'}>${esc(c.country)}</option>`).join(''); $('cfCountry').value = (s.countries.find(c => c.country === cur && c.courses) || s.countries.find(c => c.courses) || {}).country || ''; $('cfLv').innerHTML = (s.levels || []).map(l => `<option>${esc(l)}</option>`).join(''); meta(); drawSettings(); search(); }); }).catch(e => toast(msg(e), true)));
   rd.readAsDataURL(f);
 }
+
+
+function daysTo(ymd, what) {
+  if (!ymd) return '';
+  const d = Math.round((new Date(String(ymd).slice(0, 10) + 'T00:00:00') - new Date(new Date().toDateString())) / 864e5);
+  const w = what || 'closes';
+  return d < 0 ? (what ? 'push ended' : 'deadline passed') : d === 0 ? w + ' today' : w + ' in ' + d + ' day' + (d === 1 ? '' : 's');
+}
+function modal(title, body, foot) {
+  const bg = document.createElement('div'); bg.className = 'cmdk-backdrop open cf-modal';
+  bg.innerHTML = `<div class="cmdk-box" role="dialog" aria-modal="true"><div class="preview-modal-header"><span style="font-size:15px;font-weight:600;flex:1;">${esc(title)}</span><button type="button" class="um-btn" data-x>Close</button></div><div class="s10-body">${body}</div>${foot ? `<div class="s10-actions" style="padding:12px 18px;display:flex;gap:8px;justify-content:flex-end;">${foot}</div>` : ''}</div>`;
+  document.body.appendChild(bg);
+  const shut = () => bg.remove();
+  bg.querySelector('[data-x]').onclick = shut;
+  bg.addEventListener('click', e => { if (e.target === bg) shut(); });
+  bg.addEventListener('keydown', e => { if (e.key === 'Escape') shut(); });
+  return { el: bg, close: shut };
+}
+
+ 
+function nudge(go) {
+  const have = new Set(S.short.map(s => s.uni)), miss = [];
+  (S.res ? S.res.groups : []).forEach(g => {
+    if (!((g.focus || g.partner) && g.best <= 1) || have.has(g.name)) return;
+    const c = g.courses.find(x => x.tier === 'safe' || x.tier === 'likely'); if (c) miss.push(Object.assign({ uni: g.name, qs: g.qs, focus: g.focus, route: g.route, partner: g.partner }, c));
+  });
+  if (!miss.length) { go(); return; }
+  const top = miss.slice(0, 4);
+  const m = modal(top.length === 1 ? '1 focus or partner university also fits' : top.length + ' focus or partner universities also fit',
+    `<div class="cf-hint" style="margin-bottom:10px;">Add them before you send, or continue without them.</div>${top.map((c, i) => `<label class="cf-srow" style="cursor:pointer;"><span><b>${esc(c.uni)}</b> ${c.focus ? '<span class="cf-route focus">Focus</span>' : '<span class="cf-route direct">Partner</span>'}<div class="m">${esc(c.degree)} · ${gbp(c.fee)} · ${TIER[c.tier]}</div></span><input type="checkbox" data-nudge="${i}" checked></label>`).join('')}`,
+    '<button type="button" class="um-btn" data-skip>Continue without</button><button type="button" class="um-btn primary" data-add>Add and continue</button>');
+  m.el.querySelector('[data-skip]').onclick = () => { m.close(); go(); };
+  m.el.querySelector('[data-add]').onclick = () => { m.el.querySelectorAll('[data-nudge]:checked').forEach(x => S.short.push(top[+x.dataset.nudge])); tray(); draw(); m.close(); go(); };
+}
+
+ 
+function loadUnis() {
+  const p = document.querySelector('#cfView [data-cf-pane="unis"]');
+  p.innerHTML = '<div class="sx-card"><div class="skeleton" style="height:200px;"></div></div>';
+  run('getUniDirectory').then(r => { S.dir = r; drawUnis(); }).catch(e => { p.innerHTML = `<div class="sx-card cf-empty">${esc(msg(e))}</div>`; });
+}
+function drawUnis() {
+  const p = document.querySelector('#cfView [data-cf-pane="unis"]'), r = S.dir, q = (S.uq || '').toLowerCase(), f = S.uf || '';
+  const list = r.unis.filter(u => (!q || u.name.toLowerCase().indexOf(q) !== -1) && (!f || (f === 'none' ? !u.route : u.route === f)));
+  const n = k => r.unis.filter(u => u.route === k).length, wk = r.unis.find(u => u.uniOfWeek);
+  p.innerHTML = `${r.demo ? '<div class="cf-demo">Preview: these routes, contacts and pushes are demo entries. The live page starts empty and directors fill it in.</div>' : ''}
+<div class="cf-funnel"><div class="cq-stat"><div class="l">Partner (tie-up)</div><div class="n">${n('direct')}</div><div class="d">We apply to them directly</div></div><div class="cq-stat"><div class="l">Via aggregator</div><div class="n">${n('aggregator')}</div><div class="d">Applied through a partner</div></div>
+<div class="cq-stat"><div class="l">In a focus push</div><div class="n">${r.unis.filter(u => u.focus).length}</div><div class="d">Pinned for counsellors now</div></div><div class="cq-stat"><div class="l">University of the week</div><div class="n" style="font-size:15px;line-height:1.3;">${wk ? esc(wk.name) : 'Not set'}</div></div></div>
+<div class="cf-uhead"><input type="text" class="grow" id="cfUq" placeholder="Search universities" value="${esc(S.uq || '')}"><select id="cfUf"><option value="">All routes</option><option value="direct" ${f === 'direct' ? 'selected' : ''}>Partner</option><option value="aggregator" ${f === 'aggregator' ? 'selected' : ''}>Via aggregator</option><option value="none" ${f === 'none' ? 'selected' : ''}>Not set</option></select>${r.canEdit ? '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="um-btn" id="cfUdl">Download sheet</button><button type="button" class="um-btn" id="cfUup">Upload sheet</button><input type="file" id="cfUfile" accept=".xlsx" hidden><button type="button" class="um-btn primary" data-cf-uedit="">Add a university</button></div>' : ''}</div>
+${r.canEdit && !r.unis.length ? '<div class="sx-card cf-hint" style="margin-bottom:12px;">Start with <b>Download sheet</b>: it has a How to fill tab and every university name from the course list. Fill the Universities tab (and Focus Pushes if you want), then <b>Upload sheet</b>.</div>' : ''}
+<div class="sx-card cf-ulist">${list.length ? list.slice(0, 80).map(u => `<div class="cf-urow"><div class="cf-qs ${u.qs == null ? 'na' : ''}"><b>${u.qs == null ? 'n/a' : u.qs}</b>QS</div>
+<div><div class="nm">${esc(u.name)}${u.route === 'direct' ? '<span class="cf-route direct">Partner</span>' : u.route === 'aggregator' ? `<span class="cf-route agg">Via ${esc(u.aggregator || 'aggregator')}</span>` : ''}${u.focus ? '<span class="cf-route focus">Focus</span>' : ''}${u.uniOfWeek ? '<span class="cf-tag">University of the week</span>' : ''}</div>
+<div class="m">${esc([u.bdm ? 'Contact: ' + u.bdm : '', u.scholarship || ''].filter(Boolean).join(' · ') || 'No details yet')}</div></div>
+<div class="mid m">${(u.deadlines || []).filter(d => d.date).slice(0, 2).map(d => `${esc(d.label)}: <span class="cf-days">${esc(daysTo(d.date))}</span>`).join('<br>') || ''}${r.canSeeMoney && (u.commission || u.commissionInr) ? `<div>Commission: ${esc([u.commissionInr ? inr2(u.commissionInr) + ' per student' : '', u.commission].filter(Boolean).join(' · '))}</div>` : ''}</div>
+<div class="acts">${u.route === 'direct' ? `<button type="button" class="um-btn" data-cf-share="${esc(u.name)}">Share</button>` : ''}<button type="button" class="um-btn" data-cf-rep="${esc(u.name)}">Rep visit</button>${r.canEdit ? `<button type="button" class="um-btn" data-cf-uedit="${esc(u.name)}">Edit</button>` : ''}</div></div>`).join('') : '<div class="cf-empty">No universities match</div>'}</div>
+${list.length > 80 ? `<div class="cf-hint" style="margin-top:8px;">Showing 80 of ${list.length}. Search to find the rest.</div>` : ''}`;
+  $('cfUq').oninput = () => { S.uq = $('cfUq').value; clearTimeout(S.ut); S.ut = setTimeout(() => { drawUnis(); const i = $('cfUq'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 200); };
+  $('cfUf').onchange = () => { S.uf = $('cfUf').value; drawUnis(); };
+  if ($('cfUdl')) $('cfUdl').onclick = () => { const bt = $('cfUdl'); bt.disabled = true; bt.textContent = 'Making the sheet…';
+    run('downloadUniDirectorySheet').then(x => { const bin = atob(x.base64), arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      const url = URL.createObjectURL(new Blob([arr], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })), a = document.createElement('a'); a.href = url; a.download = x.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 30000); toast('Sheet downloaded'); })
+      .catch(e => toast(msg(e), true)).then(() => { bt.disabled = false; bt.textContent = 'Download sheet'; }); };
+  if ($('cfUup')) { $('cfUup').onclick = () => $('cfUfile').click(); $('cfUfile').onchange = () => { const f = $('cfUfile').files[0]; $('cfUfile').value = ''; if (!f) return;
+    if (!/\.xlsx$/i.test(f.name)) { toast('Upload the .xlsx file you downloaded', true); return; }
+    if (f.size > 8 * 1024 * 1024) { toast('That file is over 8 MB', true); return; }
+    const rd = new FileReader(); toast('Reading the sheet…');
+    rd.onload = () => busy(() => run('uploadUniDirectory', f.name, String(rd.result).split(',')[1]).then(x => { S.dir = x.directory; drawUnis(); search(); uploadResult(x); }).catch(e => toast(msg(e), true)));
+    rd.readAsDataURL(f); }; }
+}
+function uploadResult(x) {
+  modal('Sheet uploaded', `<div class="cf-srow"><span>Universities added</span><b>${x.unis.added}</b></div><div class="cf-srow"><span>Universities updated</span><b>${x.unis.updated}</b></div>
+<div class="cf-srow"><span>Focus pushes added / updated</span><b>${x.pushes.added} / ${x.pushes.updated}</b></div>
+${x.unmatched.length ? `<div class="cf-alert" style="margin-top:12px;"><b>${x.unmatched.length} name${x.unmatched.length === 1 ? ' is' : 's are'} not in the course list</b>, so ${x.unmatched.length === 1 ? 'it gets' : 'they get'} no tag in search results. Copy the exact name from the University names tab:<br>${x.unmatched.map(esc).join(', ')}</div>` : ''}
+${x.errors.length ? `<div class="cf-alert" style="margin-top:12px;"><b>Check these rows</b><br>${x.errors.map(esc).join('<br>')}</div>` : ''}`);
+}
+function uniByName(n) { return ((S.dir && S.dir.unis) || []).find(u => u.name === n); }
+function editUni(name) {
+  const u = Object.assign({ name: '', route: '', aggregator: '', bdm: '', bdmPhone: '', portal: '', points: [], scholarship: '', waiver: '', deadlines: [], files: [], commission: '', uniOfWeek: false, weekFact: '' }, uniByName(name) || {});
+  const names = (S.set && S.set.uniNames) || [];
+  const m = modal(name ? 'Edit ' + name : 'Add a university', `
+<label class="cf-lbl">University</label>${name ? `<b>${esc(name)}</b>` : `<input type="text" id="cuN" list="cuNames" placeholder="Type to search the course list"><datalist id="cuNames">${names.map(n => `<option value="${esc(n)}">`).join('')}</datalist>`}
+<div class="cf-ff"><div><label class="cf-lbl">How we work with them</label><select id="cuR"><option value="">Not set</option><option value="direct" ${u.route === 'direct' ? 'selected' : ''}>Partner (tie-up, we apply directly)</option><option value="aggregator" ${u.route === 'aggregator' ? 'selected' : ''}>Via aggregator</option></select></div>
+<div><label class="cf-lbl">Aggregator</label><input type="text" id="cuA" value="${esc(u.aggregator)}" placeholder="Only for via aggregator"></div></div>
+<div class="cf-ff"><div><label class="cf-lbl">Contact person / BDM</label><input type="text" id="cuB" value="${esc(u.bdm)}"></div><div><label class="cf-lbl">Contact phone or email</label><input type="text" id="cuBp" value="${esc(u.bdmPhone)}"></div></div>
+<label class="cf-lbl">Application portal link</label><input type="text" id="cuP" value="${esc(u.portal)}" placeholder="https:\x2F\x2F">
+<label class="cf-lbl">Selling points (one per line)<\x2Flabel><textarea id="cuPts" rows="4">${esc((u.points || []).join('\n'))}</textarea>
+<div class="cf-ff"><div><label class="cf-lbl">Scholarship</label><input type="text" id="cuS" value="${esc(u.scholarship)}"></div><div><label class="cf-lbl">Application fee waiver code</label><input type="text" id="cuW" value="${esc(u.waiver)}"></div></div>
+<label class="cf-lbl">Deadlines (one per line: label | yyyy-mm-dd)</label><textarea id="cuD" rows="2" placeholder="Jan intake | 2026-11-30">${esc((u.deadlines || []).map(d => d.label + ' | ' + d.date).join('\n'))}</textarea>
+<label class="cf-lbl">Brochures and files (one per line: name | Drive link)</label><textarea id="cuF" rows="2">${esc((u.files || []).map(f => f.name + ' | ' + f.url).join('\n'))}</textarea>
+${S.dir.canSeeMoney ? `<div class="cf-ff"><div><label class="cf-lbl">Commission per student (₹, directors only)</label><input type="number" id="cuCi" min="0" value="${esc(u.commissionInr == null ? '' : u.commissionInr)}"></div><div><label class="cf-lbl">Commission notes</label><input type="text" id="cuC" value="${esc(u.commission)}"></div></div>` : ''}
+<label class="cf-checks" style="margin-top:12px;"><span style="display:flex;gap:8px;align-items:center;"><input type="checkbox" id="cuWk" ${u.uniOfWeek ? 'checked' : ''}> University of the week (shown at sign-in)</span></label>
+<label class="cf-lbl">One fact for the week card</label><input type="text" id="cuWf" value="${esc(u.weekFact)}" placeholder="Example: £2,000 scholarship for January">`,
+    (name ? '<button type="button" class="um-btn danger" data-rm style="margin-right:auto;">Remove</button>' : '') + '<button type="button" class="um-btn" data-x2>Cancel</button><button type="button" class="um-btn primary" data-ok>Save</button>');
+  m.el.querySelector('[data-x2]').onclick = m.close;
+  if (m.el.querySelector('[data-rm]')) m.el.querySelector('[data-rm]').onclick = () => { if (!confirm('Remove ' + name + ' from the list? It stays in the sheet history.')) return; busy(() => run('removeUniDirectoryEntry', name).then(r2 => { S.dir = r2; m.close(); drawUnis(); toast('Removed'); search(); }).catch(e => toast(msg(e), true))); };
+  m.el.querySelector('[data-ok]').onclick = () => {
+    const v = id => (m.el.querySelector('#' + id) || {}).value || '';
+    const pairs = t => t.split('\n').map(x => x.split('|').map(y => y.trim())).filter(x => x[0]);
+    const e2 = { name: name || v('cuN').trim(), route: v('cuR'), aggregator: v('cuA').trim(), bdm: v('cuB').trim(), bdmPhone: v('cuBp').trim(), portal: v('cuP').trim(),
+      points: v('cuPts').split('\n').map(x => x.trim()).filter(Boolean), scholarship: v('cuS').trim(), waiver: v('cuW').trim(),
+      deadlines: pairs(v('cuD')).map(x => ({ label: x[0], date: x[1] || '' })), files: pairs(v('cuF')).map(x => ({ name: x[0], url: x[1] || '' })),
+      commission: v('cuC').trim(), commissionInr: v('cuCi'), uniOfWeek: m.el.querySelector('#cuWk').checked, weekFact: v('cuWf').trim() };
+    if (!e2.name) { toast('Pick the university', true); return; }
+    busy(() => run('saveUniDirectoryEntry', e2).then(r => { S.dir = r; m.close(); drawUnis(); toast('Saved'); search(); }).catch(e => toast(msg(e), true)));
+  };
+}
+function postTexts(u) {
+  const pts = (u.points || []).slice(0, 3), sch = u.scholarship ? 'Scholarship: ' + u.scholarship + '. ' : '';
+  const dl = (u.deadlines || []).find(d => d.date);
+  return {
+    wa: `${u.name}\n\n${pts.map(x => '• ' + x).join('\n')}${u.scholarship ? '\n• Scholarship: ' + u.scholarship : ''}${dl ? '\n• ' + dl.label + ' deadline: ' + new Date(dl.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long' }) : ''}\n\nAkbar Study Abroad is an official partner of ${u.name}. Talk to your counsellor to check your eligibility.`,
+    status: `Study at ${u.name}. ${sch}${dl ? dl.label + ' closes ' + new Date(dl.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + '. ' : ''}Message us to check if you are eligible.`,
+    insta: `${u.name} with Akbar Study Abroad\n\n${pts.join('\n')}\n${sch}\nWe are an official partner of ${u.name}. Send us a message to check your eligibility and next intake.\n\n#StudyInUK #AkbarStudyAbroad`
+  };
+}
+function share(name) {
+  const u = uniByName(name);
+  if (!u) { run('getUniDirectory').then(r => { S.dir = r; if (uniByName(name)) share(name); else toast('Add details for this university first', true); }).catch(e => toast(msg(e), true)); return; }
+  const t = postTexts(u);
+  const m = modal('Share ' + name, `
+<div class="cf-hint" style="margin-bottom:10px;">Copy and send yourself. Nothing is posted automatically. Commission is never included.</div>
+<div class="sx-tabs" style="margin-bottom:10px;"><button type="button" class="sx-tab active" data-pt="wa">WhatsApp message</button><button type="button" class="sx-tab" data-pt="status">WhatsApp status</button><button type="button" class="sx-tab" data-pt="insta">Instagram caption</button></div>
+<textarea class="cf-tpl" id="cfTpl">${esc(t.wa)}</textarea>
+<div style="display:flex;gap:8px;margin:10px 0 16px;flex-wrap:wrap;"><button type="button" class="um-btn primary" data-copy>Copy</button><button type="button" class="um-btn" data-pdf>One-page PDF</button>${(u.files || []).filter(f => /^https:\x2F\x2F/.test(f.url)).map(f => `<a class="um-btn" href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.name)}</a>`).join('')}</div>
+<div class="cf-lbl" style="margin-bottom:6px;">How it shows in the student app</div><div class="cf-stu"><span class="bd">RECOMMENDED BY AKBAR</span><div style="font-weight:700;">${esc(name)}</div><div class="cf-hint">${esc((u.points || [])[0] || 'Picked for you by your counsellor')}</div></div>`);
+  m.el.querySelectorAll('[data-pt]').forEach(x => x.onclick = () => { m.el.querySelectorAll('[data-pt]').forEach(y => y.classList.toggle('active', y === x)); m.el.querySelector('#cfTpl').value = t[x.dataset.pt]; });
+  m.el.querySelector('[data-copy]').onclick = () => { try { navigator.clipboard.writeText(m.el.querySelector('#cfTpl').value).then(() => toast('Copied'), () => toast('Copy did not work in this browser', true)); } catch (e) { toast('Copy did not work in this browser', true); } };
+  m.el.querySelector('[data-pdf]').onclick = () => uniPdf(u);
+}
+function uniPdf(u) {
+  const w = window.open('', '_blank'); if (!w) { toast('Allow pop-ups to download the PDF', true); return; }
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(u.name)}</title><style>body{font:14px/1.5 Arial,sans-serif;color:#141826;margin:36px}header{display:flex;justify-content:space-between;align-items:center;background:#161B33;color:#fff;padding:18px 22px;border-radius:12px}header img{height:34px}h1{font:500 26px Georgia,serif;margin:20px 0 6px}li{margin:6px 0}.m{color:#667085;font-size:12.5px}footer{margin-top:24px;font-size:12px;color:#667085}</style></head><body>
+<header><img src="${LOGO}" alt="Akbar Study Abroad"><span>Official partner</span></header><h1>${esc(u.name)}</h1><ul>${(u.points || []).map(x => '<li>' + esc(x) + '</li>').join('')}${u.scholarship ? '<li>Scholarship: ' + esc(u.scholarship) + '</li>' : ''}</ul>
+${(u.deadlines || []).filter(d => d.date).map(d => `<div class="m">${esc(d.label)}: ${esc(new Date(d.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }))}</div>`).join('')}
+<footer>Akbar Study Abroad is an official partner of ${esc(u.name)}. Ask your counsellor to check your eligibility.</footer><script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`);
+  w.document.close();
+}
+function repVisit(name) {
+  const ev = Array.prototype.find.call(document.querySelectorAll('#sidebar .nav-item'), n => /^\s*Events/i.test(n.textContent));
+  try { sessionStorage.setItem('ak_event_prefill', JSON.stringify({ title: name + ' rep visit', university: name })); } catch (e) {   }
+  if (ev) { close(); ev.click(); toast('Add the visit in Events. The university name is ready to paste: ' + name); }
+  else toast('The Events module is not in your menu', true);
+}
+
+ 
+function loadPushes() {
+  const p = document.querySelector('#cfView [data-cf-pane="push"]');
+  p.innerHTML = '<div class="sx-card"><div class="skeleton" style="height:220px;"></div></div>';
+  run('getFocusPushes').then(r => { S.push = r; drawPushes(); }).catch(e => { p.innerHTML = `<div class="sx-card cf-empty">${esc(msg(e))}</div>`; });
+}
+function drawPushes() {
+  const p = document.querySelector('#cfView [data-cf-pane="push"]'), r = S.push;
+  $('cfPushN').textContent = r.pushes.filter(x => x.active).length ? '(' + r.pushes.filter(x => x.active).length + ')' : '';
+  const prog = (l, a, t) => `<div class="cf-prog"><span>${esc(l)}</span><span class="bar"><i style="width:${t ? Math.min(100, Math.round(a / t * 100)) : 0}%"></i></span><span class="n">${a}${t ? ' / ' + t : ''} applied</span></div>`;
+  p.innerHTML = `${r.demo ? '<div class="cf-demo">Preview: demo pushes and numbers. The live page counts real shortlists, applications and offers.</div>' : ''}
+<div class="cf-uhead"><div class="sx-sub" style="margin:0;">Pin universities for chosen branches after a training or before a deadline. Counsellors and telecallers see them on their dashboard, on the calling screen, in the lead pop-up and at the top of the course finder.</div>${r.canCreate ? '<div style="display:flex;gap:8px;"><button type="button" class="um-btn" data-cf-pedit="training">From a training session</button><button type="button" class="um-btn primary" data-cf-pedit="">New focus push</button></div>' : ''}</div>
+${r.pushes.length ? r.pushes.map(x => `<div class="sx-card cf-push"><div class="ph"><div><h3>${esc(x.title)} ${x.active ? '' : '<span class="cf-pill">Ended</span>'}</h3>
+<div class="meta">${esc(x.unis.join(', '))} · ${esc(x.branches.length ? x.branches.join(', ') : 'All branches')} · ${esc(fmtDate(x.start))} to ${esc(fmtDate(x.end))} · <span class="cf-days">${esc(daysTo(x.end, 'ends'))}</span></div>
+<div class="meta">${esc(x.reason)}${x.fromTraining ? ' · from training: ' + esc(x.fromTraining) : ''} · set by ${esc(x.createdBy)}</div></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;">${x.mine && !x.read ? `<button type="button" class="um-btn primary" data-cf-read="${esc(x.id)}">I have read this</button>` : x.mine ? '<span class="cf-pill ok">Read</span>' : ''}${r.canCreate ? `<button type="button" class="um-btn" data-cf-pedit="${esc(x.id)}">Edit</button>${x.active ? `<button type="button" class="um-btn" data-cf-pend="${esc(x.id)}">End now</button>` : ''}` : ''}</div></div>
+${x.points.length ? '<ul class="pts">' + x.points.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>' : ''}
+${x.progress ? `<div class="cf-pgrid"><div><div class="cf-lbl" style="margin-bottom:6px;">Applications by branch${x.target ? ' (target ' + x.target + ' each)' : ''}</div>${x.progress.byBranch.map(b => prog(b.branch, b.applied, x.target)).join('')}
+<div class="cf-hint" style="margin-top:6px;">${x.progress.shortlisted} students shortlisted · ${x.progress.applied} applied · ${x.progress.offers} offers${x.progress.matches != null ? ' · ' + x.progress.matches + ' match alerts sent' : ''}</div>
+${(x.alerts || []).map(a => `<div class="cf-alert">${esc(a)}</div>`).join('')}</div>
+<div><div class="cf-lbl" style="margin-bottom:6px;">Counsellors who read it</div><div style="font-size:22px;font-weight:700;">${x.reads.read} <span class="cf-hint" style="font-size:13px;">of ${x.reads.total}</span></div>
+${x.reads.notRead.length ? `<div class="cf-hint" style="margin-top:4px;">Not yet: ${esc(x.reads.notRead.join(', '))}</div>` : ''}</div></div>` : ''}</div>`).join('') : '<div class="sx-card cf-empty">No focus pushes yet</div>'}`;
+}
+function editPush(id) {
+  const r = S.push, x = Object.assign({ id: '', title: '', unis: [], branches: [], start: new Date().toISOString().slice(0, 10), end: '', reason: '', points: [], target: '', fromTraining: '' }, r.pushes.find(p => p.id === id) || {});
+  const fromTr = id === 'training';
+  const names = (S.set && S.set.uniNames) || [];
+  const m = modal(fromTr ? 'Focus push from a training session' : x.id ? 'Edit focus push' : 'New focus push', `
+${fromTr ? `<label class="cf-lbl">Training session</label><select id="fpT"><option value="">Pick a session</option>${(r.trainings || []).map((t, i) => `<option value="${i}">${esc(t.date)} · ${esc(t.title)}</option>`).join('')}</select>` : ''}
+<label class="cf-lbl">Title</label><input type="text" id="fpTi" value="${esc(x.title)}" placeholder="Example: Sussex and Belfast after the 6 Nov training">
+<label class="cf-lbl">Universities</label><input type="text" id="fpU" list="fpNames" placeholder="Type a name and press Enter"><datalist id="fpNames">${names.map(n => `<option value="${esc(n)}">`).join('')}</datalist><div class="cf-chipsel" id="fpUs"></div>
+<label class="cf-lbl">Branches</label><div class="cf-chipsel" id="fpBr"><button type="button" data-b="" class="${x.branches.length ? '' : 'on'}">All branches</button>${(r.branches || []).map(b => `<button type="button" data-b="${esc(b)}" class="${x.branches.indexOf(b) !== -1 ? 'on' : ''}">${esc(b)}</button>`).join('')}</div>
+<div class="cf-ff"><div><label class="cf-lbl">Starts</label><input type="date" id="fpS" value="${esc(x.start)}"></div><div><label class="cf-lbl">Ends</label><input type="date" id="fpE" value="${esc(x.end)}"></div></div>
+<label class="cf-lbl">Why</label><input type="text" id="fpR" value="${esc(x.reason)}" placeholder="Training on 6 Nov · Jan intake deadline 30 Nov · fee waiver till Friday">
+<label class="cf-lbl">Talking points (one per line)</label><textarea id="fpP" rows="4">${esc(x.points.join('\n'))}</textarea>
+<div class="cf-ff"><div><label class="cf-lbl">Target applications per branch</label><input type="number" id="fpG" min="0" value="${esc(x.target)}"></div><div></div></div>
+<div class="cf-hint">Everyone in these branches gets a bell notification on the start day.</div>`,
+    '<button type="button" class="um-btn" data-x2>Cancel</button><button type="button" class="um-btn primary" data-ok>Save and notify branches</button>');
+  const unis = x.unis.slice(), us = m.el.querySelector('#fpUs');
+  const drawU = () => { us.innerHTML = unis.map((u, i) => `<button type="button" class="on" data-ru="${i}">${esc(u)} ×</button>`).join(''); };
+  drawU();
+  us.onclick = e => { const b = e.target.closest('[data-ru]'); if (b) { unis.splice(+b.dataset.ru, 1); drawU(); } };
+  const ui = m.el.querySelector('#fpU');
+  const addU = () => { const v = ui.value.trim(); if (v && unis.indexOf(v) === -1) { unis.push(v); drawU(); } ui.value = ''; };
+  ui.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addU(); } });
+  ui.addEventListener('change', () => { if (names.indexOf(ui.value.trim()) !== -1) addU(); });
+  const br = m.el.querySelector('#fpBr');
+  br.onclick = e => { const b = e.target.closest('[data-b]'); if (!b) return; if (!b.dataset.b) br.querySelectorAll('[data-b]').forEach(y => y.classList.toggle('on', !y.dataset.b)); else { b.classList.toggle('on'); br.querySelector('[data-b=""]').classList.toggle('on', !br.querySelector('[data-b]:not([data-b=""]).on')); } };
+  const tsel = m.el.querySelector('#fpT');
+  if (tsel) tsel.onchange = () => { const t = (r.trainings || [])[+tsel.value]; if (!t) return; m.el.querySelector('#fpTi').value = t.title; m.el.querySelector('#fpR').value = 'Training on ' + t.date; (t.unis || []).forEach(u => { if (unis.indexOf(u) === -1) unis.push(u); }); drawU(); const d = new Date(t.date + 'T00:00:00'); d.setDate(d.getDate() + 28); m.el.querySelector('#fpE').value = d.toISOString().slice(0, 10); };
+  m.el.querySelector('[data-x2]').onclick = m.close;
+  m.el.querySelector('[data-ok]').onclick = () => {
+    const v = id2 => m.el.querySelector('#' + id2).value;
+    const np = { id: x.id, title: v('fpTi').trim(), unis: unis, branches: Array.from(br.querySelectorAll('[data-b].on')).map(y => y.dataset.b).filter(Boolean), start: v('fpS'), end: v('fpE'), reason: v('fpR').trim(),
+      points: v('fpP').split('\n').map(y => y.trim()).filter(Boolean), target: Number(v('fpG')) || 0, fromTraining: tsel && tsel.value !== '' ? ((r.trainings || [])[+tsel.value] || {}).title || '' : x.fromTraining };
+    if (!np.title || !np.unis.length || !np.end) { toast('Add a title, at least one university and the end date', true); return; }
+    busy(() => run('saveFocusPush', np).then(res => { S.push = res; m.close(); drawPushes(); if (window.akFocusReload) window.akFocusReload(); toast('Saved. Counsellors in ' + (np.branches.length ? np.branches.join(', ') : 'all branches') + ' see it now.'); search(); }).catch(e => toast(msg(e), true)));
+  };
+}
+function markRead(id) { busy(() => run('markFocusRead', id).then(() => { (S.push.pushes.find(p => p.id === id) || {}).read = true; drawPushes(); toast('Marked as read'); if (window.akFocusReload) window.akFocusReload(); }).catch(e => toast(msg(e), true))); }
+function endPush(id) { if (!confirm('End this push today? Counsellors stop seeing it.')) return; busy(() => run('endFocusPush', id).then(res => { S.push = res; drawPushes(); toast('Push ended'); search(); if (window.akFocusReload) window.akFocusReload(); }).catch(e => toast(msg(e), true))); }
+function pushInsights(d) {
+  return `<div class="cf-ins" style="margin-top:16px;"><div class="sx-card"><h3>Partner and focus applications by counsellor</h3><table class="sx-table"><thead><tr><th>Counsellor</th><th style="text-align:right;">Partner</th><th style="text-align:right;">Focus</th><th style="text-align:right;">All</th><th style="text-align:right;">Share</th></tr></thead><tbody>
+${(d.scorecard || []).map(x => `<tr><td>${esc(x.name)}<div class="cf-hint">${esc(x.branch)}</div></td><td style="text-align:right;">${x.direct}</td><td style="text-align:right;">${x.focus}</td><td style="text-align:right;">${x.all}</td><td style="text-align:right;">${x.all ? Math.round((x.direct + x.focus) / x.all * 100) + '%' : '—'}</td></tr>`).join('') || '<tr><td colspan="5" class="cf-empty">No applications yet</td></tr>'}</tbody></table></div>
+${d.forecast ? `<div class="sx-card"><h3>Commission forecast <span class="cf-pill">Directors only</span></h3>${d.forecast.length ? d.forecast.map(f => `<div class="cf-srow"><div><b>${esc(f.intake)}</b><div class="m">${f.apps} applications · ${f.offers} offers · ${f.visas} visas</div></div><div style="text-align:right;"><b>${inr2(f.expected)}</b><div class="m">if every offer enrols · ${inr2(f.confirmed || 0)} with visa</div></div></div>`).join('') : '<div class="cf-empty">Add a commission per student to partner universities to see this</div>'}</div>` : ''}</div>`;
+}
+function inr2(n) { return '₹' + Math.round(Number(n) || 0).toLocaleString('en-IN'); }
 
 function addNav() {
   const grp = document.querySelector('#sidebar .nav-group[data-group="applications"]');
@@ -14971,6 +15242,196 @@ setTimeout(addNav, 500); setInterval(addNav, 3000);
 const sb = document.getElementById('sidebar');
 if (sb) sb.addEventListener('click', e => { const it = e.target.closest('.nav-item, .lead-set-item, [data-branch]'); if (it && !it.hasAttribute('data-cf-view')) close(); }, true);
 window.openCourseFinder = open;
+window.cfGo = (t) => { open(); if (t) setTimeout(() => tab(t), 50); };
+window.cfOpenLead = (branch, leadId) => { open(); tab('find'); setTimeout(() => { const sel = $('cfLead'); if (!sel) return; const v = branch + '|' + leadId; if (!Array.from(sel.options).some(o => o.value === v)) { const o = document.createElement('option'); o.value = v; o.textContent = 'Lead ' + leadId; sel.appendChild(o); } sel.value = v; pickLead(); }, 120); };
+})();
+</script>
+
+
+<style>
+#cfHome { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; margin: 16px 0; }
+@media (max-width: 960px) { #cfHome { grid-template-columns: minmax(0, 1fr); } }
+#cfHome:empty { display: none; }
+#cfHome .sx-card { padding: 18px 20px; }
+#cfHome h3 { margin: 0 0 4px; font-size: 15px; }
+.fh-sub { font-size: 12.5px; color: var(--muted); }
+.fh-push { border-top: 1px solid var(--border); padding: 12px 0 4px; margin-top: 10px; }
+.fh-push:first-of-type { border-top: 0; margin-top: 6px; padding-top: 6px; }
+.fh-push .t { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; font-weight: 700; font-size: 13.5px; color: var(--ink); }
+.fh-push .u { font-size: 12.5px; color: var(--ink); margin-top: 3px; }
+.fh-push ul { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--muted); }
+.fh-days { font-size: 11.5px; font-weight: 700; color: #B45309; white-space: nowrap; }
+.fh-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.fh-week { border-left: 3px solid #B8925A; padding-left: 12px; }
+.fh-week .n { font: 500 18px/1.3 Georgia, 'Times New Roman', serif; color: var(--ink); margin: 4px 0; }
+.fh-match { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border); font-size: 12.5px; }
+.fh-match:first-child { border-top: 0; }
+.fh-match b { color: var(--ink); }
+.fh-demo { grid-column: 1 / -1; border: 1px dashed rgba(217,119,6,.6); color: #B45309; background: rgba(217,119,6,.06); border-radius: 10px; padding: 8px 12px; font-size: 12.5px; font-weight: 600; }
+.fs-strip { border: 1px solid var(--border); border-left: 3px solid #B8925A; border-radius: 10px; padding: 10px 14px; margin: 12px 0; background: var(--card); font-size: 12.5px; }
+.fs-strip .fs-h { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.fs-strip .fs-k { font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.fs-strip .fs-t { font-weight: 700; color: var(--ink); font-size: 13px; }
+.fs-uni { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; padding: 5px 0; border-top: 1px dashed var(--border); }
+.fs-uni:first-of-type { border-top: 0; }
+.fs-uni b { color: var(--ink); font-weight: 600; }
+.fs-uni span { color: var(--muted); }
+.fs-strip ul { margin: 4px 0 0; padding-left: 18px; color: var(--muted); }
+.fs-strip .fs-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+</style>
+<script>
+(function () {
+const $ = id => document.getElementById(id);
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const run = (fn, ...a) => promisifyRun(fn, window._authToken || '', ...a);
+const msg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
+const toast = (m, bad) => { if (typeof showToast === 'function') showToast(m, bad ? 'error' : 'success'); };
+const isTc = () => document.body.classList.contains('tc-staff');
+function daysTo(ymd) {
+  if (!ymd) return '';
+  const d = Math.round((new Date(String(ymd).slice(0, 10) + 'T00:00:00') - new Date(new Date().toDateString())) / 864e5);
+  return d < 0 ? 'ended' : d === 0 ? 'ends today' : 'ends in ' + d + ' day' + (d === 1 ? '' : 's');
+}
+const fmtD = ymd => { const d = new Date(String(ymd).slice(0, 10) + 'T00:00:00'); return isNaN(d) ? String(ymd) : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); };
+const ctry = c => { const s = String(c || '').toLowerCase().trim(); return !s ? '' : /\b(uk|u\.k|united kingdom|england|scotland|wales|britain|great britain|london)\b/.test(s) ? 'uk' : s.split(/[\s,/]+/)[0]; };
+let H = null, busy = false, loading = false;
+function draw() {
+  const box = $('cfHome'); if (!box || !H) return;
+  const any = H.pushes.length || H.uniOfWeek || H.matches.length;
+  if (!any) { box.innerHTML = ''; return; }
+  box.innerHTML = `${H.demo ? '<div class="fh-demo">Preview: demo focus pushes and matches. The live card shows only your branch pushes and your own leads.</div>' : ''}
+<div class="sx-card"><h3>Focus universities</h3><div class="fh-sub">Pitch these when you call and shortlist. They are pinned at the top of your Course finder searches.</div>
+${H.pushes.length ? H.pushes.map(p => `<div class="fh-push"><div class="t"><span>${esc(p.title)}</span><span class="fh-days">${esc(daysTo(p.end))}</span></div>
+<div class="u">${esc(p.unis.join(' · '))}</div>${p.points.length ? '<ul>' + p.points.slice(0, 3).map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>' : ''}
+<div class="fh-acts">${p.mine && !p.read ? `<button type="button" class="um-btn primary" data-fh-read="${esc(p.id)}">I have read this</button>` : p.mine ? '<span class="cf-pill ok">Read</span>' : ''}${isTc() ? '' : '<button type="button" class="um-btn" data-fh-open>Open in Course finder</button>'}</div></div>`).join('') : '<div class="fh-sub" style="margin-top:10px;">No focus push for your branch right now</div>'}</div>
+<div style="display:grid;gap:16px;align-content:start;">
+${H.uniOfWeek ? `<div class="sx-card"><div class="fh-week"><div class="fh-sub">University of the week${H.uniOfWeek.partner ? ' · Partner' : ''}</div><div class="n">${esc(H.uniOfWeek.name)}</div><div class="fh-sub">${esc(H.uniOfWeek.fact || '')}</div></div></div>` : ''}
+${H.matches.length ? `<div class="sx-card"><h3>${H.matches.length} of your leads fit a focus university</h3><div style="margin-top:8px;">${H.matches.map(m => `<div class="fh-match"><span><b>${esc(m.name)}</b><div class="fh-sub">${esc(m.course)}</div></span><span class="fh-sub" style="text-align:right;">${esc(m.uni)}</span></div>`).join('')}</div>
+${isTc() ? '' : '<div class="fh-acts"><button type="button" class="um-btn" data-fh-open>Find courses for them</button></div>'}</div>` : ''}</div>`;
+}
+function markRead(id) {
+  if (busy) return; busy = true;
+  run('markFocusRead', id).then(() => { busy = false; H.pushes.forEach(p => { if (p.id === id) p.read = true; }); draw(); refreshStrips(); toast('Marked as read'); }).catch(er => { busy = false; toast(msg(er), true); });
+}
+function load() {
+  if (loading || !window._authToken) return; loading = true;
+  run('getFocusHome').then(r => { loading = false; H = r; window.AK_FOCUS = r; draw(); refreshStrips(); }).catch(() => { loading = false;   });
+}
+window.akFocusReload = load;
+
+ 
+function stripHtml(r) {
+  const F = window.AK_FOCUS; if (!F || !F.pushes || !F.pushes.length) return '';
+  const lc = ctry(r && r.country);
+  const pushes = F.pushes.filter(p => !lc || (p.facts || []).some(f => ctry(f.country || 'UK') === lc));
+  if (!pushes.length) return '';
+  const key = r && r.branch && r.leadId ? r.branch + '|' + r.leadId : '';
+  return `<div class="fs-strip" data-fs-key="${esc(key)}">${pushes.slice(0, 2).map(p => `<div class="fs-h"><span><span class="fs-k">Pitch first · </span><span class="fs-t">${esc(p.title)}</span></span><span class="fh-days">${esc(daysTo(p.end))}</span></div>
+${(p.facts && p.facts.length ? p.facts : p.unis.map(n => ({ name: n }))).slice(0, 4).map(f => `<div class="fs-uni"><b>${esc(f.name)}</b>${f.partner ? '<span class="cf-route direct">Partner</span>' : ''}${f.deadline ? `<span>Deadline ${esc(fmtD(f.deadline))}</span>` : ''}${f.scholarship ? `<span>${esc(f.scholarship)}</span>` : ''}</div>`).join('')}
+${p.points && p.points.length ? '<ul>' + p.points.slice(0, 2).map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>' : ''}
+${p.mine && !p.read ? `<div class="fs-acts"><button type="button" class="um-btn" data-fs-read="${esc(p.id)}">I have read this</button></div>` : ''}`).join('<div style="height:8px"></div>')}
+${key && !isTc() ? `<div class="fs-acts"><button type="button" class="um-btn" data-fs-open="${esc(key)}">Find courses for this student</button></div>` : ''}</div>`;
+}
+window.akFocusStripHtml = stripHtml;
+function refreshStrips() {
+  document.querySelectorAll('.fs-strip').forEach(el => {
+    const k = el.dataset.fsKey || '', i = k.indexOf('|');
+    const row = k && typeof allRows !== 'undefined' ? allRows.find(x => x.branch + '|' + x.leadId === k) : null;
+    const h = stripHtml(row || (k ? { branch: k.slice(0, i), leadId: k.slice(i + 1) } : null));
+    if (!h) el.remove(); else el.outerHTML = h;
+  });
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-fs-read],[data-fs-open]'); if (!t) return;
+  e.stopPropagation();
+  if (t.dataset.fsRead) { if (!H) return; markRead(t.dataset.fsRead); return; }
+  const k = t.dataset.fsOpen, i = k.indexOf('|');
+  if (window.cfOpenLead) window.cfOpenLead(k.slice(0, i), k.slice(i + 1));
+}, true);
+
+function mount() {
+  if (!H) load();
+  const sr = $('statsRow'); if (!sr || $('cfHome')) return;
+  const box = document.createElement('div'); box.id = 'cfHome'; sr.after(box);
+  box.addEventListener('click', e => {
+    const t = e.target.closest('[data-fh-read],[data-fh-open]'); if (!t) return;
+    if (t.dataset.fhRead) markRead(t.dataset.fhRead);
+    else if (window.cfGo) window.cfGo('find');
+  });
+  draw();
+}
+setTimeout(mount, 800); setInterval(mount, 3000); setInterval(load, 30 * 60 * 1000);
+})();
+</script>
+
+
+
+<style>
+#hoView { display: none; }
+#hoView .ho-tbl td { vertical-align: top; }
+#hoView .ho-rm { max-width: 320px; color: var(--muted); font-size: 12.5px; white-space: pre-wrap; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+#hoView tr[data-ho] { cursor: pointer; }
+#hoView tr[data-ho]:hover td { background: var(--canvas); }
+#hoView .ho-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+#hoView .ho-bar input { flex: 1; min-width: 200px; height: 36px; border: 1px solid var(--border); border-radius: 10px; padding: 0 12px; font: inherit; font-size: 13px; background: var(--card); color: var(--ink); }
+@media (max-width: 720px) { #hoView .ho-hide { display: none; } }
+</style>
+<script>
+(function () {
+const $ = id => document.getElementById(id);
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const run = (fn, ...a) => promisifyRun(fn, window._authToken || '', ...a);
+const msg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
+const H = { data: null, q: '' };
+const isTc = () => document.body.classList.contains('tc-staff');
+const canSee = () => isTc() || !!window._isSuperAdmin || (typeof viewerBranch !== 'undefined' && !!viewerBranch && typeof viewerCounselor !== 'undefined' && !viewerCounselor);
+const when = at => { const d = new Date(at); return isNaN(d) ? String(at || '') : d.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }); };
+
+function open() {
+  const app = document.querySelector('.app'); if (app) app.style.display = 'none';
+  ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'cfView'].forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
+  if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
+  let root = $('hoView'); if (!root) { root = document.createElement('div'); root.id = 'hoView'; document.body.appendChild(root); }
+  root.style.display = 'block';
+  root.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><div class="at-eyebrow">Lead source</div><h1 class="sx-title">Handed over</h1><div class="sx-sub">${isTc() ? 'Leads you passed to a counsellor, with where they are now' : 'Leads telecallers passed to a counsellor, with where they are now'}</div></div>
+<button class="um-btn" id="hoBack" type="button">Back to dashboard</button></div><div id="hoBody"><div class="sx-card sx-empty">Loading…</div></div></div>`;
+  $('hoBack').onclick = close;
+  document.querySelectorAll('#sidebar .nav-item').forEach(n => n.classList.toggle('active', n.hasAttribute('data-ho-view')));
+  window.scrollTo(0, 0);
+  run('getMyHandedOver').then(r => { H.data = r; draw(); }).catch(e => { $('hoBody').innerHTML = `<div class="sx-card sx-empty">${esc(msg(e))}</div>`; });
+}
+function close() {
+  const root = $('hoView'); if (!root || root.style.display !== 'block') return;
+  root.style.display = 'none';
+  const app = document.querySelector('.app'); if (app) app.style.display = '';
+  document.querySelectorAll('#sidebar [data-ho-view]').forEach(n => n.classList.remove('active'));
+}
+function draw() {
+  const b = $('hoBody'), r = H.data; if (!b || !r) return;
+  const q = H.q.toLowerCase();
+  const rows = r.rows.filter(x => !q || [x.name, x.phone, x.counsellor, x.status, x.by, x.list, x.branch].join(' ').toLowerCase().indexOf(q) !== -1);
+  b.innerHTML = r.rows.length ? `<div class="ho-bar"><input type="text" id="hoQ" placeholder="Search name, phone, counsellor or status" value="${esc(H.q)}"><span class="sx-sub" style="margin:0;">${rows.length} of ${r.rows.length}</span></div>
+<div class="sx-card" style="padding:0;"><div class="sx-table-wrap"><table class="sx-table ho-tbl"><thead><tr><th>Student</th><th class="ho-hide">From</th><th>Counsellor</th><th class="ho-hide">Handed over</th><th>Status now</th><th class="ho-hide">Last remark</th>${r.showBy ? '<th class="ho-hide">By</th>' : ''}</tr></thead><tbody>
+${rows.map(x => `<tr data-ho="${esc(x.branch + '|' + x.leadId)}"><td><b>${esc(x.name || 'No name')}</b><div class="sx-sub" style="margin:0;">${esc(String(x.phone || '').replace(/^p:/i, ''))}${x.branch ? ' · ' + esc(x.branch) : ''}</div></td>
+<td class="ho-hide">${esc(x.list || '')}</td><td>${esc(x.counsellor || '—')}</td><td class="ho-hide">${esc(when(x.at))}</td><td>${x.found === false ? '<span class="sx-sub" style="margin:0;">Not found in the main list</span>' : esc(x.status || 'New')}</td>
+<td class="ho-hide"><div class="ho-rm">${esc(x.lastRemark || '')}</div></td>${r.showBy ? `<td class="ho-hide">${esc(x.by || '')}</td>` : ''}</tr>`).join('')}
+</tbody></table></div></div>` : '<div class="sx-card sx-empty">No hand-overs yet. Leads you pass to a counsellor show here.</div>';
+  const qi = $('hoQ'); if (qi) qi.oninput = () => { H.q = qi.value; const p = qi.selectionStart; draw(); const n = $('hoQ'); n.focus(); n.setSelectionRange(p, p); };
+  b.querySelectorAll('tr[data-ho]').forEach(tr => { tr.onclick = () => { if (window.akOpenLeadCard) window.akOpenLeadCard(tr.dataset.ho); }; });
+}
+function addNav() {
+  const grp = document.querySelector('#sidebar .nav-group[data-group="lead-source"]');
+  if (!grp || grp.querySelector('[data-ho-view]') || !canSee()) return;
+  const it = document.createElement('div'); it.className = 'nav-item'; it.setAttribute('data-ho-view', '1'); it.setAttribute('role', 'button'); it.tabIndex = 0; it.title = 'Leads passed to a counsellor, with their status now';
+  it.innerHTML = '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span>Handed over</span>';
+  grp.appendChild(it);
+  it.addEventListener('click', e => { e.stopPropagation(); open(); });
+  it.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+}
+setTimeout(addNav, 600); setInterval(addNav, 3000);
+const sb = document.getElementById('sidebar');
+if (sb) sb.addEventListener('click', e => { const it = e.target.closest('.nav-item, .lead-set-item, [data-branch]'); if (it && !it.hasAttribute('data-ho-view')) close(); }, true);
+window.akOpenHandedOver = open;
 })();
 </script>
 
@@ -22649,6 +23110,7 @@ function draw() {
   b.innerHTML = `<div class="cq-cols"><div class="sx-card cq-lead">
 <h2>${esc(l.name || 'No name')}</h2><div class="cq-phone">${esc(clean(l.phone) || 'No phone')}</div>
 <div class="cq-facts">${facts.map(f => `<span><b>${esc(f[0])}</b>${esc(f[1])}</span>`).join('')}</div>
+${typeof window.akFocusStripHtml === 'function' ? window.akFocusStripHtml(Object.assign({ branch: C.branch }, l)) : ''}
 ${(l.history || []).length ? `<div class="cq-prev"><b>Earlier calls</b>${l.history.map(h => `<div>• ${esc(new Date(h.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }))} — ${esc(h.result)}${h.by ? ' (' + esc(h.by) + ')' : ''}${h.notes ? ': ' + esc(h.notes) : ''}</div>`).join('')}</div>` : ''}${l.remark ? `<div class="cq-prev">${esc(l.remark)}</div>` : ''}
 <div class="cq-callrow" data-ak-lead="${esc(l.leadId)}" data-ak-branch="${esc(C.branch)}" data-ak-name="${esc(l.name || '')}">${digits(l.phone) ? `<a class="cq-call" id="cqCall" href="tel:${esc(digits(l.phone).length === 10 ? '+91' + digits(l.phone) : '+' + digits(l.phone))}">📞 Call<\x2Fa><a class="um-btn" target="_blank" rel="noopener" href="https:\x2F\x2Fwa.me/${esc(digits(l.phone).length === 10 ? '91' + digits(l.phone) : digits(l.phone))}">WhatsApp</a>` : ''}${typeof window.pbBtn === 'function' && l.leadId ? window.pbBtn({ subjectType: 'lead', subjectId: (C.branch || l.branch || '') + ':' + l.leadId, subject: l.name, phone: l.phone, branch: C.branch || l.branch, country: l.country, kinds: ['newLead'] }, '📋 First-call checklist') : ''}
 <span class="cq-timer ${C.timerId ? 'on' : ''}" id="cqTimer">${clock()}</span><button class="um-btn" id="cqTimerBtn">${C.timerId ? '⏸ Stop timer' : '⏱ Start timer'}</button></div>
@@ -22831,6 +23293,7 @@ function openFuCard(key) {
     bg.querySelector('[data-x]').onclick = shut; bg.addEventListener('click', e => { if (e.target === bg) shut(); });
   }).catch(e => toast(e && e.message ? e.message.replace(/^Error:\s*/, '') : 'Could not open the lead', 'error'));
 }
+window.akOpenLeadCard = openFuCard; 
 function openFuLead(key) { 
   const r = (typeof allRows !== 'undefined' ? allRows : []).find(x => x.branch + '|' + x.leadId === key);
   if (!r) { openFuCard(key); return; } 
