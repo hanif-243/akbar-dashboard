@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '3 Nov 2026 · v160';
+window.AKBAR_BUILD = '3 Nov 2026 · v162';
 
 (function () {
   try {
@@ -2918,7 +2918,24 @@ overflow: hidden;
 .lead-sort select { height: 36px; border-radius: 11px; border: 1px solid var(--border); background: var(--canvas); color: var(--ink); font: inherit; font-size: 12px; font-weight: 700; padding: 0 10px 0 30px; cursor: pointer; }
 .lead-sort select:hover, .lead-sort select:focus-visible { border-color: var(--red); outline: none; }
 .lead-sort.on select { border-color: var(--red); background: var(--red-dim); }
-.lv-tools { margin-left: auto; display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; flex-shrink: 0; position: sticky; right: 0; z-index: 1; padding-left: 10px; background: linear-gradient(90deg, transparent, var(--card) 10px); }
+#statusFilterBar.sf-split { overflow: visible !important; flex-wrap: wrap !important; gap: 10px 12px !important; align-items: center; }
+.sf-chips { display: flex; gap: 8px; align-items: center; flex: 1 1 560px; min-width: 0; overflow-x: auto; scrollbar-width: thin; padding: 2px 0; }
+.lv-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex: 0 0 auto; margin-left: auto; padding-left: 12px; border-left: 1px solid var(--border); }
+.lv-tools .lead-sort select { height: 30px; border-radius: 9px; padding-left: 30px; }
+.sf-btn.sf-age.sf-active { background: var(--tone-bg); border-color: var(--tone); color: var(--tone); }
+.lv-score { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--muted); }
+.lv-score b { color: var(--ink); font-size: 13px; }
+.lv-score .n { font-family: 'JetBrains Mono', ui-monospace, monospace; font-weight: 700; color: var(--ink); margin-right: 4px; font-variant-numeric: tabular-nums; }
+.lv-score .bad { color: var(--red); }
+.lt-kind.stale { color: var(--red); font-weight: 700; }
+.lt-kind.stale:before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--red); margin-right: 5px; vertical-align: 1px; }
+.bulk-assign { height: 30px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--ink); font: inherit; font-size: 12px; font-weight: 700; padding: 0 8px; cursor: pointer; max-width: 220px; }
+.qr-pop { position: fixed; z-index: 9000; width: 300px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 18px 40px -16px rgba(18,23,43,.45); padding: 12px; }
+.qr-pop b { display: block; font-size: 13px; margin-bottom: 8px; }
+.qr-pop textarea { width: 100%; box-sizing: border-box; min-height: 70px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; font: inherit; font-size: 13px; resize: vertical; background: var(--canvas); color: var(--ink); }
+.qr-pop .qr-act { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+.lv-tools .lead-sort svg { left: 10px; }
+#dateRangeBtn { white-space: nowrap; }
 .lv-tools select { height: 30px; border-radius: 9px; border: 1px solid var(--border); background: var(--canvas); color: var(--ink); font: inherit; font-size: 12px; font-weight: 700; padding: 0 8px; cursor: pointer; max-width: 200px; }
 .lv-tools select.on { border-color: var(--red); background: var(--red-dim); }
 .lv-save, .lv-clear { height: 30px; border-radius: 9px; border: 1px solid var(--border); background: var(--card); color: var(--ink); font: inherit; font-size: 12px; font-weight: 700; padding: 0 10px; cursor: pointer; }
@@ -4215,7 +4232,7 @@ Didn't get it?
 <div class="um-field"><label>Interested In / Country</label><input id="alCountry" autocomplete="off" placeholder="e.g. UK, Canada"></div>
 <div class="um-field"><label>Qualification</label><input id="alQualification" autocomplete="off" placeholder="e.g. B.Com, 12th"></div>
 <div class="um-field"><label>Budget</label><input id="alBudget" autocomplete="off" placeholder="e.g. 15-20 Lakhs"></div>
-<div class="um-field"><label>Source</label><select id="alSource"><option>Walk-in</option><option>WhatsApp Inquiry</option><option>Referral</option><option>Other</option></select></div>
+<div class="um-field"><label>Source</label><select id="alSource"><option>Walk-in</option><option>Phone call</option><option>WhatsApp Inquiry</option><option>Referral</option><option>Other</option></select></div>
 <div class="um-field full"><label>Notes</label><textarea id="alNotes" placeholder="Anything the counselor should know"></textarea></div>
 </div>
 <button class="al-submit" id="addLeadSaveBtn">Save Lead</button>
@@ -4948,12 +4965,19 @@ Log out
 <button onclick="setStatusFilter(this,'Inactive7')" class="sf-btn" data-tone="cold" id="sfInactiveBtn" title="No remark, status change or follow-up for 7+ days (Junk and converted excluded)"><span class="sf-dot"></span>Inactive 7d+<span class="sf-count" data-sf-count="Inactive7"></span></button>
 <button onclick="setStatusFilter(this,'FollowUps')" class="sf-btn" data-tone="warm" id="sfFollowUpsBtn" title="Open follow-ups — overdue first"><span class="sf-dot"></span>Follow-ups<span class="sf-count" data-sf-count="FollowUps"></span></button>
 <button onclick="setStatusFilter(this,'NoRemark')" class="sf-btn" data-tone="hot" id="sfNoRemarkBtn" title="Notified, but nobody has written a remark yet (Junk excluded)"><span class="sf-dot"></span>No remark yet<span class="sf-count" data-sf-count="NoRemark"></span></button>
+<button onclick="setStatusFilter(this,'CallToday')" class="sf-btn" data-tone="warm" id="sfCallTodayBtn" title="Follow-ups due today or overdue, plus new telecaller leads nobody has called yet"><span class="sf-dot"></span>Call today<span class="sf-count" data-sf-count="CallToday"></span></button>
+<span class="sf-divider"></span>
+<span class="sf-label">Age</span>
+<button type="button" class="sf-btn sf-age" data-tone="new" data-age="today" title="Leads that came in today">Today<span class="sf-count" data-age-count="today"></span></button>
+<button type="button" class="sf-btn sf-age" data-tone="new" data-age="week" title="Leads from the last 7 days">This week<span class="sf-count" data-age-count="week"></span></button>
+<button type="button" class="sf-btn sf-age" data-tone="cold" data-age="old" title="Leads older than 30 days">30d+<span class="sf-count" data-age-count="old"></span></button>
 <span class="lv-tools">
 <select id="leadCounselor" aria-label="Counsellor" style="display:none;"><option value="">All counsellors</option></select>
 <button type="button" class="lv-save" id="leadViewSave" title="Open the lead list this way every time you sign in">Save my view</button>
 <button type="button" class="lv-clear" id="leadViewClear" title="Forget my saved view" style="display:none;">Reset</button>
 </span>
 </div>
+<div id="lvScore" class="lv-score" style="display:none;"></div>
 <div id="fuPanel"></div>
 <div class="bulk-bar" id="bulkBar">
 <span class="bulk-count" id="bulkCount">0 selected</span>
@@ -4964,6 +4988,7 @@ Log out
 <button class="bulk-btn" data-bulk-status="Junk">Junk</button>
 <button class="bulk-btn" id="bulkWhatsAppBtn">💬 WhatsApp</button>
 <button class="bulk-btn" id="bulkEmailBtn">📧 Email</button>
+<select class="bulk-assign" id="bulkAssign" aria-label="Assign selected leads to a counsellor" style="display:none;"><option value="">Assign to…</option></select>
 </div>
 <button class="bulk-clear" id="bulkClear">Clear</button>
 </div>
@@ -6536,7 +6561,8 @@ function slaCell(r) {
 if (r.notifiedAt) {
 
 const lt = leadLastTouch(r);
-return lt.ms ? `<span class="mono" title="${lt.kind === 'Created' ? 'No remark yet' : 'Last ' + lt.kind.toLowerCase()} · ${escapeHtml(new Date(lt.ms).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }))}">${timeAgo(new Date(lt.ms).toISOString())}</span><div class="lt-kind ${lt.kind === 'Created' ? 'none' : ''}">${lt.kind === 'Created' ? 'No remark yet' : lt.kind === 'Remark' ? 'Last remark' : 'Status changed'}</div>` : `<span class="mono">${timeAgo(r.createdAt)}</span>`;
+const stale = leadIsStale(r, lt.ms);
+return lt.ms ? `<span class="mono" title="${lt.kind === 'Created' ? 'No remark yet' : 'Last ' + lt.kind.toLowerCase()} · ${escapeHtml(new Date(lt.ms).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }))}">${timeAgo(new Date(lt.ms).toISOString())}</span><div class="lt-kind ${stale ? 'stale' : lt.kind === 'Created' ? 'none' : ''}"${stale ? ' title="Not worked on for 3 days or more"' : ''}>${stale ? 'Needs attention' : lt.kind === 'Created' ? 'No remark yet' : lt.kind === 'Remark' ? 'Last remark' : 'Status changed'}</div>` : `<span class="mono">${timeAgo(r.createdAt)}</span>`;
 }
 const elapsed = minsSince(r.createdAt);
 const remaining = 15 - elapsed;
@@ -6554,6 +6580,73 @@ let activeStatusFilter = null;
 
 let leadSortMode = 'newest';
 let activeCounselorFilter = '';
+let leadAgeFilter = '';
+const LEAD_DAY = 864e5;
+function leadIsConverted(r) { return typeof convById !== 'undefined' && !!(convById && convById[r.leadId]); }
+function leadIsStale(r, lastMs) {
+if (!r.notifiedAt || statusPill(r.status).label === 'Junk' || leadIsConverted(r)) return false;
+const t = lastMs == null ? leadLastTouch(r).ms : lastMs;
+return !!t && Date.now() - t >= 3 * LEAD_DAY;
+}
+function leadCallToday(r) {
+if (typeof window.akFuToday === 'function' && window.akFuToday(r)) return true;
+return isTelecallerLead(r) && !String(r.counselor || '').trim() && !String(r.remark || '').replace(/^Added by telecaller[^|]*\|?/i, '').trim() && statusPill(r.status).label !== 'Junk';
+}
+function leadAgeOk(r, mode) {
+const t = Date.parse(r.createdAt || ''); if (!t) return false;
+if (mode === 'today') return new Date(t).toDateString() === new Date().toDateString();
+if (mode === 'week') return Date.now() - t < 7 * LEAD_DAY;
+if (mode === 'old') return Date.now() - t > 30 * LEAD_DAY;
+return true;
+}
+function updateAgeCounts(rows) {
+['today', 'week', 'old'].forEach(m => { const el = document.querySelector('[data-age-count="' + m + '"]'); if (el) el.textContent = rows.filter(r => leadAgeOk(r, m)).length; });
+document.querySelectorAll('.sf-age').forEach(b => b.classList.toggle('sf-active', b.dataset.age === leadAgeFilter));
+}
+function canAssignLeads() { return !viewerCounselor && !document.body.classList.contains('tc-staff'); }
+
+function counselorLoad() {
+const load = {};
+allRows.forEach(r => {
+if (activeBranch !== 'All' && r.branch !== activeBranch) return;
+const c = String(r.counselor || '').trim(); if (!c) return;
+if (!(c in load)) load[c] = 0;
+if (statusPill(r.status).label !== 'Junk' && !leadIsConverted(r)) load[c]++;
+});
+(Array.isArray(window.counselorList) ? window.counselorList : (typeof counselorList !== 'undefined' && Array.isArray(counselorList) ? counselorList : [])).forEach(c => {
+const n = String(typeof c === 'string' ? c : (c && (c.name || c.counselorName)) || '').trim();
+const b = c && typeof c === 'object' ? c.branch : '';
+if (n && !(n in load) && (activeBranch === 'All' || !b || b === activeBranch)) load[n] = 0;
+});
+return load;
+}
+function drawLvScore() {
+const el = document.getElementById('lvScore'); if (!el) return;
+const name = activeCounselorFilter;
+if (!name) { el.style.display = 'none'; return; }
+const mine = allRows.filter(r => String(r.counselor || '').trim() === name && (activeBranch === 'All' || r.branch === activeBranch));
+const open = mine.filter(r => statusPill(r.status).label !== 'Junk' && !leadIsConverted(r));
+const fu = (typeof window.akFuList === 'function' ? window.akFuList() : []).filter(f => String(f.counselor || '').trim() === name && (activeBranch === 'All' || f.branch === activeBranch));
+const n = (v, bad) => `<span class="n${bad && v ? ' bad' : ''}">${v.toLocaleString('en-IN')}</span>`;
+el.innerHTML = `<b>${escapeHtml(name)}</b>`
++ `<span>${n(open.length)}open leads</span>`
++ `<span>${n(open.filter(r => statusPill(r.status).label === 'Hot').length)}hot</span>`
++ `<span>${n(mine.filter(r => noRemarkLead(r)).length, 1)}no remark yet</span>`
++ `<span>${n(open.filter(r => leadIsStale(r)).length, 1)}not worked on 3d+</span>`
++ `<span>${n(fu.filter(f => f.state === 'overdue').length, 1)}overdue follow-ups</span>`
++ `<span>${n(fu.filter(f => f.state === 'today').length)}follow-ups today</span>`
++ `<span>${n(mine.filter(r => leadIsConverted(r)).length)}converted</span>`;
+el.style.display = '';
+}
+function updateBulkAssign() {
+const sel = document.getElementById('bulkAssign'); if (!sel) return;
+const show = canAssignLeads();
+sel.style.display = show ? '' : 'none';
+if (!show) return;
+const load = counselorLoad();
+const html = '<option value="">Assign to…</option>' + Object.keys(load).sort((a, b) => a.localeCompare(b)).map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)} · ${load[c]} open</option>`).join('');
+if (sel.dataset.sig !== html) { sel.innerHTML = html; sel.dataset.sig = html; }
+}
 const noRemarkLead = r => !!r.notifiedAt && !String(r.remark || '').trim() && statusPill(r.status).label !== 'Junk';
 const LEAD_SORT_HEAT = { Hot: 0, Warm: 1, New: 2, Cold: 3, Junk: 4 };
 function sortLeads(rows) {
@@ -6572,7 +6665,17 @@ return (ha == null ? 9 : ha) - (hb == null ? 9 : hb) || made(b) - made(a);
 const touch = new Map(rows.map(r => [r, leadLastTouch(r).ms]));
 return rows.slice().sort((a, b) => leadSortMode === 'stale' ? touch.get(a) - touch.get(b) : touch.get(b) - touch.get(a));
 }
+function splitStatusBar() {
+const bar = document.getElementById('statusFilterBar'), tools = bar && bar.querySelector('.lv-tools');
+if (!bar || !tools || bar.classList.contains('sf-split')) return;
+const chips = document.createElement('div'); chips.className = 'sf-chips';
+[...bar.childNodes].forEach(n => { if (n !== tools) chips.appendChild(n); });
+bar.insertBefore(chips, tools);
+const sort = document.querySelector('.lead-sort'); if (sort) tools.insertBefore(sort, tools.firstChild);
+bar.classList.add('sf-split');
+}
 function initLeadSort() {
+splitStatusBar();
 const sel = document.getElementById('leadSort'); if (!sel) return;
 if (![...sel.options].some(o => o.value === leadSortMode)) leadSortMode = 'newest';
 sel.value = leadSortMode;
@@ -6586,13 +6689,76 @@ const cs = document.getElementById('leadCounselor');
 if (cs) cs.onchange = () => { activeCounselorFilter = cs.value; cs.classList.toggle('on', !!cs.value); render(); leadViewMark(); };
 const sv = document.getElementById('leadViewSave'), cl = document.getElementById('leadViewClear');
 if (sv) sv.onclick = () => {
-const v = { sort: leadSortMode, counselor: activeCounselorFilter, status: activeStatusFilter || '' };
-try { localStorage.setItem(leadViewKey(), JSON.stringify(v)); } catch (e) { showToast('Could not save — this browser blocks storage', 'error'); return; }
-leadViewMark(); showToast('Saved — the lead list opens this way next time', 'success');
+const v = { sort: leadSortMode, counselor: activeCounselorFilter, status: activeStatusFilter || '', age: leadAgeFilter };
+try { localStorage.setItem(leadViewKey(), JSON.stringify(v)); } catch (e) {   }
+leadViewMark();
+google.script.run.withSuccessHandler(() => showToast('Saved — the lead list opens this way on any computer', 'success'))
+.withFailureHandler(() => showToast('Saved in this browser only — could not reach the server', 'error'))
+.saveMyLeadView(window._authToken || '', v);
 };
-if (cl) cl.onclick = () => { try { localStorage.removeItem(leadViewKey()); } catch (e) {   } leadViewMark(); showToast('Saved view removed', 'success'); };
+if (cl) cl.onclick = () => { try { localStorage.removeItem(leadViewKey()); } catch (e) {   } leadViewMark(); google.script.run.withFailureHandler(() => {}).saveMyLeadView(window._authToken || '', null); showToast('Saved view removed', 'success'); };
 }
 initLeadSort();
+document.querySelectorAll('.sf-age').forEach(b => b.addEventListener('click', () => {
+leadAgeFilter = leadAgeFilter === b.dataset.age ? '' : b.dataset.age;
+render(); leadViewMark();
+}));
+(function () {
+const sel = document.getElementById('bulkAssign'); if (!sel) return;
+sel.addEventListener('change', async () => {
+const name = sel.value; sel.value = '';
+const ids = Array.from(selectedLeadIds);
+if (!name || !ids.length) return;
+if (!confirm('Assign ' + ids.length + ' lead' + (ids.length === 1 ? '' : 's') + ' to ' + name + '?')) return;
+const olds = {};
+ids.forEach(id => { const i = allRows.findIndex(r => r.leadId === id); if (i !== -1) { olds[id] = allRows[i]; allRows[i] = Object.assign({}, allRows[i], { counselor: name }); } });
+selectedLeadIds.clear(); forceRender();
+const todo = ids.filter(id => olds[id]);
+showToast('Assigning ' + todo.length + ' lead' + (todo.length === 1 ? '' : 's') + ' to ' + name + '…', 'success');
+let ok = 0, failed = 0, next = 0;
+const worker = async () => {
+while (next < todo.length) {
+const id = todo[next++], row = olds[id];
+try { const up = await promisifyRun('setLeadCounselor', window._authToken || '', row.branch, id, name); const i = allRows.findIndex(r => r.leadId === id); if (i !== -1 && up && up.leadId && allRows[i].counselor === name) allRows[i] = up; ok++; }
+catch (err) { console.error(err); failed++; const i = allRows.findIndex(r => r.leadId === id); if (i !== -1 && allRows[i].counselor === name) allRows[i] = row; }
+}
+};
+await Promise.all([worker(), worker(), worker(), worker()]);
+if (failed) { forceRender(); showToast(failed + ' of ' + todo.length + ' could not be assigned and were changed back.', 'error'); }
+else showToast('Assigned ' + ok + ' lead' + (ok === 1 ? '' : 's') + ' to ' + name, 'success');
+render();
+});
+})();
+
+document.addEventListener('click', e => {
+const b = e.target.closest && e.target.closest('[data-quick-remark]');
+const pop = document.getElementById('qrPop');
+if (!b) { if (pop && !e.target.closest('#qrPop')) pop.remove(); return; }
+e.preventDefault(); e.stopPropagation();
+if (pop) pop.remove();
+const r = allRows.find(x => x.leadId === b.dataset.quickRemark); if (!r) return;
+const p = document.createElement('div'); p.id = 'qrPop'; p.className = 'qr-pop';
+p.innerHTML = `<b>Remark for ${escapeHtml(r.name || 'this lead')}</b><textarea id="qrText" maxlength="1000" placeholder="Called, next step, objection…"></textarea><div class="qr-act"><button type="button" class="um-btn" id="qrCancel">Cancel</button><button type="button" class="um-btn primary" id="qrSave">Save remark</button></div>`;
+document.body.appendChild(p);
+const rect = b.getBoundingClientRect();
+p.style.left = Math.max(8, Math.min(window.innerWidth - 316, rect.left)) + 'px';
+p.style.top = (rect.bottom + 6 + 170 > window.innerHeight ? Math.max(8, rect.top - 176) : rect.bottom + 6) + 'px';
+const ta = p.querySelector('#qrText'); ta.focus();
+p.querySelector('#qrCancel').onclick = () => p.remove();
+p.querySelector('#qrSave').onclick = () => {
+const text = ta.value.trim(); if (!text) { ta.focus(); return; }
+const save = p.querySelector('#qrSave'); save.disabled = true; save.textContent = 'Saving…';
+google.script.run.withSuccessHandler(up => {
+const i = allRows.findIndex(x => x.leadId === r.leadId);
+if (i !== -1 && up && up.leadId) allRows[i] = up; else setTimeout(loadData, 1500);
+p.remove(); forceRender(); showToast('Remark saved for ' + (r.name || 'the lead'), 'success');
+}).withFailureHandler(err => {
+save.disabled = false; save.textContent = 'Save remark';
+showToast('Could not save the remark: ' + (err && err.message ? String(err.message).replace(/^Error:\s*/, '') : 'no reply from the server'), 'error');
+}).setLeadNote(window._authToken || '', r.branch, r.leadId, text);
+};
+ta.addEventListener('keydown', ev => { if (ev.key === 'Escape') p.remove(); if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) p.querySelector('#qrSave').click(); });
+}, true);
 
 function updateCounselorFilter(rows) {
 const cs = document.getElementById('leadCounselor'); if (!cs) return;
@@ -6611,7 +6777,7 @@ function leadViewGet() { try { return JSON.parse(localStorage.getItem(leadViewKe
 function leadViewMark() {
 const v = leadViewGet(), sv = document.getElementById('leadViewSave'), cl = document.getElementById('leadViewClear');
 if (!sv) return;
-const same = !!v && v.sort === leadSortMode && (v.counselor || '') === activeCounselorFilter && (v.status || '') === (activeStatusFilter || '');
+const same = !!v && v.sort === leadSortMode && (v.counselor || '') === activeCounselorFilter && (v.status || '') === (activeStatusFilter || '') && (v.age || '') === leadAgeFilter;
 sv.textContent = same ? '✓ My view' : 'Save my view';
 sv.classList.toggle('saved', same);
 if (cl) cl.style.display = v ? '' : 'none';
@@ -6620,21 +6786,29 @@ function applyLeadView(email) {
 if (window._akViewApplied) return;
 window._akViewApplied = true;
 window._akViewerEmail = email || '';
-const v = leadViewGet();
+setLeadView(leadViewGet());
+
+google.script.run.withSuccessHandler(sv => {
+const local = leadViewGet();
+if (JSON.stringify(sv || null) === JSON.stringify(local || null)) return;
+try { if (sv) localStorage.setItem(leadViewKey(), JSON.stringify(sv)); else if (local) localStorage.removeItem(leadViewKey()); } catch (e) {   }
+if (sv) { setLeadView(sv); render(); } else leadViewMark();
+}).withFailureHandler(() => {}).getMyLeadView(window._authToken || '');
+}
+function setLeadView(v) {
 if (v) {
+leadAgeFilter = ['today', 'week', 'old'].indexOf(v.age) !== -1 ? v.age : '';
 const sel = document.getElementById('leadSort');
 if (sel && [...sel.options].some(o => o.value === v.sort)) { leadSortMode = v.sort; sel.value = v.sort; sel.closest('.lead-sort').classList.toggle('on', v.sort !== 'newest'); }
 activeCounselorFilter = viewerCounselor ? '' : (v.counselor || '');
-if (v.status) {
-const btn = [...document.querySelectorAll('.sf-btn')].find(b => (b.getAttribute('onclick') || '').indexOf("'" + v.status + "'") !== -1);
-if (btn && btn.style.display !== 'none') { activeStatusFilter = v.status; document.querySelectorAll('.sf-btn').forEach(b => b.classList.remove('sf-active')); btn.classList.add('sf-active'); }
-}
+const btn = [...document.querySelectorAll('.sf-btn')].find(b => (b.getAttribute('onclick') || '').indexOf("'" + (v.status || '') + "'") !== -1);
+if (btn && btn.style.display !== 'none') { activeStatusFilter = v.status || null; document.querySelectorAll('.sf-btn').forEach(b => b.classList.remove('sf-active')); btn.classList.add('sf-active'); }
 }
 leadViewMark();
 }
 
 function updateStatusFilterCounts(rows) {
-const counts = { All: rows.length, Hot: 0, Warm: 0, Cold: 0, Junk: 0, New: 0, Duplicates: 0, Telecaller: 0, Unassigned: 0, Inactive7: 0, FollowUps: 0, NoRemark: 0 };
+const counts = { All: rows.length, Hot: 0, Warm: 0, Cold: 0, Junk: 0, New: 0, Duplicates: 0, Telecaller: 0, Unassigned: 0, Inactive7: 0, FollowUps: 0, NoRemark: 0, CallToday: 0 };
 counts.FollowUps = typeof window.akFuCount === 'function' ? window.akFuCount(rows) : 0;
 rows.forEach(r => {
 const label = statusPill(r.status).label;
@@ -6643,6 +6817,7 @@ if (getDupInfo(r)) counts.Duplicates++;
 if (isTelecallerLead(r)) counts.Telecaller++;
 if (!String(r.counselor || '').trim()) counts.Unassigned++;
 if (noRemarkLead(r)) counts.NoRemark++;
+if (leadCallToday(r)) counts.CallToday++;
 if (typeof window.s10IsInactive === 'function' && window.s10IsInactive(r)) counts.Inactive7++;
 });
 document.querySelectorAll('[data-sf-count]').forEach(el => {
@@ -6663,7 +6838,7 @@ if (typeof leadViewMark === 'function') leadViewMark();
 function render() {
 const q = document.getElementById('search').value.trim().toLowerCase();
 
-const baseFiltered = allRows.filter(r => {
+const preAge = allRows.filter(r => {
 if (activeBranch !== 'All' && r.branch !== activeBranch) return false;
 if (window.akSheetFilter != null && (r.sheet || '') !== window.akSheetFilter) return false;
 if (activeCounselorFilter && String(r.counselor || '').trim() !== activeCounselorFilter) return false;
@@ -6679,8 +6854,11 @@ if (dateRangeTo && dayStr > dateRangeTo) return false;
 }
 return true;
 });
+updateAgeCounts(preAge);
+const baseFiltered = leadAgeFilter ? preAge.filter(r => leadAgeOk(r, leadAgeFilter)) : preAge;
 let filtered = baseFiltered.filter(r => {
 if (activeStatusFilter === 'Duplicates') return !!getDupInfo(r);
+if (activeStatusFilter === 'CallToday') return leadCallToday(r);
 if (activeStatusFilter === 'Telecaller') return isTelecallerLead(r);
 if (activeStatusFilter === 'Unassigned') return !String(r.counselor || '').trim();
 if (activeStatusFilter === 'NoRemark') return noRemarkLead(r);
@@ -6691,6 +6869,8 @@ return true;
 });
 updateStatusFilterCounts(baseFiltered);
 updateCounselorFilter(allRows);
+drawLvScore();
+updateBulkAssign();
 filtered = sortLeads(filtered);
 lastFiltered = filtered;
 
@@ -6734,7 +6914,7 @@ document.getElementById('emptyState').style.display = 'none';
 
 const changedIds = computeChangedIds(allRows);
 
-const filterSig = [activeBranch, q, activeStatusFilter, dateRangeFrom, dateRangeTo, bellFilterActive, leadSortMode, activeCounselorFilter].join('|');
+const filterSig = [activeBranch, q, activeStatusFilter, dateRangeFrom, dateRangeTo, bellFilterActive, leadSortMode, activeCounselorFilter, leadAgeFilter].join('|');
 if (filterSig !== tableFilterSig) { tableFilterSig = filterSig; tableShowCount = TABLE_PAGE; }
 filtered.forEach((r, i) => { if (i >= tableShowCount && expandedLeadIds.has(r.leadId)) tableShowCount = Math.ceil((i + 1) / TABLE_PAGE) * TABLE_PAGE; });
 const drawn = filtered.slice(0, tableShowCount);
@@ -6767,6 +6947,7 @@ return `
 <div class="mono">${r.phone || '—'}${getDupInfo(r) ? `<span class="duplicate-badge" title="${escapeHtml(getDupInfo(r).duplicateInfo || '')}">Duplicate</span>` : ''}</div>
 <div class="contact-actions">
 ${tel ? `<a class="icon-btn" href="${tel}" title="Call"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>` : ''}
+<button type="button" class="icon-btn" data-quick-remark="${escapeHtml(r.leadId)}" title="Add a remark"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
 ${wa ? `<a class="icon-btn" href="${wa}" title="WhatsApp" target="_blank"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C21.96 6.45 17.5 2 12.04 2zm0 18.02h-.01a8.1 8.1 0 0 1-4.14-1.13l-.3-.18-3.12.82.83-3.04-.19-.31a8.09 8.09 0 0 1-1.24-4.33c0-4.47 3.64-8.11 8.12-8.11 2.17 0 4.2.85 5.73 2.38a8.05 8.05 0 0 1 2.38 5.73c0 4.48-3.64 8.11-8.06 8.11z"/></svg></a>` : ''}
 </div>
 </td>
@@ -7611,7 +7792,7 @@ if (e.target.id === 'compareBackdrop') closeCompareModal();
 function openAddLeadModal() {
 ['alName', 'alPhone', 'alEmail', 'alCountry', 'alQualification', 'alBudget', 'alNotes']
 .forEach(id => { document.getElementById(id).value = ''; });
-document.getElementById('alSource').value = 'Walk-in';
+document.getElementById('alSource').value = document.body.classList.contains('tc-staff') ? 'Phone call' : 'Walk-in';
 const branchSel = document.getElementById('alBranch');
 
 if (!window._isSuperAdmin && viewerBranch) {
@@ -7659,10 +7840,10 @@ btn.innerHTML = '<span class="btn-spinner"></span> Saving…';
 status.textContent = '';
 status.classList.remove('err');
 
-google.script.run.withSuccessHandler(function() {
+google.script.run.withSuccessHandler(function(res) {
 btn.disabled = false;
 btn.innerHTML = original;
-showToast(window._isSuperAdmin || !viewerCounselor ? 'Lead added successfully' : 'Lead added and assigned to you', 'success');
+showToast(res && res.telecaller ? 'Lead added to your list — your manager will assign a counsellor' : window._isSuperAdmin || !viewerCounselor ? 'Lead added successfully' : 'Lead added and assigned to you', 'success');
 closeAddLeadModal();
 loadData();
 }).withFailureHandler(function(err) {
@@ -13744,7 +13925,7 @@ window.openBulkAssign = openBulkAssign;
 <style>
 
 body.tc-staff [data-group="visa"], body.tc-staff [data-group="lead-source"], body.tc-staff [data-group="applications"], body.tc-staff [data-group="student-experience"],
-body.tc-staff #leadsetBanner [data-leadset="main"], body.tc-staff #addLeadBtn, body.tc-staff #monthlyReportBtn,
+body.tc-staff #leadsetBanner [data-leadset="main"], body.tc-staff #monthlyReportBtn,
 body.tc-staff #previewCounselorBtn, body.tc-staff #ceoViewBtn, body.tc-staff #bulkEmailBtn,
 body.tc-staff [data-edit-lead], body.tc-staff [data-delete-lead], body.tc-staff .branch-move-select, body.tc-staff .branch-move-btn,
 body.tc-staff .cv-row, body.tc-staff .auto-section, body.tc-staff [data-dt-tab="timeline"], body.tc-staff [data-dt-tab="docs"], body.tc-staff [data-sx-portal-lead],
@@ -21311,9 +21492,10 @@ const sb = document.getElementById('sidebar');
 if (sb) sb.addEventListener('click', e => { const it = e.target.closest('.nav-item, .lead-set-item'); if (it && $('callView') && $('callView').style.display === 'block') { stopTimer(); $('callView').style.display = 'none'; const app = document.querySelector('.app'); if (app) app.style.display = ''; } }, true);
 window.openCallingQueue = openCalling;
 
-const F = { list: [], set: {}, at: 0, busy: false };
+const F = { list: [], set: {}, now: {}, at: 0, busy: false };
 window.akFuHas = r => !!F.set[r.branch + '|' + r.leadId];
 window.akFuCount = rows => rows.reduce((n, r) => n + (F.set[r.branch + '|' + r.leadId] ? 1 : 0), 0);
+window.akFuToday = r => !!F.now[r.branch + '|' + r.leadId];
 window.akFuDue = r => F.set[r.branch + '|' + r.leadId] || 0;
 window.akFuList = () => F.list;
 function loadBoard(force) {
@@ -21323,7 +21505,8 @@ function loadBoard(force) {
   F.busy = true; F.at = Date.now();
   run('getFollowUpBoard').then(d => {
     F.busy = false; F.list = d.followUps || []; F.set = {};
-    F.list.forEach(f => { const k = f.branch + '|' + f.leadId; if (!F.set[k]) F.set[k] = Date.parse(f.dueAt || '') || 9e15; });
+    F.now = {};
+F.list.forEach(f => { const k = f.branch + '|' + f.leadId; if (!F.set[k]) F.set[k] = Date.parse(f.dueAt || '') || 9e15; if (f.state === 'overdue' || f.state === 'today') F.now[k] = 1; });
     const btn = $('sfFollowUpsBtn'); if (btn) btn.title = d.overdue + ' overdue · ' + d.today + ' today · ' + d.total + ' open follow-ups';
     if (typeof render === 'function') render();
     drawPanel();
@@ -21341,7 +21524,16 @@ function drawPanel() {
     const r = rowsByLead[f.branch + '|' + f.leadId];
     return `<div class="fu-item" data-fu-lead="${esc(f.branch + '|' + f.leadId)}" data-fu-name="${esc((r && r.name) || f.leadName || '')}"><span class="w">${esc(fmtDay(f.date) || 'No date')}${f.time ? ' · ' + esc(f.time) : ''}</span><span class="n">${esc((r && r.name) || f.leadName || f.leadId)}</span><span class="m">${esc(f.type || 'Follow-up')} · ${esc(f.counselor || f.createdBy || '—')}${f.branch ? ' · ' + esc(f.branch) : ''}</span>${f.notes ? `<span class="m" style="flex-basis:100%;">${esc(f.notes)}</span>` : ''}</div>`; }).join('')}${L.length > 60 ? `<div class="sx-sub">+ ${L.length - 60} more</div>` : ''}</div>` : ''; }).join('')
     : '<div class="sx-sub" style="padding:6px 0 10px;">No open follow-ups. 🎉</div>';
-  p.querySelectorAll('[data-fu-name]').forEach(x => x.onclick = () => { const s = $('search'); if (s && x.dataset.fuName) { s.value = x.dataset.fuName; if (typeof render === 'function') render(); } });
+  p.querySelectorAll('[data-fu-lead]').forEach(x => { x.style.cursor = 'pointer'; x.title = 'Open this lead'; x.onclick = () => openFuLead(x.dataset.fuLead); });
+}
+function openFuLead(key) {
+  const r = (typeof allRows !== 'undefined' ? allRows : []).find(x => x.branch + '|' + x.leadId === key);
+  if (!r) { toast('That lead is not in this list — it may be in Bulk leads or another branch.', 'error'); return; }
+  const s = $('search'); if (s && s.value && F.list.some(f => s.value === f.leadName)) s.value = '';
+  expandedLeadIds.clear(); expandedLeadIds.add(r.leadId);
+  if (typeof forceRender === 'function') forceRender(); else render();
+  const row = document.querySelector('tr.lead-row[data-lead-id="' + CSS.escape(r.leadId) + '"]');
+  if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 const origSet = window.setStatusFilter;
 if (typeof origSet === 'function') window.setStatusFilter = function (btn, status) { const s = $('search'); if (activeStatusFilter === 'FollowUps' && status !== 'FollowUps' && s && s.value && F.list.some(f => s.value === f.leadName)) s.value = ''; origSet(btn, status); if (status === 'FollowUps') loadBoard(true); drawPanel(); };
