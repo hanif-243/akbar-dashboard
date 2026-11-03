@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '3 Nov 2026 · v165';
+window.AKBAR_BUILD = '3 Nov 2026 · v166';
 
 (function () {
   try {
@@ -111,7 +111,7 @@ window.AKBAR_BUILD = '3 Nov 2026 · v165';
     }
     var keyOf = function (fn, args) { return fn + '|' + JSON.stringify(args || []); };
 
-    var mem = {}, memOrder = [], navAt = 0, NOMEM = { getAuthState: 1, getDashboardData: 1, getStudentQuestionCount: 1, getMetaAdsToday: 1, getFollowUpBoard: 1, getNextCallLead: 1, getChatState: 1, getChatMessages: 1, getServerBuild: 1, getLandingPages: 1, getStudentReviews: 1, getBranchSources: 1, getViewTabLeads: 1, getCounsellorAvailability: 1, getSecurityStatus: 1 };
+    var mem = {}, memOrder = [], navAt = 0, NOMEM = { getAuthState: 1, getAssignPopups: 1, getDashboardData: 1, getStudentQuestionCount: 1, getMetaAdsToday: 1, getFollowUpBoard: 1, getNextCallLead: 1, getChatState: 1, getChatMessages: 1, getServerBuild: 1, getLandingPages: 1, getStudentReviews: 1, getBranchSources: 1, getViewTabLeads: 1, getCounsellorAvailability: 1, getSecurityStatus: 1 };
     var lastNavEl = null, userAt = 0, NAVSEL = '#sidebar .nav-item, .s10-tab, .sx-tab, .um-tab, .dash-tab, [data-fin-go], [data-dash-tab], [data-fin-view], [data-fin-tab], [data-hr-view], [data-hr-tab], [data-hr-go], [data-ma-go], [data-ma-view], [data-ma-tab], [data-visa-view], [data-vd-tab], [data-mr-tab], [data-um-tab], [data-sx-tab], [data-sq-tab], [data-sq-view], [data-s10-tab], [data-s10-go], [data-mu-view], [data-mou-view], [data-inv-view], [data-en-view], [data-go-tab], [data-b2b-view], [data-b2b-tab], [data-view], [data-own-view], #appTeamBtn, #ceoViewBtn';
     var lastWrite = 0; try { lastWrite = Number(localStorage.getItem('ak_lastwrite')) || 0; } catch (e) {   }
     function markWrite() { lastWrite = Date.now(); try { localStorage.setItem('ak_lastwrite', String(lastWrite)); } catch (e) {   } }
@@ -4592,7 +4592,7 @@ Akbar Study Abroad</textarea>
 
 <div class="nav-group" data-group="b2b" style="display:none;">
 <div class="nav-group-divider"></div>
-<div class="nav-label">B2B</div>
+<div class="nav-label">Partner desk</div>
 <div class="nav-item" data-b2b-view="desk" role="button" tabindex="0" title="Partner agents, their students, visa cases and dues">
 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
 <span>B2B Desk</span>
@@ -14029,6 +14029,68 @@ if (content && ['insights', 'timing', 'markets'].indexOf(content.dataset.dash) !
 </script>
 
 <style>
+.ap-box { max-width: 520px; }
+.ap-list { display: flex; flex-direction: column; gap: 8px; max-height: 50vh; overflow: auto; }
+.ap-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--border, rgba(0,0,0,.08)); border-radius: 10px; }
+.ap-item .t { flex: 1; min-width: 0; }
+.ap-item .n { font-weight: 600; font-size: 14px; }
+.ap-item .m { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.ap-head { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+</style>
+<script>
+(function () {
+const shown = {};
+let open = false;
+function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function isCounsellor() { return typeof viewerCounselor !== 'undefined' && !!viewerCounselor && !document.body.classList.contains('tc-staff'); }
+function ago(iso) { const m = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000)); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }); }
+function openLead(it) {
+  const go = () => {
+    const r = (typeof allRows !== 'undefined' ? allRows : []).find(x => x.leadId === it.leadId);
+    if (!r) { const s = document.getElementById('search'); if (s && it.name) { s.value = it.name; s.dispatchEvent(new Event('input', { bubbles: true })); } return; }
+    if (typeof expandedLeadIds !== 'undefined') { expandedLeadIds.clear(); expandedLeadIds.add(r.leadId); }
+    if (typeof forceRender === 'function') forceRender(); else if (typeof render === 'function') render();
+    const row = document.querySelector('tr.lead-row[data-lead-id="' + CSS.escape(r.leadId) + '"]');
+    if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+  if (window._leadSet && window._leadSet !== 'main' && typeof window.switchLeadSet === 'function') { window.switchLeadSet('main'); setTimeout(go, 2500); } else go();
+}
+function show(items) {
+  if (open || !items.length) return;
+  open = true;
+  const byWho = Array.from(new Set(items.map(x => x.by).filter(Boolean)));
+  const total = items.reduce((n, x) => n + (x.count || 1), 0);
+  const bg = document.createElement('div'); bg.className = 'cmdk-backdrop open';
+  bg.innerHTML = `<div class="cmdk-box ap-box" role="dialog" aria-modal="true" aria-labelledby="apTitle"><div class="preview-modal-header"><span id="apTitle" style="font-size:15px;font-weight:600;flex:1;">${total === 1 ? 'New lead assigned to you' : total + ' new leads assigned to you'}</span></div><div class="s10-body">
+<div class="ap-head">From ${esc(byWho.join(', ') || 'your team')}</div>
+<div class="ap-list">${items.map((x, i) => `<div class="ap-item"><div class="t"><div class="n">${x.count ? esc(x.count + ' lead' + (x.count === 1 ? '' : 's') + ' from ' + (x.source || 'a bulk list')) : esc(x.name || 'A student')}</div>
+<div class="m">${[x.count ? '' : x.phone, x.count ? '' : x.source, 'by ' + (x.by || 'your team'), ago(x.at)].filter(Boolean).map(esc).join(' · ')}</div></div>${x.leadId ? `<button class="um-btn" data-ap-open="${i}">Open</button>` : ''}</div>`).join('')}</div>
+<div class="s10-actions"><button class="um-btn primary" data-ap-ok>Got it</button></div></div></div>`;
+  document.body.appendChild(bg);
+  const done = () => {
+    bg.remove(); open = false;
+    try { promisifyRun('ackAssignPopups', window._authToken || '', items.map(x => x.id)).catch(() => {}); } catch (e) {   }
+  };
+  bg.querySelector('[data-ap-ok]').onclick = done;
+  bg.querySelectorAll('[data-ap-open]').forEach(b => b.onclick = () => { const it = items[+b.dataset.apOpen]; done(); openLead(it); });
+  bg.addEventListener('keydown', e => { if (e.key === 'Escape') done(); });
+  setTimeout(() => { const ok = bg.querySelector('[data-ap-ok]'); if (ok) ok.focus(); }, 50);
+}
+function check() {
+  if (!isCounsellor() || open || document.hidden || !window._authToken || typeof promisifyRun !== 'function') return;
+  promisifyRun('getAssignPopups', window._authToken).then(r => {
+    const items = ((r && r.items) || []).filter(x => !shown[x.id]);
+    items.forEach(x => { shown[x.id] = 1; });
+    show(items);
+  }).catch(() => {});
+}
+setTimeout(check, 6000);
+setInterval(check, 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+})();
+</script>
+
+<style>
 .um-filter-bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:0 0 10px; position:sticky; top:0; z-index:2; background:var(--card); padding:6px 0; }
 .um-filter-bar input, .um-filter-bar select { border:1px solid var(--border); border-radius:8px; padding:8px 10px; font:inherit; font-size:12.5px; background:var(--card); color:var(--ink); }
 .um-filter-bar input { flex:1; min-width:220px; }
@@ -21415,7 +21477,7 @@ function loadSetup() {
     C.setup = s; C.branch = s.branch;
     if (!C.waT) run('getWhatsAppTemplates').then(t => { C.waT = (t && t.templates) || []; }).catch(() => { C.waT = []; });
     $('cqSub').textContent = s.branch + ' · ' + ({ bulk: 'bulk uploads', sulekha: 'Sulekha leads', b2b: 'B2B leads' }[C.set] || 'all calling lists') + ', one by one · signed in as ' + s.me;
-    const ss = $('cqSet'); if (ss) { ss.value = C.set; ss.onchange = () => { C.set = ss.value; C.lead = null; C.skip = []; C.pre = null; stopTimer(); loadSetup(); }; }
+    const ss = $('cqSet'); if (ss) { ss.value = C.set; ss.onchange = () => { C.set = ss.value; C.lead = null; C.skip = []; C.pre = null; stopTimer(); $('cqSub').textContent = C.branch + ' · ' + ({ bulk: 'bulk uploads', sulekha: 'Sulekha leads', b2b: 'B2B leads' }[C.set] || 'all calling lists') + ', one by one · signed in as ' + C.setup.me; next(); }; }
     const sel = $('cqBranch');
     if (s.branches.length > 1) { sel.style.display = ''; sel.innerHTML = s.branches.map(b => `<option ${b === s.branch ? 'selected' : ''}>${esc(b)}</option>`).join(''); sel.onchange = () => { C.branch = sel.value; C.lead = null; C.skip = []; loadSetup(); }; }
     drawStats(s.stats); draw();
@@ -21457,12 +21519,12 @@ ${(l.history || []).length ? `<div class="cq-prev"><b>Earlier calls</b>${l.histo
 <label class="f" style="font-size:12px;font-weight:700;color:var(--muted);">Call result</label>
 <div class="cq-results">${R.map(r => `<button type="button" class="${cls(r)} ${r.result === C.result ? 'on' : ''}" data-cq-res="${esc(r.result)}">${esc(r.result)}</button>`).join('')}</div>
 ${C.result === 'Call back later' ? `<div class="cq-box"><div class="cq-two"><div><label for="cqCbD">Call back on</label><input type="date" id="cqCbD" min="${today()}" value="${esc(C.cbDate || '')}"></div><div><label for="cqCbT">At</label><input type="time" id="cqCbT" value="${esc(C.cbTime || '')}"></div></div></div>` : ''}
-${C.result === 'Interested' ? `<div class="cq-box"><div class="cq-two"><div><label for="cqHo">Send to</label><select id="cqHo"><option value="mgr" ${C.ho === 'mgr' ? 'selected' : ''}>Branch manager — assigns a counsellor</option><option value="" ${C.ho === '' ? 'selected' : ''}>Keep with me for now</option>${C.setup.counsellors.length ? '<optgroup label="Hand to a counsellor">' + C.setup.counsellors.map(n => `<option ${n === C.ho ? 'selected' : ''}>${esc(n)}</option>`).join('') + '</optgroup>' : ''}</select></div><div><label for="cqHoNote">Note for the ${C.ho === 'mgr' ? 'manager' : 'counsellor'}</label><input type="text" id="cqHoNote" value="${esc(C.hoNote || '')}" placeholder="e.g. wants UK, Sept intake, call after 6 pm"></div></div>
+${C.result === 'Interested' ? `<div class="cq-box"><div class="cq-two"><div><label for="cqHo">Send to</label><select id="cqHo"><option value="pick" ${C.ho === 'pick' ? 'selected' : ''} disabled>Choose a counsellor…</option>${C.setup.counsellors.length ? '<optgroup label="Counsellors">' + C.setup.counsellors.map(n => `<option ${n === C.ho ? 'selected' : ''}>${esc(n)}</option>`).join('') + '</optgroup>' : ''}<optgroup label="Other"><option value="mgr" ${C.ho === 'mgr' ? 'selected' : ''}>Branch manager — assigns a counsellor</option><option value="" ${C.ho === '' ? 'selected' : ''}>Keep with me for now</option></optgroup></select></div><div><label for="cqHoNote">Note for the ${C.ho === 'mgr' ? 'manager' : 'counsellor'}</label><input type="text" id="cqHoNote" value="${esc(C.hoNote || '')}" placeholder="e.g. wants UK, Sept intake, call after 6 pm"></div></div>
 ${C.ho === 'mgr' ? `<div class="cq-mtg"><div class="cq-two"><div><label for="cqMD">📅 Book a meeting (optional) — who is free on</label><input type="date" id="cqMD" min="${today()}" value="${esc(C.mDate || today())}"></div><div class="cq-two"><div><label for="cqMC">Counsellor</label><select id="cqMC"><option value="">No meeting</option>${C.setup.counsellors.map(n => `<option ${n === C.mC ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></div><div><label for="cqMT">Time</label><input type="time" id="cqMT" value="${esc(C.mTime || '')}"></div></div></div><div id="cqAv" class="cq-av"><span class="sx-sub">Checking who is free…</span></div></div>` : ''}
-<div class="sx-sub" style="margin-top:6px;">${C.ho === 'mgr' ? 'The branch manager gets a notification and an email to assign a counsellor.' + (C.mC ? ' The meeting goes on ' + esc(C.mC) + '’s calendar.' : '') : C.ho ? 'The lead moves to ' + esc(C.ho) + '’s list and they get a notification and an email from you.' : 'The lead stays in the calling queue with you.'}</div></div>` : ''}
+<div class="sx-sub" style="margin-top:6px;">${C.ho === 'pick' ? 'Choose who gets this lead.' : C.ho === 'mgr' ? 'The branch manager gets a notification and an email to assign a counsellor.' + (C.mC ? ' The meeting goes on ' + esc(C.mC) + '’s calendar.' : '') : C.ho ? 'The lead moves to ' + esc(C.ho) + '’s list and they get a notification and an email from you.' : 'The lead stays in the calling queue with you.'}</div></div>` : ''}
 ${cqWaBox()}
 <label class="f" for="cqNotes" style="font-size:12px;font-weight:700;color:var(--muted);">Notes</label><textarea id="cqNotes" placeholder="What did they say?">${esc(C.notes || '')}</textarea>
-<div class="cq-actions"><button class="um-btn primary" id="cqSave" ${C.result ? '' : 'disabled'}>${res && res.result === 'Interested' && C.ho === 'mgr' ? '📞 Send to manager & next' : res && res.result === 'Interested' && C.ho ? '🤝 Hand over & next' : '✓ Save & next'}</button><button class="um-btn" id="cqSkip" title="Skip this lead for now — it stays in the queue">Skip</button><button class="um-btn" id="cqStop">Save & stop</button></div>
+<div class="cq-actions"><button class="um-btn primary" id="cqSave" ${C.result ? '' : 'disabled'}>${res && res.result === 'Interested' && C.ho === 'mgr' ? '📞 Send to manager & next' : res && res.result === 'Interested' && C.ho && C.ho !== 'pick' ? 'Hand over & next' : '✓ Save & next'}</button><button class="um-btn" id="cqSkip" title="Skip this lead for now — it stays in the queue">Skip</button><button class="um-btn" id="cqStop">Save & stop</button></div>
 <div class="sx-sub" style="margin-top:8px;">${res ? (res.status ? 'Lead becomes <b>' + esc(res.status) + '</b>.' : res.connected ? '' : 'The lead comes back to the queue in 3 hours (up to 4 tries).') : ''}</div>
 </div>${scriptCard()}</div>`;
   b.querySelectorAll('[data-cq-res]').forEach(x => x.onclick = () => { keep(); C.result = x.dataset.cqRes; if (C.timerId && !(R.find(r => r.result === C.result) || {}).connected) stopTimer(); draw(); });
@@ -21500,7 +21562,7 @@ function wireScript() {
 function clock() { const s = C.timerSec + (C.timerId ? Math.floor((Date.now() - C.timerAt) / 1000) : 0); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
 function startTimer() { if (C.timerId) return; C.timerAt = Date.now(); C.timerId = setInterval(() => { const t = $('cqTimer'); if (t) t.textContent = clock(); }, 1000); }
 function stopTimer() { if (!C.timerId) return; C.timerSec += Math.floor((Date.now() - C.timerAt) / 1000); clearInterval(C.timerId); C.timerId = 0; }
-function resetLead() { stopTimer(); C.timerSec = 0; C.result = ''; C.notes = ''; C.cbDate = ''; C.cbTime = ''; C.ho = 'mgr'; C.hoNote = ''; C.mDate = ''; C.mC = ''; C.mTime = ''; }
+function resetLead() { stopTimer(); C.timerSec = 0; C.result = ''; C.notes = ''; C.cbDate = ''; C.cbTime = ''; C.ho = 'pick'; C.hoNote = ''; C.mDate = ''; C.mC = ''; C.mTime = ''; }
 
 function loadAv() {
   const date = C.mDate || today(); C.av = C.av || {};
@@ -21560,6 +21622,7 @@ function save(goNext) {
   const res = C.setup.results.find(r => r.result === C.result);
   const p = { branch: C.branch, leadId: C.lead.leadId, leadName: C.lead.name, phone: C.lead.phone, result: C.result, talkSec: res && res.connected ? C.timerSec : 0, notes: C.notes || '' };
   if (C.result === 'Call back later') { if (!C.cbDate) { toast('Pick the call-back date', 'error'); return; } p.callBack = { date: C.cbDate, time: C.cbTime || '' }; }
+  if (C.result === 'Interested' && C.ho === 'pick') { toast('Choose the counsellor for this lead', 'error'); return; }
   if (C.result === 'Interested' && C.ho === 'mgr') {
     if (C.mC && !C.mTime) { toast('Pick the meeting time (or choose “No meeting”)', 'error'); return; }
     p.handover = { toManager: true, note: C.hoNote || '', meeting: C.mC ? { counsellor: C.mC, date: C.mDate || today(), time: C.mTime } : null };
