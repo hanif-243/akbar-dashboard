@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '3 Nov 2026 · v167';
+window.AKBAR_BUILD = '3 Nov 2026 · v168';
 
 (function () {
   try {
@@ -111,7 +111,7 @@ window.AKBAR_BUILD = '3 Nov 2026 · v167';
     }
     var keyOf = function (fn, args) { return fn + '|' + JSON.stringify(args || []); };
 
-    var mem = {}, memOrder = [], navAt = 0, NOMEM = { getAuthState: 1, getAssignPopups: 1, getDashboardData: 1, getStudentQuestionCount: 1, getMetaAdsToday: 1, getFollowUpBoard: 1, getNextCallLead: 1, getChatState: 1, getChatMessages: 1, getServerBuild: 1, getLandingPages: 1, getStudentReviews: 1, getBranchSources: 1, getViewTabLeads: 1, getCounsellorAvailability: 1, getSecurityStatus: 1 };
+    var mem = {}, memOrder = [], navAt = 0, NOMEM = { getAuthState: 1, getAssignPopups: 1, searchCourses: 1, getCourseLeadProfile: 1, getCourseFinderSettings: 1, getDashboardData: 1, getStudentQuestionCount: 1, getMetaAdsToday: 1, getFollowUpBoard: 1, getNextCallLead: 1, getChatState: 1, getChatMessages: 1, getServerBuild: 1, getLandingPages: 1, getStudentReviews: 1, getBranchSources: 1, getViewTabLeads: 1, getCounsellorAvailability: 1, getSecurityStatus: 1 };
     var lastNavEl = null, userAt = 0, NAVSEL = '#sidebar .nav-item, .s10-tab, .sx-tab, .um-tab, .dash-tab, [data-fin-go], [data-dash-tab], [data-fin-view], [data-fin-tab], [data-hr-view], [data-hr-tab], [data-hr-go], [data-ma-go], [data-ma-view], [data-ma-tab], [data-visa-view], [data-vd-tab], [data-mr-tab], [data-um-tab], [data-sx-tab], [data-sq-tab], [data-sq-view], [data-s10-tab], [data-s10-go], [data-mu-view], [data-mou-view], [data-inv-view], [data-en-view], [data-go-tab], [data-b2b-view], [data-b2b-tab], [data-view], [data-own-view], #appTeamBtn, #ceoViewBtn';
     var lastWrite = 0; try { lastWrite = Number(localStorage.getItem('ak_lastwrite')) || 0; } catch (e) {   }
     function markWrite() { lastWrite = Date.now(); try { localStorage.setItem('ak_lastwrite', String(lastWrite)); } catch (e) {   } }
@@ -14089,6 +14089,456 @@ function check() {
 setTimeout(check, 6000);
 setInterval(check, 60000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+})();
+</script>
+
+<style>
+#cfView { display: none; }
+.cf-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 960px) { .cf-grid { grid-template-columns: minmax(0, 1fr); } }
+.cf-prof { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; }
+@media (max-width: 960px) { .cf-prof { position: static; max-height: none; } }
+.cf-f { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.cf-f > label, .cf-lbl { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.cf-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+#cfView input[type=text], #cfView input[type=number], #cfView select {
+  width: 100%; height: 38px; border: 1px solid var(--border); border-radius: 10px; padding: 0 11px; font: inherit; font-size: 13px; background: var(--card); color: var(--ink); }
+#cfView input:focus, #cfView select:focus { outline: none; border-color: var(--atl-navy, #161B33); box-shadow: 0 0 0 3px rgba(22,27,51,.10); }
+.cf-hint { font-size: 11.5px; color: var(--muted); }
+.cf-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 10px; background: var(--canvas); }
+.cf-seg button { height: 30px; border: 0; border-radius: 7px; background: none; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--muted); cursor: pointer; }
+.cf-seg button.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(14,18,34,.10); }
+.cf-checks { display: flex; flex-direction: column; gap: 7px; margin: 2px 0 14px; font-size: 13px; color: var(--ink); }
+.cf-checks label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+.cf-leadbox { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin: -4px 0 12px; font-size: 12.5px; color: var(--muted); }
+.cf-leadbox b { color: var(--ink); }
+.cf-leadbox .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--border); }
+.cf-link { background: none; border: 0; padding: 0; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--red); cursor: pointer; }
+.cf-data { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--border); background: var(--card); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; font-size: 12.5px; color: var(--muted); }
+.cf-data b { color: var(--ink); font-weight: 600; }
+.cf-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; margin-top: 5px; background: #D97706; }
+.cf-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+@media (max-width: 900px) { .cf-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.cf-kpis .cq-stat { text-align: left; font: inherit; color: inherit; }
+.cf-kpis button.cq-stat { cursor: pointer; }
+.cf-kpis button.cq-stat.on { border-color: var(--atl-navy, #161B33); box-shadow: 0 0 0 1px var(--atl-navy, #161B33) inset; }
+.cf-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.cf-bar .cf-sort { display: flex; gap: 8px; align-items: center; }
+#cfView .cf-bar select { width: auto; height: 34px; }
+.cf-uni { padding: 0; overflow: hidden; }
+.cf-uni > summary { list-style: none; display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 16px; cursor: pointer; }
+.cf-uni > summary::-webkit-details-marker { display: none; }
+.cf-uni[open] > summary { border-bottom: 1px solid var(--border); }
+.cf-qs { text-align: center; border-radius: 12px; padding: 7px 0; background: var(--atl-tint, rgba(22,27,51,.035)); font-size: 10.5px; font-weight: 700; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; }
+.cf-qs b { display: block; font-size: 18px; letter-spacing: -.01em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.cf-qs.na b { font-size: 13px; color: var(--muted); }
+.cf-un { font-size: 15px; font-weight: 700; color: var(--ink); overflow-wrap: anywhere; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cf-uf { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 3px; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cf-cnt { font-size: 12px; font-weight: 600; color: var(--muted); white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+.cf-cnt svg { transition: transform .2s; }
+.cf-uni[open] .cf-cnt svg { transform: rotate(180deg); }
+.cf-c { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; padding: 13px 16px; border-top: 1px solid var(--border); }
+.cf-c:first-child { border-top: 0; }
+.cf-cn { font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+.cf-cs { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.cf-why { font-size: 12.5px; margin-top: 6px; color: #B45309; }
+.cf-c[data-tier="fail"] .cf-why { color: #B91C1C; }
+.cf-cost { font-size: 12px; color: var(--muted); margin-top: 6px; font-variant-numeric: tabular-nums; }
+.cf-cost b { color: var(--ink); font-weight: 600; }
+.cf-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.cf-chip { font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--canvas); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cf-chip.ok { background: rgba(22,163,74,.10); color: #15803D; }
+.cf-chip.warn { background: rgba(217,119,6,.12); color: #B45309; }
+.cf-tier { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; letter-spacing: .02em; white-space: nowrap; }
+.cf-tier.safe { background: rgba(22,163,74,.12); color: #15803D; }
+.cf-tier.likely { background: rgba(22,27,51,.07); color: var(--ink); }
+.cf-tier.ambitious { background: rgba(217,119,6,.13); color: #B45309; }
+.cf-tier.fail { background: rgba(185,28,28,.09); color: #B91C1C; }
+.cf-tag { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(184,146,90,.55); color: #8A6A35; }
+[data-theme="dark"] .cf-chip.ok, [data-theme="dark"] .cf-tier.safe { color: #4ADE80; }
+[data-theme="dark"] .cf-chip.warn, [data-theme="dark"] .cf-tier.ambitious, [data-theme="dark"] .cf-why { color: #FBBF24; }
+[data-theme="dark"] .cf-tier.fail, [data-theme="dark"] .cf-c[data-tier="fail"] .cf-why { color: #F87171; }
+[data-theme="dark"] .cf-tag { color: #E3C38B; }
+.cf-side { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.cf-side .acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.cf-fee { font-size: 16px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cf-star.on, .cf-cmp.on { background: var(--atl-navy, #161B33) !important; border-color: var(--atl-navy, #161B33) !important; color: #fff !important; }
+.cf-req { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); }
+.cf-req summary { cursor: pointer; font-weight: 600; }
+.cf-req p { margin: 6px 0 0; white-space: pre-line; }
+.cf-req a { color: var(--red); font-weight: 600; }
+.cf-more { padding: 10px 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+.cf-tray { position: sticky; bottom: 12px; z-index: 5; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 4px;
+  border-radius: 16px; padding: 12px 14px 12px 18px; color: #fff; background: linear-gradient(135deg, #0E1222 0%, #161B33 55%, #1E2546 100%); box-shadow: 0 20px 40px -24px rgba(14,18,34,.8); }
+.cf-tray .t { font-weight: 700; white-space: nowrap; }
+.cf-tray .t b { color: #F3CF8E; font-variant-numeric: tabular-nums; }
+.cf-tray .l { flex: 1; min-width: 140px; font-size: 12.5px; color: rgba(255,255,255,.62); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cf-tray .um-btn { background: rgba(255,255,255,.06) !important; border: 1px solid rgba(255,255,255,.16) !important; color: #fff !important; box-shadow: none !important; }
+.cf-tray .um-btn.primary { background: #fff !important; color: #0E1222 !important; border-color: #fff !important; }
+.cf-empty { text-align: center; color: var(--muted); padding: 34px 16px; }
+.cf-cmpwrap { overflow-x: auto; }
+.cf-cmpt { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 640px; }
+.cf-cmpt th, .cf-cmpt td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.cf-cmpt th { width: 170px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.cf-cmpt td { font-variant-numeric: tabular-nums; color: var(--ink); }
+.cf-cmpt td.best { font-weight: 700; }
+.cf-cmpt thead td { font-weight: 700; }
+.cf-ins { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 960px) { .cf-ins { grid-template-columns: minmax(0, 1fr); } }
+.cf-rank { display: grid; grid-template-columns: minmax(0, 1fr) 56px; gap: 4px 12px; align-items: center; font-size: 13px; padding: 7px 0; }
+.cf-rank .n { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.cf-rank .bar { grid-column: 1 / -1; height: 4px; border-radius: 4px; background: var(--canvas); overflow: hidden; }
+.cf-rank .bar i { display: block; height: 100%; background: var(--atl-navy, #161B33); border-radius: 4px; }
+[data-theme="dark"] .cf-rank .bar i { background: #C9A96E; }
+.cf-funnel { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+@media (max-width: 700px) { .cf-funnel { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.cf-demo { border: 1px dashed rgba(217,119,6,.6); color: #B45309; background: rgba(217,119,6,.06); border-radius: 10px; padding: 8px 12px; font-size: 12.5px; font-weight: 600; margin-bottom: 14px; }
+.cf-set { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 960px) { .cf-set { grid-template-columns: minmax(0, 1fr); } }
+.cf-srow { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 13px; }
+.cf-srow .m { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.cf-plist { max-height: 300px; overflow: auto; border: 1px solid var(--border); border-radius: 10px; padding: 4px 12px; margin-top: 8px; }
+.cf-plist label { display: flex; gap: 8px; align-items: center; padding: 6px 0; font-size: 13px; cursor: pointer; }
+.cf-pill { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: var(--canvas); color: var(--muted); }
+.cf-pill.draft { background: rgba(217,119,6,.13); color: #B45309; }
+.cf-pill.ok { background: rgba(22,163,74,.12); color: #15803D; }
+</style>
+<script>
+(function () {
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const gbp = n => n == null || !isFinite(n) ? 'Not listed' : '£' + Math.round(Number(n)).toLocaleString('en-GB');
+const run = (fn, ...a) => promisifyRun(fn, window._authToken || '', ...a);
+const msg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
+const toast = (m, bad) => { if (typeof showToast === 'function') showToast(m, bad ? 'error' : 'success'); };
+const CHEV = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const TIER = { safe: 'Safe', likely: 'Likely', ambitious: 'Ambitious', fail: 'Not eligible' };
+const LOGO = 'https:\x2F\x2Fhanif-243.github.io\x2Fakbar-dashboard\x2Fportal\x2Flogo.png';
+const S = { tab: 'find', res: null, set: null, short: [], cmp: [], en: 'ielts', t: 0, busy: false, lead: null, tierView: '', limit: 20, past: [] };
+const canManage = () => !!window._isSuperAdmin || (typeof viewerBranch !== 'undefined' && !!viewerBranch && typeof viewerCounselor !== 'undefined' && !viewerCounselor);
+
+function open() {
+  const app = document.querySelector('.app'); if (app) app.style.display = 'none';
+  ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView'].forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
+  if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
+  let root = $('cfView'); if (!root) { root = document.createElement('div'); root.id = 'cfView'; document.body.appendChild(root); }
+  root.style.display = 'block';
+  if (!root.dataset.built) build(root);
+  document.querySelectorAll('#sidebar .nav-item').forEach(n => n.classList.toggle('active', n.hasAttribute('data-cf-view')));
+  window.scrollTo(0, 0);
+}
+function close() {
+  const root = $('cfView'); if (!root || root.style.display !== 'block') return;
+  root.style.display = 'none';
+  const app = document.querySelector('.app'); if (app) app.style.display = '';
+  document.querySelectorAll('#sidebar [data-cf-view]').forEach(n => n.classList.remove('active'));
+}
+function leadOptions() {
+  const rows = (typeof allRows !== 'undefined' ? allRows : []).slice(0, 500);
+  return '<option value="">No lead, just browsing</option>' + rows.map(r => `<option value="${esc(r.branch + '|' + r.leadId)}">${esc(r.name || 'No name')} · ${esc(String(r.phone || '').replace(/^p:/i, ''))}</option>`).join('');
+}
+
+function build(root) {
+  root.dataset.built = '1';
+  const mgr = canManage();
+  root.innerHTML = `<div class="sx-wrap">
+<div class="sx-top"><div><div class="at-eyebrow">Course finder</div><h1 class="sx-title">Course shortlist</h1><div class="sx-sub" id="cfMeta">Universities that fit your student</div></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><select id="cfCountry" aria-label="Country" style="width:auto;min-width:170px;"></select><button class="um-btn" id="cfBack" type="button">Back to dashboard</button></div></div>
+<div class="sx-tabs" role="tablist"><button class="sx-tab active" data-cf-tab="find" type="button">Find courses</button><button class="sx-tab" data-cf-tab="compare" type="button">Compare <span id="cfCmpN"></span></button>${mgr ? '<button class="sx-tab" data-cf-tab="insights" type="button">Insights</button>' : ''}<button class="sx-tab" data-cf-tab="settings" type="button" id="cfSetTab" hidden>Data and rules</button></div>
+<div data-cf-pane="find"><div class="cf-grid">
+<form class="sx-card cf-prof" id="cfForm" autocomplete="off">
+<h3>Student profile</h3>
+<div class="cf-f"><label for="cfLead">Lead</label><select id="cfLead">${leadOptions()}</select><span class="cf-hint" id="cfLeadHint">Pick a lead to fill the profile from the CRM.</span></div>
+<div id="cfLeadBox"></div>
+<div class="cf-f"><label for="cfLv">Level of study</label><select id="cfLv"></select></div>
+<div class="cf-f"><label for="cfKw">Course</label><input type="text" id="cfKw" placeholder="Business, data science"><span class="cf-hint">Separate options with a comma.</span></div>
+<div class="cf-two"><div class="cf-f"><label for="cfBud">Max fee (£)</label><input type="number" id="cfBud" min="0" step="500" placeholder="Any"></div>
+<div class="cf-f"><label for="cfPct">Marks %</label><input type="number" id="cfPct" min="0" max="100" step="0.5" placeholder="12th / degree"></div></div>
+<div class="cf-hint" id="cfCls" style="margin:-6px 0 12px;"></div>
+<div class="cf-f"><span class="cf-lbl">English</span><div class="cf-seg"><button type="button" id="cfEnI" class="on">IELTS score</button><button type="button" id="cfEnW">Needs waiver</button></div></div>
+<div class="cf-two" id="cfIeRow"><div class="cf-f"><label for="cfIe">IELTS overall</label><input type="number" id="cfIe" min="0" max="9" step="0.5" placeholder="6.5"></div>
+<div class="cf-f"><label for="cfBand">Lowest band</label><input type="number" id="cfBand" min="0" max="9" step="0.5" placeholder="6"></div></div>
+<div class="cf-two"><div class="cf-f"><label for="cfBl">Backlogs</label><input type="number" id="cfBl" min="0" step="1" placeholder="0"></div>
+<div class="cf-f"><label for="cfWx">Work exp. (yrs)</label><input type="number" id="cfWx" min="0" step="0.5" placeholder="0"></div></div>
+<div class="cf-two"><div class="cf-f"><label for="cfIn">Intake</label><select id="cfIn"><option value="">Any month</option>${MONTHS.map(m => `<option>${m}</option>`).join('')}</select></div>
+<div class="cf-f"><label for="cfQs">QS rank within</label><select id="cfQs"><option value="">Any</option><option>100</option><option>200</option><option>300</option><option>500</option><option>800</option><option>1000</option></select></div></div>
+<div class="cf-f"><label for="cfCity">City</label><input type="text" id="cfCity" placeholder="London"></div>
+<div class="cf-checks"><label><input type="checkbox" id="cfSch"> Scholarship available</label><label><input type="checkbox" id="cfSure"> Only courses with a stated minimum %</label><label><input type="checkbox" id="cfFail"> Also show courses the student is not eligible for</label></div>
+<button class="um-btn" type="button" id="cfClear">Clear profile</button>
+</form>
+<div style="min-width:0;">
+<div class="cf-data" id="cfData" hidden></div>
+<div class="cf-kpis" id="cfKpis"></div>
+<div class="cf-bar"><div class="sx-sub" id="cfNote" style="margin:0;"></div><div class="cf-sort"><span class="cf-lbl">Sort</span><select id="cfSort"><option value="qs">QS rank</option><option value="fit">Best fit</option><option value="fee">Lowest fee</option><option value="ielts">Lowest IELTS</option><option value="count">Most courses</option></select></div></div>
+<div id="cfList"><div class="sx-card"><div class="skeleton" style="height:180px;"></div></div></div>
+<div id="cfMoreWrap" style="text-align:center;margin:4px 0 12px;" hidden><button class="um-btn" type="button" id="cfMore">Show more universities</button></div>
+<div class="cf-tray" id="cfTray"><span class="t">Shortlist <b id="cfN">0</b></span><span class="l" id="cfTL">Press Shortlist on the courses you want to send.</span>
+<button class="um-btn" type="button" id="cfCopy">Copy for WhatsApp</button><button class="um-btn" type="button" id="cfPdf">Download PDF</button><button class="um-btn" type="button" id="cfSend">Send to student app</button><button class="um-btn" type="button" id="cfApply">Start applications</button><button class="um-btn primary" type="button" id="cfSave">Save to lead</button></div>
+</div></div></div>
+<div data-cf-pane="compare" hidden></div>
+<div data-cf-pane="insights" hidden></div>
+<div data-cf-pane="settings" hidden></div>
+</div>`;
+  $('cfBack').onclick = close;
+  root.querySelectorAll('[data-cf-tab]').forEach(b => b.onclick = () => tab(b.dataset.cfTab));
+  $('cfForm').addEventListener('input', e => { if (e.target.id === 'cfLead') return; clearTimeout(S.t); S.t = setTimeout(() => { S.limit = 20; search(); }, 250); });
+  $('cfForm').addEventListener('submit', e => e.preventDefault());
+  $('cfLead').onchange = pickLead;
+  $('cfEnI').onclick = () => { setEn('ielts'); search(); };
+  $('cfEnW').onclick = () => { setEn('waiver'); search(); };
+  $('cfSort').onchange = search;
+  $('cfMore').onclick = () => { S.limit += 20; search(); };
+  $('cfClear').onclick = () => { fill({}); search(); };
+  $('cfCountry').onchange = () => { const c = (S.set.countries || []).find(x => x.country === $('cfCountry').value); if (c && !c.courses) { toast('No course sheet for ' + c.country + ' yet. Directors can add one under Data and rules.', true); $('cfCountry').value = ((S.set.countries || []).find(x => x.courses) || {}).country || ''; } meta(); S.limit = 20; search(); };
+  root.addEventListener('click', onClick);
+  $('cfCopy').onclick = copy; $('cfPdf').onclick = pdf; $('cfSave').onclick = save; $('cfSend').onclick = send; $('cfApply').onclick = apply;
+  run('getCourseFinderSettings').then(s => { S.set = s; setup(); search(); }).catch(e => { $('cfList').innerHTML = `<div class="sx-card cf-empty">${esc(msg(e))}</div>`; });
+}
+function setup() {
+  const s = S.set;
+  $('cfCountry').innerHTML = (s.countries || []).map(c => `<option ${c.courses ? '' : 'disabled'}>${esc(c.country)}</option>`).join('');
+  $('cfLv').innerHTML = (s.levels || []).map(l => `<option>${esc(l)}</option>`).join('');
+  $('cfSetTab').hidden = !s.canEdit;
+  const first = (s.countries || []).find(c => c.courses);
+  if (first) $('cfCountry').value = first.country;
+  meta();
+  fill({ level: 'Postgraduate', keywords: 'business', maxFee: 20000, pct: 60, ielts: 6.5, band: 6, intake: 'Sep' });
+}
+function meta() {
+  const c = (S.set.countries || []).find(x => x.country === $('cfCountry').value) || {}, d = $('cfData');
+  $('cfMeta').textContent = c.courses ? c.courses.toLocaleString('en-GB') + ' courses at ' + c.unis + ' universities in ' + c.country : 'No course sheet uploaded yet';
+  d.hidden = !c.courses;
+  if (c.courses) d.innerHTML = `<span class="cf-dot"></span><div>Data from <b>${esc(c.file || 'the course sheet')}</b>, added ${esc(fmtDate(c.updated))}.${c.intakeYear ? ` Fees and intakes are listed for <b>${esc(c.intakeYear)}</b>.` : ''} Check the course page before quoting a fee or date to a student.</div>`;
+}
+function fmtDate(iso) { if (!iso) return 'on an unknown date'; const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); }
+function tab(t) {
+  S.tab = t;
+  document.querySelectorAll('#cfView [data-cf-tab]').forEach(b => b.classList.toggle('active', b.dataset.cfTab === t));
+  document.querySelectorAll('#cfView [data-cf-pane]').forEach(p => { p.hidden = p.dataset.cfPane !== t; });
+  if (t === 'compare') drawCompare();
+  if (t === 'insights') loadInsights();
+  if (t === 'settings') drawSettings();
+}
+
+function fill(p) {
+  const v = (id, x) => { $(id).value = x == null ? '' : x; };
+  v('cfLv', p.level || 'Postgraduate'); v('cfKw', p.keywords); v('cfBud', p.maxFee); v('cfPct', p.pct); v('cfIe', p.ielts); v('cfBand', p.band);
+  v('cfBl', p.backlogs); v('cfWx', p.workYears); v('cfIn', p.intake); v('cfQs', p.qsMax); v('cfCity', p.city);
+  $('cfSch').checked = !!p.scholarship; $('cfSure').checked = !!p.statedPctOnly; setEn(p.english || 'ielts');
+}
+function setEn(v) { S.en = v; $('cfEnI').classList.toggle('on', v === 'ielts'); $('cfEnW').classList.toggle('on', v === 'waiver'); $('cfIeRow').style.display = v === 'ielts' ? '' : 'none'; }
+function profile() {
+  return { country: $('cfCountry').value || 'United Kingdom', level: $('cfLv').value, keywords: $('cfKw').value.trim(), maxFee: $('cfBud').value, pct: $('cfPct').value, english: S.en,
+    ielts: $('cfIe').value, band: $('cfBand').value, backlogs: $('cfBl').value, workYears: $('cfWx').value, intake: $('cfIn').value, qsMax: $('cfQs').value,
+    city: $('cfCity').value.trim(), scholarship: $('cfSch').checked, statedPctOnly: $('cfSure').checked, showFail: $('cfFail').checked, sort: $('cfSort').value, limit: S.limit };
+}
+
+function pickLead() {
+  const v = $('cfLead').value, box = $('cfLeadBox');
+  if (!v) { S.lead = null; S.past = []; box.innerHTML = ''; $('cfLeadHint').textContent = 'Pick a lead to fill the profile from the CRM.'; return; }
+  const i = v.indexOf('|'); S.lead = { branch: v.slice(0, i), leadId: v.slice(i + 1), name: $('cfLead').selectedOptions[0].textContent.split(' · ')[0] };
+  box.innerHTML = '<div class="cf-leadbox">Reading the lead…</div>';
+  run('getCourseLeadProfile', S.lead.branch, S.lead.leadId).then(r => {
+    if (r.profile) { fill(Object.assign(profile(), r.profile)); search(); }
+    $('cfLeadHint').textContent = r.filled && r.filled.length ? 'Filled from the lead: ' + r.filled.join(', ') + '. Check before you search.' : 'The lead has no study details yet. Fill them in here.';
+    S.past = r.shortlists || [];
+    box.innerHTML = S.past.length ? `<div class="cf-leadbox"><b>Earlier shortlists</b>${S.past.map((s, k) => `<div class="row"><span>${esc(fmtDate(s.at))} · ${s.items.length} course${s.items.length === 1 ? '' : 's'} · ${esc(s.by)}</span><button type="button" class="cf-link" data-cf-load="${k}">Load</button></div>`).join('')}</div>` : '';
+  }).catch(e => { box.innerHTML = ''; toast(msg(e), true); });
+}
+
+function search() {
+  if (!S.set) return;
+  const seq = (S.seq = (S.seq || 0) + 1);
+  $('cfList').style.opacity = '.55';
+  run('searchCourses', profile()).then(r => { if (seq !== S.seq) return; S.res = r; draw(); })
+    .catch(e => { if (seq !== S.seq) return; $('cfList').style.opacity = ''; $('cfList').innerHTML = `<div class="sx-card cf-empty">${esc(msg(e))}</div>`; });
+}
+function draw() {
+  const r = S.res, t = r.tiers; $('cfList').style.opacity = '';
+  const pct = $('cfPct').value;
+  $('cfCls').innerHTML = pct && r.studentClass ? `About a UK <b>${esc(r.studentClass)}</b> by ${r.ruleApproved ? 'your conversion rule' : 'the draft conversion rule'}${r.ruleApproved ? '' : ' <span class="cf-pill draft">Draft</span>'}` : '';
+  const k = (key, l, n, d) => `<button type="button" class="cq-stat ${S.tierView === key ? 'on' : ''}" data-cf-tier="${key}"><div class="l">${esc(l)}</div><div class="n">${Number(n).toLocaleString('en-GB')}</div>${d ? `<div class="d">${d}</div>` : ''}</button>`;
+  $('cfKpis').innerHTML = `<div class="cq-stat"><div class="l">Universities</div><div class="n">${r.universities.toLocaleString('en-GB')}</div><div class="d">${r.total.toLocaleString('en-GB')} courses</div></div>` +
+    k('safe', 'Safe', t.safe, 'Clearly meets every rule') + k('likely', 'Likely', t.likely, 'Meets the rules, check notes') + k('ambitious', 'Ambitious', t.ambitious, 'Just short on one rule') +
+    `<div class="cq-stat"><div class="l">Not eligible</div><div class="n">${t.fail.toLocaleString('en-GB')}</div><div class="d">${$('cfFail').checked ? 'Shown below' : 'Hidden'}</div></div>`;
+  $('cfNote').textContent = S.tierView ? 'Showing ' + TIER[S.tierView].toLowerCase() + ' courses only' : r.more ? 'Showing ' + r.groups.length + ' of ' + r.universities + ' universities' : '';
+  $('cfMoreWrap').hidden = !r.more;
+  const groups = r.groups.map(g => Object.assign({}, g, { courses: S.tierView ? g.courses.filter(c => c.tier === S.tierView) : g.courses })).filter(g => g.courses.length);
+  if (!groups.length) { $('cfList').innerHTML = '<div class="sx-card cf-empty">No course fits this profile. Try a higher fee, fewer course words, or any intake month.</div>'; return; }
+  $('cfList').innerHTML = groups.map((g, gi) => `<details class="sx-card cf-uni" ${gi < 2 ? 'open' : ''}><summary>
+<div class="cf-qs ${g.qs == null ? 'na' : ''}"><b>${g.qs == null ? 'n/a' : g.qs}</b>QS</div>
+<div><div class="cf-un">${esc(g.name)}${g.partner ? '<span class="cf-tag">Partner</span>' : ''}</div><div class="cf-uf"><span>${g.minFee === g.maxFee ? gbp(g.minFee) : gbp(g.minFee) + ' – ' + gbp(g.maxFee)}</span>${g.minIe != null ? `<span>IELTS from ${g.minIe}</span>` : ''}<span>${['safe', 'likely', 'ambitious'].filter(x => g.tiers[x]).map(x => g.tiers[x] + ' ' + TIER[x].toLowerCase()).join(' · ')}</span></div></div>
+<div class="cf-cnt">${g.count} course${g.count === 1 ? '' : 's'} ${CHEV}</div></summary>
+<div>${g.courses.map(c => course(g, c)).join('')}${g.count > g.courses.length && !S.tierView ? `<div class="cf-more">${g.count - g.courses.length} more here. Add a course word to narrow them down.</div>` : ''}</div></details>`).join('');
+}
+function course(g, c) {
+  const inS = S.short.some(s => s.key === c.key), inC = S.cmp.some(s => s.key === c.key), ch = [];
+  if (c.ielts != null) ch.push(`<span class="cf-chip">IELTS ${c.ielts}${c.band != null ? ' · no band below ' + c.band : ''}</span>`);
+  if (c.minPct != null) ch.push(`<span class="cf-chip ok">Min ${c.minPct}%</span>`);
+  else if (c.pctSrc !== 'sheet') ch.push(`<span class="cf-chip">Asks ${esc(c.pctSrc)}</span>`);
+  if (c.months) ch.push(`<span class="cf-chip">${c.months % 12 === 0 ? c.months / 12 + (c.months > 12 ? ' years' : ' year') : c.months + ' months'}</span>`);
+  if (c.intake) ch.push(`<span class="cf-chip">${esc(c.intake)}</span>`);
+  if (c.backlogs > 0) ch.push(`<span class="cf-chip">Backlogs up to ${c.backlogs}</span>`);
+  if (c.waiver) ch.push('<span class="cf-chip">IELTS waiver possible</span>');
+  if (c.scholarship) ch.push('<span class="cf-chip">Scholarship</span>');
+  c.checks.forEach(x => ch.push(`<span class="cf-chip warn">${esc(x)}</span>`));
+  const why = c.reasons.length ? `<div class="cf-why">${esc(c.reasons.join(' · '))}</div>` : '';
+  const cost = c.firstYear != null ? `<div class="cf-cost">First year about <b>${gbp(c.firstYear)}</b>: tuition ${gbp(c.fee)}${c.appFee ? ' + application ' + gbp(c.appFee) : ''} + living ${gbp(c.living)} (${c.livingMonths} months, ${c.london ? 'London' : 'outside London'})</div>` : '';
+  return `<div class="cf-c" data-tier="${c.tier}"><div><div class="cf-cn"><span class="cf-tier ${c.tier}">${TIER[c.tier]}</span> ${esc(c.degree)}</div><div class="cf-cs">${esc(c.campus)}</div>${why}<div class="cf-chips">${ch.join('')}</div>${cost}</div>
+<div class="cf-side"><span class="cf-fee">${gbp(c.fee)}</span><div class="acts">${c.tier === 'ambitious' || c.tier === 'fail' ? `<button type="button" class="um-btn" data-cf-ask="${esc(c.key)}">Ask manager</button>` : ''}<button type="button" class="um-btn cf-cmp ${inC ? 'on' : ''}" data-cf-cmp="${esc(c.key)}">${inC ? 'In compare' : 'Compare'}</button><button type="button" class="um-btn cf-star ${inS ? 'on' : ''}" data-cf-k="${esc(c.key)}">${inS ? 'Shortlisted' : 'Shortlist'}</button></div></div>
+<details class="cf-req"><summary>Entry requirements</summary><p>${esc(c.elig || 'Not listed')}</p>${/^https?:/.test(c.link || '') ? `<p><a href="${esc(c.link)}" target="_blank" rel="noopener">Open course page</a></p>` : ''}</details></div>`;
+}
+function find(k) { for (const g of (S.res ? S.res.groups : [])) { const c = g.courses.find(x => x.key === k); if (c) return Object.assign({ uni: g.name, qs: g.qs, partner: g.partner }, c); } return null; }
+function onClick(e) {
+  const t = e.target.closest('[data-cf-k],[data-cf-cmp],[data-cf-ask],[data-cf-tier],[data-cf-load],[data-cf-rm]'); if (!t) return;
+  e.preventDefault();
+  if (t.dataset.cfK) { const i = S.short.findIndex(s => s.key === t.dataset.cfK); if (i !== -1) S.short.splice(i, 1); else { const c = find(t.dataset.cfK); if (c) S.short.push(c); } tray(); draw(); }
+  else if (t.dataset.cfCmp) { const i = S.cmp.findIndex(s => s.key === t.dataset.cfCmp); if (i !== -1) S.cmp.splice(i, 1); else if (S.cmp.length >= 3) toast('Compare holds 3 courses. Remove one first.', true); else { const c = find(t.dataset.cfCmp); if (c) S.cmp.push(c); } $('cfCmpN').textContent = S.cmp.length ? '(' + S.cmp.length + ')' : ''; draw(); }
+  else if (t.dataset.cfRm) { S.cmp = S.cmp.filter(s => s.key !== t.dataset.cfRm); $('cfCmpN').textContent = S.cmp.length ? '(' + S.cmp.length + ')' : ''; drawCompare(); }
+  else if (t.dataset.cfAsk) ask(find(t.dataset.cfAsk));
+  else if (t.dataset.cfTier !== undefined) { S.tierView = S.tierView === t.dataset.cfTier ? '' : t.dataset.cfTier; draw(); }
+  else if (t.dataset.cfLoad) { const s = S.past[+t.dataset.cfLoad]; if (s) { S.short = s.items.slice(); tray(); toast('Earlier shortlist loaded'); } }
+}
+function tray() {
+  $('cfN').textContent = S.short.length;
+  $('cfTL').textContent = S.short.length ? S.short.map(s => s.uni + ' — ' + s.degree).join(' · ') : 'Press Shortlist on the courses you want to send.';
+}
+function text() {
+  return ($('cfCountry').value || 'UK') + ' course shortlist' + (S.lead ? ' for ' + S.lead.name : '') + '\n' + S.short.map((s, i) => `\n${i + 1}. ${s.uni}${s.qs != null ? ' (QS ' + s.qs + ')' : ''}\n${s.degree}\n${s.campus} · Tuition ${gbp(s.fee)} · IELTS ${s.ielts == null ? 'not listed' : s.ielts} · Intake ${s.intake || 'not listed'}${s.firstYear != null ? '\nFirst year about ' + gbp(s.firstYear) + ' with living costs' : ''}${/^https?:/.test(s.link || '') ? '\n' + s.link : ''}`).join('\n');
+}
+function need(lead) {
+  if (!S.short.length) { toast('Shortlist a course first', true); return false; }
+  if (lead && !S.lead) { toast('Pick the lead at the top of the profile first', true); return false; }
+  return true;
+}
+function busy(fn) { if (S.busy) return; S.busy = true; fn().then(() => { S.busy = false; }, () => { S.busy = false; }); }
+function items() { return S.short.map(s => ({ uni: s.uni, qs: s.qs, degree: s.degree, campus: s.campus, fee: s.fee, appFee: s.appFee, ielts: s.ielts, band: s.band, intake: s.intake, months: s.months, link: s.link, tier: s.tier, firstYear: s.firstYear })); }
+function copy() {
+  if (!need()) return;
+  try { navigator.clipboard.writeText(text()).then(() => toast('Shortlist copied. Paste it in WhatsApp.'), () => toast('Copy did not work in this browser', true)); } catch (e) { toast('Copy did not work in this browser', true); }
+}
+function save() { if (!need(true)) return; busy(() => run('saveCourseShortlist', S.lead.branch, S.lead.leadId, items(), profile()).then(() => { toast('Shortlist saved on the lead'); }).catch(e => toast(msg(e), true))); }
+function send() { if (!need(true)) return; busy(() => run('sendShortlistToStudent', S.lead.branch, S.lead.leadId, items(), profile()).then(r => { toast(r.inApp ? 'Sent. The student sees it in their app.' : 'Saved. The student sees it when they sign in to the app.'); }).catch(e => toast(msg(e), true))); }
+function apply() {
+  if (!need(true)) return;
+  if (!confirm('Start ' + S.short.length + ' application' + (S.short.length === 1 ? '' : 's') + ' for ' + S.lead.name + '?')) return;
+  busy(() => run('startApplicationsFromShortlist', S.lead.branch, S.lead.leadId, items()).then(r => { toast(r.created + ' application' + (r.created === 1 ? '' : 's') + ' started' + (r.skipped ? ', ' + r.skipped + ' already existed' : '')); }).catch(e => toast(msg(e), true)));
+}
+function ask(c) {
+  if (!c) return;
+  if (!S.lead) { toast('Pick the lead at the top of the profile first', true); return; }
+  const note = prompt('Question for your manager about ' + c.uni + ' — ' + c.degree, 'Student is just short: ' + c.reasons.join(', ') + '. Should we apply?');
+  if (note == null) return;
+  busy(() => run('askManagerCourse', S.lead.branch, S.lead.leadId, { uni: c.uni, degree: c.degree, campus: c.campus, reasons: c.reasons, link: c.link }, note).then(r => toast('Sent to ' + (r.manager || 'your manager'))).catch(e => toast(msg(e), true)));
+}
+function pdf() {
+  if (!need()) return;
+  const w = window.open('', '_blank'); if (!w) { toast('Allow pop-ups to download the PDF', true); return; }
+  const rows = S.short.map((s, i) => `<tr><td class="n">${i + 1}</td><td><b>${esc(s.uni)}</b>${s.qs != null ? ' <span class="m">QS ' + s.qs + '</span>' : ''}<div>${esc(s.degree)}</div><div class="m">${esc(s.campus)} · Intake ${esc(s.intake || 'not listed')} · IELTS ${s.ielts == null ? 'not listed' : s.ielts}</div></td><td class="r">${gbp(s.fee)}${s.firstYear != null ? '<div class="m">First year ' + gbp(s.firstYear) + '</div>' : ''}</td></tr>`).join('');
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Course shortlist${S.lead ? ' - ' + esc(S.lead.name) : ''}</title><style>
+body{font:14px/1.45 Arial,sans-serif;color:#141826;margin:36px}header{display:flex;justify-content:space-between;align-items:center;background:#161B33;color:#fff;padding:18px 22px;border-radius:12px}
+header img{height:34px}h1{font:500 24px Georgia,serif;margin:18px 0 4px}.m{color:#667085;font-size:12px}table{width:100%;border-collapse:collapse;margin-top:14px}td{padding:12px 8px;border-bottom:1px solid #E4E7EC;vertical-align:top}
+td.n{width:24px;color:#667085}td.r{text-align:right;white-space:nowrap;font-weight:700}footer{margin-top:22px;font-size:11.5px;color:#667085}@media print{body{margin:14mm}}</style></head><body>
+<header><img src="${LOGO}" alt="Akbar Study Abroad"><span>Course shortlist</span></header><h1>${S.lead ? esc(S.lead.name) : 'Your course shortlist'}</h1><div class="m">Prepared ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+<table>${rows}</table><footer>First-year cost adds the UKVI living-cost amount for the course length (up to 9 months). Fees and intakes come from our course list; your counsellor confirms them with the university before you apply.</footer>
+<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`);
+  w.document.close();
+}
+
+function drawCompare() {
+  const p = document.querySelector('#cfView [data-cf-pane="compare"]');
+  if (!S.cmp.length) { p.innerHTML = '<div class="sx-card cf-empty">Press Compare on up to 3 courses to see them side by side.</div>'; return; }
+  const lo = (f, c) => { const v = S.cmp.map(f).filter(x => x != null); return v.length > 1 && f(c) != null && f(c) === Math.min(...v); };
+  const row = (label, f, fmt, best) => `<tr><th>${label}</th>${S.cmp.map(c => `<td class="${best && lo(f, c) ? 'best' : ''}">${fmt ? fmt(f(c), c) : esc(f(c) == null || f(c) === '' ? 'Not listed' : f(c))}</td>`).join('')}</tr>`;
+  p.innerHTML = `<div class="sx-card"><div class="cf-cmpwrap"><table class="cf-cmpt"><thead><tr><th></th>${S.cmp.map(c => `<td>${esc(c.uni)}<div class="cf-hint" style="font-weight:400;">${esc(c.degree)}</div><button type="button" class="cf-link" data-cf-rm="${esc(c.key)}">Remove</button></td>`).join('')}</tr></thead><tbody>
+${row('Fit', c => c.tier, v => `<span class="cf-tier ${v}">${TIER[v]}</span>`)}
+${row('Why', c => c.reasons.concat(c.checks).join(', ') || 'Meets every listed rule')}
+${row('QS rank', c => c.qs, null, true)}
+${row('Campus', c => c.campus)}
+${row('Tuition', c => c.fee, v => gbp(v), true)}
+${row('Application fee', c => c.appFee, v => v ? gbp(v) : 'None listed')}
+${row('Living costs', c => c.living, (v, c) => gbp(v) + ' <span class="cf-hint">(' + c.livingMonths + ' months, ' + (c.london ? 'London' : 'outside London') + ')</span>')}
+${row('First year total', c => c.firstYear, v => gbp(v), true)}
+${row('IELTS', c => c.ielts, (v, c) => v == null ? 'Not listed' : v + (c.band != null ? ' · no band below ' + c.band : ''), true)}
+${row('Minimum %', c => c.needPct, (v, c) => v == null ? 'Not stated' : v + '%' + (c.pctSrc !== 'sheet' ? ' (asks ' + c.pctSrc + ')' : ''))}
+${row('Length', c => c.months, v => v ? (v % 12 === 0 ? v / 12 + (v > 12 ? ' years' : ' year') : v + ' months') : 'Not listed')}
+${row('Intake', c => c.intake)}
+${row('Application deadline', c => c.deadline, v => v ? esc(v) : '<span class="cf-hint">Sheet says: see the university website</span>')}
+${row('Scholarship', c => c.scholarship, v => v ? 'Yes' : 'No')}
+${row('IELTS waiver', c => c.waiver, v => v ? 'Possible' : 'No')}
+${row('Backlogs', c => c.backlogs, v => v > 0 ? 'Up to ' + v : 'Not stated')}
+${row('Course page', c => c.link, v => /^https?:/.test(v || '') ? `<a class="cf-link" href="${esc(v)}" target="_blank" rel="noopener">Open</a>` : 'Not listed')}
+</tbody></table></div></div>`;
+}
+
+function loadInsights() {
+  const p = document.querySelector('#cfView [data-cf-pane="insights"]');
+  p.innerHTML = '<div class="sx-card"><div class="skeleton" style="height:220px;"></div></div>';
+  run('getCourseInsights').then(r => {
+    const list = a => { const m = Math.max(1, ...a.map(x => x.n)); return a.length ? a.map(x => `<div class="cf-rank"><span>${esc(x.name)}</span><span class="n">${x.n}</span><span class="bar"><i style="width:${Math.round(x.n / m * 100)}%"></i></span></div>`).join('') : '<div class="cf-empty">Nothing yet</div>'; };
+    const f = r.funnel || {};
+    const pc = (a, b) => b ? Math.round(a / b * 100) + '% of shortlisted' : '';
+    p.innerHTML = `${r.demo ? '<div class="cf-demo">Demo numbers for the preview. The live page counts real shortlists and applications.</div>' : ''}
+<div class="cf-funnel"><div class="cq-stat"><div class="l">Shortlists made</div><div class="n">${f.shortlists || 0}</div><div class="d">${esc(r.period || '')}</div></div>
+<div class="cq-stat"><div class="l">Courses shortlisted</div><div class="n">${f.courses || 0}</div></div>
+<div class="cq-stat"><div class="l">Applications started</div><div class="n">${f.applied || 0}</div><div class="d">${pc(f.applied, f.courses)}</div></div>
+<div class="cq-stat"><div class="l">Enrolled</div><div class="n">${f.enrolled || 0}</div><div class="d">${pc(f.enrolled, f.courses)}</div></div></div>
+<div class="cf-ins"><div class="sx-card"><h3>Most shortlisted universities</h3>${list(r.topUnis || [])}</div><div class="sx-card"><h3>Most shortlisted courses</h3>${list(r.topCourses || [])}</div></div>
+<div class="sx-card" style="margin-top:16px;"><h3>By counsellor</h3><table class="sx-table"><thead><tr><th>Counsellor</th><th>Branch</th><th style="text-align:right;">Shortlists</th><th style="text-align:right;">Applied</th><th style="text-align:right;">Enrolled</th><th style="text-align:right;">Applied rate</th></tr></thead><tbody>
+${(r.byCounsellor || []).map(x => `<tr><td>${esc(x.name)}</td><td>${esc(x.branch)}</td><td style="text-align:right;">${x.shortlists}</td><td style="text-align:right;">${x.applied}</td><td style="text-align:right;">${x.enrolled}</td><td style="text-align:right;">${x.courses ? Math.round(x.applied / x.courses * 100) + '%' : '—'}</td></tr>`).join('') || '<tr><td colspan="6" class="cf-empty">No shortlists yet</td></tr>'}</tbody></table></div>`;
+  }).catch(e => { p.innerHTML = `<div class="sx-card cf-empty">${esc(msg(e))}</div>`; });
+}
+
+function drawSettings() {
+  const p = document.querySelector('#cfView [data-cf-pane="settings"]'), s = S.set, r = s.classRule || {};
+  const partners = new Set(s.partners || []);
+  p.innerHTML = `<div class="cf-set"><div>
+<div class="sx-card"><h3>Course data by country</h3>${(s.countries || []).map(c => `<div class="cf-srow"><div><b>${esc(c.country)}</b><div class="m">${c.courses ? c.courses.toLocaleString('en-GB') + ' courses · ' + c.unis + ' universities · ' + esc(c.file) + ' · added ' + esc(fmtDate(c.updated)) : 'No sheet yet'}</div></div><button type="button" class="um-btn" data-cf-up="${esc(c.country)}">${c.courses ? 'Replace sheet' : 'Add sheet'}</button></div>`).join('')}
+<input type="file" id="cfFile" accept=".xlsx" hidden><div class="cf-hint" style="margin-top:8px;">Upload the Excel file in the same layout as the UK sheet. It goes to a private Drive folder and replaces that country's courses.</div></div>
+<div class="sx-card" style="margin-top:16px;"><h3>Rules</h3>
+<div class="cf-srow" style="border-top:0;"><div><b>Indian % to UK class</b> <span class="cf-pill ${r.approved ? 'ok' : 'draft'}">${r.approved ? 'Approved' : 'Draft'}</span><div class="m">Used when a course asks for a 2:1 or 2:2 and gives no %.</div></div></div>
+<div class="cf-two"><div class="cf-f"><label for="cfR21">2:1 from %</label><input type="number" id="cfR21" min="40" max="90" value="${esc(r.c21)}"></div><div class="cf-f"><label for="cfR22">2:2 from %</label><input type="number" id="cfR22" min="35" max="80" value="${esc(r.c22)}"></div></div>
+<div class="cf-checks" style="margin:0 0 6px;"><label><input type="checkbox" id="cfRok" ${r.approved ? 'checked' : ''}> This rule is approved for counsellors</label></div>
+<div class="cf-srow"><div><b>Bachelor's courses listed as Postgraduate</b><div class="m">Some sheet rows named BA or BSc are labelled Postgraduate.</div></div><select id="cfLvMode" style="width:auto;"><option value="tag" ${s.levelMode !== 'hide' ? 'selected' : ''}>Show with "Check level"</option><option value="hide" ${s.levelMode === 'hide' ? 'selected' : ''}>Hide them</option></select></div>
+<div class="cf-srow"><div><b>Public university finder</b><div class="m">Students on the website see their top 3 from this data before the OTP.</div></div><select id="cfPub" style="width:auto;"><option value="0" ${s.publicFinder ? '' : 'selected'}>Off</option><option value="1" ${s.publicFinder ? 'selected' : ''}>On</option></select></div>
+</div></div>
+<div class="sx-card"><h3>Partner universities</h3><div class="cf-hint">Directors only. Partners get a small tag in the results. Counsellors do not see commission.</div>
+<input type="text" id="cfPq" placeholder="Search universities" style="margin-top:10px;"><div class="cf-plist" id="cfPlist">${(s.uniNames || []).map(n => `<label data-n="${esc(n.toLowerCase())}"><input type="checkbox" value="${esc(n)}" ${partners.has(n) ? 'checked' : ''}> ${esc(n)}</label>`).join('')}</div>
+<div style="display:flex;justify-content:flex-end;margin-top:14px;"><button class="um-btn primary" type="button" id="cfSetSave">Save changes</button></div></div></div>`;
+  $('cfPq').oninput = () => { const q = $('cfPq').value.trim().toLowerCase(); $('cfPlist').querySelectorAll('label').forEach(l => { l.style.display = !q || l.dataset.n.indexOf(q) !== -1 ? '' : 'none'; }); };
+  p.querySelectorAll('[data-cf-up]').forEach(b => b.onclick = () => { S.upCountry = b.dataset.cfUp; $('cfFile').click(); });
+  $('cfFile').onchange = upload;
+  $('cfSetSave').onclick = () => {
+    const ns = { classRule: { c21: Number($('cfR21').value), c22: Number($('cfR22').value), approved: $('cfRok').checked }, levelMode: $('cfLvMode').value, publicFinder: $('cfPub').value === '1',
+      partners: Array.from($('cfPlist').querySelectorAll('input:checked')).map(x => x.value) };
+    busy(() => run('saveCourseFinderSettings', ns).then(() => { Object.assign(S.set, ns); toast('Saved'); search(); }).catch(e => toast(msg(e), true)));
+  };
+}
+function upload() {
+  const f = $('cfFile').files[0]; $('cfFile').value = ''; if (!f) return;
+  if (!/\.xlsx$/i.test(f.name)) { toast('Upload an .xlsx file', true); return; }
+  if (f.size > 12e6) { toast('That file is over 12 MB. Remove extra tabs or columns and try again.', true); return; }
+  const rd = new FileReader();
+  toast('Uploading and reading ' + f.name + '. This can take a minute or two.');
+  rd.onload = () => busy(() => run('uploadCourseSheet', S.upCountry, f.name, String(rd.result).split(',')[1]).then(r => { toast(r.courses ? r.courses.toLocaleString('en-GB') + ' courses loaded for ' + S.upCountry : 'Uploaded'); return run('getCourseFinderSettings').then(s => { const cur = $('cfCountry').value; S.set = s; $('cfCountry').innerHTML = (s.countries || []).map(c => `<option ${c.courses ? '' : 'disabled'}>${esc(c.country)}</option>`).join(''); $('cfCountry').value = (s.countries.find(c => c.country === cur && c.courses) || s.countries.find(c => c.courses) || {}).country || ''; $('cfLv').innerHTML = (s.levels || []).map(l => `<option>${esc(l)}</option>`).join(''); meta(); drawSettings(); search(); }); }).catch(e => toast(msg(e), true)));
+  rd.readAsDataURL(f);
+}
+
+function addNav() {
+  const grp = document.querySelector('#sidebar .nav-group[data-group="applications"]');
+  if (!grp || grp.querySelector('[data-cf-view]')) return;
+  const it = document.createElement('div'); it.className = 'nav-item'; it.setAttribute('data-cf-view', 'uk'); it.setAttribute('role', 'button'); it.tabIndex = 0; it.title = 'Shortlist universities for a student';
+  it.innerHTML = '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6M11 8v6"/></svg><span>Course finder</span>';
+  const first = grp.querySelector('.nav-item'); if (first) first.after(it); else grp.appendChild(it);
+  it.addEventListener('click', e => { e.stopPropagation(); open(); });
+  it.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+}
+setTimeout(addNav, 500); setInterval(addNav, 3000);
+const sb = document.getElementById('sidebar');
+if (sb) sb.addEventListener('click', e => { const it = e.target.closest('.nav-item, .lead-set-item, [data-branch]'); if (it && !it.hasAttribute('data-cf-view')) close(); }, true);
+window.openCourseFinder = open;
 })();
 </script>
 
