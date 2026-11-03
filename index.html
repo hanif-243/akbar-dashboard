@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '3 Nov 2026 · v168b';
+window.AKBAR_BUILD = '3 Nov 2026 · v168c';
 
 (function () {
   try {
@@ -14303,11 +14303,18 @@ function build(root) {
 function setup() {
   const s = S.set;
   $('cfCountry').innerHTML = countryOpts(s);
-  $('cfLv').innerHTML = (s.levels || []).map(l => `<option>${esc(l)}</option>`).join('');
+  levelOpts(s);
   $('cfSetTab').hidden = !s.canEdit;
   $('cfCountry').value = ((s.countries || []).find(c => c.courses) || { country: 'United Kingdom' }).country;
   meta();
   fill({ level: 'Postgraduate', keywords: 'business', maxFee: 20000, pct: 60, ielts: 6.5, band: 6, intake: 'Sep' });
+}
+const LV_FIRST = ['Postgraduate', 'Undergraduate', 'Foundation', 'PG Diploma /Certificate', 'PhD', 'UG+PG (Accelerated) Degree'];
+function levelOpts(s) {
+  const el = $('cfLv'), cur = el.value, all = (s.levels || []).slice();
+  const list = LV_FIRST.filter(l => all.indexOf(l) !== -1).concat(all.filter(l => LV_FIRST.indexOf(l) === -1));
+  el.innerHTML = list.map(l => `<option>${esc(l)}</option>`).join('');
+  el.value = list.indexOf(cur) !== -1 ? cur : list.indexOf('Postgraduate') !== -1 ? 'Postgraduate' : list[0] || '';
 }
 function countryOpts(s) { return (s.countries || []).map(c => `<option value="${esc(c.country)}">${esc(c.country)}${c.courses ? '' : ' (no sheet yet)'}</option>`).join(''); }
 function hasData() { const c = ((S.set && S.set.countries) || []).find(x => x.country === $('cfCountry').value); return !!(c && c.courses); }
@@ -14337,7 +14344,7 @@ function tab(t) {
 
 function fill(p) {
   const v = (id, x) => { $(id).value = x == null ? '' : x; };
-  v('cfLv', p.level || 'Postgraduate'); v('cfKw', p.keywords); v('cfBud', p.maxFee); v('cfPct', p.pct); v('cfIe', p.ielts); v('cfBand', p.band);
+  v('cfLv', p.level || 'Postgraduate'); if (!$('cfLv').value && $('cfLv').options.length) $('cfLv').value = Array.prototype.some.call($('cfLv').options, o => o.value === 'Postgraduate') ? 'Postgraduate' : $('cfLv').options[0].value; v('cfKw', p.keywords); v('cfBud', p.maxFee); v('cfPct', p.pct); v('cfIe', p.ielts); v('cfBand', p.band);
   v('cfBl', p.backlogs); v('cfWx', p.workYears); v('cfIn', p.intake); v('cfQs', p.qsMax); v('cfCity', p.city);
   $('cfSch').checked = !!p.scholarship; $('cfSure').checked = !!p.statedPctOnly; setEn(p.english || 'ielts');
 }
@@ -14537,7 +14544,7 @@ function upload() {
   if (f.size > 12e6) { toast('That file is over 12 MB. Remove extra tabs or columns and try again.', true); return; }
   const rd = new FileReader();
   toast('Uploading and reading ' + f.name + '. This can take a minute or two.');
-  rd.onload = () => busy(() => run('uploadCourseSheet', S.upCountry, f.name, String(rd.result).split(',')[1]).then(r => { toast(r.courses ? r.courses.toLocaleString('en-GB') + ' courses loaded for ' + S.upCountry : 'Uploaded'); return run('getCourseFinderSettings').then(s => { const cur = $('cfCountry').value; S.set = s; $('cfCountry').innerHTML = countryOpts(s); $('cfCountry').value = (s.countries.find(c => c.country === cur && c.courses) || s.countries.find(c => c.courses) || { country: 'United Kingdom' }).country; $('cfLv').innerHTML = (s.levels || []).map(l => `<option>${esc(l)}</option>`).join(''); meta(); drawSettings(); search(); }); }).catch(e => toast(msg(e), true)));
+  rd.onload = () => busy(() => run('uploadCourseSheet', S.upCountry, f.name, String(rd.result).split(',')[1]).then(r => { toast(r.courses ? r.courses.toLocaleString('en-GB') + ' courses loaded for ' + S.upCountry : 'Uploaded'); return run('getCourseFinderSettings').then(s => { const cur = $('cfCountry').value; S.set = s; $('cfCountry').innerHTML = countryOpts(s); $('cfCountry').value = (s.countries.find(c => c.country === cur && c.courses) || s.countries.find(c => c.courses) || { country: 'United Kingdom' }).country; levelOpts(s); meta(); drawSettings(); search(); }); }).catch(e => toast(msg(e), true)));
   rd.readAsDataURL(f);
 }
 
