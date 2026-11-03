@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '3 Nov 2026 · v163';
+window.AKBAR_BUILD = '3 Nov 2026 · v164';
 
 (function () {
   try {
@@ -2922,6 +2922,15 @@ overflow: hidden;
 .sf-chips { display: flex; gap: 8px; align-items: center; flex: 1 1 560px; min-width: 0; overflow-x: auto; scrollbar-width: thin; padding: 2px 0; }
 .lv-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex: 0 0 auto; margin-left: auto; padding-left: 12px; border-left: 1px solid var(--border); }
 .lv-tools .lead-sort select { height: 30px; border-radius: 9px; padding-left: 30px; }
+.al-dup { font-size: 12px; margin-top: 6px; line-height: 1.4; min-height: 0; }
+.al-dup.warn { color: #B4232F; font-weight: 600; }
+.al-dup.ok { color: var(--ok); }
+.tc-board { padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--muted); }
+.tc-board h4 { font-size: 12px; font-weight: 700; color: var(--ink); margin: 0 0 8px; }
+.tc-board table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.tc-board th { text-align: left; font-weight: 600; font-size: 11px; color: var(--muted); padding: 4px 8px 4px 0; border-bottom: 1px solid var(--border); }
+.tc-board td { padding: 6px 8px 6px 0; color: var(--ink); border-bottom: 1px solid var(--border); }
+.tc-board td.n, .tc-board th.n { text-align: right; font-family: 'JetBrains Mono', ui-monospace, monospace; }
 .sf-btn.sf-age.sf-active { background: var(--tone-bg); border-color: var(--tone); color: var(--tone); }
 .lv-score { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--muted); }
 .lv-score b { color: var(--ink); font-size: 13px; }
@@ -4226,13 +4235,14 @@ Didn't get it?
 <div class="al-body">
 <div class="um-form-grid">
 <div class="um-field"><label>Name *</label><input id="alName" autocomplete="off" placeholder="Full name"></div>
-<div class="um-field"><label>Phone *</label><input id="alPhone" type="tel" autocomplete="off" placeholder="+91 98765 43210"></div>
+<div class="um-field"><label>Phone *</label><input id="alPhone" type="tel" autocomplete="off" placeholder="+91 98765 43210"><div class="al-dup" id="alDup" role="status"></div></div>
 <div class="um-field"><label>Email</label><input id="alEmail" type="email" autocomplete="off" placeholder="name@example.com"></div>
 <div class="um-field"><label>Branch</label><select id="alBranch"><option>Mumbai</option><option>Calicut</option><option>Kochi</option><option>Delhi</option></select></div>
 <div class="um-field"><label>Interested In / Country</label><input id="alCountry" autocomplete="off" placeholder="e.g. UK, Canada"></div>
 <div class="um-field"><label>Qualification</label><input id="alQualification" autocomplete="off" placeholder="e.g. B.Com, 12th"></div>
 <div class="um-field"><label>Budget</label><input id="alBudget" autocomplete="off" placeholder="e.g. 15-20 Lakhs"></div>
-<div class="um-field"><label>Source</label><select id="alSource"><option>Walk-in</option><option>Phone call</option><option>WhatsApp Inquiry</option><option>Sulekha</option><option>Referral</option><option>Other</option></select></div>
+<div class="um-field"><label>Source</label><select id="alSource"><option>Walk-in</option><option>Phone call</option><option>WhatsApp Inquiry</option><option>Sulekha</option><option>JustDial</option><option>Instagram DM</option><option>Website</option><option>Event / Seminar</option><option>Partner / Agent</option><option>Referral</option><option>Other</option></select></div>
+<div class="um-field" id="alRefWrap" style="display:none;"><label>Referred by *</label><input id="alRefBy" autocomplete="off" placeholder="Who sent this student? (name / phone)"></div>
 <div class="um-field full"><label>Notes</label><textarea id="alNotes" placeholder="Anything the counselor should know"></textarea></div>
 </div>
 <button class="al-submit" id="addLeadSaveBtn">Save Lead</button>
@@ -4978,6 +4988,7 @@ Log out
 </span>
 </div>
 <div id="lvScore" class="lv-score" style="display:none;"></div>
+<div id="tcBoard" class="tc-board" style="display:none;"></div>
 <div id="fuPanel"></div>
 <div class="bulk-bar" id="bulkBar">
 <span class="bulk-count" id="bulkCount">0 selected</span>
@@ -6009,7 +6020,7 @@ ${qualifiedRate !== null ? `
 
 function renderLeadSourceCard(rows, branch) {
 const scoped = branch ? rows.filter(r => r.branch === branch) : rows;
-const PLATFORM_COLORS = { Facebook: '#2C5FBD', Instagram: '#D6249F', Other: '#9AA1B2' };
+const PLATFORM_COLORS = { Facebook: '#2C5FBD', Instagram: '#D6249F', Sulekha: '#7A4DD8', Other: '#9AA1B2' };
 
 const platformLabel = (raw) => {
 const p = (raw || '').toLowerCase();
@@ -6020,7 +6031,7 @@ return 'Other';
 
 const counts = {};
 scoped.forEach(r => {
-const label = platformLabel(r.platform);
+const label = /sulekha/i.test(String(r.platform || '') + ' ' + String(r.source || '')) ? 'Sulekha' : platformLabel(r.platform);
 counts[label] = (counts[label] || 0) + 1;
 });
 const labels = Object.keys(counts).filter(l => counts[l] > 0);
@@ -6638,6 +6649,27 @@ el.innerHTML = `<b>${escapeHtml(name)}</b>`
 + `<span>${n(mine.filter(r => leadIsConverted(r)).length)}converted</span>`;
 el.style.display = '';
 }
+let tcBoardData = null, tcBoardAt = 0, tcBoardBusy = false;
+function drawTcBoard() {
+const el = document.getElementById('tcBoard'); if (!el) return;
+if (activeStatusFilter !== 'Telecaller' || viewerCounselor) { el.style.display = 'none'; return; }
+el.style.display = '';
+if (!tcBoardData || Date.now() - tcBoardAt > 180000) {
+if (!tcBoardData) el.innerHTML = '<h4>Leads added by telecallers</h4>Loading…';
+if (!tcBoardBusy) {
+tcBoardBusy = true;
+google.script.run.withSuccessHandler(d => { tcBoardBusy = false; tcBoardData = d; tcBoardAt = Date.now(); drawTcBoard(); })
+.withFailureHandler(err => { tcBoardBusy = false; tcBoardAt = Date.now(); if (!tcBoardData) el.innerHTML = '<h4>Leads added by telecallers</h4>Could not load: ' + escapeHtml(String(err && err.message || err).replace(/^Error:\s*/, '')); })
+.getTelecallerAddedBoard(window._authToken || '');
+}
+if (!tcBoardData) return;
+}
+const d = tcBoardData;
+const list = (d.list || []).filter(x => activeBranch === 'All' || x.branch === activeBranch);
+el.innerHTML = `<h4>Leads added by telecallers · ${escapeHtml(d.month || '')}</h4>` + (list.length
+? `<table><thead><tr><th>Telecaller</th><th>Branch</th><th class="n">Added</th><th class="n">Hot</th><th class="n">Warm</th><th class="n">Junk</th><th class="n">Assigned</th><th class="n">Converted</th><th class="n">Sulekha</th></tr></thead><tbody>${list.map(x => `<tr><td>${escapeHtml(x.name)}</td><td>${escapeHtml(x.branch)}</td><td class="n">${x.added}</td><td class="n">${x.hot}</td><td class="n">${x.warm}</td><td class="n">${x.junk}</td><td class="n">${x.assigned}</td><td class="n">${x.converted}</td><td class="n">${x.sulekha}</td></tr>`).join('')}</tbody></table>`
+: 'No leads added by telecallers this month yet. They appear here when a telecaller uses + Add Lead.');
+}
 function updateBulkAssign() {
 const sel = document.getElementById('bulkAssign'); if (!sel) return;
 const show = canAssignLeads();
@@ -6870,6 +6902,7 @@ return true;
 updateStatusFilterCounts(baseFiltered);
 updateCounselorFilter(allRows);
 drawLvScore();
+drawTcBoard();
 updateBulkAssign();
 filtered = sortLeads(filtered);
 lastFiltered = filtered;
@@ -7790,8 +7823,10 @@ if (e.target.id === 'compareBackdrop') closeCompareModal();
 });
 
 function openAddLeadModal() {
-['alName', 'alPhone', 'alEmail', 'alCountry', 'alQualification', 'alBudget', 'alNotes']
+['alName', 'alPhone', 'alEmail', 'alCountry', 'alQualification', 'alBudget', 'alNotes', 'alRefBy']
 .forEach(id => { document.getElementById(id).value = ''; });
+document.getElementById('alRefWrap').style.display = 'none';
+const dupEl = document.getElementById('alDup'); dupEl.textContent = ''; dupEl.className = 'al-dup';
 document.getElementById('alSource').value = document.body.classList.contains('tc-staff') ? 'Phone call' : 'Walk-in';
 const branchSel = document.getElementById('alBranch');
 
@@ -7826,6 +7861,12 @@ budget: val('alBudget'),
 source: val('alSource'),
 notes: val('alNotes')
 };
+if (formData.source === 'Referral') {
+const by = val('alRefBy');
+if (!by) { status.textContent = 'Add who referred this student.'; status.classList.add('err'); document.getElementById('alRefBy').focus(); return; }
+formData.source = 'Referral — ' + by;
+formData.notes = ('Referred by: ' + by + (formData.notes ? ' | ' + formData.notes : '')).slice(0, 1000);
+}
 if (!formData.name || !formData.phone) {
 status.textContent = 'Name and Phone are required.';
 status.classList.add('err');
@@ -7857,6 +7898,28 @@ showToast(msg, 'error');
 }
 
 document.getElementById('addLeadBtn').addEventListener('click', openAddLeadModal);
+document.getElementById('alSource').addEventListener('change', e => { document.getElementById('alRefWrap').style.display = e.target.value === 'Referral' ? '' : 'none'; if (e.target.value === 'Referral') document.getElementById('alRefBy').focus(); });
+
+(function () {
+const ph = document.getElementById('alPhone'), out = document.getElementById('alDup');
+let timer = null, last = '';
+function show(cls, text) { out.className = 'al-dup ' + cls; out.textContent = text; }
+function check() {
+const p10 = ph.value.replace(/\D/g, '').slice(-10);
+if (p10.length < 10) { last = ''; show('', ''); return; }
+if (p10 === last) return; last = p10;
+const local = (allRows || []).find(r => String(r.phone || '').replace(/\D/g, '').slice(-10) === p10);
+if (local) { show('warn', '⚠ Already a lead: ' + (local.name || 'this number') + ' · ' + local.branch + (local.counselor ? ' · with ' + local.counselor : ' · not assigned yet')); return; }
+show('', 'Checking this number…');
+google.script.run.withSuccessHandler(r => {
+if (last !== p10) return;
+if (r && r.found) show('warn', '⚠ Already a lead: ' + (r.name || 'this number') + ' · ' + r.branch + (r.list === 'bulk' ? ' (bulk list)' : '') + (r.counselor ? ' · with ' + r.counselor : ' · not assigned yet'));
+else show('ok', '✓ New number');
+}).withFailureHandler(() => { if (last === p10) show('', ''); }).checkLeadPhone(window._authToken || '', p10, document.getElementById('alBranch').value);
+}
+ph.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(check, 450); });
+document.getElementById('alBranch').addEventListener('change', () => { last = ''; check(); });
+})();
 document.getElementById('addLeadCancelBtn').addEventListener('click', closeAddLeadModal);
 document.getElementById('addLeadSaveBtn').addEventListener('click', saveNewLead);
 document.getElementById('addLeadBackdrop').addEventListener('click', (e) => {
@@ -7937,6 +8000,7 @@ var SOURCE_META = {
 Facebook:  { label: 'Facebook',  color: '#2C5FBD' },
 Instagram: { label: 'Instagram', color: '#D6249F' },
 WalkIn:    { label: 'Walk-in',   color: 'var(--ok)' },
+Sulekha:   { label: 'Sulekha',   color: '#7A4DD8' },
 Other:     { label: 'Other',     color: 'var(--junk)' }
 };
 
@@ -8134,7 +8198,8 @@ const sources = perf.branches.map(b => {
 const sb = b.sourceBreakdown;
 const total = Object.keys(sb).reduce((a, k) => a + sb[k], 0);
 const seg = total ? Object.keys(SOURCE_META).filter(k => sb[k] > 0).map(k => `<div style="width:${(sb[k] / total) * 100}%;background:${SOURCE_META[k].color};" title="${SOURCE_META[k].label}: ${sb[k]}"></div>`).join('') : `<div style="width:100%;background:var(--canvas);"></div>`;
-const legend = Object.keys(SOURCE_META).map(k => `<span class="source-legend-item"><span class="dot" style="background:${SOURCE_META[k].color};"></span>${SOURCE_META[k].label} · ${sb[k]}</span>`).join('');
+const sh = b.sourceHot || {};
+const legend = Object.keys(SOURCE_META).filter(k => k !== 'Sulekha' || sb[k]).map(k => `<span class="source-legend-item"><span class="dot" style="background:${SOURCE_META[k].color};"></span>${SOURCE_META[k].label} · ${sb[k] || 0}${sh[k] ? ` <span style="color:var(--muted);">(${sh[k]} hot)</span>` : ''}</span>`).join('');
 return `<div class="mr-src-row"><div style="font-weight:700;font-size:12.5px;">${escapeHtml(b.name)}</div><div><div class="source-split-bar">${seg}</div><div class="source-legend">${legend}</div></div></div>`;
 }).join('');
 
@@ -8192,11 +8257,11 @@ const esc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
 const p = mrData.perf;
 const lines = [
 esc('Monthly Performance Report — ' + p.monthLabel),
-['Branch', 'Leads', 'Hot', 'Warm', 'Cold', 'Junk', 'Pending', 'Hot Rate %', 'Avg Response (mins)', 'Top Counselor', 'Week 1', 'Week 2', 'Week 3', 'Week 4', 'Facebook', 'Instagram', 'Walk-in', 'Other'].map(esc).join(',')
+['Branch', 'Leads', 'Hot', 'Warm', 'Cold', 'Junk', 'Pending', 'Hot Rate %', 'Avg Response (mins)', 'Top Counselor', 'Week 1', 'Week 2', 'Week 3', 'Week 4', 'Facebook', 'Instagram', 'Walk-in', 'Sulekha', 'Other'].map(esc).join(',')
 ];
 p.branches.forEach(b => lines.push([
 b.name, b.totalLeads, b.hot, b.warm, b.cold, b.junk, b.pending, b.hotRate, b.avgResponseMins == null ? '' : b.avgResponseMins, b.topCounselor,
-...b.weeklyBreakdown, b.sourceBreakdown.Facebook, b.sourceBreakdown.Instagram, b.sourceBreakdown.WalkIn, b.sourceBreakdown.Other
+...b.weeklyBreakdown, b.sourceBreakdown.Facebook, b.sourceBreakdown.Instagram, b.sourceBreakdown.WalkIn, b.sourceBreakdown.Sulekha || 0, b.sourceBreakdown.Other
 ].map(esc).join(',')));
 lines.push(['Overall', p.overall.totalLeads, p.overall.hot, p.overall.warm, p.overall.cold, p.overall.junk, '', p.overall.hotRate].map(esc).join(','));
 if (mrData.conv) {
