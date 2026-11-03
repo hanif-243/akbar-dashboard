@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
  
-window.AKBAR_BUILD = '3 Nov 2026 · v169';
+window.AKBAR_BUILD = '3 Nov 2026 · v170';
 
 
 (function () {
@@ -11205,8 +11205,9 @@ files + (missing.length ? '<div class="ld-miss"><b>Still missing:</b> ' + missin
 function ldPaint(id) { document.querySelectorAll('[data-ld-lead="' + CSS.escape(id) + '"]').forEach(x => { x.innerHTML = ldBody(id); }); }
 function ldLoad(id, branch) {
 if (!branch) { const r = (typeof allRows !== 'undefined' ? allRows : []).find(x => x.leadId === id); branch = r ? r.branch : ''; }
+if (ldCache[id] && ldCache[id].branch !== branch) delete ldCache[id]; 
 ldPaint(id);
-ldRun('getLeadDocuments', id, branch).then(d => { ldCache[id] = d; d.branch = branch; }).catch(e => { ldCache[id] = { err: ldErr(e) }; }).finally(() => ldPaint(id));
+ldRun('getLeadDocuments', id, branch).then(d => { ldCache[id] = d; d.branch = branch; }).catch(e => { ldCache[id] = { err: ldErr(e), branch: branch }; }).finally(() => ldPaint(id));
 }
 function ldFile(btn, open) {
 const id = btn.dataset.ldFor, d = ldCache[id] || {};
@@ -14563,6 +14564,10 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) chec
 .cf-uni > summary::-webkit-details-marker { display: none; }
 .cf-uni[open] > summary { border-bottom: 1px solid var(--border); }
 .cf-qs { text-align: center; border-radius: 12px; padding: 7px 0; background: var(--atl-tint, rgba(22,27,51,.035)); font-size: 10.5px; font-weight: 700; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; }
+.cf-logo { position: relative; display: inline-grid; place-items: center; flex: none; border-radius: 8px; background: #fff; border: 1px solid var(--border); overflow: hidden; vertical-align: middle; }
+.cf-logo i { font-style: normal; font-weight: 700; font-size: 12px; color: var(--muted); }
+.cf-logo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 14%; background: #fff; }
+.cf-cmpt thead .cf-logo { display: grid; margin-bottom: 8px; }
 .cf-qs b { display: block; font-size: 18px; letter-spacing: -.01em; color: var(--ink); font-variant-numeric: tabular-nums; }
 .cf-qs.na b { font-size: 13px; color: var(--muted); }
 .cf-un { font-size: 15px; font-weight: 700; color: var(--ink); overflow-wrap: anywhere; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -14686,7 +14691,11 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) chec
 'use strict';
 const $ = id => document.getElementById(id);
 const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const gbp = n => n == null || !isFinite(n) ? 'Not listed' : '£' + Math.round(Number(n)).toLocaleString('en-GB');
+const CUR_SYM = { GBP: '£', EUR: '€', USD: 'US$', CAD: 'CA$', AUD: 'A$', NZD: 'NZ$', SGD: 'S$', AED: 'AED ', MYR: 'RM ', MUR: 'MUR ', RUB: 'RUB ', KRW: '₩', SEK: 'SEK ', DKK: 'DKK ', CHF: 'CHF ', JPY: 'JPY ', CNY: 'CN¥' };
+const curNow = () => typeof S === 'undefined' || S.cur == null ? 'GBP' : S.cur;
+const gbp = (n, cur) => { if (n == null || !isFinite(n)) return 'Not listed'; const c = cur === undefined ? curNow() : cur; return (c ? CUR_SYM[c] || c + ' ' : '') + Math.round(Number(n)).toLocaleString('en-GB'); };
+const logoUrl = link => { try { const h = new URL(link).hostname.replace(/^www\./, ''); return h ? 'https:\x2F\x2Fwww.google.com\x2Fs2\x2Ffavicons?domain=' + encodeURIComponent(h) + '&sz=64' : ''; } catch (e) { return ''; } };
+const logo = (link, name, size) => { const u = logoUrl(link), ini = esc(String(name || '?').replace(/^\(.*?\)\s*/, '').trim().charAt(0).toUpperCase()); return `<span class="cf-logo" style="width:${size}px;height:${size}px;"><i>${ini}</i>${u ? `<img src="${esc(u)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</span>`; };
 const run = (fn, ...a) => promisifyRun(fn, window._authToken || '', ...a);
 const msg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
 const toast = (m, bad) => { if (typeof showToast === 'function') showToast(m, bad ? 'error' : 'success'); };
@@ -14732,7 +14741,7 @@ function build(root) {
 <div id="cfLeadBox"></div>
 <div class="cf-f"><label for="cfLv">Level of study</label><select id="cfLv"></select></div>
 <div class="cf-f"><label for="cfKw">Course</label><input type="text" id="cfKw" placeholder="Business, data science"><span class="cf-hint">Separate options with a comma.</span></div>
-<div class="cf-two"><div class="cf-f"><label for="cfBud">Max fee (£)</label><input type="number" id="cfBud" min="0" step="500" placeholder="Any"></div>
+<div class="cf-two"><div class="cf-f"><label for="cfBud" id="cfBudL">Max fee (£)</label><input type="number" id="cfBud" min="0" step="500" placeholder="Any"></div>
 <div class="cf-f"><label for="cfPct">Marks %</label><input type="number" id="cfPct" min="0" max="100" step="0.5" placeholder="12th / degree"></div></div>
 <div class="cf-hint" id="cfCls" style="margin:-6px 0 12px;"></div>
 <div class="cf-f"><span class="cf-lbl">English</span><div class="cf-seg"><button type="button" id="cfEnI" class="on">IELTS score</button><button type="button" id="cfEnW">Needs waiver</button></div></div>
@@ -14788,9 +14797,12 @@ function setup() {
 }
 function meta() {
   const c = (S.set.countries || []).find(x => x.country === $('cfCountry').value) || {}, d = $('cfData');
+  S.cur = c.currency == null ? 'GBP' : c.currency;
+  if ($('cfBudL')) $('cfBudL').textContent = S.cur ? 'Max fee (' + (CUR_SYM[S.cur] || S.cur).trim() + ')' : 'Max fee (as listed)';
+  if (c.levels && c.levels.length && $('cfLv')) { const lv = $('cfLv').value; $('cfLv').innerHTML = c.levels.map(l => `<option>${esc(l)}</option>`).join(''); $('cfLv').value = c.levels.indexOf(lv) !== -1 ? lv : c.levels.indexOf('Postgraduate') !== -1 ? 'Postgraduate' : c.levels[0]; }
   $('cfMeta').textContent = c.courses ? c.courses.toLocaleString('en-GB') + ' courses at ' + c.unis + ' universities in ' + c.country : 'No course sheet uploaded yet';
   d.hidden = !c.courses;
-  if (c.courses) d.innerHTML = `<span class="cf-dot"></span><div>Data from <b>${esc(c.file || 'the course sheet')}</b>, added ${esc(fmtDate(c.updated))}.${c.intakeYear ? ` Fees and intakes are listed for <b>${esc(c.intakeYear)}</b>.` : ''} Check the course page before quoting a fee or date to a student.</div>`;
+  if (c.courses) d.innerHTML = `<span class="cf-dot"></span><div>Data from <b>${esc(c.file || 'the course sheet')}</b>, added ${esc(fmtDate(c.updated))}.${c.intakeYear ? ` Fees and intakes are listed for <b>${esc(c.intakeYear)}</b>.` : ''} ${c.currency === '' ? ' The sheet gives fees as plain numbers with no currency.' : ''}${c.country !== 'United Kingdom' ? ' Living costs are not in our data for this country, so totals show tuition only.' : ''} Check the course page before quoting a fee or date to a student.</div>`;
 }
 function fmtDate(iso) { if (!iso) return 'on an unknown date'; const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); }
 function tab(t) {
@@ -14834,7 +14846,7 @@ function search() {
   if (!S.set) return;
   const seq = (S.seq = (S.seq || 0) + 1);
   $('cfList').style.opacity = '.55';
-  run('searchCourses', profile()).then(r => { if (seq !== S.seq) return; S.res = r; draw(); })
+  run('searchCourses', profile()).then(r => { if (seq !== S.seq) return; S.res = r; S.cur = r.currency === undefined ? 'GBP' : r.currency; S.living = r.living; draw(); })
     .catch(e => { if (seq !== S.seq) return; $('cfList').style.opacity = ''; $('cfList').innerHTML = `<div class="sx-card cf-empty">${esc(msg(e))}</div>`; });
 }
 function draw() {
@@ -14851,7 +14863,7 @@ function draw() {
   if (!groups.length) { $('cfList').innerHTML = '<div class="sx-card cf-empty">No course fits this profile. Try a higher fee, fewer course words, or any intake month.</div>'; return; }
   $('cfList').innerHTML = groups.map((g, gi) => `<details class="sx-card cf-uni" ${gi < 2 ? 'open' : ''}><summary>
 <div class="cf-qs ${g.qs == null ? 'na' : ''}"><b>${g.qs == null ? 'n/a' : g.qs}</b>QS</div>
-<div><div class="cf-un">${esc(g.name)}${g.partner ? '<span class="cf-route direct">Partner</span>' : g.route === 'aggregator' ? `<span class="cf-route agg">Via ${esc(g.aggregator || 'aggregator')}</span>` : ''}${g.focus ? '<span class="cf-route focus">Focus</span>' : ''}${g.focus && g.focus.deadline ? `<span class="cf-days">${esc(daysTo(g.focus.deadline))}</span>` : ''}</div><div class="cf-uf"><span>${g.minFee === g.maxFee ? gbp(g.minFee) : gbp(g.minFee) + ' – ' + gbp(g.maxFee)}</span>${g.minIe != null ? `<span>IELTS from ${g.minIe}</span>` : ''}<span>${['safe', 'likely', 'ambitious'].filter(x => g.tiers[x]).map(x => g.tiers[x] + ' ' + TIER[x].toLowerCase()).join(' · ')}</span></div></div>
+<div><div class="cf-un">${logo((g.courses[0] || {}).link, g.name, 26)}${esc(g.name)}${g.partner ? '<span class="cf-route direct">Partner</span>' : g.route === 'aggregator' ? `<span class="cf-route agg">Via ${esc(g.aggregator || 'aggregator')}</span>` : ''}${g.focus ? '<span class="cf-route focus">Focus</span>' : ''}${g.focus && g.focus.deadline ? `<span class="cf-days">${esc(daysTo(g.focus.deadline))}</span>` : ''}</div><div class="cf-uf"><span>${g.minFee === g.maxFee ? gbp(g.minFee) : gbp(g.minFee) + ' – ' + gbp(g.maxFee)}</span>${g.minIe != null ? `<span>IELTS from ${g.minIe}</span>` : ''}<span>${['safe', 'likely', 'ambitious'].filter(x => g.tiers[x]).map(x => g.tiers[x] + ' ' + TIER[x].toLowerCase()).join(' · ')}</span></div></div>
 <div class="cf-cnt">${g.partner ? `<button type="button" class="um-btn" data-cf-share="${esc(g.name)}">Share</button>` : ''}${g.count} course${g.count === 1 ? '' : 's'} ${CHEV}</div></summary>
 ${g.focus ? `<div class="cf-fstrip"><div><b>Focus push:</b> ${esc(g.focus.title)} · ${esc(daysTo(g.focus.ends, 'push ends'))}${(g.focus.points || []).length ? '<ul>' + g.focus.points.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>' : ''}</div></div>` : ''}
 <div>${g.courses.map(c => course(g, c)).join('')}${g.count > g.courses.length && !S.tierView ? `<div class="cf-more">${g.count - g.courses.length} more here. Add a course word to narrow them down.</div>` : ''}</div></details>`).join('');
@@ -14873,7 +14885,7 @@ function course(g, c) {
 <div class="cf-side"><span class="cf-fee">${gbp(c.fee)}</span><div class="acts">${c.tier === 'ambitious' || c.tier === 'fail' ? `<button type="button" class="um-btn" data-cf-ask="${esc(c.key)}">Ask manager</button>` : ''}<button type="button" class="um-btn cf-cmp ${inC ? 'on' : ''}" data-cf-cmp="${esc(c.key)}">${inC ? 'In compare' : 'Compare'}</button><button type="button" class="um-btn cf-star ${inS ? 'on' : ''}" data-cf-k="${esc(c.key)}">${inS ? 'Shortlisted' : 'Shortlist'}</button></div></div>
 <details class="cf-req"><summary>Entry requirements</summary><p>${esc(c.elig || 'Not listed')}</p>${/^https?:/.test(c.link || '') ? `<p><a href="${esc(c.link)}" target="_blank" rel="noopener">Open course page</a></p>` : ''}</details></div>`;
 }
-function find(k) { for (const g of (S.res ? S.res.groups : [])) { const c = g.courses.find(x => x.key === k); if (c) return Object.assign({ uni: g.name, qs: g.qs, partner: g.partner }, c); } return null; }
+function find(k) { for (const g of (S.res ? S.res.groups : [])) { const c = g.courses.find(x => x.key === k); if (c) return Object.assign({ uni: g.name, qs: g.qs, partner: g.partner, cur: curNow() }, c); } return null; }
 function onClick(e) {
   const t = e.target.closest('[data-cf-k],[data-cf-cmp],[data-cf-ask],[data-cf-tier],[data-cf-load],[data-cf-rm],[data-cf-share],[data-cf-uedit],[data-cf-read],[data-cf-pedit],[data-cf-rep],[data-cf-pend]'); if (!t) return;
   e.preventDefault();
@@ -14895,7 +14907,7 @@ function tray() {
   $('cfTL').textContent = S.short.length ? S.short.map(s => s.uni + ' — ' + s.degree).join(' · ') : 'Press Shortlist on the courses you want to send.';
 }
 function text() {
-  return ($('cfCountry').value || 'UK') + ' course shortlist' + (S.lead ? ' for ' + S.lead.name : '') + '\n' + S.short.map((s, i) => `\n${i + 1}. ${s.uni}${s.qs != null ? ' (QS ' + s.qs + ')' : ''}\n${s.degree}\n${s.campus} · Tuition ${gbp(s.fee)} · IELTS ${s.ielts == null ? 'not listed' : s.ielts} · Intake ${s.intake || 'not listed'}${s.firstYear != null ? '\nFirst year about ' + gbp(s.firstYear) + ' with living costs' : ''}${/^https?:/.test(s.link || '') ? '\n' + s.link : ''}`).join('\n');
+  return ($('cfCountry').value || 'UK') + ' course shortlist' + (S.lead ? ' for ' + S.lead.name : '') + '\n' + S.short.map((s, i) => `\n${i + 1}. ${s.uni}${s.qs != null ? ' (QS ' + s.qs + ')' : ''}\n${s.degree}\n${s.campus} · Tuition ${gbp(s.fee, s.cur)} · IELTS ${s.ielts == null ? 'not listed' : s.ielts} · Intake ${s.intake || 'not listed'}${s.firstYear != null ? '\nFirst year about ' + gbp(s.firstYear, s.cur) + ' with living costs' : ''}${/^https?:/.test(s.link || '') ? '\n' + s.link : ''}`).join('\n');
 }
 function need(lead) {
   if (!S.short.length) { toast('Shortlist a course first', true); return false; }
@@ -14903,7 +14915,7 @@ function need(lead) {
   return true;
 }
 function busy(fn) { if (S.busy) return; S.busy = true; fn().then(() => { S.busy = false; }, () => { S.busy = false; }); }
-function items() { return S.short.map(s => ({ uni: s.uni, qs: s.qs, degree: s.degree, campus: s.campus, fee: s.fee, appFee: s.appFee, ielts: s.ielts, band: s.band, intake: s.intake, months: s.months, link: s.link, tier: s.tier, firstYear: s.firstYear })); }
+function items() { return S.short.map(s => ({ cur: s.cur === undefined ? curNow() : s.cur, uni: s.uni, qs: s.qs, degree: s.degree, campus: s.campus, fee: s.fee, appFee: s.appFee, ielts: s.ielts, band: s.band, intake: s.intake, months: s.months, link: s.link, tier: s.tier, firstYear: s.firstYear })); }
 function copy() {
   if (!need()) return;
   try { navigator.clipboard.writeText(text()).then(() => toast('Shortlist copied. Paste it in WhatsApp.'), () => toast('Copy did not work in this browser', true)); } catch (e) { toast('Copy did not work in this browser', true); }
@@ -14927,13 +14939,13 @@ function ask(c) {
 function pdf() {
   if (!need()) return;
   const w = window.open('', '_blank'); if (!w) { toast('Allow pop-ups to download the PDF', true); return; }
-  const rows = S.short.map((s, i) => `<tr><td class="n">${i + 1}</td><td><b>${esc(s.uni)}</b>${s.qs != null ? ' <span class="m">QS ' + s.qs + '</span>' : ''}<div>${esc(s.degree)}</div><div class="m">${esc(s.campus)} · Intake ${esc(s.intake || 'not listed')} · IELTS ${s.ielts == null ? 'not listed' : s.ielts}</div></td><td class="r">${gbp(s.fee)}${s.firstYear != null ? '<div class="m">First year ' + gbp(s.firstYear) + '</div>' : ''}</td></tr>`).join('');
+  const rows = S.short.map((s, i) => `<tr><td class="n">${i + 1}</td><td><b>${esc(s.uni)}</b>${s.qs != null ? ' <span class="m">QS ' + s.qs + '</span>' : ''}<div>${esc(s.degree)}</div><div class="m">${esc(s.campus)} · Intake ${esc(s.intake || 'not listed')} · IELTS ${s.ielts == null ? 'not listed' : s.ielts}</div></td><td class="r">${gbp(s.fee, s.cur)}${s.firstYear != null ? '<div class="m">First year ' + gbp(s.firstYear, s.cur) + '</div>' : ''}</td></tr>`).join('');
   w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Course shortlist${S.lead ? ' - ' + esc(S.lead.name) : ''}</title><style>
 body{font:14px/1.45 Arial,sans-serif;color:#141826;margin:36px}header{display:flex;justify-content:space-between;align-items:center;background:#161B33;color:#fff;padding:18px 22px;border-radius:12px}
 header img{height:34px}h1{font:500 24px Georgia,serif;margin:18px 0 4px}.m{color:#667085;font-size:12px}table{width:100%;border-collapse:collapse;margin-top:14px}td{padding:12px 8px;border-bottom:1px solid #E4E7EC;vertical-align:top}
 td.n{width:24px;color:#667085}td.r{text-align:right;white-space:nowrap;font-weight:700}footer{margin-top:22px;font-size:11.5px;color:#667085}@media print{body{margin:14mm}}</style></head><body>
 <header><img src="${LOGO}" alt="Akbar Study Abroad"><span>Course shortlist</span></header><h1>${S.lead ? esc(S.lead.name) : 'Your course shortlist'}</h1><div class="m">Prepared ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-<table>${rows}</table><footer>First-year cost adds the UKVI living-cost amount for the course length (up to 9 months). Fees and intakes come from our course list; your counsellor confirms them with the university before you apply.</footer>
+<table>${rows}</table><footer>${S.living ? 'First-year cost adds the UKVI living-cost amount for the course length (up to 9 months). ' : ''}Fees and intakes come from our course list; your counsellor confirms them with the university before you apply.</footer>
 <script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`);
   w.document.close();
 }
@@ -14943,15 +14955,15 @@ function drawCompare() {
   if (!S.cmp.length) { p.innerHTML = '<div class="sx-card cf-empty">Press Compare on up to 3 courses to see them side by side.</div>'; return; }
   const lo = (f, c) => { const v = S.cmp.map(f).filter(x => x != null); return v.length > 1 && f(c) != null && f(c) === Math.min(...v); };
   const row = (label, f, fmt, best) => `<tr><th>${label}</th>${S.cmp.map(c => `<td class="${best && lo(f, c) ? 'best' : ''}">${fmt ? fmt(f(c), c) : esc(f(c) == null || f(c) === '' ? 'Not listed' : f(c))}</td>`).join('')}</tr>`;
-  p.innerHTML = `<div class="sx-card"><div class="cf-cmpwrap"><table class="cf-cmpt"><thead><tr><th></th>${S.cmp.map(c => `<td>${esc(c.uni)}<div class="cf-hint" style="font-weight:400;">${esc(c.degree)}</div><button type="button" class="cf-link" data-cf-rm="${esc(c.key)}">Remove</button></td>`).join('')}</tr></thead><tbody>
+  p.innerHTML = `<div class="sx-card"><div class="cf-cmpwrap"><table class="cf-cmpt"><thead><tr><th></th>${S.cmp.map(c => `<td>${logo(c.link, c.uni, 44)}${esc(c.uni)}<div class="cf-hint" style="font-weight:400;">${esc(c.degree)}</div><button type="button" class="cf-link" data-cf-rm="${esc(c.key)}">Remove</button></td>`).join('')}</tr></thead><tbody>
 ${row('Fit', c => c.tier, v => `<span class="cf-tier ${v}">${TIER[v]}</span>`)}
 ${row('Why', c => c.reasons.concat(c.checks).join(', ') || 'Meets every listed rule')}
 ${row('QS rank', c => c.qs, null, true)}
 ${row('Campus', c => c.campus)}
-${row('Tuition', c => c.fee, v => gbp(v), true)}
-${row('Application fee', c => c.appFee, v => v ? gbp(v) : 'None listed')}
-${row('Living costs', c => c.living, (v, c) => gbp(v) + ' <span class="cf-hint">(' + c.livingMonths + ' months, ' + (c.london ? 'London' : 'outside London') + ')</span>')}
-${row('First year total', c => c.firstYear, v => gbp(v), true)}
+${row('Tuition', c => c.fee, (v, c) => gbp(v, c.cur), true)}
+${row('Application fee', c => c.appFee, (v, c) => v ? gbp(v, c.cur) : 'None listed')}
+${row('Living costs', c => c.living, (v, c) => v == null ? '<span class="cf-hint">Not in our data for this country</span>' : gbp(v, c.cur) + ' <span class="cf-hint">(' + c.livingMonths + ' months, ' + (c.london ? 'London' : 'outside London') + ')</span>')}
+${row('First year total', c => c.firstYear, (v, c) => v == null ? (c.fee != null ? gbp(c.fee + (c.appFee || 0), c.cur) + ' <span class="cf-hint">tuition and application only</span>' : 'Not listed') : gbp(v, c.cur), true)}
 ${row('IELTS', c => c.ielts, (v, c) => v == null ? 'Not listed' : v + (c.band != null ? ' · no band below ' + c.band : ''), true)}
 ${row('Minimum %', c => c.needPct, (v, c) => v == null ? 'Not stated' : v + '%' + (c.pctSrc !== 'sheet' ? ' (asks ' + c.pctSrc + ')' : ''))}
 ${row('Length', c => c.months, v => v ? (v % 12 === 0 ? v / 12 + (v > 12 ? ' years' : ' year') : v + ' months') : 'Not listed')}
@@ -14988,7 +15000,9 @@ function drawSettings() {
   const partners = new Set(s.partners || []);
   p.innerHTML = `<div class="cf-set"><div>
 <div class="sx-card"><h3>Course data by country</h3>${(s.countries || []).map(c => `<div class="cf-srow"><div><b>${esc(c.country)}</b><div class="m">${c.courses ? c.courses.toLocaleString('en-GB') + ' courses · ' + c.unis + ' universities · ' + esc(c.file) + ' · added ' + esc(fmtDate(c.updated)) : 'No sheet yet'}</div></div><button type="button" class="um-btn" data-cf-up="${esc(c.country)}">${c.courses ? 'Replace sheet' : 'Add sheet'}</button></div>`).join('')}
-<input type="file" id="cfFile" accept=".xlsx" hidden><div class="cf-hint" style="margin-top:8px;">Upload the Excel file in the same layout as the UK sheet. It goes to a private Drive folder and replaces that country's courses.</div></div>
+<input type="file" id="cfFile" accept=".xlsx" hidden><input type="file" id="cfFiles" accept=".xlsx" multiple hidden>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><button type="button" class="um-btn primary" id="cfUpMany">Upload several countries</button></div>
+<div class="cf-hint" style="margin-top:8px;">Upload the Excel file in the same layout as the UK sheet. It goes to a private Drive folder and replaces that country's courses. With several files, each sheet's country column decides the country.</div></div>
 <div class="sx-card" style="margin-top:16px;"><h3>Rules</h3>
 <div class="cf-srow" style="border-top:0;"><div><b>Indian % to UK class</b> <span class="cf-pill ${r.approved ? 'ok' : 'draft'}">${r.approved ? 'Approved' : 'Draft'}</span><div class="m">Used when a course asks for a 2:1 or 2:2 and gives no %.</div></div></div>
 <div class="cf-two"><div class="cf-f"><label for="cfR21">2:1 from %</label><input type="number" id="cfR21" min="40" max="90" value="${esc(r.c21)}"></div><div class="cf-f"><label for="cfR22">2:2 from %</label><input type="number" id="cfR22" min="35" max="80" value="${esc(r.c22)}"></div></div>
@@ -15002,11 +15016,34 @@ function drawSettings() {
   $('cfGoUnis').onclick = () => tab('unis');
   p.querySelectorAll('[data-cf-up]').forEach(b => b.onclick = () => { S.upCountry = b.dataset.cfUp; $('cfFile').click(); });
   $('cfFile').onchange = upload;
+  $('cfUpMany').onclick = () => $('cfFiles').click();
+  $('cfFiles').onchange = uploadMany;
   $('cfSetSave').onclick = () => {
     const ns = { classRule: { c21: Number($('cfR21').value), c22: Number($('cfR22').value), approved: $('cfRok').checked }, levelMode: $('cfLvMode').value, publicFinder: $('cfPub').value === '1',
       partners: s.partners || [] };
     busy(() => run('saveCourseFinderSettings', ns).then(() => { Object.assign(S.set, ns); toast('Saved'); search(); }).catch(e => toast(msg(e), true)));
   };
+}
+function uploadMany() {
+  const files = Array.from($('cfFiles').files).filter(f => /\.xlsx$/i.test(f.name)); $('cfFiles').value = '';
+  if (!files.length) { toast('Pick one or more .xlsx files', true); return; }
+  const big = files.find(f => f.size > 20e6); if (big) { toast(big.name + ' is over 20 MB', true); return; }
+  const st = files.map(f => ({ name: f.name, state: 'Waiting', note: '' }));
+  const m = modal('Uploading ' + files.length + ' course sheet' + (files.length === 1 ? '' : 's'), '<div id="cfUpList"></div><div class="cf-hint" style="margin-top:10px;">Keep this tab open. Big sheets (USA, UK) take a minute or two each.</div>');
+  const draw = () => { const el = m.el.querySelector('#cfUpList'); if (el) el.innerHTML = st.map(x => `<div class="cf-srow"><div><b>${esc(x.name)}</b>${x.note ? `<div class="m">${esc(x.note)}</div>` : ''}</div><span class="cf-pill ${x.state === 'Loaded' ? 'ok' : x.state === 'Failed' ? 'draft' : ''}">${esc(x.state)}</span></div>`).join(''); };
+  const read = f => new Promise((res, rej) => { const rd = new FileReader(); rd.onload = () => res(String(rd.result).split(',')[1]); rd.onerror = () => rej(new Error('Could not read the file')); rd.readAsDataURL(f); });
+  let i = 0, ok = 0;
+  const next = () => {
+    if (i >= files.length) {
+      toast(ok + ' of ' + files.length + ' sheets loaded', ok < files.length);
+      return run('getCourseFinderSettings').then(s => { const cur = $('cfCountry').value; S.set = s; $('cfCountry').innerHTML = (s.countries || []).map(c => `<option ${c.courses ? '' : 'disabled'}>${esc(c.country)}</option>`).join(''); $('cfCountry').value = cur || ((s.countries || []).find(c => c.courses) || {}).country || ''; meta(); drawSettings(); search(); }).catch(() => {});
+    }
+    const x = st[i], f = files[i]; x.state = 'Uploading'; draw();
+    return read(f).then(b64 => run('uploadCourseSheet', 'auto', f.name, b64)).then(r => {
+      ok++; x.state = 'Loaded'; x.note = r.country + ': ' + r.courses.toLocaleString('en-GB') + ' courses at ' + r.unis + ' universities' + (r.currency ? ' · fees in ' + r.currency : ' · currency not stated in the sheet');
+    }).catch(e => { x.state = 'Failed'; x.note = msg(e); }).then(() => { draw(); i++; return next(); });
+  };
+  draw(); next();
 }
 function upload() {
   const f = $('cfFile').files[0]; $('cfFile').value = ''; if (!f) return;
