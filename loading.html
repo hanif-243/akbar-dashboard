@@ -6,128 +6,140 @@
 <title>Akbar Study Abroad · Lead Ops</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
+/* v168d: departures board. Our students' flights depart one by one while the dashboard loads; your row flips last. */
 :root {
-  --bg: #100E1B; --ink: #FFFFFF; --muted: rgba(255,255,255,.58); --faint: rgba(255,255,255,.14);
-  --red: #F22F3D; --gold: #F3CF8E;
-  --sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --bg: #0B0A12; --panel: #0F0E15; --cell: #1C1A25; --ink: #F4F1E8; --muted: rgba(255,255,255,.45);
+  --red: #F22F3D; --gold: #F3CF8E; --green: #3FB37F;
   --mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  --c: clamp(15px, 2.1vw, 24px);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
-body {
-  background: radial-gradient(70% 55% at 50% 0%, rgba(242,47,61,.16), transparent 70%),
-              radial-gradient(60% 50% at 50% 110%, rgba(62,107,214,.18), transparent 70%), var(--bg);
-  color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased;
-  display: grid; place-items: center; overflow: hidden; padding: 24px 16px;
-}
-.grid {
-  position: fixed; inset: 0; pointer-events: none;
-  background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px); background-size: 26px 26px;
-  -webkit-mask-image: radial-gradient(ellipse 55% 50% at 50% 50%, #000 0%, transparent 75%);
-          mask-image: radial-gradient(ellipse 55% 50% at 50% 50%, #000 0%, transparent 75%);
-}
-main { position: relative; width: min(440px, 100%); text-align: center; animation: rise .8s cubic-bezier(.16,1,.3,1) both; }
-@keyframes rise { from { opacity: 0; transform: translateY(10px); } }
-.logo { display: block; height: 52px; width: auto; margin: 0 auto 36px; user-select: none; -webkit-user-drag: none; }
-.logo-text { display: none; font-weight: 600; font-size: 26px; letter-spacing: .14em; margin-bottom: 36px; }
+body { background: radial-gradient(90% 70% at 50% 42%, #16131F 0%, var(--bg) 70%); color: var(--ink); font-family: var(--mono);
+  -webkit-font-smoothing: antialiased; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; padding: 24px 16px; }
+.logo { position: fixed; top: max(28px, env(safe-area-inset-top)); left: 32px; height: 30px; width: auto; user-select: none; -webkit-user-drag: none; }
+.logo-text { display: none; position: fixed; top: 28px; left: 32px; font-weight: 600; font-size: 18px; letter-spacing: .14em; }
 .logo-text span { color: var(--red); }
-
-.route { position: relative; height: 92px; margin: 0 auto; width: 100%; max-width: 380px; }
-.route svg { width: 100%; height: 100%; overflow: visible; }
-.track { fill: none; stroke: var(--faint); stroke-width: 1.5; stroke-dasharray: 3 6; }
-.trail { fill: none; stroke: var(--red); stroke-width: 2.2; stroke-linecap: round; }
-.pin { fill: var(--bg); stroke: rgba(255,255,255,.7); stroke-width: 1.5; }
-.pin.to { stroke: var(--gold); }
-.code { font: 500 11px var(--mono); letter-spacing: .12em; fill: var(--muted); }
-#plane { transition: opacity .3s ease; }
-
-h1 { font-weight: 600; font-size: 22px; letter-spacing: -.01em; margin-top: 26px; }
-.status { margin-top: 8px; font-size: 14px; color: var(--muted); min-height: 1.4em; transition: opacity .25s ease; }
-.bar { margin: 22px auto 0; width: 160px; height: 3px; border-radius: 3px; background: var(--faint); overflow: hidden; }
-.bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--red), #FF6B75); border-radius: 3px; transition: width .35s ease; }
-.foot { position: fixed; left: 0; right: 0; bottom: max(20px, env(safe-area-inset-bottom)); text-align: center; font: 500 10.5px var(--mono); letter-spacing: .16em; color: rgba(255,255,255,.32); }
+main { width: min(940px, 100%); min-width: 0; animation: rise .7s cubic-bezier(.16,1,.3,1) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+.board { background: var(--panel); border: 1px solid rgba(255,255,255,.08); border-radius: 14px; padding: 20px 24px 14px; box-shadow: 0 30px 80px rgba(0,0,0,.55); }
+.head { display: flex; justify-content: space-between; font-weight: 500; font-size: 12.5px; letter-spacing: .2em; color: var(--gold); margin-bottom: 12px; }
+.row { display: grid; grid-template-columns: 92px max-content max-content minmax(0, 1fr); gap: 32px; align-items: center; padding: 7px 0; border-top: 1px solid rgba(255,255,255,.06); }
+.code, .st { font-weight: 600; font-size: 12.5px; letter-spacing: .1em; color: var(--muted); white-space: nowrap; transition: color .3s ease; }
+.st { text-align: right; }
+.fl { display: flex; gap: 3px; }
+.fl i { font-style: normal; width: calc(var(--c) * .95); height: calc(var(--c) * 1.4); background: var(--cell); border-radius: 4px; display: grid; place-items: center;
+  font-weight: 600; font-size: calc(var(--c) * .78); color: var(--ink); position: relative; }
+.fl i::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--bg); }
+.fl i.flip { animation: flip .09s ease-in-out; }
+@keyframes flip { 50% { transform: scaleY(.15); } }
+.fl.dim i { color: rgba(244,241,232,.38); }
+.st.boarding { color: var(--gold); } .st.departed { color: var(--green); } .st.gate { color: var(--red); }
+.row.you { background: rgba(242,47,61,.07); border-radius: 8px; padding-left: 8px; padding-right: 8px; margin: 2px -8px 0; border-top-color: transparent; transition: background .4s ease; }
+.row.you .code { color: var(--red); }
+.row.you.open { background: rgba(242,47,61,.16); }
+.under { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; font-weight: 500; font-size: 12.5px; letter-spacing: .06em; color: var(--muted); }
+.under b { color: var(--ink); font-weight: 500; }
+#status { transition: opacity .2s ease; }
+.foot { position: fixed; left: 0; right: 0; bottom: max(20px, env(safe-area-inset-bottom)); text-align: center; font-weight: 500; font-size: 10.5px; letter-spacing: .16em; color: rgba(255,255,255,.3); }
 body.done main { animation: none; transition: opacity .45s ease, transform .45s ease; opacity: 0; transform: scale(.985); }
-@media (prefers-reduced-motion: reduce) { main { animation: none; } .bar i { transition: none; } }
+@media (max-width: 720px) {
+  .row { grid-template-columns: max-content minmax(0, 1fr); gap: 10px; } .row .code, .row .when, .head .wide { display: none; } .code, .st { font-size: 11px; letter-spacing: .06em; }
+  .board { padding: 16px 14px 10px; } .under { flex-direction: column; gap: 4px; } :root { --c: clamp(13px, 3.6vw, 18px); }
+}
+@media (prefers-reduced-motion: reduce) { main { animation: none; } .fl i.flip { animation: none; } }
 </style>
 </head>
 <body>
-<div class="grid" aria-hidden="true"></div>
+<img class="logo" id="logo" src="portal/logo.png" alt="Akbar Study Abroad">
+<div class="logo-text" id="logoText">AKB<span>A</span>R</div>
 <main role="status" aria-live="polite">
-  <img class="logo" id="logo" src="portal/logo.png" alt="Akbar Study Abroad">
-  <div class="logo-text" id="logoText">AKB<span>A</span>R</div>
-  <div class="route" aria-hidden="true">
-    <svg viewBox="0 0 380 92" preserveAspectRatio="xMidYMid meet">
-      <path id="arc" class="track" d="M24 74 Q190 -14 356 74"/>
-      <path id="trail" class="trail" d="M24 74 Q190 -14 356 74"/>
-      <circle class="pin" cx="24" cy="74" r="5"/>
-      <circle class="pin to" cx="356" cy="74" r="5"/>
-      <text class="code" x="24" y="92" text-anchor="middle">YOU</text>
-      <text class="code" x="356" y="92" text-anchor="middle">LEADS</text>
-      <g id="plane"><path d="M0 -1.6 L-7 -6.5 L-5 0 L-7 6.5 L0 1.6 L9 1.2 Q11 0 9 -1.2 Z" fill="#fff"/></g>
-    </svg>
+  <div class="board" aria-hidden="true">
+    <div class="head"><span>DEPARTURES<span class="wide"> · AKBAR STUDY ABROAD</span></span><span id="clock">--:--</span></div>
+    <div id="rows"></div>
   </div>
-  <h1 id="hello">Welcome back</h1>
-  <p class="status" id="status">Signing you in…</p>
-  <div class="bar"><i id="bar"></i></div>
+  <div class="under"><span id="hello">Welcome back</span><span><b id="status">Signing you in…</b></span></div>
 </main>
 <div class="foot">AKBAR STUDY ABROAD · LEAD OPS</div>
 <script>
 (function () {
   'use strict';
   var embedded = /[?&]embed=1/.test(location.search);
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var FLIGHTS = [['AK 101', 'LONDON', 'SEP'], ['AK 204', 'TORONTO', 'JAN'], ['AK 317', 'DUBLIN', 'SEP'], ['AK 422', 'SYDNEY', 'FEB'], ['AK 509', 'FRANKFURT', 'OCT']];
   var STEPS = ['Signing you in…', 'Loading your leads…', 'Getting follow-ups ready…', 'Checking what needs a call today…', 'Almost there…'];
-  var arc = document.getElementById('arc'), trail = document.getElementById('trail'), plane = document.getElementById('plane');
-  var bar = document.getElementById('bar'), status = document.getElementById('status');
-  var len = arc.getTotalLength();
-  trail.style.strokeDasharray = len; trail.style.strokeDashoffset = len;
-
-  var h = new Date().getHours();
-  document.getElementById('hello').textContent = h < 5 ? 'Welcome back' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  var W = 9, ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  var rowsEl = document.getElementById('rows'), statusEl = document.getElementById('status');
 
   var logo = document.getElementById('logo');
   logo.onerror = function () { logo.style.display = 'none'; document.getElementById('logoText').style.display = 'block'; };
+  var h = new Date().getHours();
+  document.getElementById('hello').textContent = h < 5 ? 'Welcome back' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  function clock() { var d = new Date(); document.getElementById('clock').textContent = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
+  clock(); setInterval(clock, 15000);
 
-  var p = 0, target = 0, finishing = false, step = -1, start = Date.now();
-  function setStep(i) {
-    if (i === step || i >= STEPS.length) return;
-    step = i; status.style.opacity = 0;
-    setTimeout(function () { status.textContent = STEPS[i]; status.style.opacity = 1; }, 180);
+  function cells(n, dim) { var s = '<div class="fl' + (dim ? ' dim' : '') + '">'; for (var i = 0; i < n; i++) s += '<i>&nbsp;</i>'; return s + '</div>'; }
+  var rows = FLIGHTS.map(function (f) {
+    var r = document.createElement('div'); r.className = 'row';
+    r.innerHTML = '<span class="code">' + f[0] + '</span>' + cells(W) + '<span class="when">' + cells(3, true) + '</span><span class="st">ON TIME</span>';
+    rowsEl.appendChild(r); return r;
+  });
+  var you = document.createElement('div'); you.className = 'row you';
+  you.innerHTML = '<span class="code">YOU</span>' + cells(W) + '<span class="when">' + cells(3) + '</span><span class="st">CHECK-IN</span>';
+  rowsEl.appendChild(you);
+
+  /** Split-flap: each cell spins through letters and settles on its own character, left to right. */
+  function flap(fl, text, delay, done) {
+    var cs = fl.querySelectorAll('i'), left = cs.length;
+    for (var i = 0; i < cs.length; i++) (function (c, ch, k) {
+      var spins = reduce ? 0 : 3 + Math.floor(Math.random() * 4) + k;
+      setTimeout(function step() {
+        if (spins-- > 0) { c.textContent = ABC[Math.floor(Math.random() * 26)]; c.classList.remove('flip'); void c.offsetWidth; c.classList.add('flip'); setTimeout(step, 55); return; }
+        c.innerHTML = ch === ' ' ? '&nbsp;' : ch; c.classList.remove('flip'); void c.offsetWidth; c.classList.add('flip');
+        if (--left === 0 && done) done();
+      }, delay + k * 18);
+    })(cs[i], text.charAt(i) || ' ', i);
   }
-  function draw() {
-    var at = arc.getPointAtLength(len * p), ahead = arc.getPointAtLength(Math.min(len, len * p + 1));
-    var ang = Math.atan2(ahead.y - at.y, ahead.x - at.x) * 180 / Math.PI;
-    plane.setAttribute('transform', 'translate(' + at.x.toFixed(1) + ' ' + at.y.toFixed(1) + ') rotate(' + ang.toFixed(1) + ')');
-    trail.style.strokeDashoffset = (len * (1 - p)).toFixed(1);
-    bar.style.width = (p * 100).toFixed(1) + '%';
+  function setSt(row, txt, cls) { var s = row.querySelector('.st'); s.textContent = txt; s.className = 'st' + (cls ? ' ' + cls : ''); }
+
+  rows.forEach(function (r, i) { flap(r.querySelector('.fl'), FLIGHTS[i][1], 120 + i * 110); flap(r.querySelector('.when .fl'), FLIGHTS[i][2], 260 + i * 110); });
+  flap(you.querySelector('.fl'), 'LEAD OPS', 120 + rows.length * 110); flap(you.querySelector('.when .fl'), '···', 260 + rows.length * 110);
+
+  var start = Date.now(), departed = 0, step = -1, finishing = false, ended = false, timer;
+  function setStep(i) {
+    if (i === step || i >= STEPS.length) return; step = i; statusEl.style.opacity = 0;
+    setTimeout(function () { statusEl.textContent = STEPS[i]; statusEl.style.opacity = 1; }, 160);
   }
   function tick() {
     var t = (Date.now() - start) / 1000;
-    if (!finishing) target = 0.92 * (1 - Math.exp(-t / 2.6)); // eases toward 92 % until the dashboard says the leads are in
-    p += (target - p) * (finishing ? 0.2 : 0.08);
-    if (!finishing) setStep(Math.min(STEPS.length - 1, Math.floor(t / 1.6)));
-    draw();
-    if (finishing && p > 0.995) { p = 1; draw(); done(); return; }
-    requestAnimationFrame(tick);
+    setStep(Math.min(STEPS.length - 1, Math.floor(t / 1.6)));
+    var want = Math.min(rows.length - 1, Math.floor((t - 0.9) / 1.3)); // the last flight waits for you
+    while (departed <= want) { if (departed > 0) setSt(rows[departed - 1], 'DEPARTED', 'departed'); setSt(rows[departed], 'BOARDING', 'boarding'); departed++; }
+    if (t > 2.4 && you.querySelector('.st').textContent === 'CHECK-IN') setSt(you, 'BOARDING', 'boarding');
   }
-  var ended = false;
+  timer = setInterval(tick, 200);
+
+  function finish() {
+    if (finishing) return; finishing = true; clearInterval(timer);
+    rows.forEach(function (r) { setSt(r, 'DEPARTED', 'departed'); });
+    statusEl.textContent = 'Ready';
+    flap(you.querySelector('.when .fl'), 'NOW', 0);
+    setSt(you, 'GATE OPEN ▸', 'gate'); you.classList.add('open');
+    setTimeout(done, reduce ? 200 : 650);
+  }
   function done() {
     if (ended) return; ended = true;
-    status.textContent = 'Ready';
-    setTimeout(function () {
-      document.body.classList.add('done');
-      try { if (embedded) parent.postMessage('akbar:intro-done', '*'); } catch (e) { /* not in a frame */ }
-      if (!embedded) setTimeout(function () { document.body.classList.remove('done'); p = 0; finishing = false; ended = false; step = -1; start = Date.now(); requestAnimationFrame(tick); }, 1200);
-    }, 350);
+    document.body.classList.add('done');
+    try { if (embedded) parent.postMessage('akbar:intro-done', '*'); } catch (e) { /* not in a frame */ }
+    if (!embedded) setTimeout(function () { location.reload(); }, 1600); // opened on its own: loop the preview
   }
-  function finish() { finishing = true; target = 1; }
 
-  draw(); requestAnimationFrame(tick);
   window.AkbarLoader = { finish: finish };
   addEventListener('message', function (e) { if (e.data === 'akbar:finish') finish(); });
   if (embedded) { try { parent.postMessage('akbar:hello', '*'); } catch (e) { /* not in a frame */ } }
-  else setTimeout(finish, 4500); // opened on its own: play once as a preview
+  else setTimeout(finish, 6500);
 })();
 </script>
 </body>
