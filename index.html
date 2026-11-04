@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
  
-window.AKBAR_BUILD = '3 Nov 2026 · v170';
+window.AKBAR_BUILD = '4 Nov 2026 · v171';
 
 
 (function () {
@@ -25287,9 +25287,9 @@ function runModal(r) {
 <div style="flex:1;min-width:180px;"><div class="pb-prog ${late ? 'late' : ''}"><i style="width:${r.pct}%"></i></div><div class="sx-sub" style="margin-top:4px;">${r.done} of ${r.total} done${left ? ' · ' + left + ' required left' : ' · ✓ all required items done'}${checks ? ' · <b style="color:#B7791F;">' + checks + ' upload' + (checks === 1 ? '' : 's') + ' to check</b>' : ''}</div></div>
 ${r.status === 'Complete' ? '<span class="pb-badge ok">✓ Complete</span>' : late ? '<span class="pb-badge bad">Overdue</span>' : ''}</div>
 <div class="sx-sub">${[r.country, r.level, r.branch, r.phone].filter(Boolean).map(esc).join(' · ')}${r.startedBy ? ' · started by ' + esc(r.startedBy) + ' ' + esc(fst(r.startedAt)) : ''}</div>
-<div class="pb-share"><div class="pb-share-h">📤 Share with the ${/^agent/.test(r.kind) ? 'agent' : 'student'} <span class="sx-sub">— a live link: they see their progress and upload each document${r.shareUrl ? ' · opened ' + r.shareViews + '×' : ''}</span></div>
+<div class="pb-share"><div class="pb-share-h">Share with the ${/^agent/.test(r.kind) ? 'agent' : 'student'} <span class="sx-sub">— a live link: they see their progress and upload each document${r.shareUrl ? ' · opened ' + r.shareViews + '×' : ''}</span></div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">${canBrand ? `<select id="pbShB" class="pb-in" style="width:auto;padding:6px 8px;"><option value="akbar" ${r.shareBrand !== 'agent' ? 'selected' : ''}>Akbar brand</option><option value="agent" ${r.shareBrand === 'agent' ? 'selected' : ''}>White label — agent's brand</option></select><select id="pbShA" class="pb-in" style="width:auto;padding:6px 8px;${r.shareBrand === 'agent' ? '' : 'display:none;'}"><option value="">Choose agent…</option></select>` : ''}
-<button class="um-btn" id="pbShLink">🔗 Copy link</button><button class="um-btn sx-wa" id="pbShWa">💬 WhatsApp${ph.length >= 10 ? '' : ' text'}</button><button class="um-btn" id="pbShMail">✉ Email</button><button class="um-btn" id="pbShPdf">⬇ PDF</button><button class="um-btn" id="pbShOpen">👁 Preview</button></div></div>
+<button class="um-btn" id="pbShLink">Copy link</button><button class="um-btn sx-wa" id="pbShWa">WhatsApp</button><button class="um-btn" id="pbShMail">Email</button><button class="um-btn" id="pbShPdf">PDF</button><button class="um-btn" id="pbShOpen">Preview</button></div></div>
 <div id="pbItems" style="margin-top:8px;max-height:46vh;overflow:auto;padding-right:4px;"></div>
 <div class="sx-modal-actions" style="align-items:center;"><label style="font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;margin-right:auto;">Due <input type="date" id="pbRmDue" class="pb-in" style="width:auto;padding:5px 8px;" value="${esc(r.dueDate || '')}"></label>
 ${me.isLead || r.startedBy === me.name ? '<button class="um-btn" id="pbRmDel" style="color:var(--red);">Remove</button>' : ''}<button class="um-btn" id="pbRmCopy">Copy missing list</button></div>`, 760);
@@ -25317,36 +25317,53 @@ ${me.isLead || r.startedBy === me.name ? '<button class="um-btn" id="pbRmDel" st
   const fail = e => toast(errMsg(e), 'error');
   const copy = (t, msg) => { try { navigator.clipboard.writeText(t).then(() => toast(msg), () => prompt('Copy:', t)); } catch (e) { prompt('Copy:', t); } };
   $('pbShLink').onclick = () => share().then(s => copy(s.url, 'Link copied — paste it in chat, email or your landing page')).catch(fail);
-  $('pbShOpen').onclick = () => share().then(s => window.open(s.url, '_blank', 'noopener')).catch(fail);
-  $('pbShPdf').onclick = () => share().then(s => window.open(s.url + '&print=1', '_blank', 'noopener')).catch(fail);
-  $('pbShWa').onclick = () => share().then(s => {
+  
+  const openAfter = (mk, okMsg) => {
+    let w = null; try { w = window.open('', '_blank'); } catch (e) { w = null; }
+    if (w) { try { w.document.write('<title>Opening…</title><p style="font:15px Arial;color:#555;padding:24px;">Opening…</p>'); } catch (e) {   } }
+    share().then(s => {
+      const u = mk(s); if (!u) { if (w) w.close(); return; }
+      if (w && !w.closed) { try { w.opener = null; } catch (e) {   } w.location.href = u; if (okMsg) toast(okMsg); }
+      else { const a = document.createElement('a'); a.href = u; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); }
+    }).catch(e => { if (w) w.close(); fail(e); });
+  };
+  const waNum = n => { const d = digits(n); return d.length >= 10 ? (d.length === 10 ? '91' + d : d) : ''; };
+  $('pbShOpen').onclick = () => openAfter(s => s.url);
+  $('pbShPdf').onclick = () => openAfter(s => s.url + '&print=1');
+  $('pbShWa').onclick = () => openAfter(s => {
     const t = waText(r, s.brand, s.url);
-    if (ph.length >= 10) window.open('https:\x2F\x2Fwa.me\x2F' + (ph.length === 10 ? '91' + ph : ph) + '?text=' + encodeURIComponent(t), '_blank', 'noopener');
-    else copy(t, 'WhatsApp text copied — this checklist has no phone number');
-  }).catch(fail);
+    const to = waNum(r.phone) || (s.brand && s.brand.white ? waNum(s.brand.phone) : '');
+    const u = 'https:\x2F\x2Fwa.me\x2F' + to + '?text=' + encodeURIComponent(t);
+    return window.akWaUrl ? window.akWaUrl(u) : u;
+  }, ph.length >= 10 ? '' : 'No phone number on this checklist — choose the chat in WhatsApp');
   $('pbShMail').onclick = () => share().then(s => mailForm(r, s.brand)).catch(fail);
   $('pbRmDue').onchange = () => run('setPbRunDue', r.id, $('pbRmDue').value).then(nr => { Object.assign(r, nr); toast('Due date saved'); }).catch(fail);
   $('pbRmCopy').onclick = () => copy(missingText(r), 'Copied');
   const del = $('pbRmDel'); if (del) del.onclick = () => { if (!confirm('Remove this checklist? It is kept in the sheet as removed.')) return; run('deletePbRun', r.id).then(() => { closeModal(); toast('Removed'); if (P.runs) { P.runs.runs = P.runs.runs.filter(z => z.id !== r.id); if (isOpen() && P.tab === 'checklists') drawRuns(); } }).catch(fail); };
 }
 function waText(r, B, url) {
-  const first = String(r.subject || '').trim().split(/\s+/)[0] || 'there';
-  const miss = r.items.filter(i => !i.sec && !i.done && i.req !== false), opt = r.items.filter(i => !i.sec && !i.done && i.req === false), done = r.items.filter(i => !i.sec && i.done);
-  const k = Math.round(r.pct / 10), bar = '🟩'.repeat(k) + '⬜'.repeat(10 - k); 
-  const what = kindOf(r.kind).l.toLowerCase(), where = [r.country, r.level].filter(Boolean).join(' · ');
+  const first = String(r.subject || '').trim().split(/\s+/)[0] || '';
+  const real = r.items.filter(i => !i.sec), miss = real.filter(i => !i.done && i.req !== false), opt = real.filter(i => !i.done && i.req === false), done = real.filter(i => i.done);
+  const what = kindOf(r.kind).l, where = [r.country, r.level].filter(Boolean).join(', ');
   const agent = /^agent/.test(r.kind);
-  return [`*${B.name}*${B.tagline ? ' · _' + B.tagline + '_' : ''}`, `📋 *${kindOf(r.kind).l} checklist*${where ? '  ·  ' + where : ''}`, '',
-    agent ? `Hi ${first}! Here's where this file stands 👇` : `Hi ${first}! 👋 Here's where you are with your ${what} 👇`, '',
-    `${bar}  *${r.pct}%*  (${r.done}/${r.total} done)`, '',
-    miss.length ? `*📌 Still needed (${miss.length})*\n` + miss.map(i => '⬜ ' + i.t).join('\n') : '🎉 *Everything required is done!*',
-    opt.length ? `\n_If it applies to you:_\n` + opt.map(i => '▫️ ' + i.t).join('\n') : '',
-    done.length ? `\n*✅ Done (${done.length})*\n` + done.slice(0, 8).map(i => '✅ ~' + i.t + '~').join('\n') + (done.length > 8 ? `\n…and ${done.length - 8} more` : '') : '',
-    '', `👉 *See your live checklist and upload each document here:*\n${url}`, '',
-    `_Clear photos or PDFs are fine. Any question — just reply here._`, B.white ? `— ${B.name}` : `— Akbar Study Abroad${r.branch ? ', ' + r.branch : ''}`].filter(x => x !== '').join('\n');
+  const sign = B.white ? B.name : 'Akbar Study Abroad' + (r.branch ? ', ' + r.branch : '');
+  const L = [`*${B.name}*`];
+  if (B.tagline) L.push(B.tagline);
+  L.push('', first ? `Dear ${first},` : 'Hello,', '');
+  L.push(agent ? `Please find the ${what.toLowerCase()} checklist for this file${where ? ' (' + where + ')' : ''}.` : `Please find your ${what.toLowerCase()} checklist${where ? ' for ' + where : ''}.`);
+  L.push(`Progress: ${r.done} of ${r.total} complete (${r.pct}%)`, '');
+  if (miss.length) { L.push(`*Documents still needed (${miss.length})*`); miss.forEach((i, n) => L.push((n + 1) + '. ' + i.t)); }
+  else L.push('*All required documents are complete.* Thank you.');
+  if (opt.length) { L.push('', '*Only if it applies to you*'); opt.forEach(i => L.push('- ' + i.t)); }
+  if (done.length) L.push('', `*Received:* ${done.length} document${done.length === 1 ? '' : 's'}`);
+  L.push('', 'View the live checklist and upload each document securely here:', url, '');
+  L.push('Clear photos or PDF files are accepted. Please reply to this message if you have any questions.', '');
+  L.push('Kind regards,', sign);
+  return L.join('\n');
 }
 function mailForm(r, B) {
   const forAgent = !!B.white;
-  modal('✉ Email the checklist', `<div class="pb-form"><div class="full"><label for="pbEmT">${forAgent ? 'Agent’s email (they forward it to their student — the link shows only their brand)' : 'Student’s email'}</label><input id="pbEmT" type="email" value="${esc(forAgent ? (B.email || '') : '')}" placeholder="name@example.com"></div>
+  modal('Email the checklist', `<div class="pb-form"><div class="full"><label for="pbEmT">${forAgent ? 'Agent’s email (they forward it to their student — the link shows only their brand)' : 'Student’s email'}</label><input id="pbEmT" type="email" value="${esc(forAgent ? (B.email || '') : '')}" placeholder="name@example.com"></div>
 <div class="full"><label for="pbEmN">Personal note (optional)</label><textarea id="pbEmN" placeholder="e.g. Please send these before Friday so we can apply for the September intake."></textarea></div>
 <div class="full pb-help">${forAgent ? 'White label: the link and the PDF carry only <b>' + esc(B.name) + '</b>’s name and logo. The email itself comes from Akbar Study Abroad to the agent, who forwards it from their own email or WhatsApp.' : 'A designed email from noreply@akbarstudy.com: progress bar, what is still needed, and a button to the live checklist where they upload each document.'}</div></div>
 <div id="pbEmErr" class="fin-alert" style="display:none;margin-top:8px;"></div><div class="sx-modal-actions"><button class="um-btn" id="pbEmBack" style="margin-right:auto;">← Back</button><button class="um-btn primary" id="pbEmGo">Send email</button></div>`, 560);
