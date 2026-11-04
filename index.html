@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '4 Nov 2026 · v172';
+window.AKBAR_BUILD = '4 Nov 2026 · v175';
 
 (function () {
   try {
@@ -3660,6 +3660,8 @@ transition: background 120ms ease;
 .at-chip-lk { display: inline-flex; align-items: center; gap: 6px; background: var(--red-dim); color: var(--red); border-radius: 999px; padding: 4px 6px 4px 12px; font-size: 12px; font-weight: 600; }
 .at-chip-lk button { border: none; background: none; color: inherit; cursor: pointer; font-size: 13px; padding: 0 4px; }
 .at-table tbody tr.clickable { cursor: pointer; }
+.at-gcount { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 6px; background: var(--row-hover, #F3F1F6); white-space: nowrap; }
+.at-table tbody tr.at-child td { background: rgba(0,0,0,.015); font-size: 13px; }
 .at-age { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--canvas); color: var(--muted); }
 .at-age.late { background: var(--red-dim); color: var(--red); }
 .at-pager { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 12px; font-size: 12.5px; color: var(--muted); }
@@ -12271,7 +12273,7 @@ ${t.monthly ? ring(t.team.monthlyPct, t.team.month, t.monthly, 'This month vs mo
 const maxPipe = Math.max(...data.pipeline.map(x => x.count));
 $('atBody').innerHTML = `
 <div class="app-kpi-grid">
-${kpi('Total applications', s.total, delta(s.total, p.total, rangeLabel))}
+${kpi('Students', s.total, delta(s.total, p.total, rangeLabel) + (s.applications != null && s.applications !== s.total ? plain(s.applications + ' applications in all') : ''))}
 ${kpi('This month', s.month, delta(s.month, p.month, 'vs last month, same days'))}
 ${kpi('This week', s.week, delta(s.week, p.week, 'vs last week, same days'))}
 ${kpi('Today', s.today, delta(s.today, p.today, 'vs yesterday'))}
@@ -12289,7 +12291,7 @@ ${kpi('Pending', s.pending, plain(s.closed + ' closed · ' + rupeesSafe(s.fees) 
 <div class="at-card"><h3>Status breakdown</h3>${donut(data.charts.status)}</div>
 </div>
 <div class="at-2col wide-left">
-<div class="at-card"><h3>Top executives</h3><div class="at-scroll">${data.execs.length ? `<table class="mini-table"><thead><tr><th>Executive</th><th>Total</th><th>Today</th><th>Month</th><th>Offers</th><th>Visa</th></tr></thead><tbody>
+<div class="at-card"><h3>Top executives</h3><div class="at-scroll">${data.execs.length ? `<table class="mini-table"><thead><tr><th>Executive</th><th>Students</th><th>Today</th><th>Month</th><th>Offers</th><th>Visa</th></tr></thead><tbody>
 ${data.execs.slice(0, 8).map(e => `<tr><td>${e.name === 'Unassigned' ? '<span style="color:var(--muted)">Unassigned</span>' : `<button class="at-link" data-exec-open="${esc(e.name)}">${esc(e.name)}</button>`}</td><td class="num">${e.total}</td><td class="num">${e.today}</td><td class="num">${e.month}</td><td class="num">${e.offers}</td><td class="num">${e.visa}</td></tr>`).join('')}
 </tbody></table>` : '<div class="at-empty">No applications in this view.</div>'}</div></div>
 <div class="at-card"><h3>Alerts</h3>${data.alerts.map(a => `<div class="app-alert-row ${a.severity}"><span class="lbl"><span class="dot"></span>${esc(a.label)}</span><button class="badge-btn" data-drill="${esc(a.listKey)}" data-title="${esc(a.label)}" ${a.count ? '' : 'disabled'}>${a.count}</button></div>`).join('')}</div>
@@ -12352,6 +12354,17 @@ renderAppPerformance(data);
 function listRowsVisible() {
 const q = AT.list.q.trim().toLowerCase();
 return !q ? AT.list.rows : AT.list.rows.filter(r => [r.id, r.student, r.exec, r.university, r.country, r.course, r.status].join(' ').toLowerCase().indexOf(q) !== -1);
+}
+
+function appStudentGroups(rows) {
+const norm = v => String(v == null ? '' : v).trim().replace(/\s+/g, ' ').toLowerCase();
+const nameKey = r => norm(r.branch) + '|' + norm(r.student), byName = {}, keyOf = new Map();
+rows.forEach(r => { const sid = norm(r.studentId), d = String(r.studentId || '').replace(/[^0-9]/g, ''); if (!sid) return;
+  const k = d.length >= 10 ? 'p' + d.slice(-10) : 'i' + norm(r.branch) + '|' + sid; keyOf.set(r, k); if (!byName[nameKey(r)]) byName[nameKey(r)] = k; });
+rows.forEach(r => { if (!keyOf.has(r)) keyOf.set(r, byName[nameKey(r)] || 'n' + nameKey(r)); });
+const out = [], at = {};
+rows.forEach(r => { const k = keyOf.get(r); if (at[k] === undefined) { at[k] = out.length; out.push({ key: k, apps: [] }); } out[at[k]].apps.push(r); });
+return out;
 }
 function ageChip(r) {
 if (r.age === null || r.age === undefined) return '<span class="at-age">—</span>';
@@ -12435,35 +12448,51 @@ function pipePill(r) { return `<span class="at-pill pipe-${esc(r.pipe)}">${esc(P
 function renderAppList(data) {
 const L = AT.list;
 const rows = listRowsVisible();
-const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+const groups = appStudentGroups(rows);
+if (!L.openG) L.openG = new Set();
+const pages = Math.max(1, Math.ceil(groups.length / PAGE_SIZE));
 L.page = Math.min(L.page, pages);
-const slice = rows.slice((L.page - 1) * PAGE_SIZE, L.page * PAGE_SIZE);
+const gSlice = groups.slice((L.page - 1) * PAGE_SIZE, L.page * PAGE_SIZE);
+const slice = [].concat.apply([], gSlice.map(g => g.apps));
+const uq = (list, f) => Array.from(new Set(list.map(f).filter(Boolean)));
+const appRow = (r, child, gk) => `<tr class="clickable ${AT.sel.has(r.row) ? 'sel' : ''} ${child ? 'at-child' : ''}" data-open="${esc(r.id)}" data-row="${r.row}" ${child ? `data-gchild="${esc(gk)}"` : ''}>
+<td class="at-ck"><input type="checkbox" data-ck="${r.row}" ${AT.sel.has(r.row) ? 'checked' : ''} aria-label="Select ${esc(r.student)}"></td>
+<td class="num">${esc(r.id)}</td><td>${child ? `<div class="muted" style="padding-left:12px;">${esc(r.university || r.country || 'Application')}</div>` : `<div class="at-who"><span class="at-av">${esc(String(r.student || '?').trim().split(/\s+/).slice(0, 2).map(w => w.charAt(0)).join('').toUpperCase())}</span><div><div class="strong">${esc(r.student)}</div>${r.studentId ? `<div class="muted">${esc(r.studentId)}</div>` : ''}</div></div>`}</td>
+<td>${esc(r.branch)}</td><td>${r.exec ? `<button class="at-link" data-exec-open="${esc(r.exec)}">${esc(r.exec)}</button>` : '<span class="muted">—</span>'}</td>
+<td>${esc(r.country || '—')}</td><td>${esc(r.university || '—')}</td><td>${esc((window.akIntake || (x => x))(r.intake) || '—')}</td>
+<td>${pipePill(r)}${r.status ? `<div class="muted" style="margin-top:3px;">${esc(r.status)}</div>` : ''}</td>
+<td>${esc(r.offerStatus || '—')}</td><td>${esc(r.visaStatus || '—')}</td>
+<td class="num" title="${r.submittedDate ? 'Submitted date' : 'Application date'}">${fmtDate(r.pd)}</td><td>${ageChip(r)}${dueChip(r)}${chaseChip(r)}</td></tr>`;
+const grpRow = g => { const a = g.apps, r = a[0], open = L.openG.has(g.key), allSel = a.every(x => AT.sel.has(x.row)), j = list => list.length ? list.map(esc).join('<br>') : '—';
+return `<tr class="clickable at-grp ${allSel ? 'sel' : ''}" data-grp="${esc(g.key)}" aria-expanded="${open}">
+<td class="at-ck"><input type="checkbox" data-ckg="${esc(g.key)}" ${allSel ? 'checked' : ''} aria-label="Select all applications of ${esc(r.student)}"></td>
+<td><span class="at-gcount">${a.length} applications</span><div class="muted" style="margin-top:4px;">${open ? 'Hide' : 'Show'} each</div></td>
+<td><div class="at-who"><span class="at-av">${esc(String(r.student || '?').trim().split(/\s+/).slice(0, 2).map(w => w.charAt(0)).join('').toUpperCase())}</span><div><div class="strong">${esc(r.student)}</div>${r.studentId ? `<div class="muted">${esc(r.studentId)}</div>` : ''}</div></div></td>
+<td>${j(uq(a, x => x.branch))}</td><td>${j(uq(a, x => x.exec))}</td><td>${j(uq(a, x => x.country))}</td><td>${j(uq(a, x => x.university))}</td>
+<td>${j(uq(a, x => (window.akIntake || (y => y))(x.intake)))}</td><td>${pipePill(r)}</td>
+<td>${j(uq(a, x => x.offerStatus))}</td><td>${j(uq(a, x => x.visaStatus))}</td>
+<td class="num">${fmtDate(r.pd)}</td><td>${ageChip(r)}</td></tr>${open ? a.map(x => appRow(x, true, g.key)).join('') : ''}`; };
 const lkLabel = L.listKey ? (L.listKey.indexOf('alert:') === 0 ? ((AT.dash.alerts.find(a => a.listKey === L.listKey) || {}).label || L.listKey) : 'Stage: ' + (PIPE_LABEL[L.listKey.substring(5)] || L.listKey)) : '';
 $('atBody').innerHTML = `
 <div class="at-toolbar">
 <input type="search" id="atListSearch" placeholder="Quick search in these results…" value="${esc(L.q)}">
 ${lkLabel ? `<span class="at-chip-lk">${esc(lkLabel)}<button id="atClearLk" title="Show all" aria-label="Clear">✕</button></span>` : ''}
 <span class="grow"></span>
-<span style="font-size:12.5px;color:var(--muted);">${rows.length} application${rows.length === 1 ? '' : 's'} matching filters${data.capped ? ' · first 1000 loaded (use filters or Export CSV)' : ''}</span>
+<span style="font-size:12.5px;color:var(--muted);">${groups.length} student${groups.length === 1 ? '' : 's'} · ${rows.length} application${rows.length === 1 ? '' : 's'} matching filters${data.capped ? ' · first 1000 loaded (use filters or Export CSV)' : ''}</span>
 <button class="um-btn primary" id="atListAdd">Add application</button>
 </div>
 ${bulkBarHtml()}
 <div class="at-card"><div class="at-scroll">${slice.length ? `<table class="at-table"><thead><tr><th class="at-ck"><input type="checkbox" id="atCkAll" aria-label="Select all on this page"></th><th>App ID</th><th>Student</th><th>Branch</th><th>Executive</th><th>Country</th><th>University</th><th>Intake</th><th>Status</th><th>Offer</th><th>Visa</th><th>Perf date</th><th>Age</th></tr></thead><tbody>
-${slice.map(r => `<tr class="clickable ${AT.sel.has(r.row) ? 'sel' : ''}" data-open="${esc(r.id)}" data-row="${r.row}">
-<td class="at-ck"><input type="checkbox" data-ck="${r.row}" ${AT.sel.has(r.row) ? 'checked' : ''} aria-label="Select ${esc(r.student)}"></td>
-<td class="num">${esc(r.id)}</td><td><div class="at-who"><span class="at-av">${esc(String(r.student || '?').trim().split(/\s+/).slice(0, 2).map(w => w.charAt(0)).join('').toUpperCase())}</span><div><div class="strong">${esc(r.student)}</div>${r.studentId ? `<div class="muted">${esc(r.studentId)}</div>` : ''}</div></div></td>
-<td>${esc(r.branch)}</td><td>${r.exec ? `<button class="at-link" data-exec-open="${esc(r.exec)}">${esc(r.exec)}</button>` : '<span class="muted">—</span>'}</td>
-<td>${esc(r.country || '—')}</td><td>${esc(r.university || '—')}</td><td>${esc((window.akIntake || (x => x))(r.intake) || '—')}</td>
-<td>${pipePill(r)}${r.status ? `<div class="muted" style="margin-top:3px;">${esc(r.status)}</div>` : ''}</td>
-<td>${esc(r.offerStatus || '—')}</td><td>${esc(r.visaStatus || '—')}</td>
-<td class="num" title="${r.submittedDate ? 'Submitted date' : 'Application date'}">${fmtDate(r.pd)}</td><td>${ageChip(r)}${dueChip(r)}${chaseChip(r)}</td></tr>`).join('')}
+${gSlice.map(g => g.apps.length > 1 ? grpRow(g) : appRow(g.apps[0], false, '')).join('')}
 </tbody></table>` : '<div class="at-empty">No applications match. Try clearing filters, or click “+ Add Application”.</div>'}</div>
-${rows.length > PAGE_SIZE ? `<div class="at-pager"><span>Page ${L.page} of ${pages}</span><button class="um-btn" id="atPrev" ${L.page <= 1 ? 'disabled' : ''}>← Prev</button><button class="um-btn" id="atNext" ${L.page >= pages ? 'disabled' : ''}>Next →</button></div>` : ''}
+${groups.length > PAGE_SIZE ? `<div class="at-pager"><span>Page ${L.page} of ${pages}</span><button class="um-btn" id="atPrev" ${L.page <= 1 ? 'disabled' : ''}>← Prev</button><button class="um-btn" id="atNext" ${L.page >= pages ? 'disabled' : ''}>Next →</button></div>` : ''}
 </div>`;
 bindCommon($('atBody'));
 $('atListAdd').onclick = () => openAddApp();
 const clr = $('atClearLk'); if (clr) clr.onclick = () => { L.listKey = ''; load(); };
-$('atBody').querySelectorAll('tr[data-open]').forEach(tr => tr.onclick = e => { if (e.target.closest('.at-ck')) return; openAppDetail(tr.dataset.open, rowPick(L.rows, tr)); });
+$('atBody').querySelectorAll('tr[data-open]').forEach(tr => tr.onclick = e => { if (e.target.closest('.at-ck') || e.target.closest('[data-exec-open]')) return; openAppDetail(tr.dataset.open, rowPick(L.rows, tr)); });
+$('atBody').querySelectorAll('tr[data-grp]').forEach(tr => tr.onclick = e => { if (e.target.closest('.at-ck') || e.target.closest('[data-exec-open]')) return; const k = tr.dataset.grp; L.openG.has(k) ? L.openG.delete(k) : L.openG.add(k); renderAppList(data); });
+$('atBody').querySelectorAll('[data-ckg]').forEach(c => c.onchange = () => { const g = gSlice.find(x => x.key === c.dataset.ckg); if (!g) return; g.apps.forEach(x => c.checked ? AT.sel.add(x.row) : AT.sel.delete(x.row)); renderAppList(data); });
 bindBulk(slice, () => renderAppList(data));
 const prev = $('atPrev'), next = $('atNext');
 if (prev) prev.onclick = () => { L.page--; renderAppList(data); window.scrollTo(0, 0); };
@@ -13060,10 +13089,10 @@ const box = openModal('atExecBg', { title: esc(name), subtitle: 'Application Exe
 const f = apiFilters({ executive: name });
 Promise.all([run('getApplicationDashboard', f), run('getFilteredApplications', f, '', false)]).then(([d, list]) => {
 const s = d.stats;
-box.querySelector('.st').textContent = 'Application Executive · ' + s.total + ' applications in this view';
+box.querySelector('.st').textContent = 'Application Executive · ' + s.total + ' student' + (s.total === 1 ? '' : 's') + (s.applications != null ? ' · ' + s.applications + ' applications' : '') + ' in this view';
 const k = (l, v) => `<div class="at-kpi"><div class="l">${l}</div><div class="n">${v}</div></div>`;
 box.querySelector('.at-mbody').innerHTML = `
-<div class="app-kpi-grid at-exec-kpis">${k('Total', s.total)}${k('Month', s.month)}${k('Week', s.week)}${k('Today', s.today)}${k('Offers', s.offers)}${k('Visa', s.visa)}${k('Pending', s.pending)}${k('Offer %', s.offerConv + '%')}</div>
+<div class="app-kpi-grid at-exec-kpis">${k('Students', s.total)}${k('Month', s.month)}${k('Week', s.week)}${k('Today', s.today)}${k('Offers', s.offers)}${k('Visa', s.visa)}${k('Pending', s.pending)}${k('Offer %', s.offerConv + '%')}</div>
 <div class="at-2col wide-left"><div class="at-card"><h3>Applications over time</h3>${lineChart(d.charts.timeline.points)}</div><div class="at-card"><h3>Status breakdown</h3>${donut(d.charts.status)}</div></div>
 <div class="at-toolbar"><input type="search" id="atExecFilter" placeholder="Filter these applications…"><span class="grow"></span><span style="font-size:12px;color:var(--muted);" id="atExecCount"></span></div>
 <div class="at-scroll" id="atExecTable"></div>`;
@@ -14986,7 +15015,7 @@ const when = at => { const d = new Date(at); return isNaN(d) ? String(at || '') 
 
 function open() {
   const app = document.querySelector('.app'); if (app) app.style.display = 'none';
-  ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'cfView'].forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
+  ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'cfView', 'olView'].forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
   if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
   let root = $('hoView'); if (!root) { root = document.createElement('div'); root.id = 'hoView'; document.body.appendChild(root); }
   root.style.display = 'block';
@@ -15029,6 +15058,110 @@ setTimeout(addNav, 600); setInterval(addNav, 3000);
 const sb = document.getElementById('sidebar');
 if (sb) sb.addEventListener('click', e => { const it = e.target.closest('.nav-item, .lead-set-item, [data-branch]'); if (it && !it.hasAttribute('data-ho-view')) close(); }, true);
 window.akOpenHandedOver = open;
+})();
+</script>
+
+<style>
+body:not(.tc-staff) #sidebar .lead-set-item[data-leadset="bulk"], body:not(.tc-staff) #sidebar .lead-set-item[data-leadset="sulekha"] { display: none !important; }
+#olView .ol-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin: 0 0 12px; }
+#olView .ol-tab { border: 1px solid var(--border); background: var(--card); color: var(--ink); border-radius: 8px; padding: 7px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+#olView .ol-tab.on { background: var(--ink); color: var(--card); border-color: var(--ink); }
+#olView .ol-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 0 0 12px; }
+#olView .ol-bar input, #olView .ol-bar select { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; background: var(--card); color: var(--ink); }
+#olView .ol-bar input { flex: 1; min-width: 200px; }
+#olView .ol-facts { display: flex; gap: 20px; flex-wrap: wrap; margin: 0 0 12px; font-size: 13px; color: var(--muted); }
+#olView .ol-facts b { color: var(--ink); font-size: 16px; margin-right: 4px; font-variant-numeric: tabular-nums; }
+#olView .ol-src { display: inline-block; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; font-size: 12.5px; color: var(--muted); }
+#olView tr[data-ol] { cursor: pointer; }
+#olView .ol-pager { display: flex; gap: 8px; align-items: center; justify-content: flex-end; padding: 10px 12px; font-size: 13px; color: var(--muted); }
+#olView .ol-sources { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 12px; }
+#olView .ol-chip { border: 1px solid var(--border); background: var(--card); border-radius: 999px; padding: 4px 10px; font-size: 12px; cursor: pointer; color: var(--ink); }
+#olView .ol-chip.on { border-color: var(--ink); font-weight: 600; }
+#olView .ol-chip span { color: var(--muted); margin-left: 4px; font-variant-numeric: tabular-nums; }
+@media (max-width: 720px) { #olView .ol-hide { display: none; } }
+</style>
+<script>
+(function () {
+const $ = id => document.getElementById(id);
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const run = (fn, ...a) => promisifyRun(fn, window._authToken || '', ...a);
+const msg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
+const S = { list: '', source: '', q: '', page: 1, branch: '', data: null, seq: 0 };
+const isTc = () => document.body.classList.contains('tc-staff');
+const canSee = () => !isTc() && (!!window._isSuperAdmin || (typeof viewerBranch !== 'undefined' && !!viewerBranch && typeof viewerCounselor !== 'undefined' && !viewerCounselor));
+const day = at => { const d = new Date(at); return at && !isNaN(d) ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; };
+const VIEWS = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'cfView', 'hoView'];
+
+function open() {
+  const app = document.querySelector('.app'); if (app) app.style.display = 'none';
+  VIEWS.forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
+  if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
+  let root = $('olView'); if (!root) { root = document.createElement('div'); root.id = 'olView'; document.body.appendChild(root); }
+  root.style.display = 'block';
+  root.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><div class="at-eyebrow">Lead source</div><h1 class="sx-title">Other leads</h1><div class="sx-sub">Bulk uploads, Sulekha and old data, with the file or sheet each lead came from</div></div>
+<button class="um-btn" id="olBack" type="button">Back to dashboard</button></div>
+<div class="ol-tabs" role="tablist">${[['', 'All'], ['bulk', 'Bulk'], ['sulekha', 'Sulekha'], ['old', 'Old data']].map(t => `<button type="button" class="ol-tab ${S.list === t[0] ? 'on' : ''}" data-ol-list="${t[0]}" role="tab" aria-selected="${S.list === t[0]}">${t[1]}</button>`).join('')}</div>
+<div id="olBody"><div class="sx-card sx-empty">Loading…</div></div></div>`;
+  $('olBack').onclick = close;
+  root.querySelectorAll('[data-ol-list]').forEach(b => b.onclick = () => { S.list = b.dataset.olList; S.source = ''; S.page = 1; root.querySelectorAll('[data-ol-list]').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b); }); load(); });
+  document.querySelectorAll('#sidebar .nav-item').forEach(n => n.classList.toggle('active', n.hasAttribute('data-ol-view')));
+  window.scrollTo(0, 0);
+  load();
+}
+function close() {
+  const root = $('olView'); if (!root || root.style.display !== 'block') return;
+  root.style.display = 'none';
+  const app = document.querySelector('.app'); if (app) app.style.display = '';
+  document.querySelectorAll('#sidebar [data-ol-view]').forEach(n => n.classList.remove('active'));
+}
+function load() {
+  const seq = ++S.seq, b = $('olBody');
+  if (b && !S.data) b.innerHTML = '<div class="sx-card sx-empty">Loading…</div>';
+  else if (b) b.style.opacity = '.55';
+  run('getOtherLeads', { branch: S.branch, list: S.list, source: S.source, q: S.q, page: S.page }).then(r => { if (seq !== S.seq) return; S.data = r; draw(); })
+    .catch(e => { if (seq !== S.seq) return; const x = $('olBody'); if (x) { x.style.opacity = ''; x.innerHTML = `<div class="sx-card sx-empty">${esc(msg(e))}</div>`; } });
+}
+function draw() {
+  const b = $('olBody'), r = S.data; if (!b || !r) return;
+  b.style.opacity = '';
+  const listSrc = r.sources;
+  b.innerHTML = `<div class="ol-facts"><span><b>${r.totals.all.toLocaleString('en-IN')}</b>leads in this list</span>${S.list !== 'old' ? `<span><b>${r.totals.waiting.toLocaleString('en-IN')}</b>not handed over yet</span><span><b>${r.totals.handed.toLocaleString('en-IN')}</b>handed over</span>` : ''}</div>
+<div class="ol-bar"><input type="search" id="olQ" placeholder="Search name, phone, counsellor or source" value="${esc(S.q)}" aria-label="Search">
+${r.canPickBranch ? `<select id="olBr" aria-label="Branch"><option value="">All branches</option>${r.branches.map(x => `<option ${S.branch === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>` : ''}
+${S.list === 'bulk' || S.list === 'sulekha' ? `<button type="button" class="um-btn" id="olFull">Open the full ${S.list === 'bulk' ? 'Bulk' : 'Sulekha'} list to assign</button>` : ''}</div>
+${listSrc.length > 1 ? `<div class="ol-sources" aria-label="Source"><button type="button" class="ol-chip ${!S.source ? 'on' : ''}" data-ol-src="">All sources<span>${r.totals.all}</span></button>${listSrc.slice(0, 30).map(x => `<button type="button" class="ol-chip ${S.source === x.source ? 'on' : ''}" data-ol-src="${esc(x.source)}" title="${esc(x.list)}">${esc(x.source)}<span>${x.count}</span></button>`).join('')}</div>` : ''}
+${r.rows.length ? `<div class="sx-card" style="padding:0;"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Student</th><th>Source</th><th class="ol-hide">List</th><th>Status</th><th class="ol-hide">Counsellor</th><th class="ol-hide">Added</th><th class="ol-hide">Last remark</th></tr></thead><tbody>
+${r.rows.map(x => `<tr ${x.open ? `data-ol="${esc(x.branch + '|' + x.leadId)}"` : ''}><td><b>${esc(x.name || 'No name')}</b><div class="sx-sub" style="margin:0;">${esc(x.phone)}${x.branch ? ' · ' + esc(x.branch) : ''}</div></td>
+<td><span class="ol-src" title="${esc(x.source)}">${esc(x.source)}</span></td><td class="ol-hide">${esc(x.list)}</td>
+<td>${x.handedOver ? 'Handed over' : esc(x.status)}</td><td class="ol-hide">${esc(x.counsellor || '—')}</td><td class="ol-hide">${esc(day(x.createdAt))}</td>
+<td class="ol-hide"><div class="ho-rm">${esc(x.lastRemark)}</div></td></tr>`).join('')}
+</tbody></table></div>
+${r.pages > 1 ? `<div class="ol-pager"><span>Page ${r.page} of ${r.pages} · ${r.total.toLocaleString('en-IN')} leads</span><button type="button" class="um-btn" id="olPrev" ${r.page <= 1 ? 'disabled' : ''}>Previous</button><button type="button" class="um-btn" id="olNext" ${r.page >= r.pages ? 'disabled' : ''}>Next</button></div>` : ''}</div>`
+  : `<div class="sx-card sx-empty">${S.list === 'old' ? 'No old (archived) leads in this view.' : 'No leads match.'}</div>`}`;
+  let t = null; const qi = $('olQ');
+  if (qi) qi.oninput = () => { clearTimeout(t); t = setTimeout(() => { S.q = qi.value; S.page = 1; load(); }, 350); };
+  const br = $('olBr'); if (br) br.onchange = () => { S.branch = br.value; S.source = ''; S.page = 1; load(); };
+  b.querySelectorAll('[data-ol-src]').forEach(c => c.onclick = () => { S.source = c.dataset.olSrc; S.page = 1; load(); });
+  const pv = $('olPrev'), nx = $('olNext');
+  if (pv) pv.onclick = () => { S.page--; load(); window.scrollTo(0, 0); };
+  if (nx) nx.onclick = () => { S.page++; load(); window.scrollTo(0, 0); };
+  const full = $('olFull'); if (full) full.onclick = () => { const set = S.list; close(); if (typeof window.switchLeadSet === 'function') window.switchLeadSet(set); };
+  b.querySelectorAll('tr[data-ol]').forEach(tr => { tr.onclick = () => { if (window.akOpenLeadCard) window.akOpenLeadCard(tr.dataset.ol); }; });
+}
+function addNav() {
+  const grp = document.querySelector('#sidebar .nav-group[data-group="lead-source"]');
+  if (!grp || grp.querySelector('[data-ol-view]') || !canSee()) return;
+  const it = document.createElement('div'); it.className = 'nav-item'; it.setAttribute('data-ol-view', '1'); it.setAttribute('role', 'button'); it.tabIndex = 0; it.title = 'Bulk uploads, Sulekha and old data, with their source';
+  it.innerHTML = '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Other leads</span>';
+  const ho = grp.querySelector('[data-ho-view]'); if (ho && ho.nextSibling) grp.insertBefore(it, ho.nextSibling); else grp.appendChild(it);
+  it.addEventListener('click', e => { e.stopPropagation(); open(); });
+  it.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+  if (['bulk', 'sulekha'].indexOf(window._leadSet) !== -1 && typeof window.switchLeadSet === 'function') window.switchLeadSet('main');
+}
+setTimeout(addNav, 700); setInterval(addNav, 3000);
+const sb = document.getElementById('sidebar');
+if (sb) sb.addEventListener('click', e => { const it = e.target.closest('.nav-item, .lead-set-item, [data-branch]'); if (it && !it.hasAttribute('data-ol-view')) close(); }, true);
+window.akOpenOtherLeads = open;
 })();
 </script>
 
@@ -23965,7 +24098,7 @@ function showAnn(list) {
   $('akAnnOk').onclick = close;
   $('akAnnChat').onclick = () => { close(); openPanel(); loadChat('all'); };
 }
-function schedule() { clearTimeout(C.timer); C.timer = setTimeout(() => poll().then(schedule), C.open ? 12000 : 30000); }
+function schedule() { clearTimeout(C.timer); C.timer = setTimeout(() => poll().then(schedule), C.open ? 12000 : 90000); }
 
 function openPanel() { C.open = true; $('akChat').classList.add('open'); $('akChat').setAttribute('aria-hidden', 'false'); C.view = 'list'; drawList(); poll(true); schedule(); }
 function closePanel() { C.open = false; $('akChat').classList.remove('open'); $('akChat').setAttribute('aria-hidden', 'true'); schedule(); }
