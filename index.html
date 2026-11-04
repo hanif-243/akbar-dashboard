@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '4 Nov 2026 · v180';
+window.AKBAR_BUILD = '4 Nov 2026 · v181';
 
 (function () {
   try {
@@ -7342,7 +7342,7 @@ const parts = email.split('@')[0].split(/[._-]/);
 const initials = parts.slice(0, 2).map(s => s[0] || '').join('').toUpperCase() || '?';
 
 const displayName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
-const roleLabel = isSuperAdmin ? 'Super Admin' : (viewerCounselor ? 'Counselor' : 'Branch Manager');
+const roleLabel = isSuperAdmin ? 'Super Admin' : window._b2bStaff ? 'B2B Team' : (viewerCounselor ? 'Counselor' : 'Branch Manager');
 
 const si = document.getElementById('viewerIdentity');
 if (si) {
@@ -7366,7 +7366,7 @@ const adminDivider = document.getElementById('udAdminDivider');
 if (adminTop) adminTop.style.display = isSuperAdmin ? 'flex' : 'none';
 if (adminMenu) adminMenu.style.display = isSuperAdmin ? 'flex' : 'none';
 if (adminDivider) adminDivider.style.display = isSuperAdmin ? 'block' : 'none';
-const b2bNav = document.querySelector('[data-group="b2b"]'); if (b2bNav) b2bNav.style.display = isSuperAdmin ? '' : 'none';
+const b2bNav = document.querySelector('[data-group="b2b"]'); if (b2bNav) b2bNav.style.display = isSuperAdmin || window._b2bStaff ? '' : 'none';
 const visaNav = document.querySelector('[data-group="visa"]'); if (visaNav) visaNav.style.display = (isSuperAdmin || (typeof viewerBranch !== 'undefined' && viewerBranch && typeof viewerCounselor !== 'undefined' && !viewerCounselor)) ? '' : 'none';
 
 const avatarBg = isSuperAdmin ? 'var(--red)' : 'var(--navy)';
@@ -7487,6 +7487,7 @@ const akAway = home => ['ceoView', 'appTeamView', 'studentExpView', 's10View', '
   .some(id => { if (id === home) return false; const el = document.getElementById(id); return !!(el && el.style.display === 'block'); });
 if (response && (response.isTelecaller || response.isAppExecutive || response.isB2BTeam || response.isVisaExecutive) && akAway(response.isTelecaller ? 'telecallerApp' : response.isAppExecutive ? 'appTeamView' : response.isB2BTeam ? 'b2bView' : 'visaView')) return;
 if (response && response.isTelecaller) { initTelecallerDashboard(response); return; }
+if (response && response.rows !== undefined) { window._b2bStaff = !!response.isB2BStaff; const bn = document.querySelector('[data-group="b2b"]'); if (bn && window._b2bStaff) bn.style.display = ''; }
 if (response && response.isAppExecutive) { if (typeof window.openAppTeam === 'function') window.openAppTeam({ executiveMode: true }); return; }
 if (response && response.isB2BTeam) { if (typeof window.openB2BDesk === 'function') window.openB2BDesk({ teamMode: true }); return; }
 if (response && response.isVisaExecutive) { if (typeof window.openVisaDesk === 'function') window.openVisaDesk({ teamMode: true }); return; }
@@ -16605,7 +16606,7 @@ const ROLE = { sa: false, lead: false, coun: false, tc: false };
 const isLead = () => ROLE.lead;
 
 function detectRole() {
-if (typeof allRows === 'undefined' || (!allRows.length && !document.body.classList.contains('tc-staff'))) return false;
+if (typeof allRows === 'undefined' || (!allRows.length && !document.body.classList.contains('tc-staff') && !(typeof viewerBranch !== 'undefined' && viewerBranch))) return false;
 ROLE.tc = document.body.classList.contains('tc-staff');
 ROLE.sa = !!window._isSuperAdmin;
 ROLE.coun = !ROLE.tc && !ROLE.sa && typeof viewerCounselor !== 'undefined' && !!viewerCounselor;
