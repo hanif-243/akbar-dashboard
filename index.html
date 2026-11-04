@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '4 Nov 2026 · v184';
+window.AKBAR_BUILD = '4 Nov 2026 · v185';
 
 (function () {
   try {
@@ -14246,6 +14246,8 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) chec
 .cf-tray .um-btn.primary { background: #fff !important; color: #0E1222 !important; border-color: #fff !important; }
 .cf-empty { text-align: center; color: var(--muted); padding: 34px 16px; }
 .cf-cmpwrap { overflow-x: auto; }
+.cf-fit { font-size: 12.5px; color: var(--ink); margin-top: 4px; }
+.cf-fit::before { content: 'Fits: '; font-weight: 600; color: var(--muted); }
 .cf-cmpt th.cf-cmphd { background: var(--card, #fff); text-transform: none; letter-spacing: 0; vertical-align: bottom; }
 .cf-cmpn { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 10px; }
 .cf-cmpact { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -14399,7 +14401,7 @@ function build(root) {
 <div id="cfList"><div class="sx-card"><div class="skeleton" style="height:180px;"></div></div></div>
 <div id="cfMoreWrap" style="text-align:center;margin:4px 0 12px;" hidden><button class="um-btn" type="button" id="cfMore">Show more universities</button></div>
 <div class="cf-tray" id="cfTray"><span class="t">Shortlist <b id="cfN">0</b></span><span class="l" id="cfTL">Press Shortlist on the courses you want to send.</span>
-<button class="um-btn" type="button" id="cfShare">Share</button><button class="um-btn" type="button" id="cfCopy">Copy for WhatsApp</button><button class="um-btn" type="button" id="cfPdf">Download PDF</button><button class="um-btn" type="button" id="cfSend">Send to student app</button><button class="um-btn" type="button" id="cfApply">Start applications</button><button class="um-btn primary" type="button" id="cfSave">Save to lead</button></div>
+<button class="um-btn" type="button" id="cfShare">Share</button><button class="um-btn" type="button" id="cfLinkBtn">Student link</button><button class="um-btn" type="button" id="cfCopy">Copy for WhatsApp</button><button class="um-btn" type="button" id="cfPdf">Download PDF</button><button class="um-btn" type="button" id="cfSend">Send to student app</button><button class="um-btn" type="button" id="cfApply">Start applications</button><button class="um-btn primary" type="button" id="cfSave">Save to lead</button></div>
 </div></div></div>
 <div data-cf-pane="compare" hidden></div>
 <div data-cf-pane="unis" hidden></div>
@@ -14419,7 +14421,7 @@ function build(root) {
   $('cfClear').onclick = () => { fill({}); search(); };
   $('cfCountry').onchange = () => { const c = (S.set.countries || []).find(x => x.country === $('cfCountry').value); if (c && !c.courses) { toast('No course sheet for ' + c.country + ' yet. Directors can add one under Data and rules.', true); $('cfCountry').value = ((S.set.countries || []).find(x => x.courses) || {}).country || ''; } meta(); S.limit = 20; search(); };
   root.addEventListener('click', onClick);
-  $('cfCopy').onclick = copy; $('cfPdf').onclick = pdf; $('cfShare').onclick = () => { if (need()) shareBox('Share shortlist', text(), pdf); }; $('cfSave').onclick = save; $('cfSend').onclick = send; $('cfApply').onclick = apply;
+  $('cfCopy').onclick = copy; $('cfPdf').onclick = pdf; $('cfShare').onclick = () => { if (need()) shareBox('Share shortlist', text(), pdf, { kind: 'shortlist', items: S.short.slice() }); }; $('cfLinkBtn').onclick = studentLink; $('cfSave').onclick = save; $('cfSend').onclick = send; $('cfApply').onclick = apply;
   run('getCourseFinderSettings').then(s => { S.set = s; setup(); search(); }).catch(e => { $('cfList').innerHTML = `<div class="sx-card cf-empty">${esc(msg(e))}</div>`; });
 }
 function setup() {
@@ -14476,7 +14478,7 @@ function pickLead() {
     if (r.profile) { fill(Object.assign(profile(), r.profile)); search(); }
     $('cfLeadHint').textContent = r.filled && r.filled.length ? 'Filled from the lead: ' + r.filled.join(', ') + '. Check before you search.' : 'The lead has no study details yet. Fill them in here.';
     S.past = r.shortlists || [];
-    box.innerHTML = S.past.length ? `<div class="cf-leadbox"><b>Earlier shortlists</b>${S.past.map((s, k) => `<div class="row"><span>${esc(fmtDate(s.at))} · ${s.items.length} course${s.items.length === 1 ? '' : 's'} · ${esc(s.by)}</span><button type="button" class="cf-link" data-cf-load="${k}">Load</button></div>`).join('')}</div>` : '';
+    box.innerHTML = S.past.length ? `<div class="cf-leadbox"><b>Earlier on this lead</b>${S.past.map((s, k) => `<div class="row"><span>${s.kind === 'compare' ? 'Comparison' : s.kind === 'link' ? 'Student link' : 'Shortlist'} · ${esc(fmtDate(s.at))} · ${s.items.length} course${s.items.length === 1 ? '' : 's'} · ${esc(s.by)}${s.kind === 'link' ? ' · ' + (s.views ? 'opened ' + s.views + ' time' + (s.views === 1 ? '' : 's') : 'not opened yet') + ((s.picks || []).length ? ' · likes ' + esc(s.picks.map(i => (s.items[i] || {}).uni).filter(Boolean).join(', ')) : '') : ''}</span><button type="button" class="cf-link" data-cf-load="${k}">${s.kind === 'compare' ? 'Open in Compare' : 'Load'}</button></div>`).join('')}</div>` : '';
   }).catch(e => { box.innerHTML = ''; toast(msg(e), true); });
 }
 
@@ -14517,13 +14519,15 @@ function course(g, c) {
   if (c.waiver) ch.push('<span class="cf-chip">IELTS waiver possible</span>');
   if (c.scholarship) ch.push('<span class="cf-chip">Scholarship</span>');
   c.checks.forEach(x => ch.push(`<span class="cf-chip warn">${esc(x)}</span>`));
+  const dl = nextDl(c.deadline); if (dl) ch.push(`<span class="cf-chip ${dl.days <= 30 ? 'warn' : ''}">Deadline ${esc(dlText(dl))}</span>`);
+  const fit = whyLine(c);
   const why = c.reasons.length ? `<div class="cf-why">${esc(c.reasons.join(' · '))}</div>` : '';
   const cost = c.firstYear != null ? `<div class="cf-cost">First year about <b>${gbp(c.firstYear)}</b>: tuition ${gbp(c.fee)}${c.appFee ? ' + application ' + gbp(c.appFee) : ''} + living ${gbp(c.living)} (${c.livingMonths} months, ${c.london ? 'London' : 'outside London'})</div>` : '';
-  return `<div class="cf-c" data-tier="${c.tier}"><div><div class="cf-cn"><span class="cf-tier ${c.tier}">${TIER[c.tier]}</span> ${esc(c.degree)}</div><div class="cf-cs">${esc(c.campus)}</div>${why}<div class="cf-chips">${ch.join('')}</div>${cost}</div>
+  return `<div class="cf-c" data-tier="${c.tier}"><div><div class="cf-cn"><span class="cf-tier ${c.tier}">${TIER[c.tier]}</span> ${esc(c.degree)}</div><div class="cf-cs">${esc(c.campus)}</div>${fit ? `<div class="cf-fit">${esc(fit)}</div>` : ''}${why}<div class="cf-chips">${ch.join('')}</div>${cost}</div>
 <div class="cf-side"><span class="cf-fee">${gbp(c.fee)}</span><div class="acts">${c.tier === 'ambitious' || c.tier === 'fail' ? `<button type="button" class="um-btn" data-cf-ask="${esc(c.key)}">Ask manager</button>` : ''}<button type="button" class="um-btn cf-cmp ${inC ? 'on' : ''}" data-cf-cmp="${esc(c.key)}">${inC ? 'In compare' : 'Compare'}</button><button type="button" class="um-btn cf-star ${inS ? 'on' : ''}" data-cf-k="${esc(c.key)}">${inS ? 'Shortlisted' : 'Shortlist'}</button></div></div>
 <details class="cf-req"><summary>Entry requirements</summary><p>${esc(c.elig || 'Not listed')}</p>${/^https?:/.test(c.link || '') ? `<p><a href="${esc(c.link)}" target="_blank" rel="noopener">Open course page</a></p>` : ''}</details></div>`;
 }
-function find(k) { for (const g of (S.res ? S.res.groups : [])) { const c = g.courses.find(x => x.key === k); if (c) return Object.assign({ uni: g.name, qs: g.qs, partner: g.partner, cur: curNow() }, c); } return null; }
+function find(k) { for (const g of (S.res ? S.res.groups : [])) { const c = g.courses.find(x => x.key === k); if (c) { const o = Object.assign({ uni: g.name, qs: g.qs, partner: g.partner, cur: curNow(), country: $('cfCountry').value || 'United Kingdom' }, c); o.why = whyLine(o); return o; } } return null; }
 function onClick(e) {
   const t = e.target.closest('[data-cf-k],[data-cf-cmp],[data-cf-ask],[data-cf-tier],[data-cf-load],[data-cf-rm],[data-cf-share],[data-cf-ushare],[data-cf-uedit],[data-cf-read],[data-cf-pedit],[data-cf-rep],[data-cf-pend]'); if (!t) return;
   e.preventDefault();
@@ -14539,11 +14543,11 @@ function onClick(e) {
   else if (t.dataset.cfRep) repVisit(t.dataset.cfRep);
   else if (t.dataset.cfPend) endPush(t.dataset.cfPend);
   else if (t.dataset.cfTier !== undefined) { S.tierView = S.tierView === t.dataset.cfTier ? '' : t.dataset.cfTier; draw(); }
-  else if (t.dataset.cfLoad) { const s = S.past[+t.dataset.cfLoad]; if (s) { S.short = s.items.slice(); tray(); toast('Earlier shortlist loaded'); } }
+  else if (t.dataset.cfLoad) { const s = S.past[+t.dataset.cfLoad]; if (s && s.kind === 'compare') { S.cmp = s.items.slice(0, CMP_MAX).map((x, i) => Object.assign({ key: 'sv' + t.dataset.cfLoad + '-' + i, reasons: [], checks: [] }, x)); $('cfCmpN').textContent = '(' + S.cmp.length + ')'; tab('compare'); toast('Saved comparison opened'); } else if (s) { S.short = s.items.slice(); tray(); toast('Earlier shortlist loaded'); } }
 }
 function tray() {
   $('cfN').textContent = S.short.length;
-  $('cfTL').textContent = S.short.length ? S.short.map(s => s.uni + ' — ' + s.degree).join(' · ') : 'Press Shortlist on the courses you want to send.';
+  $('cfTL').textContent = S.short.length ? S.short.map(s => { const d = nextDl(s.deadline); return s.uni + ' — ' + s.degree + (d && d.days <= 30 ? ' (deadline in ' + d.days + ' days)' : ''); }).join(' · ') : 'Press Shortlist on the courses you want to send.';
 }
 function text() {
   return ($('cfCountry').value || 'UK') + ' course shortlist' + (S.lead ? ' for ' + S.lead.name : '') + '\n' + S.short.map(courseLine).join('\n');
@@ -14554,10 +14558,10 @@ function need(lead) {
   return true;
 }
 function busy(fn) { if (S.busy) return; S.busy = true; fn().then(() => { S.busy = false; }, () => { S.busy = false; }); }
-function items() { return S.short.map(s => ({ cur: s.cur === undefined ? curNow() : s.cur, uni: s.uni, qs: s.qs, degree: s.degree, campus: s.campus, fee: s.fee, appFee: s.appFee, ielts: s.ielts, band: s.band, intake: s.intake, months: s.months, link: s.link, tier: s.tier, firstYear: s.firstYear })); }
+function items(list) { return (list || S.short).map(s => ({ cur: s.cur === undefined ? curNow() : s.cur, uni: s.uni, qs: s.qs, degree: s.degree, campus: s.campus, fee: s.fee, appFee: s.appFee, ielts: s.ielts, band: s.band, intake: s.intake, months: s.months, link: s.link, tier: s.tier, firstYear: s.firstYear, deadline: s.deadline || '', why: s.why || '' })); }
 function copy() {
   if (!need()) return;
-  copyText(text(), 'Shortlist copied. Paste it in WhatsApp.');
+  copyText(text(), 'Shortlist copied. Paste it in WhatsApp.'); logShare({ kind: 'shortlist', items: S.short }, 'copy');
 }
 function save() { if (!need(true)) return; nudge(doSave); }
 function doSave() { busy(() => run('saveCourseShortlist', S.lead.branch, S.lead.leadId, items(), profile()).then(() => { toast('Shortlist saved on the lead'); }).catch(e => toast(msg(e), true))); }
@@ -14577,6 +14581,7 @@ function ask(c) {
 }
 function pdf() {
   if (!need()) return;
+  logShare({ kind: 'shortlist', items: S.short }, 'pdf');
   const w = window.open('', '_blank'); if (!w) { toast('Allow pop-ups to download the PDF', true); return; }
   const rows = S.short.map((s, i) => `<tr><td class="n">${i + 1}</td><td><b>${esc(s.uni)}</b>${s.qs != null ? ' <span class="m">QS ' + s.qs + '</span>' : ''}<div>${esc(s.degree)}</div><div class="m">${esc(s.campus)} · Intake ${esc(s.intake || 'not listed')} · IELTS ${s.ielts == null ? 'not listed' : s.ielts}</div></td><td class="r">${gbp(s.fee, s.cur)}${s.firstYear != null ? '<div class="m">First year ' + gbp(s.firstYear, s.cur) + '</div>' : ''}</td></tr>`).join('');
   w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Course shortlist${S.lead ? ' - ' + esc(S.lead.name) : ''}</title><style>
@@ -14590,6 +14595,77 @@ td.n{width:24px;color:#667085}td.r{text-align:right;white-space:nowrap;font-weig
 }
 
 const CMP_MAX = 5;
+
+const MON3 = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+function nextDl(txt) {
+  const now = new Date(), pad = n => String(n).padStart(2, '0'), t0 = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()), y0 = now.getFullYear(), out = [];
+  const ok = (m, d) => m >= 1 && m <= 12 && d >= 1 && d <= 31;
+  String(txt || '').split(/[,;]/).forEach(part => {
+    const mm = /^\s*([A-Za-z]{3,9})\s*:\s*(.+)$/.exec(part), intake = mm ? mm[1].slice(0, 3).replace(/^./, c => c.toUpperCase()) : '', rest = (mm ? mm[2] : part).trim();
+    let a = /(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/.exec(rest);
+    if (a) { if (ok(+a[2], +a[1])) { const ymd = a[3] + '-' + pad(+a[2]) + '-' + pad(+a[1]); if (ymd >= t0) out.push({ ymd: ymd, intake: intake, est: false }); } return; }
+    a = /(\d{4})-(\d{2})-(\d{2})/.exec(rest);
+    if (a) { if (a[0] >= t0) out.push({ ymd: a[0], intake: intake, est: false }); return; }
+    a = /(\d{1,2})\s*(?:st|nd|rd|th)?\s*([A-Za-z]{3})/.exec(rest) || (function () { const b = /([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2})\b/.exec(rest); return b ? [b[0], b[2], b[1]] : null; })();
+    if (!a) return;
+    const m = MON3.indexOf(String(a[2]).toLowerCase()) + 1, d = +a[1]; if (!ok(m, d)) return;
+    let ymd = y0 + '-' + pad(m) + '-' + pad(d); if (ymd < t0) ymd = (y0 + 1) + '-' + pad(m) + '-' + pad(d);
+    out.push({ ymd: ymd, intake: intake, est: true });
+  });
+  if (!out.length) return null;
+  out.sort((x, y) => x.ymd.localeCompare(y.ymd));
+  const n = out[0]; n.days = Math.round((Date.parse(n.ymd + 'T00:00:00Z') - Date.parse(t0 + 'T00:00:00Z')) / 864e5);
+  return n;
+}
+function dlText(d) { return fmtDate(d.ymd) + ' · ' + (d.days === 0 ? 'today' : 'in ' + d.days + ' day' + (d.days === 1 ? '' : 's')); }
+
+function whyLine(c) {
+  const out = [], pct = Number($('cfPct').value), ie = Number($('cfIe').value), bud = Number($('cfBud').value), inT = String($('cfIn').value || ''), need = c.needPct != null ? c.needPct : c.minPct;
+  if (pct && need != null && pct >= need) out.push('your ' + pct + '% meets the ' + need + '% asked');
+  if (S.en === 'ielts' && ie && c.ielts != null && ie >= c.ielts) out.push('IELTS ' + ie + ' meets the ' + c.ielts + ' asked');
+  if (S.en === 'waiver' && c.waiver) out.push('IELTS waiver possible');
+  if (bud && c.fee != null && c.fee <= bud) out.push('tuition within the budget');
+  if (inT && c.intake && String(c.intake).toLowerCase().indexOf(inT.toLowerCase().slice(0, 3)) !== -1) out.push(inT.slice(0, 3) + ' intake');
+  if (c.scholarship) out.push('scholarship offered');
+  if (!out.length) return '';
+  const t = out.slice(0, 3).join(', '); return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+function logShare(meta, channel) {
+  if (!meta || !(meta.items || []).length) return;
+  run('logCourseShare', { kind: meta.kind, channel: channel, items: meta.items.map(x => ({ uni: x.uni, degree: x.degree || '' })), country: $('cfCountry').value, branch: S.lead ? S.lead.branch : '', leadId: S.lead ? S.lead.leadId : '' }).catch(() => {});
+}
+function studentLink() {
+  if (!need(true)) return;
+  busy(() => run('shareShortlistLink', S.lead.branch, S.lead.leadId, items(), profile()).then(r => {
+    const first = String(r.name || S.lead.name || '').trim().split(/\s+/)[0];
+    shareBox('Send the shortlist link', 'Hi ' + first + ', here are the courses we picked for you at Akbar Study Abroad.\n\nOpen the link and tap "I like this" on the ones you want to apply to. Your counsellor sees your choice straight away.\n\n' + r.url, null, { kind: 'link', items: S.short.slice() });
+  }).catch(e => toast(msg(e), true)));
+}
+function sharesInsights(r) {
+  const sh = r.shares, l = r.links || {}, ch = (sh && sh.channels) || {}, CH = { whatsapp: 'WhatsApp', copy: 'copied', share: 'phone share', pdf: 'PDF', link: 'link' };
+  return `<div class="cf-funnel" style="margin-top:16px;"><div class="cq-stat"><div class="l">Shares</div><div class="n">${sh ? sh.total : 0}</div><div class="d">${esc(Object.keys(ch).map(k => (CH[k] || k) + ' ' + ch[k]).join(' · '))}</div></div>
+<div class="cq-stat"><div class="l">Student links sent</div><div class="n">${l.sent || 0}</div><div class="d">${l.sent ? Math.round((l.opened || 0) / l.sent * 100) + '% opened' : ''}</div></div>
+<div class="cq-stat"><div class="l">Courses students liked</div><div class="n">${l.picks || 0}</div></div>
+<div class="cq-stat"><div class="l">Comparisons saved</div><div class="n">${l.comparisons || 0}</div></div></div>
+<div class="sx-card" style="margin-top:16px;"><h3>Most shared universities</h3><table class="sx-table"><thead><tr><th>University</th><th style="text-align:right;">Times shared</th><th style="text-align:right;">Students</th><th style="text-align:right;">Applied</th></tr></thead><tbody>
+${sh && sh.top.length ? sh.top.map(x => `<tr><td>${esc(x.name)}</td><td style="text-align:right;">${x.n}</td><td style="text-align:right;">${x.students}</td><td style="text-align:right;">${x.applied}${x.students ? ' <span class="cf-hint">(' + Math.round(x.applied / x.students * 100) + '%)</span>' : ''}</td></tr>`).join('') : '<tr><td colspan="4" class="cf-empty">Nothing shared yet. Shares are counted from v185 on.</td></tr>'}</tbody></table></div>`;
+}
+
+function extrasFor(c) { const k = c.country || 'United Kingdom'; return S.extras ? S.extras[k] : undefined; }
+function askExtras() {
+  S.extras = S.extras || {}; S.exAsk = S.exAsk || {};
+  [...new Set(S.cmp.map(c => c.country || 'United Kingdom'))].filter(k => S.extras[k] === undefined && !S.exAsk[k]).forEach(k => {
+    S.exAsk[k] = 1;
+    run('getCourseCostExtras', k).then(x => { S.extras[k] = x; }).catch(() => { S.extras[k] = null; }).then(() => { const pn = document.querySelector('#cfView [data-cf-pane="compare"]'); if (pn && !pn.hidden) drawCompare(); });
+  });
+}
+function costYears(c) { return Math.max(1, Math.ceil((Number(c.months) || 12) / 12)); }
+function estTotal(c) {
+  const e = extrasFor(c); if (e === undefined) return null;
+  const base = c.firstYear != null ? c.firstYear : c.fee != null ? c.fee + (c.appFee || 0) : null; if (base == null) return null;
+  return base + ((e && e.visa) || 0) + ((e && e.health) || 0) * costYears(c);
+}
 function copyText(txt, okMsg) {
   const fallback = () => { const ta = document.createElement('textarea'); ta.value = txt; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;'; document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; } ta.remove(); toast(ok ? okMsg : 'Copy did not work. Use WhatsApp instead.', !ok); };
   try { if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(txt).then(() => toast(okMsg), fallback); return; } } catch (e) {   }
@@ -14605,14 +14681,14 @@ function shareSheet(title, txt) {
   if (navigator.share && /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)) { navigator.share({ title: title, text: txt }).catch(() => {}); return; }
   copyText(txt, 'Copied. Paste it anywhere.');
 }
-function shareBox(title, txt, pdfFn) {
+function shareBox(title, txt, pdfFn, meta) {
   const m = modal(title, `<div class="cf-hint" style="margin-bottom:10px;">Check the message, then send it yourself. Nothing is sent automatically.${S.lead ? ' WhatsApp opens the chat with ' + esc(S.lead.name) + (waPhone() ? '' : ' (no phone on the lead, pick the chat in WhatsApp)') + '.' : ''}</div>
 <textarea class="cf-tpl" id="cfShareTx" style="min-height:220px;">${esc(txt)}</textarea>
 <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;"><button type="button" class="um-btn primary" data-wa>Open in WhatsApp</button><button type="button" class="um-btn" data-cp>Copy</button>${navigator.share ? '<button type="button" class="um-btn" data-sh>Share…</button>' : ''}${pdfFn ? '<button type="button" class="um-btn" data-pdf>Download PDF</button>' : ''}</div>`);
   const val = () => m.el.querySelector('#cfShareTx').value;
-  m.el.querySelector('[data-wa]').onclick = () => waOpen(val());
-  m.el.querySelector('[data-cp]').onclick = () => copyText(val(), 'Copied. Paste it in WhatsApp or email.');
-  const sh = m.el.querySelector('[data-sh]'); if (sh) sh.onclick = () => navigator.share({ title: title, text: val() }).catch(() => {});
+  m.el.querySelector('[data-wa]').onclick = () => { waOpen(val()); logShare(meta, meta && meta.kind === 'link' ? 'link' : 'whatsapp'); };
+  m.el.querySelector('[data-cp]').onclick = () => { copyText(val(), 'Copied. Paste it in WhatsApp or email.'); logShare(meta, meta && meta.kind === 'link' ? 'link' : 'copy'); };
+  const sh = m.el.querySelector('[data-sh]'); if (sh) sh.onclick = () => { navigator.share({ title: title, text: val() }).catch(() => {}); logShare(meta, 'share'); };
   const pd = m.el.querySelector('[data-pdf]'); if (pd) pd.onclick = pdfFn;
 }
 function courseLine(s, i) {
@@ -14629,9 +14705,10 @@ function uniText(g) {
 }
 function shareUni(name) {
   const g = (S.res ? S.res.groups : []).find(x => x.name === name); if (!g) return;
-  shareBox('Share ' + name, uniText(g));
+  shareBox('Share ' + name, uniText(g), null, { kind: 'university', items: [{ uni: name }] });
 }
 function cmpPdf() {
+  logShare({ kind: 'comparison', items: S.cmp }, 'pdf');
   const w = window.open('', '_blank'); if (!w) { toast('Allow pop-ups to download the PDF', true); return; }
   const rowsDef = [['QS rank', c => c.qs == null ? 'Not listed' : c.qs], ['Course', c => c.degree], ['Campus', c => c.campus || 'Not listed'], ['Tuition', c => gbp(c.fee, c.cur)], ['First year', c => c.firstYear != null ? gbp(c.firstYear, c.cur) : 'Not listed'],
     ['IELTS', c => c.ielts == null ? 'Not listed' : c.ielts], ['Minimum %', c => c.needPct == null ? 'Not stated' : c.needPct + '%'], ['Length', c => c.months ? (c.months % 12 === 0 ? c.months / 12 + (c.months > 12 ? ' years' : ' year') : c.months + ' months') : 'Not listed'],
@@ -14647,22 +14724,28 @@ h1{font:500 22px Georgia,serif;margin:16px 0 4px}.m{color:#667085;font-size:12px
 function drawCompare() {
   const p = document.querySelector('#cfView [data-cf-pane="compare"]');
   if (!S.cmp.length) { p.innerHTML = '<div class="sx-card cf-empty">Press Compare on up to 5 courses to see them side by side.</div>'; return; }
+  askExtras();
   const lo = (f, c) => { const v = S.cmp.map(f).filter(x => x != null); return v.length > 1 && f(c) != null && f(c) === Math.min(...v); };
   const row = (label, f, fmt, best) => `<tr><th>${label}</th>${S.cmp.map(c => `<td class="${best && lo(f, c) ? 'best' : ''}">${fmt ? fmt(f(c), c) : esc(f(c) == null || f(c) === '' ? 'Not listed' : f(c))}</td>`).join('')}</tr>`;
-  p.innerHTML = `<div class="sx-card"><div class="cf-cmpwrap"><table class="cf-cmpt"><thead><tr><th class="cf-cmphd"><div class="cf-cmpn">Comparing ${S.cmp.length} of ${CMP_MAX}</div><div class="cf-cmpact"><button type="button" class="um-btn primary" id="cfCmpShare">Share</button><button type="button" class="um-btn" id="cfCmpPdf">PDF</button><button type="button" class="um-btn" id="cfCmpAll">Shortlist all</button><button type="button" class="cf-link" id="cfCmpClr">Clear</button></div></th>${S.cmp.map(c => `<td>${logo(c.link, c.uni, 44)}${esc(c.uni)}<div class="cf-hint" style="font-weight:400;">${esc(c.degree)}</div><button type="button" class="cf-link" data-cf-rm="${esc(c.key)}">Remove</button></td>`).join('')}</tr></thead><tbody>
+  p.innerHTML = `<div class="sx-card"><div class="cf-cmpwrap"><table class="cf-cmpt"><thead><tr><th class="cf-cmphd"><div class="cf-cmpn">Comparing ${S.cmp.length} of ${CMP_MAX}</div><div class="cf-cmpact"><button type="button" class="um-btn primary" id="cfCmpShare">Share</button><button type="button" class="um-btn" id="cfCmpPdf">PDF</button><button type="button" class="um-btn" id="cfCmpAll">Shortlist all</button><button type="button" class="um-btn" id="cfCmpSave">Save to lead</button><button type="button" class="cf-link" id="cfCmpClr">Clear</button></div></th>${S.cmp.map(c => `<td>${logo(c.link, c.uni, 44)}${esc(c.uni)}<div class="cf-hint" style="font-weight:400;">${esc(c.degree)}</div><button type="button" class="cf-link" data-cf-rm="${esc(c.key)}">Remove</button></td>`).join('')}</tr></thead><tbody>
 ${row('Fit', c => c.tier, v => `<span class="cf-tier ${v}">${TIER[v]}</span>`)}
-${row('Why', c => c.reasons.concat(c.checks).join(', ') || 'Meets every listed rule')}
+${row('Why it fits', c => c.why || whyLine(c), v => v ? esc(v) : '<span class="cf-hint">Search with the student profile to see this</span>')}
+${row('To check', c => (c.reasons || []).concat(c.checks || []).join(', '), v => v ? esc(v) : 'Nothing, meets every listed rule')}
 ${row('QS rank', c => c.qs, null, true)}
 ${row('Campus', c => c.campus)}
 ${row('Tuition', c => c.fee, (v, c) => gbp(v, c.cur), true)}
 ${row('Application fee', c => c.appFee, (v, c) => v ? gbp(v, c.cur) : 'None listed')}
 ${row('Living costs', c => c.living, (v, c) => v == null ? '<span class="cf-hint">Not in our data for this country</span>' : gbp(v, c.cur) + ' <span class="cf-hint">(' + c.livingMonths + ' months, ' + (c.london ? 'London' : 'outside London') + ')</span>')}
 ${row('First year total', c => c.firstYear, (v, c) => v == null ? (c.fee != null ? gbp(c.fee + (c.appFee || 0), c.cur) + ' <span class="cf-hint">tuition and application only</span>' : 'Not listed') : gbp(v, c.cur), true)}
+${row('Visa fee', c => { const e = extrasFor(c); return e && e.visa != null ? e.visa : null; }, (v, c) => extrasFor(c) === undefined ? '…' : v == null ? '<span class="cf-hint">Not set (Data and rules)</span>' : gbp(v, c.cur))}
+${row('Health surcharge', c => { const e = extrasFor(c); return e && e.health != null ? e.health * costYears(c) : null; }, (v, c) => extrasFor(c) === undefined ? '…' : v == null ? '<span class="cf-hint">Not set (Data and rules)</span>' : gbp(v, c.cur) + ` <span class="cf-hint">(${costYears(c)} year${costYears(c) === 1 ? '' : 's'})</span>`)}
+${row('Estimated total', c => estTotal(c), (v, c) => { if (v == null) return extrasFor(c) === undefined ? '…' : 'Not listed'; const e = extrasFor(c) || {}, miss = [c.firstYear == null ? 'living costs' : '', e.visa == null ? 'visa fee' : '', e.health == null ? 'health surcharge' : ''].filter(Boolean); return '<b>' + gbp(v, c.cur) + '</b>' + (miss.length ? ` <span class="cf-hint">without ${miss.join(', ')}</span>` : ''); }, true)}
+${row('Flight (one way)', c => { const e = extrasFor(c); return e && e.flight && e.flight.n ? e.flight.avg : null; }, (v, c) => { const e = extrasFor(c); return e === undefined ? '…' : v == null ? '<span class="cf-hint">No bookings to compare yet</span>' : '₹' + Number(v).toLocaleString('en-IN') + ` <span class="cf-hint">average of ${e.flight.n} real booking${e.flight.n === 1 ? '' : 's'}</span>`; })}
 ${row('IELTS', c => c.ielts, (v, c) => v == null ? 'Not listed' : v + (c.band != null ? ' · no band below ' + c.band : ''), true)}
 ${row('Minimum %', c => c.needPct, (v, c) => v == null ? 'Not stated' : v + '%' + (c.pctSrc !== 'sheet' ? ' (asks ' + c.pctSrc + ')' : ''))}
 ${row('Length', c => c.months, v => v ? (v % 12 === 0 ? v / 12 + (v > 12 ? ' years' : ' year') : v + ' months') : 'Not listed')}
 ${row('Intake', c => c.intake)}
-${row('Application deadline', c => c.deadline, v => v ? esc(v) : '<span class="cf-hint">Sheet says: see the university website</span>')}
+${row('Application deadline', c => c.deadline, v => { const d = nextDl(v); return d ? '<b>' + esc(dlText(d)) + '</b>' + (d.est ? ' <span class="cf-hint">yearly date from the sheet</span>' : '') + `<div class="cf-hint">${esc(v)}</div>` : v ? esc(v) + ' <span class="cf-hint">(no date ahead)</span>' : '<span class="cf-hint">Sheet says: see the university website</span>'; })}
 ${row('Scholarship', c => c.scholarship, v => v ? 'Yes' : 'No')}
 ${row('IELTS waiver', c => c.waiver, v => v ? 'Possible' : 'No')}
 ${row('Backlogs', c => c.backlogs, v => v > 0 ? 'Up to ' + v : 'Not stated')}
@@ -14673,6 +14756,7 @@ ${row('Course page', c => c.link, v => /^https?:/.test(v || '') ? `<a class="cf-
   $('cfCmpPdf').onclick = cmpPdf;
   $('cfCmpAll').onclick = () => { let n = 0; S.cmp.forEach(c => { if (!S.short.some(s => s.key === c.key)) { S.short.push(c); n++; } }); tray(); toast(n ? n + ' added to the shortlist' : 'All of them are already shortlisted'); };
   $('cfCmpClr').onclick = () => { S.cmp = []; $('cfCmpN').textContent = ''; drawCompare(); };
+  $('cfCmpSave').onclick = () => { if (!S.lead) { toast('Pick the lead at the top of the profile first', true); return; } busy(() => run('saveCourseComparison', S.lead.branch, S.lead.leadId, items(S.cmp), profile()).then(() => toast('Comparison saved on the lead')).catch(e => toast(msg(e), true))); };
 }
 
 function loadInsights() {
@@ -14688,7 +14772,7 @@ function loadInsights() {
 <div class="cq-stat"><div class="l">Applications started</div><div class="n">${f.applied || 0}</div><div class="d">${pc(f.applied, f.courses)}</div></div>
 <div class="cq-stat"><div class="l">Enrolled</div><div class="n">${f.enrolled || 0}</div><div class="d">${pc(f.enrolled, f.courses)}</div></div></div>
 <div class="cf-ins"><div class="sx-card"><h3>Most shortlisted universities</h3>${list(r.topUnis || [])}</div><div class="sx-card"><h3>Most shortlisted courses</h3>${list(r.topCourses || [])}</div></div>
-${r.push ? pushInsights(r.push) : ''}
+${r.push ? pushInsights(r.push) : ''}${sharesInsights(r)}
 <div class="sx-card" style="margin-top:16px;"><h3>By counsellor</h3><table class="sx-table"><thead><tr><th>Counsellor</th><th>Branch</th><th style="text-align:right;">Shortlists</th><th style="text-align:right;">Applied</th><th style="text-align:right;">Enrolled</th><th style="text-align:right;">Applied rate</th></tr></thead><tbody>
 ${(r.byCounsellor || []).map(x => `<tr><td>${esc(x.name)}</td><td>${esc(x.branch)}</td><td style="text-align:right;">${x.shortlists}</td><td style="text-align:right;">${x.applied}</td><td style="text-align:right;">${x.enrolled}</td><td style="text-align:right;">${x.courses ? Math.round(x.applied / x.courses * 100) + '%' : '—'}</td></tr>`).join('') || '<tr><td colspan="6" class="cf-empty">No shortlists yet</td></tr>'}</tbody></table></div>`;
   }).catch(e => { p.innerHTML = `<div class="sx-card cf-empty">${esc(msg(e))}</div>`; });
@@ -14708,11 +14792,21 @@ function drawSettings() {
 <div class="cf-checks" style="margin:0 0 6px;"><label><input type="checkbox" id="cfRok" ${r.approved ? 'checked' : ''}> This rule is approved for counsellors</label></div>
 <div class="cf-srow"><div><b>Bachelor's courses listed as Postgraduate</b><div class="m">Some sheet rows named BA or BSc are labelled Postgraduate.</div></div><select id="cfLvMode" style="width:auto;"><option value="tag" ${s.levelMode !== 'hide' ? 'selected' : ''}>Show with "Check level"</option><option value="hide" ${s.levelMode === 'hide' ? 'selected' : ''}>Hide them</option></select></div>
 <div class="cf-srow"><div><b>Public university finder</b><div class="m">Students on the website see their top 3 from this data before the OTP.</div></div><select id="cfPub" style="width:auto;"><option value="0" ${s.publicFinder ? '' : 'selected'}>Off</option><option value="1" ${s.publicFinder ? 'selected' : ''}>On</option></select></div>
-</div></div>
+</div>${s.canEdit ? `<div class="sx-card" style="margin-top:16px;"><h3>Extra costs per country</h3><div class="cf-hint">Compare adds these to the first year. Enter the official amounts in the country's currency. Left empty, Compare says "Not set".</div>
+<div class="cf-two" style="margin-top:10px;"><div class="cf-f"><label for="cfXc">Country</label><select id="cfXc">${(s.countries || []).map(c => `<option ${c.country === ($('cfCountry').value || 'United Kingdom') ? 'selected' : ''}>${esc(c.country)}</option>`).join('')}</select></div><div class="cf-f"><label for="cfXv">Visa fee</label><input type="number" id="cfXv" min="0" step="1"></div></div>
+<div class="cf-two"><div class="cf-f"><label for="cfXh">Health surcharge a year</label><input type="number" id="cfXh" min="0" step="1"></div><div class="cf-f"><label for="cfXn">Source</label><input type="text" id="cfXn" maxlength="160" placeholder="e.g. gov.uk, Nov 2026"></div></div>
+<div class="cf-hint" id="cfXinfo"></div><div style="display:flex;justify-content:flex-end;margin-top:10px;"><button class="um-btn" type="button" id="cfXsave">Save costs</button></div></div>` : ''}</div>
 <div class="sx-card"><h3>Direct and partner universities</h3><div class="cf-hint">Set the route, contacts, selling points and files for each university in the Universities tab.</div>
 <div style="display:flex;gap:8px;margin-top:12px;"><button class="um-btn" type="button" id="cfGoUnis">Open Universities</button></div>
 <div style="display:flex;justify-content:flex-end;margin-top:18px;"><button class="um-btn primary" type="button" id="cfSetSave">Save changes</button></div></div></div>`;
   $('cfGoUnis').onclick = () => tab('unis');
+  if ($('cfXc')) {
+    const showX = x => { S.extras = S.extras || {}; S.extras[x.country] = x; $('cfXv').value = x.visa == null ? '' : x.visa; $('cfXh').value = x.health == null ? '' : x.health; $('cfXn').value = x.note || '';
+      $('cfXinfo').textContent = (x.updated ? 'Last set ' + fmtDate(x.updated) + (x.by ? ' by ' + x.by : '') + '. ' : 'Not set yet. ') + (x.flight && x.flight.n ? 'Flights: ₹' + Number(x.flight.avg).toLocaleString('en-IN') + ' average from ' + x.flight.n + ' real bookings.' : 'Flights: no bookings to this country yet.'); };
+    const loadX = () => { $('cfXinfo').textContent = 'Loading…'; run('getCourseCostExtras', $('cfXc').value).then(showX).catch(e => { $('cfXinfo').textContent = msg(e); }); };
+    $('cfXc').onchange = loadX; loadX();
+    $('cfXsave').onclick = () => busy(() => run('saveCourseCostExtras', $('cfXc').value, { visa: $('cfXv').value, health: $('cfXh').value, note: $('cfXn').value }).then(x => { showX(x); toast('Costs saved'); }).catch(e => toast(msg(e), true)));
+  }
   p.querySelectorAll('[data-cf-up]').forEach(b => b.onclick = () => { S.upCountry = b.dataset.cfUp; $('cfFile').click(); });
   $('cfFile').onchange = upload;
   $('cfUpMany').onclick = () => $('cfFiles').click();
@@ -14876,8 +14970,8 @@ function share(name) {
 <div style="display:flex;gap:8px;margin:10px 0 16px;flex-wrap:wrap;"><button type="button" class="um-btn primary" data-copy>Copy</button><button type="button" class="um-btn" data-pdf>One-page PDF</button>${(u.files || []).filter(f => /^https:\x2F\x2F/.test(f.url)).map(f => `<a class="um-btn" href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.name)}</a>`).join('')}</div>
 <div class="cf-lbl" style="margin-bottom:6px;">How it shows in the student app</div><div class="cf-stu"><span class="bd">RECOMMENDED BY AKBAR</span><div style="font-weight:700;">${esc(name)}</div><div class="cf-hint">${esc((u.points || [])[0] || 'Picked for you by your counsellor')}</div></div>`);
   m.el.querySelectorAll('[data-pt]').forEach(x => x.onclick = () => { m.el.querySelectorAll('[data-pt]').forEach(y => y.classList.toggle('active', y === x)); m.el.querySelector('#cfTpl').value = t[x.dataset.pt]; });
-  m.el.querySelector('[data-copy]').onclick = () => copyText(m.el.querySelector('#cfTpl').value, 'Copied');
-  m.el.querySelector('[data-pdf]').onclick = () => uniPdf(u);
+  m.el.querySelector('[data-copy]').onclick = () => { copyText(m.el.querySelector('#cfTpl').value, 'Copied'); logShare({ kind: 'partner', items: [{ uni: name }] }, 'copy'); };
+  m.el.querySelector('[data-pdf]').onclick = () => { uniPdf(u); logShare({ kind: 'partner', items: [{ uni: name }] }, 'pdf'); };
 }
 function uniPdf(u) {
   const w = window.open('', '_blank'); if (!w) { toast('Allow pop-ups to download the PDF', true); return; }
