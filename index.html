@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '4 Nov 2026 · v175';
+window.AKBAR_BUILD = '4 Nov 2026 · v176';
 
 (function () {
   try {
@@ -3660,7 +3660,10 @@ transition: background 120ms ease;
 .at-chip-lk { display: inline-flex; align-items: center; gap: 6px; background: var(--red-dim); color: var(--red); border-radius: 999px; padding: 4px 6px 4px 12px; font-size: 12px; font-weight: 600; }
 .at-chip-lk button { border: none; background: none; color: inherit; cursor: pointer; font-size: 13px; padding: 0 4px; }
 .at-table tbody tr.clickable { cursor: pointer; }
-.at-gcount { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 6px; background: var(--row-hover, #F3F1F6); white-space: nowrap; }
+.at-gcount { display: block; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.at-gtoggle { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; font-family: inherit; }
+.at-g1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 160px; vertical-align: bottom; }
+.at-gmore { margin-left: 6px; font-size: 11.5px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .at-table tbody tr.at-child td { background: rgba(0,0,0,.015); font-size: 13px; }
 .at-age { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--canvas); color: var(--muted); }
 .at-age.late { background: var(--red-dim); color: var(--red); }
@@ -12043,6 +12046,7 @@ return `<div class="at-wrap">
 <button class="um-btn primary" id="atAddBtn">+ Add Application</button>
 <button class="um-btn" id="atExportBtn">Export CSV</button>
 <button class="um-btn" id="atTargetsBtn" style="display:none;">Targets</button>
+<button class="um-btn" id="atRenumBtn" style="display:none;">Application IDs</button>
 <button class="um-btn" id="atRefreshBtn">Refresh</button>
 <button class="um-btn" id="atBackBtn">${AT.execMode ? 'Log out' : '← Back to dashboard'}</button>
 </div>
@@ -12074,12 +12078,34 @@ ${presets.map(p => `<button class="at-chip ${f.preset === p[0] ? 'active' : ''}"
 }
 const skeleton = () => `<div class="app-kpi-grid">${[1, 2, 3, 4].map(() => '<div class="at-kpi"><div class="skeleton" style="height:58px;"></div></div>').join('')}</div><div class="skeleton" style="height:280px;border-radius:12px;"></div>`;
 
+function openRenumber() {
+const box = openModal('atRenumBg', { title: 'Application IDs', subtitle: 'Checking…', width: 720, body: '<div class="skeleton" style="height:160px;"></div>' });
+const draw = (r, done) => {
+  box.querySelector('.at-mbody').innerHTML = !r.count
+    ? '<p>Every application already has its own system ID (APP-0001, APP-0002 …). Nothing to change.</p>'
+    : `<p>${done ? 'Changed' : 'These'} <b>${r.count}</b> application ID${r.count === 1 ? '' : 's'} ${done ? 'to system IDs.' : 'were typed by hand, are blank or are used twice. Each gets the next system ID. The old ID is kept in Remarks.'}</p>
+${r.linked.length ? `<p class="muted">${done ? 'Also updated' : 'Will also update'}: ${r.linked.map(l => esc(l.tab) + ' (' + l.count + ')').join(', ')}</p>` : ''}
+<div class="sx-table-wrap" style="max-height:340px;overflow:auto;"><table class="mini-table"><thead><tr><th>Student</th><th>Old ID</th><th>New ID</th></tr></thead><tbody>
+${r.changes.map(c => `<tr><td>${esc(c.student || '—')}</td><td>${c.old ? esc(c.old) + (c.dup ? ' <span class="muted">(used twice)</span>' : '') : '<span class="muted">blank</span>'}</td><td class="num">${esc(c.id)}</td></tr>`).join('')}
+</tbody></table></div>`;
+  const foot = box.querySelector('.at-mfoot');
+  if (foot) foot.innerHTML = !done && r.count ? '<button class="um-btn" data-rn-cancel>Cancel</button><button class="um-btn primary" data-rn-go>Change ' + r.count + ' ID' + (r.count === 1 ? '' : 's') + '</button>' : '<button class="um-btn" data-rn-cancel>Close</button>';
+  const c = box.querySelector('[data-rn-cancel]'); if (c) c.onclick = () => closeModal('atRenumBg');
+  const go = box.querySelector('[data-rn-go]');
+  if (go) go.onclick = () => { go.disabled = true; go.textContent = 'Changing…';
+    run('renumberApplicationIds', true).then(x => { draw(x, true); load(); }).catch(e => { go.disabled = false; go.textContent = 'Try again'; showToast(e.message || String(e), 'error'); }); };
+};
+const st = box.querySelector('.at-msub, .st'); if (st) st.textContent = 'Super Admin';
+box.insertAdjacentHTML('beforeend', box.querySelector('.at-mfoot') ? '' : '<div class="at-mfoot"></div>');
+run('renumberApplicationIds', false).then(r => draw(r, false)).catch(e => { box.querySelector('.at-mbody').innerHTML = '<p>' + esc(e.message || String(e)) + '</p>'; });
+}
 function bindShell() {
 $('atBackBtn').onclick = () => { if (AT.execMode) { if (typeof logoutApp === 'function') logoutApp(); } else closeAppTeam(); };
 $('atRefreshBtn').onclick = () => load();
 $('atAddBtn').onclick = () => openAddApp();
 $('atExportBtn').onclick = exportCsv;
 $('atTargetsBtn').onclick = openTargets;
+if ($('atRenumBtn')) $('atRenumBtn').onclick = openRenumber;
 document.querySelectorAll('#appTeamView .at-tab').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
 $('atFilterRow').addEventListener('click', e => {
 const b = e.target.closest('[data-preset]'); if (!b) return;
@@ -12164,6 +12190,7 @@ const scopeText = u.scope === 'all' ? 'All branches' : u.scope === 'branch' ? (u
 const rangeText = r.from || r.to ? (r.from ? fmtDate(r.from) : '…') + ' → ' + (r.to ? fmtDate(r.to) : '…') : 'All time';
 $('atSub').textContent = scopeText + ' · ' + rangeText + ' · ' + d.meta.totalRows + ' records · updated ' + new Date(d.meta.loadedAt).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
 $('atTargetsBtn').style.display = u.canSetTargets ? '' : 'none';
+if ($('atRenumBtn')) $('atRenumBtn').style.display = window._isSuperAdmin && !AT.execMode ? '' : 'none';
 $('atExportBtn').style.display = AT.tab === 'insights' ? 'none' : '';
 }
 
@@ -12463,14 +12490,15 @@ const appRow = (r, child, gk) => `<tr class="clickable ${AT.sel.has(r.row) ? 'se
 <td>${pipePill(r)}${r.status ? `<div class="muted" style="margin-top:3px;">${esc(r.status)}</div>` : ''}</td>
 <td>${esc(r.offerStatus || '—')}</td><td>${esc(r.visaStatus || '—')}</td>
 <td class="num" title="${r.submittedDate ? 'Submitted date' : 'Application date'}">${fmtDate(r.pd)}</td><td>${ageChip(r)}${dueChip(r)}${chaseChip(r)}</td></tr>`;
-const grpRow = g => { const a = g.apps, r = a[0], open = L.openG.has(g.key), allSel = a.every(x => AT.sel.has(x.row)), j = list => list.length ? list.map(esc).join('<br>') : '—';
+const grpRow = g => { const a = g.apps, r = a[0], open = L.openG.has(g.key), allSel = a.every(x => AT.sel.has(x.row));
+const one = list => !list.length ? '<span class="muted">—</span>' : `<span class="at-g1" title="${esc(list.join(', '))}">${esc(list[0])}</span>${list.length > 1 ? `<span class="at-gmore">+${list.length - 1}</span>` : ''}`;
 return `<tr class="clickable at-grp ${allSel ? 'sel' : ''}" data-grp="${esc(g.key)}" aria-expanded="${open}">
 <td class="at-ck"><input type="checkbox" data-ckg="${esc(g.key)}" ${allSel ? 'checked' : ''} aria-label="Select all applications of ${esc(r.student)}"></td>
-<td><span class="at-gcount">${a.length} applications</span><div class="muted" style="margin-top:4px;">${open ? 'Hide' : 'Show'} each</div></td>
+<td class="num"><span class="at-gcount">${a.length} applications</span><span class="at-gtoggle">${open ? 'Hide' : 'Show'}</span></td>
 <td><div class="at-who"><span class="at-av">${esc(String(r.student || '?').trim().split(/\s+/).slice(0, 2).map(w => w.charAt(0)).join('').toUpperCase())}</span><div><div class="strong">${esc(r.student)}</div>${r.studentId ? `<div class="muted">${esc(r.studentId)}</div>` : ''}</div></div></td>
-<td>${j(uq(a, x => x.branch))}</td><td>${j(uq(a, x => x.exec))}</td><td>${j(uq(a, x => x.country))}</td><td>${j(uq(a, x => x.university))}</td>
-<td>${j(uq(a, x => (window.akIntake || (y => y))(x.intake)))}</td><td>${pipePill(r)}</td>
-<td>${j(uq(a, x => x.offerStatus))}</td><td>${j(uq(a, x => x.visaStatus))}</td>
+<td>${one(uq(a, x => x.branch))}</td><td>${one(uq(a, x => x.exec))}</td><td>${one(uq(a, x => x.country))}</td><td>${one(uq(a, x => x.university))}</td>
+<td>${one(uq(a, x => (window.akIntake || (y => y))(x.intake)))}</td><td>${pipePill(r)}</td>
+<td>${one(uq(a, x => x.offerStatus))}</td><td>${one(uq(a, x => x.visaStatus))}</td>
 <td class="num">${fmtDate(r.pd)}</td><td>${ageChip(r)}</td></tr>${open ? a.map(x => appRow(x, true, g.key)).join('') : ''}`; };
 const lkLabel = L.listKey ? (L.listKey.indexOf('alert:') === 0 ? ((AT.dash.alerts.find(a => a.listKey === L.listKey) || {}).label || L.listKey) : 'Stage: ' + (PIPE_LABEL[L.listKey.substring(5)] || L.listKey)) : '';
 $('atBody').innerHTML = `
@@ -12836,7 +12864,7 @@ const f = (label, input, full) => `<div class="um-field ${full ? 'full' : ''}"><
 const body = `<div class="at-form-grid">
 ${f('Student Name *', `<input data-k="student" value="${esc(v('student'))}" autocomplete="off">`)}
 ${f('Student ID', `<input data-k="studentId" value="${esc(v('studentId'))}" placeholder="Links all of this student's applications" autocomplete="off">`)}
-${f('Application ID', edit ? `<input value="${esc(rec.id)}" disabled>` : `<input data-k="id" placeholder="Leave blank to auto-generate" autocomplete="off">`)}
+${f('Application ID', edit ? `<input value="${esc(rec.id)}" disabled>` : `<input value="Made automatically" disabled>`)}
 ${f('Branch *', u.canPickBranch ? `<select data-k="branch" id="atFormBranch">${opt(o.branch, branchVal, 'Select branch')}</select>` : `<select disabled><option>${esc(u.branch)}</option></select>`)}
 ${f('Counsellor', `<select data-k="counsellor" id="atFormCounsellor" ${u.role === 'Counselor' ? 'disabled' : ''}></select>`)}
 ${f('Application Executive', u.isExec ? `<input value="${esc(u.name)}" disabled>` : `<select data-k="exec">${opt(o.executive || [], v('exec') || ((o.executive || []).length === 1 ? o.executive[0] : ''), 'Select executive')}</select>`)}
