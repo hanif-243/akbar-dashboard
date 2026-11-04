@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '4 Nov 2026 · v179';
+window.AKBAR_BUILD = '4 Nov 2026 · v180';
 
 (function () {
   try {
@@ -20711,7 +20711,7 @@ const paint = L => {
   if (!$('b2bAgMap')) return;
   if (agMap) { agMap.remove(); agMap = null; }
   agMap = L.map('b2bAgMap');
-  L.tileLayer('https:' + '\x2F\x2F{s}.basemaps.cartocdn.com\x2Flight_all\x2F{z}\x2F{x}\x2F{y}{r}.png', { maxZoom: 19, attribution: '© OpenStreetMap © CARTO' }).addTo(agMap);
+  L.tileLayer('https:' + '\x2F\x2Ftile.openstreetmap.org\x2F{z}\x2F{x}\x2F{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(agMap);
   const pts = [];
   Object.keys(byCity).forEach(k => { const g = geo[k]; if (!g) return; const list = byCity[k], tot = list.reduce((t, r) => t + r.students, 0);
     const worst = ['Dormant', 'Slowing', 'Active', 'No students yet'].find(s => list.some(r => r.state === s)) || 'Active';
@@ -28619,7 +28619,7 @@ const pts = d.rows.filter(v => v.lat !== '' && v.lat != null);
 leaflet().then(L => {
 if (vMap) { vMap.remove(); vMap = null; }
 vMap = L.map('akViMap', { zoomControl: true, attributionControl: true });
-L.tileLayer('https:' + '\x2F\x2F{s}.basemaps.cartocdn.com\x2Flight_all\x2F{z}\x2F{x}\x2F{y}{r}.png', { maxZoom: 19, attribution: '© OpenStreetMap © CARTO' }).addTo(vMap);
+L.tileLayer('https:' + '\x2F\x2Ftile.openstreetmap.org\x2F{z}\x2F{x}\x2F{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(vMap);
 const ic = L.divIcon({ className: 'ak-vi-pin', iconSize: [14, 14] });
 pts.forEach(v => L.marker([+v.lat, +v.lng], { icon: ic }).addTo(vMap).bindPopup('<b>' + esc(v.place) + '</b><br>' + esc(v.userName || '') + '<br>' + esc(new Date(v.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }))));
 if (pts.length) vMap.fitBounds(pts.map(v => [+v.lat, +v.lng]), { padding: [40, 40], maxZoom: 14 }); else vMap.setView([15.5, 76.5], 5);
