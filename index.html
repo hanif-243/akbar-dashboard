@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '4 Nov 2026 · v181';
+window.AKBAR_BUILD = '4 Nov 2026 · v183';
 
 (function () {
   try {
@@ -28541,8 +28541,9 @@ let strip = head.nextElementSibling && head.nextElementSibling.classList.contain
 const c = cards(scope);
 if (c && c.wait) return;
 if (!c) { if (strip) { strip.remove(); head.classList.remove('has-strip'); } return; }
+if (!c.list.some(k => k.querySelector('.n, .v') || [...k.children].some(ch => /^[₹$\d-]/.test(txt(ch))))) { if (strip) { strip.remove(); head.classList.remove('has-strip'); } return; }
 const take = c.list.slice(0, 4);
-const html = take.map((k, i) => { const n = k.querySelector('.n, .v'), l = k.querySelector('.l'); return '<button type="button" class="ak-strip-c ' + tone(n) + '" data-i="' + i + '"' + (k.title ? ' title="' + k.title.replace(/"/g, '&quot;') + '"' : '') + '><b>' + txt(n).replace(/</g, '&lt;') + '</b><span>' + txt(l).replace(/</g, '&lt;') + '</span></button>'; }).join('');
+const html = take.map((k, i) => { const kids = [...k.children], n = k.querySelector('.n, .v') || kids.find(ch => /^[₹$\d-]/.test(txt(ch)) && txt(ch).length < 18), l = k.querySelector('.l') || kids.find(ch => ch !== n && txt(ch)); return '<button type="button" class="ak-strip-c ' + tone(n) + '" data-i="' + i + '"' + (k.title ? ' title="' + k.title.replace(/"/g, '&quot;') + '"' : '') + '><b>' + txt(n).replace(/</g, '&lt;') + '</b><span>' + txt(l).replace(/</g, '&lt;') + '</span></button>'; }).join('');
 if (!strip) { strip = document.createElement('div'); strip.className = 'ak-strip'; head.insertAdjacentElement('afterend', strip); }
 if (strip.dataset.sig !== html) { strip.dataset.sig = html; strip.innerHTML = html; }
 strip._src = take;
@@ -28977,6 +28978,42 @@ note.push('file ok');
   document.getElementById('akInstGo').onclick = () => { if (!ev) return; ev.prompt(); ev.userChoice.finally(() => { ev = null; chip.classList.remove('on'); }); };
   document.getElementById('akInstX').onclick = () => { chip.classList.remove('on'); try { localStorage.setItem('ak-install-snooze', String(Date.now())); } catch (e) {   } };
   window.addEventListener('appinstalled', () => { chip.classList.remove('on'); if (typeof showToast === 'function') showToast('Lead Ops app installed — open it from your home screen', 'success'); });
+})();
+</script>
+
+<style id="akPhoneFit">
+@media (max-width: 700px) {
+  .sx-filters, #appTeamView .at-filters { flex-wrap: wrap; }
+  .sx-filters > input, .sx-filters > select, .sx-filters > label, #appTeamView .at-filters > input, #appTeamView .at-filters > select {
+    flex: 1 1 100%; width: 100% !important; min-width: 0 !important; max-width: 100% !important; box-sizing: border-box;
+  }
+  .sx-tabs, .at-tabs { flex-wrap: nowrap !important; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .sx-tabs::-webkit-scrollbar, .at-tabs::-webkit-scrollbar, #appTeamView .at-filter-row.one-row::-webkit-scrollbar { display: none; }
+  #appTeamView .at-filter-row.one-row { scrollbar-width: none; }
+  .sx-tabs > *, .at-tabs > * { flex: 0 0 auto; white-space: nowrap; }
+  .sx-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .sx-kpi { min-width: 0; overflow-wrap: anywhere; }
+  .sx-chips { flex-wrap: wrap; }
+  .sx-card { min-width: 0; max-width: 100%; box-sizing: border-box; }
+  .sx-table-wrap, #appTeamView .at-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+  .sx-wrap, #appTeamView, #b2bView { max-width: 100vw; box-sizing: border-box; overflow-x: hidden; }
+  .sx-wrap img, .sx-wrap video { max-width: 100%; height: auto; }
+}
+</style>
+<script>
+(function () {
+
+  const IDS = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'b2bDbView', 'archView', 'ownView', 'lpView', 'pbView', 'evView', 'tdView', 'acView', 'cfView', 'olView', 'hoView'];
+  const SET = new Set(IDS);
+  const shown = el => el && el.style.display === 'block';
+  const obs = new MutationObserver(list => {
+    list.forEach(m => {
+      const t = m.target;
+      if (!t.id || !SET.has(t.id) || !shown(t) || m.oldValue && /display:\s*block/.test(m.oldValue)) return;
+      IDS.forEach(id => { if (id === t.id) return; const o = document.getElementById(id); if (shown(o) && !o.contains(t) && !t.contains(o)) o.style.display = 'none'; });
+    });
+  });
+  obs.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['style'], attributeOldValue: true });
 })();
 </script>
 
