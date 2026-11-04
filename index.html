@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '4 Nov 2026 · v176';
+window.AKBAR_BUILD = '4 Nov 2026 · v177';
 
 (function () {
   try {
@@ -3660,6 +3660,11 @@ transition: background 120ms ease;
 .at-chip-lk { display: inline-flex; align-items: center; gap: 6px; background: var(--red-dim); color: var(--red); border-radius: 999px; padding: 4px 6px 4px 12px; font-size: 12px; font-weight: 600; }
 .at-chip-lk button { border: none; background: none; color: inherit; cursor: pointer; font-size: 13px; padding: 0 4px; }
 .at-table tbody tr.clickable { cursor: pointer; }
+#appTeamView .at-table.at-list td { white-space: nowrap; }
+#appTeamView .at-table.at-list .at-who > div { min-width: 0; }
+#appTeamView .at-table.at-list .at-who .strong, #appTeamView .at-table.at-list .at-who .muted { max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#appTeamView .at-table.at-list .at-cl { display: inline-block; max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+#appTeamView .at-table.at-list .at-link { white-space: nowrap; }
 .at-gcount { display: block; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
 .at-gtoggle { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; font-family: inherit; }
 .at-g1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 160px; vertical-align: bottom; }
@@ -12486,8 +12491,8 @@ const appRow = (r, child, gk) => `<tr class="clickable ${AT.sel.has(r.row) ? 'se
 <td class="at-ck"><input type="checkbox" data-ck="${r.row}" ${AT.sel.has(r.row) ? 'checked' : ''} aria-label="Select ${esc(r.student)}"></td>
 <td class="num">${esc(r.id)}</td><td>${child ? `<div class="muted" style="padding-left:12px;">${esc(r.university || r.country || 'Application')}</div>` : `<div class="at-who"><span class="at-av">${esc(String(r.student || '?').trim().split(/\s+/).slice(0, 2).map(w => w.charAt(0)).join('').toUpperCase())}</span><div><div class="strong">${esc(r.student)}</div>${r.studentId ? `<div class="muted">${esc(r.studentId)}</div>` : ''}</div></div>`}</td>
 <td>${esc(r.branch)}</td><td>${r.exec ? `<button class="at-link" data-exec-open="${esc(r.exec)}">${esc(r.exec)}</button>` : '<span class="muted">—</span>'}</td>
-<td>${esc(r.country || '—')}</td><td>${esc(r.university || '—')}</td><td>${esc((window.akIntake || (x => x))(r.intake) || '—')}</td>
-<td>${pipePill(r)}${r.status ? `<div class="muted" style="margin-top:3px;">${esc(r.status)}</div>` : ''}</td>
+<td><span class="at-cl" title="${esc(r.country || '')}">${esc(r.country || '—')}</span></td><td><span class="at-cl" title="${esc(r.university || '')}">${esc(r.university || '—')}</span></td><td>${esc((window.akIntake || (x => x))(r.intake) || '—')}</td>
+<td>${pipePill(r)}${r.status && pipePill(r).toLowerCase().indexOf('>' + String(r.status).trim().toLowerCase() + '<') === -1 ? `<div class="muted" style="margin-top:3px;">${esc(r.status)}</div>` : ''}</td>
 <td>${esc(r.offerStatus || '—')}</td><td>${esc(r.visaStatus || '—')}</td>
 <td class="num" title="${r.submittedDate ? 'Submitted date' : 'Application date'}">${fmtDate(r.pd)}</td><td>${ageChip(r)}${dueChip(r)}${chaseChip(r)}</td></tr>`;
 const grpRow = g => { const a = g.apps, r = a[0], open = L.openG.has(g.key), allSel = a.every(x => AT.sel.has(x.row));
@@ -12510,7 +12515,7 @@ ${lkLabel ? `<span class="at-chip-lk">${esc(lkLabel)}<button id="atClearLk" titl
 <button class="um-btn primary" id="atListAdd">Add application</button>
 </div>
 ${bulkBarHtml()}
-<div class="at-card"><div class="at-scroll">${slice.length ? `<table class="at-table"><thead><tr><th class="at-ck"><input type="checkbox" id="atCkAll" aria-label="Select all on this page"></th><th>App ID</th><th>Student</th><th>Branch</th><th>Executive</th><th>Country</th><th>University</th><th>Intake</th><th>Status</th><th>Offer</th><th>Visa</th><th>Perf date</th><th>Age</th></tr></thead><tbody>
+<div class="at-card"><div class="at-scroll">${slice.length ? `<table class="at-table at-list"><thead><tr><th class="at-ck"><input type="checkbox" id="atCkAll" aria-label="Select all on this page"></th><th>App ID</th><th>Student</th><th>Branch</th><th>Executive</th><th>Country</th><th>University</th><th>Intake</th><th>Status</th><th>Offer</th><th>Visa</th><th>Perf date</th><th>Age</th></tr></thead><tbody>
 ${gSlice.map(g => g.apps.length > 1 ? grpRow(g) : appRow(g.apps[0], false, '')).join('')}
 </tbody></table>` : '<div class="at-empty">No applications match. Try clearing filters, or click “+ Add Application”.</div>'}</div>
 ${groups.length > PAGE_SIZE ? `<div class="at-pager"><span>Page ${L.page} of ${pages}</span><button class="um-btn" id="atPrev" ${L.page <= 1 ? 'disabled' : ''}>← Prev</button><button class="um-btn" id="atNext" ${L.page >= pages ? 'disabled' : ''}>Next →</button></div>` : ''}
