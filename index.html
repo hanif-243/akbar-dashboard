@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '4 Nov 2026 · v178';
+window.AKBAR_BUILD = '4 Nov 2026 · v179';
 
 (function () {
   try {
@@ -19413,6 +19413,18 @@ Object.assign(window, { renderEnrollments, renderAccommodation, openFXRates: ope
 .b2b-st-active { background: #E6F4EC; color: #2F6B4F; }
 .b2b-st-slowing { background: #FDF3E1; color: #8A5A12; }
 .b2b-st-dormant { background: #FBE9E7; color: #A33A2B; }
+.b2b-tier { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 6px; font-size: 11px; font-weight: 700; vertical-align: 1px; border: 1px solid; }
+.b2b-tier-gold { color: #8A6A12; border-color: #E2C76E; background: #FBF4DC; }
+.b2b-tier-silver { color: #5B6170; border-color: #C9CDD6; background: #F2F3F6; }
+.b2b-tier-bronze { color: #8A4F2A; border-color: #DDB091; background: #F9EEE6; }
+.b2b-q { display: inline-block; padding: 1px 7px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.b2b-q-high { background: #E6F4EC; color: #2F6B4F; } .b2b-q-medium { background: #FDF3E1; color: #8A5A12; } .b2b-q-low { background: #FBE9E7; color: #A33A2B; }
+.b2b-tg { cursor: pointer; min-width: 84px; font-variant-numeric: tabular-nums; }
+.b2b-tgbar { height: 4px; background: #EEECF3; border-radius: 4px; margin-top: 4px; overflow: hidden; width: 80px; }
+.b2b-tgbar i { display: block; height: 100%; background: #C27C1A; } .b2b-tgbar i.ok { background: #2F6B4F; }
+.b2b-seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.b2b-seg button { border: 0; background: var(--card); padding: 7px 12px; font: inherit; font-size: 13px; cursor: pointer; color: var(--ink); }
+.b2b-seg button.on { background: var(--ink); color: var(--card); }
 .b2b-reqsec { background: var(--red-dim); border-radius: 12px; padding: 12px; border-top: 0; }
 .b2b-reqsec .b2b-li { background: var(--card); }
 .b2b-req-body { margin-top: 12px; background: var(--canvas); border-radius: 10px; padding: 10px 12px; font-size: 13.5px; }
@@ -20608,51 +20620,122 @@ function renderPerf() {
 const d = B.data, today = new Date(), ymd = x => { const t = new Date(x); return isNaN(t) ? '' : t.toISOString().slice(0, 10); };
 const daysAgo = x => { const t = new Date(x); return isNaN(t) ? null : Math.floor((today - t) / 864e5); };
 const m0 = today.toISOString().slice(0, 7);
-const VIS = B.visits || {};
+const VIS = B.visits || {}, PLAN = B.plan || { targets: {}, geo: {}, tiers: [['Gold', 10], ['Silver', 4], ['Bronze', 1]] };
 if (!B.visitsAsked) { B.visitsAsked = true; run('getB2BAgentVisits').then(v => { B.visits = v || {}; if (B.tab === 'perf') renderPerf(); }).catch(() => { B.visits = {}; }); }
+if (!B.planAsked) { B.planAsked = true; run('getB2BAgentPlan').then(v => { B.plan = v; if (B.tab === 'perf') renderPerf(); }).catch(() => { B.plan = PLAN; }); }
 const PIPES = ['new', 'docsPending', 'ready', 'submitted', 'offer', 'deposit', 'cas', 'visaApplied', 'visaApproved'], GOAL = ['submitted', 'offer', 'visaApproved'];
 const reached = (st, k) => (st.applications || []).some(a => PIPES.indexOf(a.pipe) >= PIPES.indexOf(GOAL[k]));
+const pct = (a, b) => b ? Math.round(100 * a / b) : null;
 const rows = d.agents.map(a => {
   const sts = d.students.filter(x => x.agentId === a.id), cs = d.cases.filter(c => c.agentId === a.id);
   const lastAt = sts.map(x => x.createdAt).filter(Boolean).sort().pop() || '';
   const idle = lastAt ? daysAgo(lastAt) : null;
   const visa = cs.filter(c => c.stage === 'Approved').length;
+  const visa12 = cs.filter(c => c.stage === 'Approved' && c.stageAt && daysAgo(c.stageAt) !== null && daysAgo(c.stageAt) <= 365).length;
+  const tier = ((PLAN.tiers || []).find(t => visa12 >= t[1]) || [''])[0];
   const st = a.active === false || String(a.active).toUpperCase() === 'FALSE' ? 'Inactive' : !sts.length ? 'No students yet' : idle <= 30 ? 'Active' : idle <= 60 ? 'Slowing' : 'Dormant';
-  const v = VIS[a.id] || null;
+  const old = sts.filter(x => { const g = daysAgo(x.createdAt); return g === null || g >= 30; });
+  const q = { n: old.length, sub: pct(old.filter(x => reached(x, 0)).length, old.length), off: pct(old.filter(x => reached(x, 1)).length, old.length), visa: pct(old.filter(x => reached(x, 2)).length, old.length) };
+  q.label = old.length < 5 ? '' : q.off >= 50 ? 'High' : q.off >= 25 ? 'Medium' : 'Low';
   return { a: a, students: sts.length, month: sts.filter(x => String(ymd(x.createdAt)).slice(0, 7) === m0).length, d30: sts.filter(x => { const g = daysAgo(x.createdAt); return g !== null && g <= 30; }).length,
-    apps: sts.reduce((t, x) => t + (x.applications || []).length, 0), submitted: sts.filter(x => reached(x, 0)).length, offers: sts.filter(x => reached(x, 1)).length,
-    visa: visa, openCases: cs.filter(c => c.open).length, pending: cs.reduce((t, c) => t + (Number(c.pending) || 0), 0), lastAt: lastAt, idle: idle, state: st,
-    conv: sts.length ? Math.round(100 * sts.filter(x => reached(x, 1)).length / sts.length) : null, visit: v };
+    apps: sts.reduce((t, x) => t + (x.applications || []).length, 0), offers: sts.filter(x => reached(x, 1)).length,
+    visa: visa, visa12: visa12, tier: tier, openCases: cs.filter(c => c.open).length, pending: cs.reduce((t, c) => t + (Number(c.pending) || 0), 0), lastAt: lastAt, idle: idle, state: st,
+    q: q, qScore: q.label ? q.off : -1, target: Number((PLAN.targets || {})[a.id]) || 0, visit: VIS[a.id] || null };
 });
+rows.forEach(r => { r.targetPct = r.target ? r.month / r.target : -1; });
 const n = s => rows.filter(r => r.state === s).length;
 const sum = k => rows.reduce((t, r) => t + r[k], 0);
 const order = { Active: 0, Slowing: 1, Dormant: 2, 'No students yet': 3, Inactive: 4 };
 const sort = B.perfSort || 'month';
-const list = rows.filter(r => (!B.perfState || r.state === B.perfState) && qMatch(r.a.id, r.a.name, r.a.company, r.a.city, r.a.phone))
+const list = rows.filter(r => (!B.perfState || r.state === B.perfState) && (!B.perfTier || r.tier === B.perfTier) && qMatch(r.a.id, r.a.name, r.a.company, r.a.city, r.a.phone))
   .sort((x, y) => sort === 'idle' ? ((y.idle == null ? -1 : y.idle) - (x.idle == null ? -1 : x.idle)) : sort === 'name' ? String(x.a.name).localeCompare(String(y.a.name)) : (y[sort] - x[sort]) || (order[x.state] - order[y.state]));
 const chip = s => `<span class="b2b-st b2b-st-${s.replace(/\s+/g, '').toLowerCase()}">${esc(s)}</span>`;
-const wa = r => { const p = String(r.a.phone || '').replace(/\D/g, ''); if (p.length < 10) return ''; const msg = 'Hi ' + (r.a.name || '') + ', this is ' + (d.me.name || 'the B2B team') + ' from Akbar Study Abroad. ' + (r.idle != null ? 'We have not received a new student from you in ' + r.idle + ' days. ' : '') + 'Do you have students planning for the next intake? We are happy to help with courses, offers and visas.'; return `<a class="um-btn" target="_blank" rel="noopener" href="https:\x2F\x2Fwa.me/${p.length === 10 ? '91' + p : p}?text=${encodeURIComponent(msg)}">WhatsApp</a>`; };
+const tierChip = t => t ? `<span class="b2b-tier b2b-tier-${t.toLowerCase()}">${t}</span>` : '';
+const wa = r => { const p = String(r.a.phone || '').replace(/\D/g, ''); if (p.length < 10) return ''; const msg = 'Hi ' + (r.a.name || '') + ', this is ' + (d.me.name || 'the B2B team') + ' from Akbar Study Abroad. ' + (r.idle != null ? 'We have not received a new student from you in ' + r.idle + ' days. ' : '') + 'Do you have students planning for the next intake? We are happy to help with courses, offers and visas.'; return `<a class="um-btn" target="_blank" rel="noopener" href="${'https:' + '\x2F\x2Fwa.me\x2F'}${p.length === 10 ? '91' + p : p}?text=${encodeURIComponent(msg)}">WhatsApp</a>`; };
 const kpi = (num, label, sub, cls) => `<div class="sx-kpi"><div class="sx-sub">${label}</div><div style="font-size:24px;font-weight:800;" class="${cls || ''}">${num}</div><div class="sx-sub">${sub}</div></div>`;
+const withT = rows.filter(r => r.target), hit = withT.filter(r => r.month >= r.target).length;
+const tiersTxt = (PLAN.tiers || []).map(t => t[0] + ' ' + t[1] + '+').join(' · ');
+const targetCell = r => { const w = r.target ? Math.min(100, Math.round(100 * r.month / r.target)) : 0;
+  return `<div class="b2b-tg" data-tg="${esc(r.a.id)}" title="Click to set this agent's monthly target">${r.target ? `<b>${r.month}</b> of ${r.target}<div class="b2b-tgbar"><i style="width:${w}%" class="${r.month >= r.target ? 'ok' : ''}"></i></div>` : '<span class="sx-sub">Set target</span>'}</div>`; };
+const qCell = r => !r.q.label ? `<span class="sx-sub" title="Needs 5 students older than 30 days">${r.q.n ? r.q.n + ' of 5 needed' : '—'}</span>` :
+  `<span class="b2b-q b2b-q-${r.q.label.toLowerCase()}" title="Students older than 30 days: ${r.q.n}">${r.q.label}</span><div class="sx-sub" style="margin:0;">Submitted ${r.q.sub}% · Offer ${r.q.off}% · Visa ${r.q.visa}%</div>`;
+const view = B.perfView || 'table';
 $('b2bBody').innerHTML = `<div class="sx-kpis">
 ${kpi(rows.length, 'Total agents', `${rows.length - n('Inactive')} active in the list · ${n('Inactive')} switched off`)}
 ${kpi(n('Active'), 'Sent a student in 30 days', `${n('Slowing')} slowing (31–60 days) · ${n('Dormant')} dormant (60+)`, 'sx-good')}
-${kpi(sum('month'), 'Students this month', `${sum('d30')} in the last 30 days · ${sum('students')} all time`)}
-${kpi(sum('visa'), 'Visas approved', `${sum('offers')} students with an offer · ${sum('openCases')} open visa cases`)}
+${kpi(sum('month'), 'Students this month', withT.length ? `${hit} of ${withT.length} agents on target · ${sum('d30')} in 30 days` : `${sum('d30')} in the last 30 days · ${sum('students')} all time`)}
+${kpi(sum('visa'), 'Visas approved', `${['Gold', 'Silver', 'Bronze'].map(t => rows.filter(r => r.tier === t).length + ' ' + t).join(' · ')}`)}
 </div>
 <div class="sx-card"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
 <div class="sx-chips">${['', 'Active', 'Slowing', 'Dormant', 'No students yet', 'Inactive'].map(s => `<button type="button" class="sx-chip ${(B.perfState || '') === s ? 'active' : ''}" data-perf-st="${s}">${s || 'All'} <b>${s ? n(s) : rows.length}</b></button>`).join('')}</div>
-<label class="sx-sub">Sort <select id="b2bPerfSort">${[['month', 'Students this month'], ['students', 'Students all time'], ['offers', 'Offers'], ['visa', 'Visas'], ['pending', 'Fees pending'], ['idle', 'Longest without a student'], ['name', 'Name']].map(o => `<option value="${o[0]}" ${sort === o[0] ? 'selected' : ''}>${o[1]}</option>`).join('')}</select></label></div>
-<div class="sx-sub" style="margin-top:6px;">Live from the desk data${B.fresh ? ' · updated ' + new Date(B.fresh).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : ''}. Last field visit counts a check-in whose place names the agent or the company.</div></div>
-${!list.length ? '<div class="sx-card sx-empty">No agents match.</div>' : `<div class="sx-card" style="padding:0;"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Agent</th><th>Status</th><th>This month</th><th>All time</th><th>Applications</th><th>Offers</th><th>Visas</th><th>Offer rate</th><th>Fees pending</th><th>Last student</th><th>Last field visit</th><th></th></tr></thead><tbody>
-${list.map(r => `<tr><td><b>${esc(r.a.name || r.a.id)}</b><div class="sx-sub" style="margin:0;">${esc([r.a.company, r.a.city].filter(Boolean).join(' · ') || r.a.id)}</div></td>
-<td>${chip(r.state)}</td><td class="num">${r.month}</td><td class="num">${r.students}</td><td class="num">${r.apps}</td><td class="num">${r.offers}</td><td class="num">${r.visa}</td>
-<td class="num">${r.conv == null ? '—' : r.conv + '%'}</td><td class="num ${r.pending ? 'sx-bad' : ''}">${r.pending ? inr(r.pending) : '—'}</td>
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+<select id="b2bPerfTier" aria-label="Tier"><option value="">All tiers</option>${['Gold', 'Silver', 'Bronze'].map(t => `<option ${B.perfTier === t ? 'selected' : ''}>${t}</option>`).join('')}</select>
+<select id="b2bPerfSort" aria-label="Sort">${[['month', 'Students this month'], ['targetPct', 'Target reached'], ['students', 'Students all time'], ['qScore', 'Lead quality'], ['visa12', 'Visas in 12 months'], ['pending', 'Fees pending'], ['idle', 'Longest without a student'], ['name', 'Name']].map(o => `<option value="${o[0]}" ${sort === o[0] ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>
+<div class="b2b-seg"><button type="button" data-perf-view="table" class="${view === 'table' ? 'on' : ''}">Table</button><button type="button" data-perf-view="map" class="${view === 'map' ? 'on' : ''}">Map</button></div></div></div>
+<div class="sx-sub" style="margin-top:6px;">Tiers count visas approved in the last 12 months: ${esc(tiersTxt)}. Lead quality uses students older than 30 days (at least 5): High = half or more got an offer, Medium = a quarter or more, Low = less. Last field visit counts a check-in whose place names the agent or the company.</div></div>
+${view === 'map' ? '<div class="sx-card" style="padding:0;overflow:hidden;"><div id="b2bAgMap" style="height:520px;"></div><div class="sx-sub" id="b2bAgMapNote" style="padding:8px 12px;margin:0;"></div></div>' :
+!list.length ? '<div class="sx-card sx-empty">No agents match.</div>' : `<div class="sx-card" style="padding:0;"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Agent</th><th>Status</th><th>This month</th><th>All time</th><th>Offers</th><th>Visas</th><th>Lead quality</th><th>Fees pending</th><th>Last student</th><th>Last field visit</th><th></th></tr></thead><tbody>
+${list.map(r => `<tr><td><b>${esc(r.a.name || r.a.id)}</b> ${tierChip(r.tier)}<div class="sx-sub" style="margin:0;">${esc([r.a.company, r.a.city].filter(Boolean).join(' · ') || r.a.id)}</div></td>
+<td>${chip(r.state)}</td><td>${targetCell(r)}</td><td class="num">${r.students}</td><td class="num">${r.offers}</td><td class="num">${r.visa}<div class="sx-sub" style="margin:0;">${r.visa12} in 12 months</div></td>
+<td>${qCell(r)}</td><td class="num ${r.pending ? 'sx-bad' : ''}">${r.pending ? inr(r.pending) : '—'}</td>
 <td>${r.lastAt ? fmtDate(ymd(r.lastAt)) + `<div class="sx-sub" style="margin:0;">${r.idle} day${r.idle === 1 ? '' : 's'} ago</div>` : '—'}</td>
 <td>${r.visit ? fmtDate(r.visit.last) + `<div class="sx-sub" style="margin:0;">${esc(r.visit.by)} · ${r.visit.count} visit${r.visit.count === 1 ? '' : 's'}</div>` : (B.visits ? '<span class="sx-sub">None in 6 months</span>' : '…')}</td>
 <td>${r.state === 'Slowing' || r.state === 'Dormant' ? wa(r) : ''}</td></tr>`).join('')}
 </tbody></table></div></div>`}`;
-$('b2bBody').querySelectorAll('[data-perf-st]').forEach(b => b.onclick = () => { B.perfState = b.dataset.perfSt; renderPerf(); });
+const body = $('b2bBody');
+body.querySelectorAll('[data-perf-st]').forEach(b => b.onclick = () => { B.perfState = b.dataset.perfSt; renderPerf(); });
+body.querySelectorAll('[data-perf-view]').forEach(b => b.onclick = () => { B.perfView = b.dataset.perfView; renderPerf(); });
 const so = $('b2bPerfSort'); if (so) so.onchange = () => { B.perfSort = so.value; renderPerf(); };
+const ti = $('b2bPerfTier'); if (ti) ti.onchange = () => { B.perfTier = ti.value; renderPerf(); };
+body.querySelectorAll('[data-tg]').forEach(el => el.onclick = () => {
+  if (el.querySelector('input')) return;
+  const id = el.dataset.tg, cur = Number((PLAN.targets || {})[id]) || '';
+  el.innerHTML = `<input type="number" min="0" max="500" value="${cur}" style="width:64px;" aria-label="Students a month"> <button class="um-btn" type="button">Save</button>`;
+  const inp = el.querySelector('input'), btn = el.querySelector('button'); inp.focus();
+  const save = () => { btn.disabled = true; run('saveB2BAgentTarget', id, inp.value).then(t => { B.plan = Object.assign({}, PLAN, { targets: t || {} }); renderPerf(); }).catch(e => { btn.disabled = false; showToast(e.message || String(e), 'error'); }); };
+  btn.onclick = e => { e.stopPropagation(); save(); };
+  inp.onkeydown = e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') renderPerf(); };
+  inp.onclick = e => e.stopPropagation();
+});
+if (view === 'map') drawAgentMap(rows.filter(r => r.state !== 'Inactive'), PLAN);
+}
+let agMap = null;
+function drawAgentMap(rows, PLAN) {
+const note = $('b2bAgMapNote'), geo = Object.assign({}, PLAN.geo || {});
+const key = c => String(c || '').trim().toLowerCase();
+const byCity = {}; rows.forEach(r => { const k = key(r.a.city); if (!k) return; (byCity[k] = byCity[k] || []).push(r); });
+const noCity = rows.filter(r => !key(r.a.city)).length;
+const missing = Object.keys(byCity).filter(k => geo[k] === undefined);
+const color = { Active: '#2F6B4F', Slowing: '#C27C1A', Dormant: '#B23A2B', 'No students yet': '#8C869A' };
+const paint = L => {
+  if (!$('b2bAgMap')) return;
+  if (agMap) { agMap.remove(); agMap = null; }
+  agMap = L.map('b2bAgMap');
+  L.tileLayer('https:' + '\x2F\x2F{s}.basemaps.cartocdn.com\x2Flight_all\x2F{z}\x2F{x}\x2F{y}{r}.png', { maxZoom: 19, attribution: '© OpenStreetMap © CARTO' }).addTo(agMap);
+  const pts = [];
+  Object.keys(byCity).forEach(k => { const g = geo[k]; if (!g) return; const list = byCity[k], tot = list.reduce((t, r) => t + r.students, 0);
+    const worst = ['Dormant', 'Slowing', 'Active', 'No students yet'].find(s => list.some(r => r.state === s)) || 'Active';
+    pts.push(g);
+    L.circleMarker(g, { radius: Math.min(26, 7 + Math.sqrt(tot) * 3), color: color[worst], fillColor: color[worst], fillOpacity: .35, weight: 2 }).addTo(agMap)
+      .bindPopup('<b>' + esc(list[0].a.city) + '</b> · ' + list.length + ' agent' + (list.length === 1 ? '' : 's') + ' · ' + tot + ' students<br>' + list.sort((x, y) => y.students - x.students).slice(0, 12).map(r => esc(r.a.name) + ' · ' + r.state + ' · ' + r.students).join('<br>')); });
+  if (pts.length) agMap.fitBounds(pts, { padding: [40, 40], maxZoom: 9 }); else agMap.setView([20.5, 78.9], 5);
+  const off = Object.keys(byCity).filter(k => geo[k] === null).length;
+  if (note) note.textContent = `${Object.keys(byCity).length} cities. Circle size = students, colour = the quietest agent there (green active, amber slowing, red dormant).` + (noCity ? ` ${noCity} agent${noCity === 1 ? ' has' : 's have'} no city saved.` : '') + (off ? ` ${off} city name${off === 1 ? '' : 's'} could not be found on the map.` : '') + (missing.length ? ` Finding ${missing.length} more cities…` : '');
+};
+const lf = window.akLeaflet ? window.akLeaflet() : Promise.reject(new Error('Map could not load'));
+lf.then(L => {
+  paint(L);
+  if (!missing.length) return;
+  const found = {}; let i = 0;
+  const next = () => {
+    if (i >= Math.min(missing.length, 25) || B.perfView !== 'map') { if (Object.keys(found).length) run('saveB2BCityMap', found).then(g => { if (B.plan) B.plan.geo = g; }).catch(() => {}); return; }
+    const k = missing[i++];
+    fetch('https:' + '\x2F\x2Fnominatim.openstreetmap.org\x2Fsearch?format=json&limit=1&countrycodes=in&q=' + encodeURIComponent(byCity[k][0].a.city)).then(r => r.json())
+      .then(a => { found[k] = a && a[0] ? [Number(a[0].lat), Number(a[0].lon)] : null; geo[k] = found[k]; })
+      .catch(() => {}).then(() => { paint(L); setTimeout(next, 1100); });
+  };
+  next();
+}).catch(e => { const m = $('b2bAgMap'); if (m) m.innerHTML = '<div class="sx-empty" style="padding:20px">' + esc(e.message || String(e)) + '</div>'; });
 }
 function renderBranch() {
 const rows = B.data.students.filter(st => isBranchSt(st) && (!B.stage || st.visaCases.some(id => (caseById(id) || {}).stage === B.stage))
@@ -28515,6 +28598,7 @@ const sc = document.createElement('script'); sc.src = 'https:' + '\x2F\x2Fcdnjs.
 });
 return leafP;
 }
+window.akLeaflet = leaflet;
 let vMap = null, vRange = 28;
 window.akOpenVisits = function () {
 $('akVi').classList.add('on'); document.body.style.overflow = 'hidden';
