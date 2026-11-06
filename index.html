@@ -7218,7 +7218,10 @@ document.addEventListener('click', e => {
   if (lead) {
     e.preventDefault();
     const id = lead.dataset.missedLead;
-    if (!findRowByLeadId(id)) { showToast('That lead isn\'t in this view — it may be in Bulk / telecaller leads or another branch.', 'error'); return; }
+    if (!findRowByLeadId(id)) {
+      if (typeof window.akCallLead === 'function' && (document.body.classList.contains('tc-staff') || window._isSuperAdmin || (typeof viewerCounselor !== 'undefined' && !viewerCounselor))) { closeMissedPopup(30); window.akCallLead(lead.dataset.missedBranch, id, () => showToast('That lead isn\'t in this view — it may be with a counsellor or in another branch.', 'error')); return; }
+      showToast('That lead isn\'t in this view — it may be in Bulk / telecaller leads or another branch.', 'error'); return;
+    }
     closeMissedPopup(30); expandedLeadIds.clear(); expandedLeadIds.add(id); forceRender();
   }
 });
@@ -14251,6 +14254,13 @@ body.ak-keep-side .app[style*="display: none"] > .main { display: none !importan
 .cf-tray .um-btn.primary { background: #fff !important; color: #0E1222 !important; border-color: #fff !important; }
 .cf-empty { text-align: center; color: var(--muted); padding: 34px 16px; }
 .cf-cmpwrap { overflow-x: auto; }
+.cq-find { margin: 0 0 14px; position: relative; }
+.cq-find input { width: 100%; max-width: 460px; box-sizing: border-box; }
+.cq-findlist { display: grid; gap: 6px; margin-top: 8px; max-width: 640px; }
+.cq-findlist button { display: grid; grid-template-columns: 1.4fr 1fr 1.6fr; gap: 10px; align-items: center; text-align: left; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--ink); cursor: pointer; font: inherit; font-size: 13px; }
+.cq-findlist button:hover { border-color: var(--accent, #E2231A); }
+.cq-findlist span { color: var(--muted); }
+@media (max-width: 700px) { .cq-findlist button { grid-template-columns: 1fr; gap: 2px; } }
 .cf-fit { font-size: 12.5px; color: var(--ink); margin-top: 4px; }
 .cf-fit::before { content: 'Fits: '; font-weight: 600; color: var(--muted); }
 .cf-cmpt th.cf-cmphd { background: var(--card, #fff); text-transform: none; letter-spacing: 0; vertical-align: bottom; }
@@ -22869,7 +22879,7 @@ function cqSuggested(key) { if (key !== 'noanswer') return ''; const n = Number(
 function cqWaBox() {
   const ph = digits((C.lead || {}).phone); if (ph.length < 10) return '';
   const key = cqWaKey(C.result); if (key === 'none') return '';
-  const ids = (CQ_BY_RESULT[key] || []).filter(id => CQ_MSG[id][2] !== 'meeting' || (C.ho === 'mgr' && C.mC && C.mTime)), sug = cqSuggested(key);
+  const ids = (CQ_BY_RESULT[key] || []).filter(id => CQ_MSG[id][2] !== 'meeting' || (C.mC && C.mTime)), sug = cqSuggested(key);
   const extra = (C.waT || []).filter(t => t.active !== false && t.message);
   return `<div class="cq-box cq-wa"><label>💬 WhatsApp message${C.result ? ' for “' + esc(C.result) + '”' : ''}</label><div class="cq-wa-list">${ids.map(id => `<button type="button" class="cq-wa-btn ${id === sug ? 'sug' : ''}" data-cq-wa="${id}" title="${esc(cqFill(CQ_MSG[id][1] + CQ_SIGN))}">${id === sug ? '⭐ ' : ''}${esc(CQ_MSG[id][0])}</button>`).join('')}
 <select id="cqWaAll" aria-label="All messages"><option value="">All messages…</option>${Object.keys(CQ_MSG).filter(id => CQ_MSG[id][2] !== 'meeting').map(id => `<option value="m:${id}">${esc(CQ_MSG[id][0])}</option>`).join('')}${extra.map((t, i) => `<option value="t:${i}">${esc(t.name || 'Message ' + (i + 1))}</option>`).join('')}</select></div>
@@ -22906,13 +22916,42 @@ function openCalling() {
   root.style.display = 'block';
   root.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-title">📞 Calling queue</h1><div class="sx-sub" id="cqSub">Loading…</div></div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><select id="cqSet" aria-label="Calling list"><option value="">All calling lists</option><option value="bulk">Bulk uploads</option><option value="sulekha">Sulekha</option><option value="b2b">B2B</option></select><select id="cqBranch" style="display:none;" aria-label="Branch"></select><button class="um-btn" id="cqBack">← Back to dashboard</button></div></div>
+<div class="cq-find"><input type="search" id="cqFind" placeholder="Find a lead you called: name or phone" aria-label="Find a lead by name or phone"><div id="cqFindRes"></div></div>
 <div id="cqPend"></div><div id="cqStats"></div><div id="cqBody"><div class="sx-card"><div class="skeleton" style="height:220px;"></div></div></div></div>`;
   $('cqBack').onclick = closeCalling;
+  wireFind();
   C.set = ['bulk', 'sulekha', 'b2b'].indexOf(window._leadSet) !== -1 ? window._leadSet : '';
   C.lead = null; C.skip = []; C.pre = null;
   window.scrollTo(0, 0);
   loadSetup();
 }
+
+function wireFind() {
+  const inp = $('cqFind'), out = $('cqFindRes'); if (!inp) return;
+  let t = 0, seq = 0;
+  const go = () => {
+    const q = inp.value.trim(); if (q.length < 3) { out.innerHTML = ''; return; }
+    const my = ++seq; out.innerHTML = '<div class="sx-sub">Searching…</div>';
+    run('searchCallLeads', C.branch, q).then(list => {
+      if (my !== seq) return;
+      out.innerHTML = list.length ? '<div class="cq-findlist">' + list.map(x => `<button type="button" data-cq-open="${esc(x.leadId)}"><b>${esc(x.name || 'No name')}</b><span>${esc(clean(x.phone))}</span><span>${esc(x.status || 'New')}${x.tries ? ' · ' + x.tries + ' call' + (x.tries === 1 ? '' : 's') + (x.lastResult ? ', last: ' + esc(x.lastResult) : '') : ' · not called yet'}</span></button>`).join('') + '</div>'
+        : '<div class="sx-sub">No lead in your calling lists matches. Leads already with a counsellor are not shown.</div>';
+      out.querySelectorAll('[data-cq-open]').forEach(b => b.onclick = () => { out.innerHTML = ''; inp.value = ''; openOne(b.dataset.cqOpen); });
+    }).catch(e => { if (my === seq) out.innerHTML = '<div class="sx-sub">' + esc(errMsg(e)) + '</div>'; });
+  };
+  inp.oninput = () => { clearTimeout(t); t = setTimeout(go, 450); };
+  inp.onkeydown = e => { if (e.key === 'Enter') { clearTimeout(t); go(); } };
+}
+function openOne(leadId, branch) {
+  if (C.lead && C.result && !confirm('Leave this lead without saving the call result?')) return;
+  stopTimer();
+  run('getCallLeadById', branch || C.branch, leadId).then(r => { resetLead(); C.lead = r.lead; C.pre = null; draw(); window.scrollTo(0, 0); }).catch(e => toast(errMsg(e), 'error'));
+}
+window.akCallLead = (branch, leadId, onFail) => {
+  toast('Opening the lead…');
+  run('getCallLeadById', branch, leadId).then(r => { C.branch = r.lead.branch; C.want = r.lead; openCalling(); })
+    .catch(e => { if (typeof onFail === 'function') onFail(e); else toast(errMsg(e), 'error'); });
+};
 function closeCalling() {
   stopTimer(); C.pre = null;
   const root = $('callView'); if (root) { root.style.display = 'none'; root.innerHTML = ''; }
@@ -22928,7 +22967,8 @@ function loadSetup() {
     const ss = $('cqSet'); if (ss) { ss.value = C.set; ss.onchange = () => { C.set = ss.value; C.lead = null; C.skip = []; C.pre = null; stopTimer(); $('cqSub').textContent = C.branch + ' · ' + ({ bulk: 'bulk uploads', sulekha: 'Sulekha leads', b2b: 'B2B leads' }[C.set] || 'all calling lists') + ', one by one · signed in as ' + C.setup.me; next(); }; }
     const sel = $('cqBranch');
     if (s.branches.length > 1) { sel.style.display = ''; sel.innerHTML = s.branches.map(b => `<option ${b === s.branch ? 'selected' : ''}>${esc(b)}</option>`).join(''); sel.onchange = () => { C.branch = sel.value; C.lead = null; C.skip = []; loadSetup(); }; }
-    drawStats(s.stats); draw();
+    drawStats(s.stats);
+    if (C.want && C.want.branch === s.branch) { stopTimer(); resetLead(); C.lead = C.want; C.want = null; C.pre = null; draw(); window.scrollTo(0, 0); } else { C.want = null; draw(); }
   }).catch(e => { $('cqBody').innerHTML = `<div class="sx-card sx-empty">${esc(errMsg(e))}</div>`; });
 }
 function drawStats(st) {
@@ -22969,8 +23009,8 @@ ${(l.history || []).length ? `<div class="cq-prev"><b>Earlier calls</b>${l.histo
 <div class="cq-results">${R.map(r => `<button type="button" class="${cls(r)} ${r.result === C.result ? 'on' : ''}" data-cq-res="${esc(r.result)}">${esc(r.result)}</button>`).join('')}</div>
 ${C.result === 'Call back later' ? `<div class="cq-box"><div class="cq-two"><div><label for="cqCbD">Call back on</label><input type="date" id="cqCbD" min="${today()}" value="${esc(C.cbDate || '')}"></div><div><label for="cqCbT">At</label><input type="time" id="cqCbT" value="${esc(C.cbTime || '')}"></div></div></div>` : ''}
 ${C.result === 'Interested' ? `<div class="cq-box"><div class="cq-two"><div><label for="cqHo">Send to</label><select id="cqHo"><option value="pick" ${C.ho === 'pick' ? 'selected' : ''} disabled>Choose a counsellor…</option>${C.setup.counsellors.length ? '<optgroup label="Counsellors">' + C.setup.counsellors.map(n => `<option ${n === C.ho ? 'selected' : ''}>${esc(n)}</option>`).join('') + '</optgroup>' : ''}<optgroup label="Other"><option value="mgr" ${C.ho === 'mgr' ? 'selected' : ''}>Branch manager — assigns a counsellor</option><option value="" ${C.ho === '' ? 'selected' : ''}>Keep with me for now</option></optgroup></select></div><div><label for="cqHoNote">Note for the ${C.ho === 'mgr' ? 'manager' : 'counsellor'}</label><input type="text" id="cqHoNote" value="${esc(C.hoNote || '')}" placeholder="e.g. wants UK, Sept intake, call after 6 pm"></div></div>
-${C.ho === 'mgr' ? `<div class="cq-mtg"><div class="cq-two"><div><label for="cqMD">📅 Book a meeting (optional) — who is free on</label><input type="date" id="cqMD" min="${today()}" value="${esc(C.mDate || today())}"></div><div class="cq-two"><div><label for="cqMC">Counsellor</label><select id="cqMC"><option value="">No meeting</option>${C.setup.counsellors.map(n => `<option ${n === C.mC ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></div><div><label for="cqMT">Time</label><input type="time" id="cqMT" value="${esc(C.mTime || '')}"></div></div></div><div id="cqAv" class="cq-av"><span class="sx-sub">Checking who is free…</span></div></div>` : ''}
-<div class="sx-sub" style="margin-top:6px;">${C.ho === 'pick' ? 'Choose who gets this lead.' : C.ho === 'mgr' ? 'The branch manager gets a notification and an email to assign a counsellor.' + (C.mC ? ' The meeting goes on ' + esc(C.mC) + '’s calendar.' : '') : C.ho ? 'The lead moves to ' + esc(C.ho) + '’s list and they get a notification and an email from you.' : 'The lead stays in the calling queue with you.'}</div></div>` : ''}
+${C.ho === 'mgr' || (C.ho && C.ho !== 'pick') ? `<div class="cq-mtg"><div class="cq-two"><div><label for="cqMD">📅 Book a meeting (optional) — who is free on</label><input type="date" id="cqMD" min="${today()}" value="${esc(C.mDate || today())}"></div><div class="cq-two"><div><label for="cqMC">Counsellor</label><select id="cqMC"><option value="">No meeting</option>${(C.ho === 'mgr' ? C.setup.counsellors : [C.ho]).map(n => `<option ${n === C.mC ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></div><div><label for="cqMT">Time</label><input type="time" id="cqMT" value="${esc(C.mTime || '')}"></div></div></div><div id="cqAv" class="cq-av"><span class="sx-sub">Checking who is free…</span></div></div>` : ''}
+<div class="sx-sub" style="margin-top:6px;">${C.ho === 'pick' ? 'Choose who gets this lead.' : C.ho === 'mgr' ? 'The branch manager gets a notification and an email to assign a counsellor.' + (C.mC ? ' The meeting goes on ' + esc(C.mC) + '’s calendar.' : '') : C.ho ? 'The lead moves to ' + esc(C.ho) + '’s list and they get a notification and an email from you.' + (C.mC && C.mTime ? ' The meeting goes on their calendar.' : '') : 'The lead stays in the calling queue with you.'}</div></div>` : ''}
 ${cqWaBox()}
 <label class="f" for="cqNotes" style="font-size:12px;font-weight:700;color:var(--muted);">Notes</label><textarea id="cqNotes" placeholder="What did they say?">${esc(C.notes || '')}</textarea>
 <div class="cq-actions"><button class="um-btn primary" id="cqSave" ${C.result ? '' : 'disabled'}>${res && res.result === 'Interested' && C.ho === 'mgr' ? '📞 Send to manager & next' : res && res.result === 'Interested' && C.ho && C.ho !== 'pick' ? 'Hand over & next' : '✓ Save & next'}</button><button class="um-btn" id="cqSkip" title="Skip this lead for now — it stays in the queue">Skip</button><button class="um-btn" id="cqStop">Save & stop</button></div>
@@ -22982,7 +23022,7 @@ ${cqWaBox()}
   $('cqSave').onclick = () => save(true);
   $('cqStop').onclick = () => save(false);
   $('cqSkip').onclick = () => { stopTimer(); C.skip.push(C.lead.leadId); C.lead = null; next(); };
-  const ho = $('cqHo'); if (ho) ho.onchange = () => { keep(); draw(); };
+  const ho = $('cqHo'); if (ho) ho.onchange = () => { keep(); C.mC = ''; C.mTime = ''; draw(); };
   cqWaWire(b);
   const md = $('cqMD'); if (md) { md.onchange = () => { keep(); loadAv(); }; loadAv(); }
   const mc = $('cqMC'); if (mc) mc.onchange = () => { keep(); draw(); };
@@ -23025,7 +23065,8 @@ function drawAv(d) {
   const hm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
   const nowMin = d.date === today() ? (() => { const t = new Date(d.nowIst); return t.getUTCHours() * 60 + t.getUTCMinutes(); })() : 0;
   const start = f => { const s = Math.max(f[0], nowMin ? Math.ceil(nowMin / 30) * 30 : 0); return s + 30 <= f[1] ? s : null; };
-  el.innerHTML = d.people.length ? d.people.map(p => {
+  const ppl = C.ho && C.ho !== 'mgr' && C.ho !== 'pick' ? d.people.filter(p => p.name === C.ho) : d.people;
+  el.innerHTML = ppl.length ? ppl.map(p => {
     const slots = (p.free || []).map(f => [start(f), f[1]]).filter(f => f[0] !== null);
     return `<div class="cq-avrow"><b>${esc(p.name)}</b>${p.onLeave ? '<span class="sx-sub">on leave</span>' : p.off ? '<span class="sx-sub">off this day</span>' : slots.length ? slots.map(f => `<button type="button" class="cq-slot ${C.mC === p.name && C.mTime === hm(f[0]) ? 'on' : ''}" data-mc="${esc(p.name)}" data-mt="${hm(f[0])}">${hm(f[0])}–${hm(f[1])}</button>`).join('') : '<span class="sx-sub">fully booked</span>'}</div>`;
   }).join('') : '<span class="sx-sub">No counsellors set up for this branch.</span>';
@@ -23075,7 +23116,10 @@ function save(goNext) {
   if (C.result === 'Interested' && C.ho === 'mgr') {
     if (C.mC && !C.mTime) { toast('Pick the meeting time (or choose “No meeting”)', 'error'); return; }
     p.handover = { toManager: true, note: C.hoNote || '', meeting: C.mC ? { counsellor: C.mC, date: C.mDate || today(), time: C.mTime } : null };
-  } else if (C.result === 'Interested' && C.ho) p.handover = { counsellor: C.ho, note: C.hoNote || '' };
+  } else if (C.result === 'Interested' && C.ho) {
+    if (C.mC && !C.mTime) { toast('Pick the meeting time (or choose “No meeting”)', 'error'); return; }
+    p.handover = { counsellor: C.ho, note: C.hoNote || '', meeting: C.mC ? { date: C.mDate || today(), time: C.mTime } : null };
+  }
   send(p);
   C.lead = null;
   if (goNext) next(); else { C.pre = null; resetLead(); draw(); }
@@ -23146,7 +23190,7 @@ function openFuCard(key) {
 window.akOpenLeadCard = openFuCard;
 function openFuLead(key) {
   const r = (typeof allRows !== 'undefined' ? allRows : []).find(x => x.branch + '|' + x.leadId === key);
-  if (!r) { openFuCard(key); return; }
+  if (!r) { if (isCallerRole()) { const i = key.indexOf('|'); window.akCallLead(key.slice(0, i), key.slice(i + 1), () => openFuCard(key)); } else openFuCard(key); return; }
   const s = $('search'); if (s && s.value && F.list.some(f => s.value === f.leadName)) s.value = '';
   expandedLeadIds.clear(); expandedLeadIds.add(r.leadId);
   if (typeof forceRender === 'function') forceRender(); else render();
