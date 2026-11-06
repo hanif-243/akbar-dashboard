@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '6 Nov 2026 · v187';
+window.AKBAR_BUILD = '6 Nov 2026 · v188';
 
 (function () {
   try {
@@ -14158,7 +14158,8 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) chec
 </script>
 
 <style>
-#cfView { display: none; }
+#cfView { display: none; flex: 1; min-width: 0; }
+.app:has(> #cfView[style*="block"]) > .main { display: none; }
 .cf-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: start; }
 @media (max-width: 960px) { .cf-grid { grid-template-columns: minmax(0, 1fr); } }
 .cf-prof { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; }
@@ -14346,10 +14347,11 @@ const S = { tab: 'find', res: null, set: null, short: [], cmp: [], en: 'ielts', 
 const canManage = () => !!window._isSuperAdmin || (typeof viewerBranch !== 'undefined' && !!viewerBranch && typeof viewerCounselor !== 'undefined' && !viewerCounselor);
 
 function open() {
-  const app = document.querySelector('.app'); if (app) app.style.display = 'none';
-  ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView'].forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
+  const app = document.querySelector('.app'); if (app) app.style.display = '';
+  ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'hoView', 'olView', 'b2bDbView', 'lpView', 'evView'].forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
   if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
-  let root = $('cfView'); if (!root) { root = document.createElement('div'); root.id = 'cfView'; document.body.appendChild(root); }
+  let root = $('cfView'); if (!root) { root = document.createElement('div'); root.id = 'cfView'; }
+  if (app && root.parentNode !== app) app.appendChild(root); else if (!app && !root.parentNode) document.body.appendChild(root);
   root.style.display = 'block';
   if (!root.dataset.built) build(root);
   document.querySelectorAll('#sidebar .nav-item').forEach(n => n.classList.toggle('active', n.hasAttribute('data-cf-view')));
