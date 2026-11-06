@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '6 Nov 2026 · v188';
+window.AKBAR_BUILD = '6 Nov 2026 · v189';
 
 (function () {
   try {
@@ -7485,6 +7485,7 @@ loader.classList.remove('active');
 
 const akAway = home => ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'b2bDbView', 'archView', 'ownView', 'lpView', 'pbView', 'evView', 'telecallerApp', 'tdView', 'acView']
   .some(id => { if (id === home) return false; const el = document.getElementById(id); return !!(el && el.style.display === 'block'); });
+if (response && response.rows !== undefined || response && (response.isTelecaller || response.isAppExecutive || response.isB2BTeam || response.isVisaExecutive)) { window._akHomeView = !!(response.isTelecaller || response.isAppExecutive || response.isB2BTeam || response.isVisaExecutive); if (window.akSyncPages) window.akSyncPages(); }
 if (response && (response.isTelecaller || response.isAppExecutive || response.isB2BTeam || response.isVisaExecutive) && akAway(response.isTelecaller ? 'telecallerApp' : response.isAppExecutive ? 'appTeamView' : response.isB2BTeam ? 'b2bView' : 'visaView')) return;
 if (response && response.isTelecaller) { initTelecallerDashboard(response); return; }
 if (response && response.rows !== undefined) { window._b2bStaff = !!response.isB2BStaff; const bn = document.querySelector('[data-group="b2b"]'); if (bn && window._b2bStaff) bn.style.display = ''; }
@@ -14159,6 +14160,9 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) chec
 
 <style>
 #cfView { display: none; flex: 1; min-width: 0; }
+body.ak-keep-side .app[style*="display: none"] { display: flex !important; }
+body.ak-keep-side .app[style*="display: none"] > .main { display: none !important; }
+.app > .ak-page { flex: 1; min-width: 0; }
 .app:has(> #cfView[style*="block"]) > .main { display: none; }
 .cf-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: start; }
 @media (max-width: 960px) { .cf-grid { grid-template-columns: minmax(0, 1fr); } }
@@ -15072,6 +15076,39 @@ if (sb) sb.addEventListener('click', e => { const it = e.target.closest('.nav-it
 window.openCourseFinder = open;
 window.cfGo = (t) => { open(); if (t) setTimeout(() => tab(t), 50); };
 window.cfOpenLead = (branch, leadId) => { open(); tab('find'); setTimeout(() => { const sel = $('cfLead'); if (!sel) return; const v = branch + '|' + leadId; if (!Array.from(sel.options).some(o => o.value === v)) { const o = document.createElement('option'); o.value = v; o.textContent = 'Lead ' + leadId; sel.appendChild(o); } sel.value = v; pickLead(); }, 120); };
+})();
+</script>
+
+<script>
+(function () {
+'use strict';
+const PAGES = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'hoView', 'olView',
+  'archView', 'b2bDbView', 'ownView', 'lpView', 'pbView', 'evView', 'tdView', 'acView'];
+const keep = () => !window._akHomeView;
+function sync() {
+  const on = keep(), app = document.querySelector('.app');
+  document.body.classList.toggle('ak-keep-side', on);
+  if (!app) return;
+  PAGES.forEach(id => {
+    const el = document.getElementById(id); if (!el) return;
+    el.classList.add('ak-page');
+    if (on) { if (el.parentNode !== app) app.appendChild(el); }
+    else if (el.parentNode === app) document.body.appendChild(el);
+  });
+}
+window.akSyncPages = sync;
+new MutationObserver(sync).observe(document.body, { childList: true });
+setInterval(sync, 2000);
+sync();
+const sb = document.getElementById('sidebar');
+if (sb) sb.addEventListener('click', e => {
+  if (!keep()) return;
+  const it = e.target.closest('.nav-item, .lead-set-item, [data-branch]'); if (!it) return;
+  const app = document.querySelector('.app'); if (!app || app.style.display !== 'none') return;
+  PAGES.forEach(id => { const el = document.getElementById(id); if (el && el.style.display === 'block') el.style.display = 'none'; });
+  if (typeof closeModal === 'function') { try { closeModal(); } catch (err) { } }
+  app.style.display = '';
+}, true);
 })();
 </script>
 
