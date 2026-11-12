@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '6 Nov 2026 · v189';
+window.AKBAR_BUILD = '12 Nov 2026 · v190';
 
 (function () {
   try {
@@ -24348,7 +24348,7 @@ function paint() {
   const rows = allRows.filter(r => r.branch === branch), today = new Date().toISOString().slice(0, 10);
   const known = (SRC[branch] || [{ key: '', label: 'Main sheet', main: true }]).slice();
   rows.forEach(r => { const k = r.sheet || ''; if (k && !known.some(s => s.key === k)) known.push({ key: k, label: k, main: false }); });
-  if (known.filter(s => !s.view).length < 2 && !known.some(s => s.view)) { bar.classList.remove('aksb-show'); return; }
+
   const stat = k => { const m = rows.filter(r => (r.sheet || '') === k); return { n: m.length, today: m.filter(r => String(r.createdAt || '').slice(0, 10) === today).length }; };
   const sig = branch + '|' + window.akSheetFilter + '|' + rows.length + '|' + known.map(s => s.key + s.url).join(',');
   if (sig === lastSig) return; lastSig = sig;
@@ -24361,7 +24361,8 @@ function paint() {
         (s.url ? '<a class="aksb-open" href="' + esc(s.url) + '" target="_blank" rel="noopener" title="Open this sheet in Google Sheets" aria-label="Open ' + esc(s.label) + '">↗</a>' : '') + '</span>'; }).join('') +
 (known.some(s => s.view) ? '<span class="aksb-sep" aria-hidden="true"></span><span class="aksb-sec">Old tabs · view only</span>' + known.filter(s => s.view).map(s => { const p = split(s.label);
       return '<span class="aksb-chip aksb-view" title="' + esc(s.label) + ' — view only' + (s.error ? ' — ' + esc(s.error) : '') + '"><button type="button" class="aksb-btn" data-vt-k="' + esc(s.key) + '" data-vt-l="' + esc(s.label) + '"><span class="aksb-dot"></span><span class="aksb-name">' + esc(p[1] || p[0]) + '</span><span class="aksb-sub">' + esc(p[1] ? p[0] : '') + '</span><span class="aksb-n">' + (s.rows || 0) + '</span></button>' +
-        (s.url ? '<a class="aksb-open" href="' + esc(s.url) + '" target="_blank" rel="noopener" title="Open this tab in Google Sheets" aria-label="Open ' + esc(s.label) + '">↗</a>' : '') + '</span>'; }).join('') : '');
+        (s.url ? '<a class="aksb-open" href="' + esc(s.url) + '" target="_blank" rel="noopener" title="Open this tab in Google Sheets" aria-label="Open ' + esc(s.label) + '">↗</a>' : '') + '</span>'; }).join('') : '') +
+    '<button type="button" class="aksb-add" id="akSrcBtn" title="Link or import a Google Sheet of leads">+ Add lead sheet</button>';
   bar.classList.add('aksb-show');
 }
 function openView(key, label) {
@@ -24400,6 +24401,137 @@ bar.addEventListener('click', e => {
   lastSig = ''; paint(); if (typeof render === 'function') render();
 });
 setInterval(paint, 1500);
+})();
+</script>
+
+<style>
+#akSheetBar .aksb-add { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border: 1px dashed var(--border); border-radius: 10px; cursor: pointer; font: 600 12.5px/1 'IBM Plex Sans', system-ui, sans-serif; color: var(--muted); }
+#akSheetBar .aksb-add:hover { color: var(--ink); border-color: var(--muted); }
+#akSheetBar .aksb-add:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+#akSrcBg .cmdk-box { max-width: 760px; width: calc(100vw - 32px); }
+#akSrcBg .lsr-body { padding: 16px 20px 20px; max-height: 76vh; overflow: auto; }
+#akSrcBg h4 { margin: 0 0 8px; font: 600 13px/1.3 'IBM Plex Sans', system-ui, sans-serif; color: var(--ink); }
+#akSrcBg .lsr-sec + .lsr-sec { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+#akSrcBg .lsr-row { display: flex; flex-direction: row; text-align: left; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; }
+#akSrcBg .lsr-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #1F9D63; }
+#akSrcBg .lsr-row.main .lsr-dot { background: #3E6BD6; }
+#akSrcBg .lsr-row.bad .lsr-dot { background: var(--red); }
+#akSrcBg .lsr-main { flex: 1; min-width: 0; }
+#akSrcBg .lsr-name { font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#akSrcBg .lsr-meta { font-size: 12px; color: var(--muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
+#akSrcBg .lsr-err { font-size: 12px; color: var(--red); margin-top: 2px; }
+#akSrcBg .lsr-row a, #akSrcBg .lsr-row button { flex: 0 0 auto; }
+#akSrcBg .lsr-link { font-size: 12px; color: var(--muted); text-decoration: none; }
+#akSrcBg .lsr-link:hover { color: var(--ink); }
+#akSrcBg .lsr-in { display: flex; gap: 8px; flex-wrap: wrap; }
+#akSrcBg .lsr-in input, #akSrcBg select { flex: 1; min-width: 220px; height: 36px; border: 1px solid var(--border); border-radius: 10px; padding: 0 12px; font: inherit; font-size: 13px; background: var(--card); color: inherit; }
+#akSrcBg .lsr-hint { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.45; }
+#akSrcBg .lsr-prev { margin-top: 12px; border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+#akSrcBg .lsr-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 10px 0; }
+#akSrcBg .lsr-kpi { background: var(--canvas); border-radius: 10px; padding: 8px 10px; }
+#akSrcBg .lsr-kpi b { display: block; font: 600 18px/1.2 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+#akSrcBg .lsr-kpi span { font-size: 11.5px; color: var(--muted); }
+#akSrcBg table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 4px; }
+#akSrcBg th { text-align: left; font-weight: 600; font-size: 11.5px; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+#akSrcBg td { padding: 6px 8px; border-bottom: 1px solid var(--border); }
+#akSrcBg .lsr-acts { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 12px; }
+#akSrcBg .lsr-acts .um-btn[disabled], #akSrcBg .lsr-in .um-btn[disabled] { opacity: .5; cursor: default; }
+#akSrcBg .lsr-note { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.45; }
+@media (max-width: 700px) { #akSrcBg .lsr-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+</style>
+<script>
+(function () {
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const run = (fn, ...a) => promisifyRun(fn, window._authToken, ...a);
+const msg = e => (e && e.message) ? e.message : String(e || 'Something went wrong');
+const toast = (t, bad) => { if (typeof showToast === 'function') showToast(t, bad ? 'error' : 'success'); };
+const dt = x => { if (!x) return ''; const t = new Date(x); return isNaN(t) ? '' : t.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); };
+let BR = '', P = null;
+function bg() {
+  let el = document.getElementById('akSrcBg');
+  if (el) return el;
+  el = document.createElement('div'); el.id = 'akSrcBg'; el.className = 'cmdk-backdrop'; document.body.appendChild(el);
+  el.addEventListener('click', e => { if (e.target === el || e.target.closest('[data-src-x]')) el.classList.remove('open'); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && el.classList.contains('open')) { el.classList.remove('open'); e.stopPropagation(); } }, true);
+  return el;
+}
+function stats(label) {
+  const rows = (typeof allRows !== 'undefined' ? allRows : []).filter(r => r.branch === BR && (r.sheet || '') === label);
+  let last = ''; rows.forEach(r => { const c = String(r.createdAt || ''); if (c > last) last = c; });
+  return { n: rows.length, last: last };
+}
+function reloadLeads() { if (window.akClearDashCache) window.akClearDashCache(); window._dashSig = ''; if (typeof loadData === 'function') loadData(); }
+function drawList(d) {
+  const el = document.getElementById('akSrcList'); if (!el) return;
+  el.innerHTML = d.sources.map(s => {
+    const st = s.main ? null : stats(s.label);
+    const meta = s.main ? 'Main sheet. Leads are worked here.' : (st.n + ' lead' + (st.n === 1 ? '' : 's') + ' copied' + (st.last ? ' · last arrived ' + dt(st.last) : '') + ' · ' + (s.rows || 0) + ' row' + (s.rows === 1 ? '' : 's') + ' in the sheet');
+    return '<div class="lsr-row' + (s.main ? ' main' : '') + (s.error ? ' bad' : '') + '"><span class="lsr-dot"></span><div class="lsr-main"><div class="lsr-name" title="' + esc(s.label) + '">' + esc(s.label) + '</div><div class="lsr-meta">' + esc(meta) + '</div>' + (s.error ? '<div class="lsr-err">' + esc(s.error) + '</div>' : '') + '</div>' +
+      (s.url ? '<a class="lsr-link" href="' + esc(s.url) + '" target="_blank" rel="noopener">Open</a>' : '') +
+      (s.main ? '' : '<button type="button" class="um-btn" data-src-rm="' + esc(s.ref) + '" data-src-l="' + esc(s.label) + '">Stop fetching</button>') + '</div>';
+  }).join('') + (d.sources.length < 2 ? '<div class="lsr-hint">No extra sheets linked yet.</div>' : '');
+}
+function loadList() {
+  const el = document.getElementById('akSrcList'); if (el) el.innerHTML = '<div class="skeleton" style="height:56px;"></div>';
+  run('getLeadSources', BR).then(drawList).catch(e => { if (el) el.innerHTML = '<div class="lsr-err">' + esc(msg(e)) + '</div>'; });
+}
+function drawPrev() {
+  const el = document.getElementById('akSrcPrev'); if (!el) return;
+  if (!P) { el.innerHTML = ''; return; }
+  const kind = P.kind === 'meta' ? 'Meta lead form (matched on the Meta lead ID)' : P.kind === 'sulekha' ? 'Sulekha list (goes to the Sulekha telecaller list, matched on phone)' : 'Plain list (matched on phone number)';
+  const tabs = P.tabs.length > 1 ? '<select id="akSrcTab" aria-label="Tab">' + P.tabs.map(t => '<option' + (t === P.tab ? ' selected' : '') + '>' + esc(t) + '</option>').join('') + '</select>' : '';
+  const block = P.isMain ? 'This is already the branch\'s main sheet.' : (!P.hasPhone && P.kind !== 'meta') ? 'No phone column found, so these rows cannot be matched. Add a "Phone" column header.' : '';
+  el.innerHTML = '<div class="lsr-prev"><h4>' + esc(P.sheet) + ' › ' + esc(P.tab) + '</h4>' + (tabs ? '<div class="lsr-in">' + tabs + '</div>' : '') +
+    '<div class="lsr-hint">' + esc(kind) + '</div>' +
+    '<div class="lsr-kpis"><div class="lsr-kpi"><b>' + P.total + '</b><span>rows</span></div><div class="lsr-kpi"><b>' + P.fresh + '</b><span>new leads</span></div><div class="lsr-kpi"><b>' + P.dup + '</b><span>already in Lead Ops</span></div><div class="lsr-kpi"><b>' + (P.test + P.noPhone) + '</b><span>skipped (test or no phone)</span></div></div>' +
+    (P.sample.length ? '<table><thead><tr><th>Name</th><th>Phone</th><th>Arrived</th></tr></thead><tbody>' + P.sample.map(r => '<tr><td>' + esc(r.name || '-') + '</td><td>' + esc(r.phone) + '</td><td>' + esc(dt(r.date)) + '</td></tr>').join('') + '</tbody></table>' : '<div class="lsr-hint">No new leads in it right now.</div>') +
+    (P.headers.length ? '<div class="lsr-note">Columns: ' + esc(P.headers.join(', ')) + '</div>' : '') +
+    (P.firstRunLimited ? '<div class="lsr-note">Keep fetching brings in only the last 7 days the first time (' + P.last7 + ' of the new leads), then every new row. Import once takes all ' + P.fresh + '.</div>' : '') +
+    (block ? '<div class="lsr-err" style="margin-top:8px;">' + esc(block) + '</div>' : '') +
+    '<div class="lsr-acts"><button type="button" class="um-btn" id="akSrcOnce"' + (block || !P.fresh ? ' disabled' : '') + '>Import once</button><button type="button" class="counselor-save-btn" id="akSrcLink"' + (block || P.linked ? ' disabled' : '') + '>' + (P.linked ? 'Already linked' : 'Keep fetching') + '</button></div></div>';
+  const tabSel = document.getElementById('akSrcTab'); if (tabSel) tabSel.onchange = () => check(tabSel.value);
+  const once = document.getElementById('akSrcOnce'), link = document.getElementById('akSrcLink');
+  if (once) once.onclick = () => {
+    if (!confirm('Copy ' + P.fresh + ' lead' + (P.fresh === 1 ? '' : 's') + ' from "' + P.sheet + ' › ' + P.tab + '" into ' + BR + ' once? They will be auto-assigned like any new lead.')) return;
+    once.disabled = true; once.textContent = 'Importing…';
+    run('importLeadSourceOnce', BR, P.ref).then(r => { toast(r.copied + ' lead' + (r.copied === 1 ? '' : 's') + ' imported from ' + r.label); P = null; drawPrev(); reloadLeads(); loadList(); })
+      .catch(e => { toast(msg(e), true); once.disabled = false; once.textContent = 'Import once'; });
+  };
+  if (link) link.onclick = () => {
+    link.disabled = true; link.textContent = 'Linking…';
+    run('linkLeadSource', BR, P.ref).then(r => { toast('Linked ' + r.label + (r.copied ? '. ' + r.copied + ' lead' + (r.copied === 1 ? '' : 's') + ' copied now' : '') + '. New rows come in every 5 minutes'); P = null; drawPrev(); const i = document.getElementById('akSrcUrl'); if (i) i.value = ''; reloadLeads(); loadList(); })
+      .catch(e => { toast(msg(e), true); link.disabled = false; link.textContent = 'Keep fetching'; });
+  };
+}
+function check(tab) {
+  const i = document.getElementById('akSrcUrl'), b = document.getElementById('akSrcGo'), el = document.getElementById('akSrcPrev');
+  const url = (i && i.value || '').trim(); if (!url) { toast('Paste a Google Sheet link first', true); return; }
+  b.disabled = true; b.textContent = 'Checking…'; el.innerHTML = '<div class="skeleton" style="height:140px;margin-top:12px;"></div>';
+  run('previewLeadSource', BR, url, tab || '').then(p => { P = p; drawPrev(); }).catch(e => { P = null; el.innerHTML = '<div class="lsr-err" style="margin-top:10px;">' + esc(msg(e)) + '</div>'; })
+    .then(() => { b.disabled = false; b.textContent = 'Check'; });
+}
+function open() {
+  BR = typeof activeBranch !== 'undefined' ? activeBranch : ''; if (!BR || BR === 'All') { toast('Pick a branch first', true); return; }
+  P = null;
+  const el = bg();
+  el.innerHTML = '<div class="cmdk-box" role="dialog" aria-modal="true" aria-label="Lead sources"><div class="preview-modal-header"><span style="font-size:14px;font-weight:600;flex:1;">Lead sources · ' + esc(BR) + '</span><button class="counselor-save-btn" data-src-x>Close</button></div><div class="lsr-body">' +
+    '<div class="lsr-sec"><h4>Add a Google Sheet</h4><div class="lsr-in"><input id="akSrcUrl" type="url" placeholder="Paste the sheet link, with the tab open" autocomplete="off"><button type="button" class="um-btn" id="akSrcGo">Check</button></div>' +
+    '<div class="lsr-hint">Open the right tab before copying the link, so the link points to it. The sheet must be shared with the Lead Ops account (Viewer is enough). Nothing is changed in the sheet you paste.</div><div id="akSrcPrev"></div></div>' +
+    '<div class="lsr-sec"><h4>Linked sheets</h4><div id="akSrcList"></div><div class="lsr-hint">Stop fetching only stops new rows coming in. Leads already copied stay.</div></div></div></div>';
+  el.classList.add('open');
+  document.getElementById('akSrcGo').onclick = () => check('');
+  document.getElementById('akSrcUrl').addEventListener('keydown', e => { if (e.key === 'Enter') check(''); });
+  document.getElementById('akSrcList').addEventListener('click', e => {
+    const b = e.target.closest('[data-src-rm]'); if (!b) return;
+    if (!confirm('Stop fetching new leads from "' + b.dataset.srcL + '"? Leads already copied stay in Lead Ops.')) return;
+    b.disabled = true;
+    run('unlinkLeadSource', BR, b.dataset.srcRm).then(() => { toast('Stopped fetching ' + b.dataset.srcL); loadList(); }).catch(e2 => { toast(msg(e2), true); b.disabled = false; });
+  });
+  loadList();
+  setTimeout(() => { const i = document.getElementById('akSrcUrl'); if (i) i.focus(); }, 50);
+}
+document.addEventListener('click', e => { if (e.target.closest('#akSrcBtn')) open(); });
+window.akOpenLeadSources = open;
 })();
 </script>
 
