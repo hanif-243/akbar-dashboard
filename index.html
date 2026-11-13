@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '13 Nov 2026 · v191';
+window.AKBAR_BUILD = '13 Nov 2026 · v192';
 
 (function () {
   try {
@@ -19660,7 +19660,7 @@ Object.assign(window, { renderEnrollments, renderAccommodation, openFXRates: ope
 (function () {
 const B = { data: null, tab: 'students', q: '', agent: '', stage: '', teamMode: false, loading: false };
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const TABS = [['students', 'Students'], ['branch', '🏢 Branch'], ['visa', 'Visa cases'], ['perf', 'Performance'], ['agents', 'Agents & dues'], ['database', '📇 Database'], ['broadcast', '📣 Broadcast']];
+const TABS = [['students', 'Students'], ['branch', '🏢 Branch'], ['refs', 'Referrals'], ['visa', 'Visa cases'], ['perf', 'Performance'], ['agents', 'Agents & dues'], ['database', '📇 Database'], ['broadcast', '📣 Broadcast']];
 const $ = id => document.getElementById(id);
 const tok = () => window._authToken || '';
 
@@ -19785,13 +19785,13 @@ $('b2bAgentF').style.display = ['database', 'broadcast', 'branch'].indexOf(B.tab
 $('b2bSub').textContent = 'Students shared by partner agents · leads · applications · visa cases · agent dues · signed in as ' + d.me.name;
 const stTab = document.querySelector('[data-b2b-tab="students"]'); if (stTab) stTab.innerHTML = 'Students' + (s.openRequests ? ` <span class="b2b-reqn ${s.overdueRequests ? 'late' : ''}">${s.openRequests}</span>` : '');
 const agTab = document.querySelector('[data-b2b-tab="agents"]'); if (agTab) agTab.innerHTML = 'Agents & dues' + (s.mouIssues ? ` <span class="b2b-reqn late" title="Agents without a valid signed MOU">${s.mouIssues}</span>` : '');
-if (B.tab === 'students') renderStudents(); else if (B.tab === 'visa') renderCases(); else if (B.tab === 'branch') renderBranch(); else if (B.tab === 'database') renderDatabase(); else if (B.tab === 'broadcast') renderBroadcast(); else if (B.tab === 'perf') renderPerf(); else renderAgents();
+if (B.tab === 'students') renderStudents(); else if (B.tab === 'visa') renderCases(); else if (B.tab === 'branch') renderBranch(); else if (B.tab === 'refs') renderRefs(); else if (B.tab === 'database') renderDatabase(); else if (B.tab === 'broadcast') renderBroadcast(); else if (B.tab === 'perf') renderPerf(); else renderAgents();
 }
 const qMatch = (...parts) => !B.q || parts.join(' ').toLowerCase().indexOf(B.q.toLowerCase()) !== -1;
 function latestCase(st) { const cs = st.visaCases.map(caseById).filter(Boolean); return cs.length ? cs[cs.length - 1] : null; }
 
 function renderStudents() {
-const rows = B.data.students.filter(st => !isBranchSt(st) && (!B.agent || st.agentId === B.agent)
+const rows = B.data.students.filter(st => !isDirectSt(st) && (!B.agent || st.agentId === B.agent)
 && (!B.stage || st.visaCases.some(id => (caseById(id) || {}).stage === B.stage))
 && qMatch(st.id, st.name, st.phone, st.email, st.passportNo, st.agentName, st.country, st.course, st.applications.map(a => a.university).join(' ')))
 .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
@@ -19906,12 +19906,24 @@ function studentForm(st) {
 st = st || {};
 const d = B.data; if (!d) return;
 const agents = d.agents.filter(a => a.active !== false || a.id === st.agentId).map(a => [a.id, a.name + (a.company ? ' · ' + a.company : '')]);
-const src0 = isBranchSt(st) || !agents.length ? 'Branch' : 'Agent';
+const src0 = isRefSt(st) ? st.sourceType : isBranchSt(st) || !agents.length ? 'Branch' : 'Agent';
+const COLS = () => (B.data && B.data.colleges) || [];
+const colOpts = sel => opts(COLS().slice().sort((a, b) => a.name.localeCompare(b.name)).map(c => [c.id, c.name + (c.city ? ' · ' + c.city : '')]), sel, COLS().length ? 'Choose college…' : 'No colleges yet. Add one with + New');
+const refPeople = () => { const seen = {}, out = []; B.data.students.forEach(x => { if (x.id === st.id || !x.phone) return; const k = String(x.phone).replace(/[^0-9]/g, '').slice(-10); if (!k || seen[k]) return; seen[k] = 1; out.push({ name: x.name, phone: x.phone, id: x.id }); });
+  if (typeof allRows !== 'undefined') allRows.forEach(l => { const k = String(l.phone || '').replace(/[^0-9]/g, '').slice(-10); if (k.length < 10 || seen[k]) return; seen[k] = 1; out.push({ name: l.name || '', phone: k, id: l.branch + ':' + l.leadId }); });
+  return out.slice(0, 3000); };
 const staffFor = br => (O().staff || []).filter(s => !br || s.branch === br).map(s => s.name);
 const gb0 = GB().find(g => g.id === st.sourceBranchId) || null;
 const srcBrName = () => { if (!$('b2bStGb')) return val('b2bStSrcBr'); const g = GB().find(x => x.id === val('b2bStGb')); return g ? g.branch : ''; };
-modal(st.id ? 'Edit student · ' + st.id : src0 === 'Branch' ? 'Add branch student' : 'Add agent student', `<div class="b2b-form">
-${fld('Student name *', `<input type="text" id="b2bStName" value="${esc(st.name)}">`)}${fld('Comes from', `<select id="b2bStSrc">${opts([['Agent', 'A partner agent'], ['Branch', 'Our own branch']], src0)}</select>`)}
+modal(st.id ? 'Edit student · ' + st.id : src0 === 'Branch' ? 'Add branch student' : src0 === 'College' ? 'Add college referral' : src0 === 'Referral' ? 'Add student referral' : 'Add agent student', `<div class="b2b-form">
+${fld('Student name *', `<input type="text" id="b2bStName" value="${esc(st.name)}">`)}${fld('Comes from', `<select id="b2bStSrc">${opts([['Agent', 'A partner agent'], ['Branch', 'Our own branch'], ['College', 'College referral'], ['Referral', 'Student referral']], src0)}</select>`)}
+<div class="full" id="b2bStColWrap"><div class="b2b-form"><div class="full"><label class="f" for="b2bStCol">College *</label><div style="display:flex;gap:8px;"><select id="b2bStCol" style="flex:1;">${colOpts(st.collegeId || '')}</select><button class="um-btn" id="b2bStColAdd" type="button">+ New</button></div>
+<div id="b2bStColNew" style="display:none;margin-top:8px;"><div style="display:flex;gap:8px;flex-wrap:wrap;"><input type="text" id="b2bStColName" placeholder="College name" style="flex:2;min-width:180px;"><input type="text" id="b2bStColCity" placeholder="City" style="flex:1;min-width:120px;"><button class="um-btn primary" id="b2bStColSave" type="button">Add college</button></div></div></div>
+${fld('Referred by (contact at the college)', `<input type="text" id="b2bStRefCon" value="${esc(st.refContact || '')}" placeholder="Placement officer, teacher…">`)}${fld('Contact phone', `<input type="text" id="b2bStRefConPh" value="${esc(st.refContactPhone || '')}">`)}
+${fld('How it came', `<select id="b2bStRefHow">${opts(O().collegeHow || ['Seminar at college', 'Placement cell', 'Teacher reference', 'Other'], st.refHow || '', 'Choose…')}</select>`)}<div></div></div></div>
+<div class="full" id="b2bStRfWrap"><div class="b2b-form">${fld('Referring student *', `<input type="text" id="b2bStRfName" value="${esc(st.refStudentName || '')}" list="b2bStRfL" placeholder="Type a name or phone" autocomplete="off"><datalist id="b2bStRfL"></datalist><input type="hidden" id="b2bStRfId" value="${esc(st.refStudentId || '')}">`)}${fld('Their phone', `<input type="text" id="b2bStRfPh" value="${esc(st.refStudentPhone || '')}">`)}
+${fld('Relationship', `<select id="b2bStRfRel">${opts(O().refRelations || ['Friend', 'Sibling', 'Relative', 'Classmate', 'Other'], st.refRelation || '', 'Choose…')}</select>`)}${fld('Thank-you', `<select id="b2bStRfTy">${opts(['Not yet', 'Given'], st.thankYou || 'Not yet')}</select>`)}
+<div class="full b2b-note" id="b2bStRfHint">Pick from the list to link someone already in Lead Ops, or type a new name and phone.</div></div></div>
 <div class="full" id="b2bStAgWrap">${fld('Shared by agent *', `<select id="b2bStAgent">${opts(agents, st.agentId || B.agent, agents.length ? 'Choose agent…' : 'No agents yet — add one first')}</select>`)}</div>
 <div class="full" id="b2bStBrWrap"><div class="b2b-form">${GB().length ? `${fld('State *', `<select id="b2bStGbState"></select>`)}${fld('City *', `<select id="b2bStGbCity"></select>`)}
 <div class="full"><label class="f" for="b2bStGb">Which branch *</label><div style="display:flex;gap:8px;"><select id="b2bStGb" style="flex:1;"></select><button class="um-btn" id="b2bStGbAdd" type="button" title="Add a group branch">＋ New</button></div></div>` : fld('Which branch *', `<select id="b2bStSrcBr">${opts(O().branches, st.sourceBranch || st.branch || '', 'Choose branch…')}</select><div class="b2b-note"><button class="link-ghost" id="b2bStGbAdd" type="button">＋ Add Akbar Group branches (state · city · branch)</button></div>`)}${fld('How did they come? *', `<select id="b2bStBrSrc">${opts(BR_SOURCES(), st.branchSource || 'Branch walk-in')}</select>`)}
@@ -19924,8 +19936,9 @@ ${fld('Notes', `<textarea id="b2bStNotes" style="min-height:70px;">${esc(st.note
 <datalist id="b2bDlCountry">${['United Kingdom', 'Ireland', 'Canada', 'United States', 'Australia', 'New Zealand', 'Germany', 'France', 'Netherlands', 'UAE', 'Singapore', 'Malta'].map(c => `<option value="${c}">`).join('')}</datalist>
 ${errBox('b2bStErr')}<div class="sx-modal-actions">${st.id ? '<button class="um-btn" id="b2bStDel" style="margin-right:auto;color:var(--red);">Remove student</button>' : ''}<button class="um-btn primary" id="b2bStSave">${st.id ? 'Save changes' : 'Add student'}</button></div>`, 640);
 const sync = () => {
-const br = val('b2bStSrc') === 'Branch';
-$('b2bStAgWrap').style.display = br ? 'none' : ''; $('b2bStBrWrap').style.display = br ? '' : 'none';
+const br = val('b2bStSrc') === 'Branch', srcT = val('b2bStSrc');
+$('b2bStAgWrap').style.display = srcT === 'Agent' ? '' : 'none'; $('b2bStBrWrap').style.display = br ? '' : 'none';
+$('b2bStColWrap').style.display = srcT === 'College' ? '' : 'none'; $('b2bStRfWrap').style.display = srcT === 'Referral' ? '' : 'none';
 $('b2bStEmpWrap').style.display = br && val('b2bStBrSrc') === 'Branch employee reference' ? '' : 'none';
 $('b2bStEmpL').innerHTML = staffFor(O().branches.indexOf(srcBrName()) !== -1 ? srcBrName() : '').map(n => `<option value="${esc(n)}">`).join('');
 if (br && !val('b2bStBranch') && O().branches.indexOf(srcBrName()) !== -1) $('b2bStBranch').value = srcBrName();
@@ -19945,12 +19958,38 @@ $('b2bStGb').innerHTML = opts(brs, keepId || (gb0 ? gb0.id : brs.length === 1 ? 
 if ($('b2bStGb')) { gbFill(); $('b2bStGbState').onchange = () => { $('b2bStGbCity').value = ''; gbFill('-'); sync(); }; $('b2bStGbCity').onchange = () => { gbFill($('b2bStGbCity').value); sync(); }; $('b2bStGb').onchange = sync; }
 if ($('b2bStGbAdd')) $('b2bStGbAdd').onclick = () => groupBranchForm({ state: $('b2bStGbState') ? val('b2bStGbState') : '', city: $('b2bStGbCity') ? val('b2bStGbCity') : '' }, id => { const g = GB().find(x => x.id === id); if (!g) return; if (!$('b2bStGb')) { toast('Branch added — open the form again to pick it'); return; } $('b2bStGbState').value = ''; gbFill(); $('b2bStGbState').value = g.state; gbFill(g.city, g.id); sync(); });
 ['b2bStSrc', 'b2bStBrSrc', 'b2bStSrcBr'].forEach(i => { if ($(i)) $(i).onchange = sync; }); sync();
+$('b2bStColAdd').onclick = () => { const w = $('b2bStColNew'); w.style.display = w.style.display === 'none' ? '' : 'none'; if (w.style.display === '') $('b2bStColName').focus(); };
+$('b2bStColSave').onclick = () => {
+  const b = $('b2bStColSave'); if (!val('b2bStColName').trim()) { toast('Enter the college name', 'error'); return; }
+  busy(b, true);
+  run('saveB2BCollege', { name: val('b2bStColName'), city: val('b2bStColCity') }).then(c => {
+    B.data.colleges = COLS().filter(x => x.id !== c.id).concat([{ id: c.id, name: c.name, city: c.city }]);
+    $('b2bStCol').innerHTML = colOpts(c.id); $('b2bStColNew').style.display = 'none'; $('b2bStColName').value = ''; $('b2bStColCity').value = '';
+    toast(c.existed ? c.name + ' was already in the list' : c.name + ' added'); busy(b, false);
+  }).catch(err => { busy(b, false); toast(err && err.message ? err.message : String(err), 'error'); });
+};
+let RP = null;
+const rfFill = () => { RP = RP || refPeople(); $('b2bStRfL').innerHTML = RP.map(x => `<option value="${esc(x.name + ' · ' + x.phone)}">`).join(''); };
+$('b2bStRfName').addEventListener('focus', rfFill, { once: true });
+$('b2bStRfName').addEventListener('change', () => {
+  const v = val('b2bStRfName'), i = v.lastIndexOf(' · ');
+  const hit = i === -1 ? null : (RP || []).find(x => x.name + ' · ' + x.phone === v);
+  if (hit) { $('b2bStRfName').value = hit.name; $('b2bStRfPh').value = hit.phone; $('b2bStRfId').value = hit.id; $('b2bStRfHint').textContent = 'Linked to ' + (String(hit.id).indexOf('B2B-') === 0 ? 'B2B student ' + hit.id : 'a lead in ' + String(hit.id).split(':')[0]) + '.'; }
+  else { $('b2bStRfId').value = ''; $('b2bStRfHint').textContent = 'New referrer. Add their phone so they can be thanked.'; }
+});
+$('b2bStPhone').addEventListener('change', () => {
+  const k = val('b2bStPhone').replace(/[^0-9]/g, '').slice(-10); if (k.length < 10) return;
+  const dup = B.data.students.find(x => x.id !== st.id && String(x.phone || '').replace(/[^0-9]/g, '').slice(-10) === k);
+  if (dup) formErr('b2bStErr', new Error('This phone is already on the desk: ' + dup.name + ' (' + dup.id + ', ' + srcLabel(dup) + ').'));
+});
 $('b2bStSave').onclick = () => {
 const btn = $('b2bStSave'); busy(btn, true); formErr('b2bStErr');
 const br = val('b2bStSrc') === 'Branch';
-run('saveB2BStudent', { id: st.id || '', name: val('b2bStName'), sourceType: br ? 'Branch' : 'Agent', agentId: br ? '' : val('b2bStAgent'), sourceBranch: br ? srcBrName() : '', sourceBranchId: br && $('b2bStGb') ? val('b2bStGb') : '', branchSource: br ? val('b2bStBrSrc') : '',
+const srcT = val('b2bStSrc'), refX = srcT === 'College' ? { collegeId: val('b2bStCol'), refContact: val('b2bStRefCon'), refContactPhone: val('b2bStRefConPh'), refHow: val('b2bStRefHow') }
+  : srcT === 'Referral' ? { refStudentName: val('b2bStRfName'), refStudentPhone: val('b2bStRfPh'), refStudentId: val('b2bStRfId'), refRelation: val('b2bStRfRel'), thankYou: val('b2bStRfTy') } : {};
+run('saveB2BStudent', Object.assign({ id: st.id || '', name: val('b2bStName'), sourceType: srcT === 'College' || srcT === 'Referral' ? srcT : br ? 'Branch' : 'Agent', agentId: srcT === 'Agent' ? val('b2bStAgent') : '', sourceBranch: br ? srcBrName() : '', sourceBranchId: br && $('b2bStGb') ? val('b2bStGb') : '', branchSource: br ? val('b2bStBrSrc') : '',
 employeeName: br && val('b2bStBrSrc') === 'Branch employee reference' ? val('b2bStEmp') : '', phone: val('b2bStPhone'), email: val('b2bStEmail'), passportNo: val('b2bStPass'), branch: val('b2bStBranch'),
-country: val('b2bStCountry'), course: val('b2bStCourse'), intake: intakeVal('b2bStIntake'), notes: val('b2bStNotes') })
+country: val('b2bStCountry'), course: val('b2bStCourse'), intake: intakeVal('b2bStIntake'), notes: val('b2bStNotes') }, refX))
 .then(r => { closeModal(1); toast(st.id ? 'Student saved' : 'Student added — ' + r.id); B.loading = false; run('getB2BDesk').then(d2 => { B.data = d2; render(); if (!st.id) studentView(r.id); }).catch(() => load()); })
 .catch(err => { busy(btn, false); formErr('b2bStErr', err); });
 };
@@ -19965,9 +20004,9 @@ const st = studentById(id); if (!st) return;
 const ag = agentById(st.agentId) || {};
 const cases = st.visaCases.map(caseById).filter(Boolean);
 modal(st.name + ' · ' + st.id, `<div class="b2b-info">
-<div><small>${isBranchSt(st) ? 'Source' : 'Agent'}</small>${esc(srcLabel(st))}${!isBranchSt(st) && ag.phone ? `<div class="sx-sub">${esc(ag.phone)}</div>` : ''}</div><div><small>Phone</small>${esc(st.phone || '—')}</div><div><small>Email</small>${esc(st.email || '—')}</div>
+<div><small>${isDirectSt(st) ? 'Source' : 'Agent'}</small>${esc(srcLabel(st))}${st.sourceType === 'College' && (st.refContact || st.refContactPhone) ? `<div class="sx-sub">${esc([st.refContact, st.refContactPhone, st.refHow].filter(Boolean).join(' · '))}</div>` : ''}${st.sourceType === 'Referral' ? `<div class="sx-sub">${esc([st.refStudentPhone, st.refRelation, 'Thank-you: ' + (st.thankYou || 'Not yet')].filter(Boolean).join(' · '))}</div>` : ''}${!isDirectSt(st) && ag.phone ? `<div class="sx-sub">${esc(ag.phone)}</div>` : ''}</div><div><small>Phone</small>${esc(st.phone || '—')}</div><div><small>Email</small>${esc(st.email || '—')}</div>
 <div><small>Passport</small>${esc(st.passportNo || '—')}</div><div><small>Country · intake</small>${esc(st.country || '—')} ${esc(st.intake || '')}</div><div><small>Course</small>${esc(st.course || '—')}</div>
-<div><small>Branch</small>${esc(st.branch || '—')}</div><div><small>Added</small>${esc(fmtStamp(st.createdAt))} · ${esc(st.createdBy || '')}</div>${isBranchSt(st) ? '' : `<div><small>Agent MOU · commission</small>${mouPill(ag.mou)} <span class="sx-sub">${esc(commTerms(ag))}</span></div>`}${st.notes ? `<div><small>Notes</small>${esc(st.notes)}</div>` : ''}</div>
+<div><small>Branch</small>${esc(st.branch || '—')}</div><div><small>Added</small>${esc(fmtStamp(st.createdAt))} · ${esc(st.createdBy || '')}</div>${isDirectSt(st) ? '' : `<div><small>Agent MOU · commission</small>${mouPill(ag.mou)} <span class="sx-sub">${esc(commTerms(ag))}</span></div>`}${st.notes ? `<div><small>Notes</small>${esc(st.notes)}</div>` : ''}</div>
 <div class="b2b-sec"><h4><span>1 · Lead for a counsellor</span><button class="um-btn" id="b2bSvLead">${st.lead ? 'Re-assign' : '＋ Add as lead'}</button></h4>
 ${st.lead ? `<div class="b2b-li"><span class="grow">In <b>${esc(st.lead.branch)}</b> leads · counsellor <b>${esc(st.lead.counsellor || 'unassigned')}</b></span><span class="b2b-pill ok">${esc(st.lead.status || 'Lead')}</span></div>` : '<div class="sx-sub">Not in the leads list yet. Adding puts them in the branch lead list with Source “Agent: ' + esc(st.agentName) + '”.</div>'}</div>
 <div class="b2b-sec"><h4><span>2 · University applications (${st.applications.length})</span><button class="um-btn" id="b2bSvApp">＋ Application</button></h4>
@@ -19986,7 +20025,7 @@ $('b2bSvCase').onclick = () => caseForm(null, st.id);
 $('b2bSvEdit').onclick = () => studentForm(st);
 $('b2bSvWa').onclick = () => waStudent(st.id);
 $('b2bSvAgent').onclick = () => agentView(st.agentId);
-if (isBranchSt(st)) { ['b2bSvAgent', 'b2bSvWa'].forEach(i => { const e = $(i); if (e) e.style.display = 'none'; }); const c = $('b2bSvComm'); if (c && c.closest('.b2b-sec')) c.closest('.b2b-sec').style.display = 'none'; }
+if (isDirectSt(st)) { ['b2bSvAgent', 'b2bSvWa'].forEach(i => { const e = $(i); if (e) e.style.display = 'none'; }); const c = $('b2bSvComm'); if (c && c.closest('.b2b-sec')) c.closest('.b2b-sec').style.display = 'none'; }
 $('b2bSvComm').onclick = () => commForm(null, { agentId: st.agentId, studentId: st.id, _back: st.id });
 document.querySelectorAll('[data-b2b-sv-comm]').forEach(b => b.onclick = () => commForm(commById(b.dataset.b2bSvComm), { _back: st.id }));
 document.querySelectorAll('[data-b2b-req]').forEach(b => b.onclick = () => reqView(st.id, b.dataset.b2bReq));
@@ -20837,7 +20876,9 @@ show({});
 const KYC_DOCS = () => O().kycDocs || ['PAN Card', 'GST Certificate', 'Company Registration', 'Cancelled Cheque', 'Aadhaar Card'];
 const BR_SOURCES = () => O().branchSources || ['Branch walk-in', 'Branch employee reference'];
 const isBranchSt = st => st && st.sourceType === 'Branch';
-const srcLabel = st => isBranchSt(st) ? (st.branchSource === 'Branch employee reference' ? 'Employee ref: ' + (st.employeeName || '—') : 'Branch walk-in') + ' · ' + (st.sourceBranch || st.branch || '') : (st.agentName || '');
+const isRefSt = st => st && (st.sourceType === 'College' || st.sourceType === 'Referral');
+const isDirectSt = st => isBranchSt(st) || isRefSt(st);
+const srcLabel = st => st && st.sourceType === 'College' ? 'College referral: ' + (st.collegeName || '-') + (st.collegeCity ? ' (' + st.collegeCity + ')' : '') : st && st.sourceType === 'Referral' ? 'Student referral: ' + (st.refStudentName || '-') : isBranchSt(st) ? (st.branchSource === 'Branch employee reference' ? 'Employee ref: ' + (st.employeeName || '—') : 'Branch walk-in') + ' · ' + (st.sourceBranch || st.branch || '') : (st.agentName || '');
 const kycPill = a => { const n = KYC_DOCS().length, v = a.kycDone || 0, h = a.kycHave || 0; return `<span class="b2b-pill ${v === n ? 'ok' : h ? 'warm' : 'muted'}" title="${h} uploaded · ${v} verified">${v}/${n}</span>`; };
 
 function renderPerf() {
@@ -20980,6 +21021,39 @@ ${rows.map(st => { const c = latestCase(st); return `<tr class="b2b-row" data-b2
 </tbody></table></div></div>`}`;
 $('b2bAddBranchSt').onclick = () => studentForm({ sourceType: 'Branch' });
 $('b2bBody').insertAdjacentHTML('beforeend', groupBranchesHtml()); wireGroupBranches();
+}
+
+function renderRefs() {
+const all = B.data.students.filter(isRefSt);
+const rows = all.filter(st => (!B.stage || st.visaCases.some(id => (caseById(id) || {}).stage === B.stage))
+&& qMatch(st.id, st.name, st.phone, st.email, st.collegeName, st.collegeCity, st.refContact, st.refStudentName, st.refStudentPhone, st.country, st.course))
+.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+const approved = st => st.visaCases.filter(id => (caseById(id) || {}).stage === 'Approved').length;
+const cols = (B.data.colleges || []).map(c => { const m = all.filter(st => st.sourceType === 'College' && st.collegeId === c.id);
+  return { c: c, n: m.length, leads: m.filter(st => st.lead).length, apps: m.reduce((t, st) => t + st.applications.length, 0), visas: m.reduce((t, st) => t + approved(st), 0), last: m.reduce((t, st) => String(st.createdAt) > t ? String(st.createdAt) : t, '') }; })
+  .sort((a, b) => b.n - a.n || a.c.name.localeCompare(b.c.name));
+const refs = {}; all.filter(st => st.sourceType === 'Referral').forEach(st => { const k = String(st.refStudentPhone || '').replace(/[^0-9]/g, '').slice(-10) || String(st.refStudentName || '').toLowerCase();
+  const r = refs[k] = refs[k] || { name: st.refStudentName, phone: st.refStudentPhone, n: 0, owed: 0, rel: {} }; r.n++; if (st.thankYou !== 'Given') r.owed++; });
+const refList = Object.keys(refs).map(k => refs[k]).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name));
+$('b2bBody').innerHTML = `<div class="sx-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><div><h3 style="margin:0;">Referrals</h3><div class="sx-sub">Students sent by colleges, and students referred by other students.</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="um-btn" id="b2bAddColSt">+ College referral</button><button class="um-btn primary" id="b2bAddRefSt">+ Student referral</button></div></div></div>
+<div class="b2b-refgrid"><div class="sx-card"><h3 style="margin:0 0 8px;">Colleges</h3>${cols.length ? `<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>College</th><th style="text-align:right;">Students</th><th style="text-align:right;">Leads</th><th style="text-align:right;">Applications</th><th style="text-align:right;">Visas approved</th><th>Last student</th></tr></thead><tbody>
+${cols.map(x => `<tr><td><b>${esc(x.c.name)}</b><div class="sx-sub">${esc(x.c.city || '')}</div></td><td style="text-align:right;font-variant-numeric:tabular-nums;">${x.n}</td><td style="text-align:right;font-variant-numeric:tabular-nums;">${x.leads}</td><td style="text-align:right;font-variant-numeric:tabular-nums;">${x.apps}</td><td style="text-align:right;font-variant-numeric:tabular-nums;">${x.visas}</td><td>${x.last ? esc(fmtStamp(x.last)) : '<span class="sx-sub">None yet</span>'}</td></tr>`).join('')}
+</tbody></table></div>` : '<div class="sx-sub">No colleges yet. Add one from + College referral.</div>'}</div>
+<div class="sx-card"><h3 style="margin:0 0 8px;">Student referrers</h3>${refList.length ? `<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Referrer</th><th style="text-align:right;">Referred</th><th>Thank-you</th></tr></thead><tbody>
+${refList.map(r => `<tr><td><b>${esc(r.name)}</b><div class="sx-sub">${esc(r.phone || '')}</div></td><td style="text-align:right;font-variant-numeric:tabular-nums;">${r.n}</td><td>${r.owed ? `<span class="b2b-pill warm">${r.owed} not yet</span>` : '<span class="b2b-pill ok">Given</span>'}</td></tr>`).join('')}
+</tbody></table></div>` : '<div class="sx-sub">No student referrals yet.</div>'}</div></div>
+${!rows.length ? `<div class="sx-card sx-empty">${all.length ? 'No referrals match.' : 'No referred students yet.'}</div>` :
+`<div class="sx-card"><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>ID</th><th>Student</th><th>Source</th><th>Country · intake</th><th>Lead</th><th>Applications</th><th>Visa</th><th></th></tr></thead><tbody>
+${rows.map(st => { const c = latestCase(st); return `<tr class="b2b-row" data-b2b-student="${esc(st.id)}">
+<td style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;">${esc(st.id)}</td><td><b>${esc(st.name)}</b><div class="sx-sub">${esc(st.phone || '')}</div></td>
+<td><b>${esc(st.sourceType === 'College' ? st.collegeName || '-' : st.refStudentName || '-')}</b><div class="sx-sub">${esc(st.sourceType === 'College' ? 'College' + (st.refHow ? ' · ' + st.refHow : '') : 'Student referral' + (st.refRelation ? ' · ' + st.refRelation : ''))}</div><div class="sx-sub">Handled by ${esc(st.branch || '-')}</div></td>
+<td>${esc(st.country || '-')}<div class="sx-sub">${esc(st.intake || '')}</div></td>
+<td>${st.lead ? `<span class="b2b-pill ok">${esc(st.lead.status || 'Lead')}</span><div class="sx-sub">${esc(st.lead.counsellor || 'unassigned')}</div>` : `<button class="um-btn" data-b2b-lead="${esc(st.id)}">+ Lead</button>`}</td>
+<td>${st.applications.length ? `<b>${st.applications.length}</b><div class="sx-sub">${esc(st.applications.map(a => a.university).filter(Boolean).slice(0, 2).join(', '))}</div>` : `<button class="um-btn" data-b2b-app="${esc(st.id)}">+ Application</button>`}</td>
+<td>${c ? stagePill(c.stage) : `<button class="um-btn" data-b2b-newcase="${esc(st.id)}">+ Visa</button>`}</td><td><button class="um-btn" data-b2b-student="${esc(st.id)}">Open</button></td></tr>`; }).join('')}
+</tbody></table></div></div>`}`;
+$('b2bAddColSt').onclick = () => studentForm({ sourceType: 'College' });
+$('b2bAddRefSt').onclick = () => studentForm({ sourceType: 'Referral' });
 }
 
 const GB = () => (B.data && B.data.groupBranches) || [];
@@ -24546,6 +24620,8 @@ document.addEventListener('click', e => { if (e.target.closest('#akSrcBtn')) ope
 window.akOpenLeadSources = open;
 })();
 </script>
+
+<style>.b2b-refgrid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; } .b2b-refgrid .sx-card { margin-top: 0; } @media (max-width: 1200px) { .b2b-refgrid { grid-template-columns: minmax(0, 1fr); } }</style>
 
 <style>
 #akChatBtn { position: fixed; right: 24px; bottom: 24px; z-index: 95; width: 54px; height: 54px; border-radius: 50%; border: 0; cursor: pointer; display: none; align-items: center; justify-content: center;
