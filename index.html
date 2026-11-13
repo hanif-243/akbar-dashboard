@@ -15120,10 +15120,14 @@ if (sb) sb.addEventListener('click', e => {
     const now = PAGES.filter(id => { const el = document.getElementById(id); return el && el.style.display === 'block'; });
     const fresh = now.filter(id => was.indexOf(id) === -1);
     const opener = Object.keys(it.dataset || {}).some(k => /view|open/i.test(k));
-    if (app.style.display !== 'none' && !fresh.length && (opener || !now.length)) return;
-    const hide = fresh.length ? was.filter(id => fresh.indexOf(id) === -1) : opener ? [] : now;
-    hide.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
-    if (!fresh.length && !opener && typeof closeModal === 'function') { try { closeModal(); } catch (err) { } }
+    if (fresh.length || (opener && now.length)) {
+      was.filter(id => fresh.indexOf(id) === -1 && now.indexOf(id) !== -1 && fresh.length).forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+      app.style.display = 'none';
+      return;
+    }
+    if (app.style.display !== 'none' && !now.length) return;
+    now.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+    if (!opener && typeof closeModal === 'function') { try { closeModal(); } catch (err) { } }
     app.style.display = '';
   }, 0);
 }, true);
