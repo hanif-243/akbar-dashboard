@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '13 Nov 2026 · v192';
+window.AKBAR_BUILD = '16 Nov 2026 · v195';
 
 (function () {
   try {
@@ -14114,6 +14114,7 @@ const shown = {};
 let open = false;
 function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function isCounsellor() { return typeof viewerCounselor !== 'undefined' && !!viewerCounselor && !document.body.classList.contains('tc-staff'); }
+function isManager() { return !window._isSuperAdmin && typeof viewerBranch !== 'undefined' && !!viewerBranch && !(typeof viewerCounselor !== 'undefined' && viewerCounselor) && !document.body.classList.contains('tc-staff'); }
 function ago(iso) { const m = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000)); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }); }
 function openLead(it) {
   const go = () => {
@@ -14124,18 +14125,19 @@ function openLead(it) {
     const row = document.querySelector('tr.lead-row[data-lead-id="' + CSS.escape(r.leadId) + '"]');
     if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
-  if (window._leadSet && window._leadSet !== 'main' && typeof window.switchLeadSet === 'function') { window.switchLeadSet('main'); setTimeout(go, 2500); } else go();
+  const want = it.set === 'b2b' ? 'b2b' : 'main';
+  if ((window._leadSet || 'main') !== want && typeof window.switchLeadSet === 'function') { window.switchLeadSet(want); setTimeout(go, 2500); } else go();
 }
 function show(items) {
   if (open || !items.length) return;
   open = true;
   const byWho = Array.from(new Set(items.map(x => x.by).filter(Boolean)));
-  const total = items.reduce((n, x) => n + (x.count || 1), 0);
+  const total = items.reduce((n, x) => n + (x.count || 1), 0), mgr = items.every(x => x.kind === 'mgr');
   const bg = document.createElement('div'); bg.className = 'cmdk-backdrop open';
-  bg.innerHTML = `<div class="cmdk-box ap-box" role="dialog" aria-modal="true" aria-labelledby="apTitle"><div class="preview-modal-header"><span id="apTitle" style="font-size:15px;font-weight:600;flex:1;">${total === 1 ? 'New lead assigned to you' : total + ' new leads assigned to you'}</span></div><div class="s10-body">
+  bg.innerHTML = `<div class="cmdk-box ap-box" role="dialog" aria-modal="true" aria-labelledby="apTitle"><div class="preview-modal-header"><span id="apTitle" style="font-size:15px;font-weight:600;flex:1;">${mgr ? (total === 1 ? 'New B2B lead for your branch' : total + ' new B2B leads for your branch') : total === 1 ? 'New lead assigned to you' : total + ' new leads assigned to you'}</span></div><div class="s10-body">
 <div class="ap-head">From ${esc(byWho.join(', ') || 'your team')}</div>
 <div class="ap-list">${items.map((x, i) => `<div class="ap-item"><div class="t"><div class="n">${x.count ? esc(x.count + ' lead' + (x.count === 1 ? '' : 's') + ' from ' + (x.source || 'a bulk list')) : esc(x.name || 'A student')}</div>
-<div class="m">${[x.count ? '' : x.phone, x.count ? '' : x.source, 'by ' + (x.by || 'your team'), ago(x.at)].filter(Boolean).map(esc).join(' · ')}</div></div>${x.leadId ? `<button class="um-btn" data-ap-open="${i}">Open</button>` : ''}</div>`).join('')}</div>
+<div class="m">${[x.count ? '' : x.phone, x.count ? '' : x.source, x.kind === 'mgr' && x.to ? (x.to === 'unassigned' || x.to === 'B2B telecaller list' ? 'in the B2B list, ' + (x.to === 'unassigned' ? 'no counsellor yet' : 'telecaller calls first') : 'assigned to ' + x.to) : '', 'by ' + (x.by || 'your team'), ago(x.at)].filter(Boolean).map(esc).join(' · ')}</div></div>${x.leadId ? `<button class="um-btn" data-ap-open="${i}">Open</button>` : ''}</div>`).join('')}</div>
 <div class="s10-actions"><button class="um-btn primary" data-ap-ok>Got it</button></div></div></div>`;
   document.body.appendChild(bg);
   const done = () => {
@@ -14148,7 +14150,7 @@ function show(items) {
   setTimeout(() => { const ok = bg.querySelector('[data-ap-ok]'); if (ok) ok.focus(); }, 50);
 }
 function check() {
-  if (!isCounsellor() || open || document.hidden || !window._authToken || typeof promisifyRun !== 'function') return;
+  if (!(isCounsellor() || isManager()) || open || document.hidden || !window._authToken || typeof promisifyRun !== 'function') return;
   promisifyRun('getAssignPopups', window._authToken).then(r => {
     const items = ((r && r.items) || []).filter(x => !shown[x.id]);
     items.forEach(x => { shown[x.id] = 1; });
@@ -19660,7 +19662,7 @@ Object.assign(window, { renderEnrollments, renderAccommodation, openFXRates: ope
 (function () {
 const B = { data: null, tab: 'students', q: '', agent: '', stage: '', teamMode: false, loading: false };
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const TABS = [['students', 'Students'], ['branch', '🏢 Branch'], ['refs', 'Referrals'], ['visa', 'Visa cases'], ['perf', 'Performance'], ['agents', 'Agents & dues'], ['database', '📇 Database'], ['broadcast', '📣 Broadcast']];
+const TABS = [['students', 'Students'], ['branch', '🏢 Branch'], ['refs', 'Referrals'], ['kit', 'Marketing kit'], ['visa', 'Visa cases'], ['perf', 'Performance'], ['agents', 'Agents & dues'], ['database', '📇 Database'], ['broadcast', '📣 Broadcast']];
 const $ = id => document.getElementById(id);
 const tok = () => window._authToken || '';
 
@@ -19785,7 +19787,7 @@ $('b2bAgentF').style.display = ['database', 'broadcast', 'branch'].indexOf(B.tab
 $('b2bSub').textContent = 'Students shared by partner agents · leads · applications · visa cases · agent dues · signed in as ' + d.me.name;
 const stTab = document.querySelector('[data-b2b-tab="students"]'); if (stTab) stTab.innerHTML = 'Students' + (s.openRequests ? ` <span class="b2b-reqn ${s.overdueRequests ? 'late' : ''}">${s.openRequests}</span>` : '');
 const agTab = document.querySelector('[data-b2b-tab="agents"]'); if (agTab) agTab.innerHTML = 'Agents & dues' + (s.mouIssues ? ` <span class="b2b-reqn late" title="Agents without a valid signed MOU">${s.mouIssues}</span>` : '');
-if (B.tab === 'students') renderStudents(); else if (B.tab === 'visa') renderCases(); else if (B.tab === 'branch') renderBranch(); else if (B.tab === 'refs') renderRefs(); else if (B.tab === 'database') renderDatabase(); else if (B.tab === 'broadcast') renderBroadcast(); else if (B.tab === 'perf') renderPerf(); else renderAgents();
+if (B.tab === 'students') renderStudents(); else if (B.tab === 'visa') renderCases(); else if (B.tab === 'branch') renderBranch(); else if (B.tab === 'refs') renderRefs(); else if (B.tab === 'kit') renderKit(); else if (B.tab === 'database') renderDatabase(); else if (B.tab === 'broadcast') renderBroadcast(); else if (B.tab === 'perf') renderPerf(); else renderAgents();
 }
 const qMatch = (...parts) => !B.q || parts.join(' ').toLowerCase().indexOf(B.q.toLowerCase()) !== -1;
 function latestCase(st) { const cs = st.visaCases.map(caseById).filter(Boolean); return cs.length ? cs[cs.length - 1] : null; }
@@ -21023,6 +21025,204 @@ $('b2bAddBranchSt').onclick = () => studentForm({ sourceType: 'Branch' });
 $('b2bBody').insertAdjacentHTML('beforeend', groupBranchesHtml()); wireGroupBranches();
 }
 
+const KIT_SIZES = { post: [1080, 1080, 'Instagram post'], story: [1080, 1920, 'Story / WhatsApp status'], flyer: [1240, 1754, 'A4 flyer'], poster: [1080, 1350, 'Event poster'] };
+const KIT_FONT = '"IBM Plex Sans", "Segoe UI", Arial, sans-serif';
+function kitImg(src) {
+  if (!src) return Promise.resolve(null);
+  B.kitImgs = B.kitImgs || {};
+  if (B.kitImgs[src]) return Promise.resolve(B.kitImgs[src]);
+  return new Promise(res => { const im = new Image(); im.onload = () => { B.kitImgs[src] = im; res(im); }; im.onerror = () => res(null); im.src = src; });
+}
+function kitQr(text, px) {
+  const qr = window.qrcode(0, 'M'); qr.addData(text); qr.make();
+  const n = qr.getModuleCount(), cell = Math.max(1, Math.floor(px / (n + 4))), size = cell * (n + 4);
+  const cv = document.createElement('canvas'); cv.width = size; cv.height = size; const g = cv.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, size, size); g.fillStyle = '#12172B';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) g.fillRect((c + 2) * cell, (r + 2) * cell, cell, cell);
+  return cv;
+}
+function kitWrap(g, text, maxW) {
+  const out = [];
+  String(text || '').split('\n').forEach(par => {
+    let line = '';
+    par.split(' ').forEach(w => { const t = line ? line + ' ' + w : w; if (g.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t; });
+    out.push(line);
+  });
+  return out;
+}
+function kitText(g, text, x, y, maxW, size, weight, color, lh, maxLines) {
+  g.font = weight + ' ' + size + 'px ' + KIT_FONT; g.fillStyle = color; g.textBaseline = 'top';
+  let lines = kitWrap(g, text, maxW);
+  if (maxLines && lines.length > maxLines) { lines = lines.slice(0, maxLines); lines[maxLines - 1] = lines[maxLines - 1].replace(/\s*\S*$/, '') + '…'; }
+  lines.forEach((l, i) => g.fillText(l, x, y + i * size * lh));
+  return y + lines.length * size * lh;
+}
+function kitDark(hex) {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex || ''); if (!m) return '#151A35';
+  const f = v => Math.round(parseInt(v, 16) * 0.32).toString(16).padStart(2, '0');
+  return '#' + f(m[1]) + f(m[2]) + f(m[3]);
+}
+function kitRound(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+
+function kitDraw(k) {
+  const sz = KIT_SIZES[k.template] || KIT_SIZES.post, W = sz[0], H = sz[1], s = W / 1080;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+  const br = k.agentBrand || {}, color = /^#[0-9a-f]{6}$/i.test(br.color || '') ? br.color : '#2563EB', ink = '#14161F', mute = '#5B6070';
+  const pad = Math.round(72 * s), tall = H / W > 1.5, co = k.brand === 'co';
+  g.fillStyle = '#FAF9F6'; g.fillRect(0, 0, W, H);
+
+  const hh = Math.round((tall ? 210 : 170) * s);
+  let tx = pad;
+  if (k.logoImg) { const lh = Math.round(hh * 0.52), lw = Math.min(Math.round(lh * k.logoImg.naturalWidth / k.logoImg.naturalHeight), Math.round(300 * s)); g.drawImage(k.logoImg, pad, (hh - lh) / 2, lw, lh); tx = pad + lw + Math.round(24 * s); }
+  const ny = kitText(g, br.name || k.agentName || '', tx, hh / 2 - (br.tagline ? 34 : 18) * s, W - tx - pad, Math.round(34 * s), '600', ink, 1.1, 1);
+  if (br.tagline) kitText(g, br.tagline, tx, ny + 4 * s, W - tx - pad, Math.round(22 * s), '400', mute, 1.2, 1);
+
+  const footH = Math.round((tall ? 520 : k.template === 'flyer' ? 430 : 330) * s) + (co ? Math.round(86 * s) : 0);
+  const py = hh, ph = H - hh - footH;
+  const shade = c => { const m = /^#?(..)(..)(..)$/.exec(c); const f = v => Math.round(parseInt(v, 16) * 0.82).toString(16).padStart(2, '0'); return '#' + f(m[1]) + f(m[2]) + f(m[3]); };
+  const grad = g.createLinearGradient(0, py, 0, py + ph); grad.addColorStop(0, color); grad.addColorStop(1, shade(color));
+  g.fillStyle = grad; g.fillRect(0, py, W, ph);
+  const inner = W - pad * 2;
+  const hs = Math.round((tall ? 96 : k.template === 'flyer' ? 84 : 78) * s), ps0 = Math.round((tall ? 38 : 32) * s);
+  const nLines = (t, size, weight, max) => { g.font = weight + ' ' + size + 'px ' + KIT_FONT; return Math.min(max, kitWrap(g, t, inner).length); };
+  const est = nLines(k.headline || '', hs, '700', 3) * hs * 1.08 + Math.round(18 * s) + (k.sub ? nLines(k.sub, Math.round(36 * s), '400', 2) * 36 * s * 1.3 + Math.round((tall ? 56 : 36) * s) : 0)
+    + Math.min((k.points || []).filter(Boolean).length, k.template === 'flyer' ? 7 : 5) * ps0 * 1.75;
+  let y = py + Math.max(Math.round((tall ? 110 : 72) * s), Math.round((ph - est) / 2));
+  y = kitText(g, k.headline || '', pad, y, inner, hs, '700', '#FFFFFF', 1.08, 3) + Math.round(18 * s);
+  if (k.sub) y = kitText(g, k.sub, pad, y, inner, Math.round(36 * s), '400', 'rgba(255,255,255,0.88)', 1.3, 2) + Math.round((tall ? 56 : 36) * s);
+  const ps = Math.round((tall ? 38 : 32) * s), maxPts = Math.max(0, Math.floor((py + ph - Math.round(48 * s) - y) / (ps * 1.75)));
+  (k.points || []).filter(Boolean).slice(0, Math.min(maxPts, k.template === 'flyer' ? 7 : 5)).forEach(pt => {
+    g.fillStyle = 'rgba(255,255,255,0.9)'; g.fillRect(pad, y + ps * 0.38, Math.round(10 * s), Math.round(10 * s));
+    kitText(g, pt, pad + Math.round(30 * s), y, inner - Math.round(30 * s), ps, '500', '#FFFFFF', 1.2, 1);
+    y += ps * 1.75;
+  });
+
+  const fy = py + ph, qs = Math.round((tall ? 330 : k.template === 'flyer' ? 300 : 236) * s), fh = footH - (co ? Math.round(86 * s) : 0);
+  const qx = W - pad - qs, qy = fy + (fh - qs - 34 * s) / 2;
+  if (k.link) { const q = kitQr(k.link, qs); g.drawImage(q, qx, qy, qs, qs); }
+  g.strokeStyle = 'rgba(20,22,31,0.12)'; g.lineWidth = Math.max(1, 2 * s); kitRound(g, qx, qy, qs, qs, 12 * s); g.stroke();
+  g.font = '500 ' + Math.round(22 * s) + 'px ' + KIT_FONT; g.fillStyle = mute; g.textBaseline = 'top'; g.textAlign = 'center'; g.fillText('Scan to register', qx + qs / 2, qy + qs + 10 * s); g.textAlign = 'left';
+  const cw = qx - pad - Math.round(40 * s);
+  let cy = fy + Math.round((tall ? 96 : 60) * s);
+  cy = kitText(g, k.cta || '', pad, cy, cw, Math.round((tall ? 48 : 40) * s), '700', ink, 1.15, 3) + Math.round(20 * s);
+  if (br.phone) cy = kitText(g, 'Call / WhatsApp  ' + br.phone, pad, cy, cw, Math.round(30 * s), '600', color, 1.3, 1) + Math.round(8 * s);
+  if (br.email) cy = kitText(g, br.email, pad, cy, cw, Math.round(26 * s), '400', mute, 1.3, 1) + Math.round(4 * s);
+  if (br.website) kitText(g, br.website, pad, cy, cw, Math.round(26 * s), '400', mute, 1.3, 1);
+  if (co) {
+    const sy = H - Math.round(86 * s); g.fillStyle = '#151A35'; g.fillRect(0, sy, W, H - sy);
+    g.font = '400 ' + Math.round(22 * s) + 'px ' + KIT_FONT; g.fillStyle = 'rgba(255,255,255,0.75)'; g.textBaseline = 'middle';
+    const lbl = 'In partnership with', lw0 = g.measureText(lbl).width; g.fillText(lbl, pad, sy + (H - sy) / 2);
+    if (k.akbarImg) { const lh = Math.round(46 * s), lw = Math.round(lh * k.akbarImg.naturalWidth / k.akbarImg.naturalHeight); g.drawImage(k.akbarImg, pad + lw0 + Math.round(18 * s), sy + ((H - sy) - lh) / 2, lw, lh); }
+    else { g.font = '600 ' + Math.round(24 * s) + 'px ' + KIT_FONT; g.fillStyle = '#fff'; g.fillText('Akbar Study Abroad', pad + lw0 + Math.round(16 * s), sy + (H - sy) / 2); }
+    g.textBaseline = 'top';
+  }
+  return cv;
+}
+
+function kitFill(K) {
+  const D = B.kit, f = { headline: '', sub: '', points: [], cta: 'Book a free counselling session' };
+  const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+  if (K.topic === 'country') {
+    const c = D.countries.find(x => x.country === K.country); if (!c) return f;
+    f.headline = 'Study in ' + c.country;
+    const intakes = {}; c.unis.forEach(u => u.intakes.forEach(i => { intakes[i] = 1; }));
+    f.sub = Object.keys(intakes).length ? 'Intakes: ' + Object.keys(intakes).slice(0, 3).join(', ') : 'Universities we work with';
+    f.points = c.unis.slice(0, 6).map(u => u.name + (u.city ? ', ' + u.city : '') + (K.fees && u.minInr ? '  ·  from ' + inr(u.minInr) + ' a year' : ''));
+    if (c.unis.some(u => u.sch)) f.points.push('Scholarships available at selected universities');
+  } else if (K.topic === 'uni') {
+    const c = D.countries.find(x => x.country === K.country), u = c && c.unis.find(x => x.name === K.uni); if (!u) return f;
+    f.headline = u.name; f.sub = [u.city, c.country].filter(Boolean).join(', ');
+    f.points = u.courses.slice(0, 4);
+    if (u.intakes.length) f.points.push('Intakes: ' + u.intakes.join(', '));
+    if (K.fees && u.minInr) f.points.push('Tuition from ' + inr(u.minInr) + ' a year');
+    if (u.sch) f.points.push('Scholarships available');
+  } else if (K.topic === 'event') {
+    const e = D.events.find(x => x.id === K.event); if (!e) return f;
+    const d = new Date(e.date + 'T12:00:00');
+    f.headline = e.name; f.sub = (isNaN(d) ? e.date : d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) + (e.time ? '  ·  ' + e.time : '');
+    f.points = [e.venue, e.city].filter(Boolean); f.cta = 'Register for the event';
+  }
+  return f;
+}
+function renderKit() {
+  if (!B.kit) {
+    $('b2bBody').innerHTML = '<div class="sx-card"><div class="skeleton" style="height:240px;"></div></div>';
+    if (!B.kitAsked) { B.kitAsked = true; run('getMarketingKit').then(d => { B.kit = d; if (B.tab === 'kit') renderKit(); }).catch(e => { B.kitAsked = false; $('b2bBody').innerHTML = `<div class="sx-card sx-empty">${esc(errMsg(e))}</div>`; }); }
+    return;
+  }
+  const D = B.kit, K = B.kitForm = B.kitForm || { template: 'post', brand: 'agent', topic: 'country', fees: false, agentId: '', country: '', uni: '', event: '', page: '' };
+  if (!K.agentId && D.agents[0]) K.agentId = D.agents[0].id;
+  if (!K.country && D.countries[0]) K.country = D.countries[0].country;
+  if (!K.page && D.pages[0]) K.page = D.pages[0].slug;
+  const opt = (v, t, cur) => `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(t)}</option>`;
+  const ctry = D.countries.find(x => x.country === K.country) || { unis: [] };
+  if (K.topic === 'uni' && !ctry.unis.some(u => u.name === K.uni)) K.uni = ctry.unis[0] ? ctry.unis[0].name : '';
+  if (K.topic === 'event' && !D.events.some(e => e.id === K.event)) K.event = D.events[0] ? D.events[0].id : '';
+  if (!K.text) K.text = kitFill(K);
+  const T = K.text, agentName = id => { const a = D.agents.find(x => x.id === id); return a ? (a.company || a.name) : id; };
+  $('b2bBody').innerHTML = `<div class="sx-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;"><div><h3 style="margin:0;">Marketing kit</h3>
+<div class="sx-sub">Make a post, story, flyer or event poster with the agent's own logo and colours. The QR code on each design is tracked: anyone who registers from it becomes a B2B lead of that agent.</div></div></div>
+${!D.agents.length ? '<div class="sx-empty" style="margin-top:10px;">Add an agent first (Agents &amp; dues).</div>' : !D.pages.length ? '<div class="sx-empty" style="margin-top:10px;">There is no live landing page for the QR code yet. Ask a Super Admin to publish one in Marketing → Landing pages.</div>' : `
+<div class="kit-grid"><div class="kit-form">
+<label class="kit-f"><span>Agent</span><select id="kitAgent">${D.agents.map(a => opt(a.id, (a.company || a.name) + (a.city ? ' · ' + a.city : '') + (a.brand && a.brand.hasBrand ? '' : '  (no brand saved)'), K.agentId)).join('')}</select></label>
+<div class="sx-sub" id="kitBrandHint"></div>
+<label class="kit-f"><span>Design</span><select id="kitTpl">${Object.keys(KIT_SIZES).map(k => opt(k, KIT_SIZES[k][2] + ' · ' + KIT_SIZES[k][0] + '×' + KIT_SIZES[k][1], K.template)).join('')}</select></label>
+<label class="kit-f"><span>Branding</span><select id="kitBrand">${opt('agent', 'Agent only', K.brand)}${opt('co', 'Agent + "In partnership with Akbar Study Abroad"', K.brand)}</select></label>
+<label class="kit-f"><span>About</span><select id="kitTopic">${opt('country', 'A country', K.topic)}${opt('uni', 'A university', K.topic)}${D.events.length ? opt('event', 'An upcoming event', K.topic) : ''}${opt('custom', 'My own text', K.topic)}</select></label>
+${K.topic === 'country' || K.topic === 'uni' ? `<label class="kit-f"><span>Country</span><select id="kitCountry">${D.countries.map(c => opt(c.country, c.country + ' (' + c.unis.length + ')', K.country)).join('')}</select></label>` : ''}
+${K.topic === 'uni' ? `<label class="kit-f"><span>University</span><select id="kitUni">${ctry.unis.map(u => opt(u.name, u.name, K.uni)).join('')}</select></label>` : ''}
+${K.topic === 'event' ? `<label class="kit-f"><span>Event</span><select id="kitEvent">${D.events.map(e => opt(e.id, e.name + ' · ' + e.date, K.event)).join('')}</select></label>` : ''}
+${K.topic === 'country' || K.topic === 'uni' ? `<label class="kit-chk"><input type="checkbox" id="kitFees"${K.fees ? ' checked' : ''}> Show "from ₹… a year" (from the University Fees sheet)</label>` : ''}
+<label class="kit-f"><span>Headline</span><input id="kitH" maxlength="90" value="${esc(T.headline)}"></label>
+<label class="kit-f"><span>Second line</span><input id="kitS" maxlength="120" value="${esc(T.sub)}"></label>
+<label class="kit-f"><span>Points (one per line)</span><textarea id="kitP" rows="5">${esc((T.points || []).join('\n'))}</textarea></label>
+<label class="kit-f"><span>Call to action</span><input id="kitC" maxlength="80" value="${esc(T.cta)}"></label>
+<label class="kit-f"><span>QR opens</span><select id="kitPage">${D.pages.map(p => opt(p.slug, p.title, K.page)).join('')}</select></label>
+<div class="sx-actions" style="margin-top:12px;"><button class="um-btn primary" id="kitPng">Download PNG</button><button class="um-btn" id="kitPdf">Print / save as PDF</button><button class="um-btn" id="kitReset">Reset text</button></div>
+<div class="sx-sub" style="margin-top:6px;">Each download saves the design below with its own tracked QR code.</div>
+</div><div class="kit-prev"><div class="kit-canvas" id="kitPrev"></div><div class="sx-sub" id="kitPrevNote">Preview. The QR code becomes tracked when you download.</div></div></div>`}</div>
+<div class="sx-card"><h3 style="margin:0 0 8px;">Designs made</h3>${D.kits.length ? `<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>ID</th><th>Made</th><th>Agent</th><th>Design</th><th>Headline</th><th class="num">Leads</th><th>By</th><th></th></tr></thead><tbody>
+${D.kits.map(x => `<tr><td style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;">${esc(x.id)}</td><td>${esc(x.createdAt ? new Date(x.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '')}</td>
+<td><b>${esc(x.agentName || agentName(x.agentId))}</b></td><td>${esc((KIT_SIZES[x.template] || [0, 0, x.template])[2])}<div class="sx-sub">${esc(x.brand || '')}</div></td><td>${esc(x.title || x.topic || '')}</td>
+<td class="num">${x.leads}</td><td>${esc(x.createdBy || '')}</td><td><div class="sx-actions"><button class="um-btn" data-kit-copy="${esc(x.link)}">Copy link</button><button class="comm-del" data-kit-del="${esc(x.id)}">Remove</button></div></td></tr>`).join('')}
+</tbody></table></div>` : '<div class="sx-sub">No designs yet.</div>'}</div>`;
+  $('b2bBody').querySelectorAll('[data-kit-copy]').forEach(b => b.onclick = () => { const t = b.dataset.kitCopy; try { navigator.clipboard.writeText(t).then(() => toast('Link copied'), () => prompt('Copy:', t)); } catch (e) { prompt('Copy:', t); } });
+  $('b2bBody').querySelectorAll('[data-kit-del]').forEach(b => b.onclick = () => { if (!confirm('Remove this design from the list? Leads already made stay.')) return;
+    run('deleteMarketingKit', b.dataset.kitDel).then(() => { D.kits = D.kits.filter(x => x.id !== b.dataset.kitDel); renderKit(); }).catch(e => toast(errMsg(e), 'error')); });
+  if (!D.agents.length || !D.pages.length) return;
+  const readText = () => { K.text = { headline: $('kitH').value.trim(), sub: $('kitS').value.trim(), points: $('kitP').value.split('\n').map(x => x.trim()).filter(Boolean), cta: $('kitC').value.trim() }; };
+  const refill = () => { K.text = null; renderKit(); };
+  const bind = (id, key, fill) => { const el = $(id); if (el) el.onchange = () => { readText(); K[key] = el.type === 'checkbox' ? el.checked : el.value; if (fill) refill(); else renderKit(); }; };
+  bind('kitAgent', 'agentId'); bind('kitTpl', 'template'); bind('kitBrand', 'brand'); bind('kitPage', 'page');
+  bind('kitTopic', 'topic', true); bind('kitCountry', 'country', true); bind('kitUni', 'uni', true); bind('kitEvent', 'event', true); bind('kitFees', 'fees', true);
+  $('kitReset').onclick = refill;
+  ['kitH', 'kitS', 'kitP', 'kitC'].forEach(id => { $(id).oninput = () => { readText(); clearTimeout(B.kitT); B.kitT = setTimeout(draw, 250); }; });
+  const agent = () => D.agents.find(a => a.id === K.agentId) || D.agents[0];
+  const hint = () => { const a = agent(); $('kitBrandHint').innerHTML = a.brand && a.brand.hasBrand ? '' : 'This agent has no saved brand yet, so the design uses their name and a default colour. Save a logo and colour in Playbook → Agent brands.'; };
+  const spec = link => Promise.all([kitImg(agent().brand && agent().brand.logo), K.brand === 'co' ? kitImg(D.akbar.logo) : Promise.resolve(null), document.fonts ? document.fonts.ready : null])
+    .then(im => ({ template: K.template, brand: K.brand, agentBrand: agent().brand || {}, agentName: agent().company || agent().name, logoImg: im[0], akbarImg: im[1],
+      headline: K.text.headline, sub: K.text.sub, points: K.text.points, cta: K.text.cta, link: link }));
+  const preview = 'https:\x2F\x2Fhanif-243.github.io\x2Fakbar-dashboard\x2Flp\x2F?p=' + encodeURIComponent(K.page);
+  function draw() { spec(preview).then(sp => { const cv = kitDraw(sp), box = $('kitPrev'); if (!box) return; cv.style.width = '100%'; cv.style.height = 'auto'; box.innerHTML = ''; box.appendChild(cv); }); }
+  hint(); draw();
+  const save = then => {
+    readText(); if (!K.text.headline) { toast('Add a headline first', 'error'); return; }
+    const btns = [$('kitPng'), $('kitPdf')]; btns.forEach(b => { b.disabled = true; });
+    run('createMarketingKit', { agentId: K.agentId, template: K.template, brand: K.brand, page: K.page, title: K.text.headline, topic: K.topic === 'uni' ? K.uni : K.topic === 'country' ? K.country : K.topic === 'event' ? ((D.events.find(e => e.id === K.event) || {}).name || '') : 'Custom' })
+      .then(r => spec(r.link).then(sp => { const cv = kitDraw(sp); then(cv, r);
+        D.kits.unshift({ id: r.id, agentId: K.agentId, agentName: agent().company || agent().name, template: K.template, topic: K.topic, title: K.text.headline, page: K.page, brand: K.brand === 'co' ? 'Co-branded' : 'Agent only', link: r.link, createdAt: new Date().toISOString(), createdBy: 'You', leads: 0 });
+        renderKit(); }))
+      .catch(e => { btns.forEach(b => { if (b) b.disabled = false; }); toast(errMsg(e), 'error'); });
+  };
+  const fname = r => (agent().company || agent().name || 'agent').replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '-' + K.template + '-' + r.id.toLowerCase();
+  $('kitPng').onclick = () => save((cv, r) => { const a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = fname(r) + '.png'; document.body.appendChild(a); a.click(); a.remove(); toast('Downloaded ' + r.id); });
+  $('kitPdf').onclick = () => save((cv, r) => {
+    const w = window.open('', '_blank'); if (!w) { toast('Allow pop-ups to print', 'error'); return; }
+    const portrait = cv.height >= cv.width;
+    w.document.write('<!doctype html><html><head><title>' + fname(r) + '</title><style>@page{size:A4 ' + (portrait ? 'portrait' : 'landscape') + ';margin:0}html,body{margin:0;height:100%}body{display:flex;align-items:center;justify-content:center}img{max-width:100%;max-height:100vh}</style></head><body><img src="' + cv.toDataURL('image/png') + '" onload="setTimeout(function(){window.print()},200)"></body></html>');
+    w.document.close();
+  });
+}
 function renderRefs() {
 const all = B.data.students.filter(isRefSt);
 const rows = all.filter(st => (!B.stage || st.visaCases.some(id => (caseById(id) || {}).stage === B.stage))
@@ -24621,6 +24821,15 @@ window.akOpenLeadSources = open;
 })();
 </script>
 
+<style>.kit-grid { display: grid; grid-template-columns: minmax(280px, 380px) minmax(0, 1fr); gap: 24px; margin-top: 14px; align-items: start; }
+.kit-f { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; font-size: 12px; color: var(--muted, #6B7280); }
+.kit-f input, .kit-f select, .kit-f textarea { font: inherit; font-size: 13px; color: inherit; padding: 8px 10px; border: 1px solid rgba(20, 22, 31, 0.14); border-radius: 8px; background: var(--card, #fff); }
+.kit-f textarea { resize: vertical; }
+.kit-chk { display: flex; gap: 8px; align-items: center; font-size: 12.5px; margin: 0 0 10px; }
+.kit-prev { position: sticky; top: 12px; }
+.kit-canvas { max-width: 520px; border: 1px solid rgba(20, 22, 31, 0.1); border-radius: 12px; overflow: hidden; background: #FAF9F6; }
+.kit-canvas canvas { display: block; }
+@media (max-width: 900px) { .kit-grid { grid-template-columns: minmax(0, 1fr); } .kit-prev { position: static; } }</style>
 <style>.b2b-refgrid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; } .b2b-refgrid .sx-card { margin-top: 0; } @media (max-width: 1200px) { .b2b-refgrid { grid-template-columns: minmax(0, 1fr); } }</style>
 
 <style>
