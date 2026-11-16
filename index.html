@@ -5546,7 +5546,7 @@ if (!input) return;
 const newC = input.value, idxC = allRows.findIndex(r => r.leadId === leadId), beforeC = idxC !== -1 ? allRows[idxC] : null;
 if (beforeC) allRows[idxC] = Object.assign({}, beforeC, { counselor: newC });
 if (statusEl) { statusEl.textContent = 'Assigned'; setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3000); }
-lastInsightsSignature = null; updateInsightsRow(allRows);
+lastInsightsSignature = null; updateInsightsRow((window.akOvFilter ? window.akOvFilter(allRows) : allRows));
 google.script.run
 .withSuccessHandler(updatedRow => {
 const idx = allRows.findIndex(r => r.leadId === leadId);
@@ -6279,7 +6279,7 @@ return `rgb(${c[0]},${c[1]},${c[2]})`;
 
 let lastInsightsSignature = null;
 function updateInsightsRow(rows) {
-const sig = effectiveChartBranch() + '|' + rows.length + '|' + (rows[0] ? rows[0].leadId + rows[0].status : '');
+const sig = effectiveChartBranch() + '|' + (window.akOvSig ? window.akOvSig() : '') + '|' + rows.length + '|' + (rows[0] ? rows[0].leadId + rows[0].status : '');
 if (sig === lastInsightsSignature) return;
 lastInsightsSignature = sig;
 
@@ -6935,7 +6935,7 @@ updateStatsRow({ total, notified, awaiting, overdue });
 const dupCount = filtered.filter(r => getDupInfo(r)).length;
 const dupNote = document.getElementById('statDupNote');
 if (dupNote) dupNote.textContent = dupCount > 0 ? `(${dupCount} duplicate${dupCount === 1 ? '' : 's'})` : '';
-try { updateInsightsRow(allRows); } catch (e) { console.error('insight cards skipped', e); }
+try { updateInsightsRow((window.akOvFilter ? window.akOvFilter(allRows) : allRows)); } catch (e) { console.error('insight cards skipped', e); }
 try { updateOverdueAlert(overdueAll); } catch (e) { console.error('overdue alert skipped', e); }
 renderLastSynced(lastKnownAutomationRun);
 
@@ -7177,7 +7177,7 @@ function loadMissedFollowUps(showPopup) {
   promisifyRun('getMissedFollowUps', window._authToken).then(m => {
     const before = window._missedFU ? window._missedFU.total : null;
     window._missedFU = m;
-    if (before !== m.total) { try { lastInsightsSignature = null; updateInsightsRow(allRows); } catch (e) {   } }
+    if (before !== m.total) { try { lastInsightsSignature = null; updateInsightsRow((window.akOvFilter ? window.akOvFilter(allRows) : allRows)); } catch (e) {   } }
     if (showPopup && m.total) {
       let snooze = null; try { snooze = JSON.parse(localStorage.getItem('akbar_missed_snooze') || 'null'); } catch (e) { snooze = null; }
       if (!snooze || Date.now() > snooze.until || m.total > snooze.count) openMissedPopup('');
@@ -24625,7 +24625,7 @@ window.akIntake = function (v) {
 const bar = document.createElement('div'); bar.id = 'akSheetBar'; bar.setAttribute('role', 'tablist'); bar.setAttribute('aria-label', 'Lead sheets');
 const sfb = document.getElementById('statusFilterBar'); if (!sfb) return; sfb.before(bar);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const SRC = {}, asked = {};
+const SRC = {}, asked = {}; window.akSheetSrc = SRC;
 window.akSheetFilter = null;
 let lastBranch = null, lastSig = '';
 const canSee = () => !!(window._isSuperAdmin || (typeof viewerBranch !== 'undefined' && viewerBranch && typeof viewerCounselor !== 'undefined' && !viewerCounselor && !document.body.classList.contains('tc-staff')));
@@ -24694,6 +24694,107 @@ bar.addEventListener('click', e => {
   lastSig = ''; paint(); if (typeof render === 'function') render();
 });
 setInterval(paint, 1500);
+})();
+</script>
+
+<style>
+#akOvSheets { display: none; gap: 8px; flex-wrap: wrap; align-items: center; margin: 0 0 12px; position: relative; }
+#akOvSheets.show { display: flex; }
+#akOvSheets .ovs-lbl { font: 500 12.5px/1 'IBM Plex Sans', system-ui, sans-serif; color: var(--muted); margin-right: 4px; }
+#akOvSheets .ovs-chip { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px; height: 32px; max-width: 320px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--card); cursor: pointer; font: 500 12.5px/1 'IBM Plex Sans', system-ui, sans-serif; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#akOvSheets .ovs-chip:hover { border-color: var(--muted); }
+#akOvSheets .ovs-chip:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+#akOvSheets .ovs-chip .n { font: 500 11px/1 'IBM Plex Mono', monospace; color: var(--muted); font-variant-numeric: tabular-nums; }
+#akOvSheets .ovs-chip.on { background: var(--ink); border-color: var(--ink); color: var(--card); }
+#akOvSheets .ovs-chip.on .n { color: inherit; opacity: .7; }
+#akOvSheets .ovs-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+#akOvSheets .ovs-now { flex-basis: 100%; font: 500 12.5px/1.4 'IBM Plex Sans', system-ui, sans-serif; color: var(--muted); }
+#akOvSheets .ovs-now b { color: var(--ink); font-weight: 600; }
+#akOvSheets .ovs-pop { position: absolute; z-index: 40; top: 40px; right: 0; width: 320px; max-width: calc(100vw - 32px); padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); box-shadow: 0 12px 32px -16px rgba(20,22,31,.5); }
+#akOvSheets .ovs-pop h4 { margin: 0 0 12px; font: 600 13px/1.3 'IBM Plex Sans', system-ui, sans-serif; color: var(--ink); }
+#akOvSheets .ovs-pop label { display: flex; align-items: center; gap: 10px; min-height: 32px; font: 500 12.5px/1.3 'IBM Plex Sans', system-ui, sans-serif; color: var(--ink); cursor: pointer; }
+#akOvSheets .ovs-pop label .n { margin-left: auto; font: 500 11px/1 'IBM Plex Mono', monospace; color: var(--muted); }
+#akOvSheets .ovs-pop .ovs-acts { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+</style>
+<script>
+(function () {
+const wrap = document.getElementById('trendCardWrap'); if (!wrap) return;
+const bar = document.createElement('div'); bar.id = 'akOvSheets'; bar.setAttribute('data-dash-section', 'overview'); bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Overview by sheet');
+wrap.before(bar);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const short = l => { const i = String(l).lastIndexOf(' › '); return i === -1 ? String(l).trim() : String(l).slice(i + 3).trim(); };
+const KEY = 'ak_ov_sheets';
+let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+let popOpen = false, lastSig = '';
+const branchNow = () => (typeof activeBranch !== 'undefined' ? activeBranch : 'All');
+const canSee = () => !!(window._isSuperAdmin || (typeof viewerBranch !== 'undefined' && viewerBranch && typeof viewerCounselor !== 'undefined' && !viewerCounselor && !document.body.classList.contains('tc-staff')));
+const sel = () => { const s = saved[branchNow()]; return s && s.mode ? s : { mode: 'all' }; };
+function store(s) { saved[branchNow()] = s; try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) { saved = saved; } }
+function sheets(br) {
+  const rows = (typeof allRows === 'undefined' ? [] : allRows).filter(r => r.branch === br);
+  const known = ((window.akSheetSrc && window.akSheetSrc[br]) || [{ key: '', label: 'Main sheet', main: true }]).filter(x => !x.view).map(x => ({ key: x.key, label: x.main ? 'Main sheet' : short(x.label), full: x.label, main: !!x.main }));
+  if (!known.some(x => x.main)) known.unshift({ key: '', label: 'Main sheet', full: 'Main sheet', main: true });
+  rows.forEach(r => { const k = r.sheet || ''; if (k && !known.some(x => x.key === k)) known.push({ key: k, label: short(k), full: k, main: false }); });
+  known.forEach(x => { x.n = rows.filter(r => (r.sheet || '') === x.key).length; });
+  return { list: known, rows: rows };
+}
+function matcher(s) {
+  if (s.mode === 'one') return k => k === s.key;
+  if (s.mode === 'extras') return k => k !== '';
+  if (s.mode === 'custom') return k => (s.keys || []).indexOf(k) !== -1;
+  return null;
+}
+window.akOvFilter = function (rows) {
+  const br = branchNow(); if (br === 'All' || !canSee()) return rows;
+  const ok = matcher(sel()); if (!ok) return rows;
+  return rows.filter(r => r.branch !== br || ok(r.sheet || ''));
+};
+window.akOvSig = function () { const s = sel(); return branchNow() + ':' + s.mode + ':' + (s.key || '') + ':' + (s.keys || []).join('/'); };
+function refresh() { try { lastInsightsSignature = null; updateInsightsRow(window.akOvFilter(allRows)); } catch (e) { console.error('overview refresh skipped', e); } }
+function paint() {
+  const br = branchNow();
+  if (!canSee() || br === 'All' || typeof allRows === 'undefined') { bar.classList.remove('show'); return; }
+  const d = sheets(br), s = sel();
+  const extras = d.list.filter(x => !x.main);
+  const sig = br + '|' + window.akOvSig() + '|' + popOpen + '|' + d.list.map(x => x.key + ':' + x.n).join(',');
+  if (sig === lastSig) return; lastSig = sig;
+  if (!extras.length) { bar.classList.remove('show'); bar.innerHTML = ''; return; }
+  const chip = (attr, label, n, on, title) => '<button type="button" class="ovs-chip' + (on ? ' on' : '') + '" ' + attr + ' aria-pressed="' + on + '"' + (title ? ' title="' + esc(title) + '"' : '') + '>' + esc(label) + (n == null ? '' : '<span class="n">' + n + '</span>') + '</button>';
+  const exN = extras.reduce((a, x) => a + x.n, 0);
+  const ok = matcher(s), shownN = ok ? d.rows.filter(r => ok(r.sheet || '')).length : d.rows.length;
+  let now;
+  if (s.mode === 'one') { const x = d.list.find(y => y.key === s.key); now = '<b>' + esc(x ? x.label : s.key) + '</b>'; }
+  else if (s.mode === 'extras') now = '<b>Other sheets combined</b> (' + extras.length + ' sheet' + (extras.length === 1 ? '' : 's') + ', main sheet left out)';
+  else if (s.mode === 'custom') { const names = d.list.filter(x => (s.keys || []).indexOf(x.key) !== -1).map(x => x.label); now = '<b>Custom</b>: ' + esc(names.join(', ') || 'no sheets picked'); }
+  else now = '<b>All sheets</b>';
+  bar.innerHTML = '<span class="ovs-lbl">Overview for</span>' +
+    chip('data-ov="all"', 'All sheets', d.rows.length, s.mode === 'all') +
+    d.list.map(x => chip('data-ov="one" data-k="' + esc(x.key) + '"', x.label, x.n, s.mode === 'one' && s.key === x.key, x.full)).join('') +
+    '<span class="ovs-sep" aria-hidden="true"></span>' +
+    chip('data-ov="extras"', 'Other sheets combined', exN, s.mode === 'extras', 'Every sheet except the main sheet') +
+    chip('data-ov="custom"', 'Custom', s.mode === 'custom' ? shownN : null, s.mode === 'custom', 'Pick any set of sheets') +
+    '<div class="ovs-now">Showing ' + now + ' · ' + shownN + ' lead' + (shownN === 1 ? '' : 's') + '</div>' +
+    (popOpen ? '<div class="ovs-pop" role="dialog" aria-label="Pick sheets"><h4>Pick the sheets to show together</h4>' +
+      d.list.map(x => '<label><input type="checkbox" data-ck="' + esc(x.key) + '"' + ((s.mode === 'custom' ? (s.keys || []) : []).indexOf(x.key) !== -1 ? ' checked' : '') + '>' + esc(x.label) + '<span class="n">' + x.n + '</span></label>').join('') +
+      '<div class="ovs-acts"><button type="button" class="um-btn" data-ov-x>Cancel</button><button type="button" class="counselor-save-btn" data-ov-ok>Show these</button></div></div>' : '');
+  bar.classList.add('show');
+}
+bar.addEventListener('click', e => {
+  if (e.target.closest('[data-ov-x]')) { popOpen = false; lastSig = ''; paint(); return; }
+  if (e.target.closest('[data-ov-ok]')) {
+    const keys = Array.from(bar.querySelectorAll('[data-ck]:checked')).map(c => c.dataset.ck);
+    popOpen = false; store(keys.length ? { mode: 'custom', keys: keys } : { mode: 'all' }); lastSig = ''; paint(); refresh(); return;
+  }
+  const b = e.target.closest('[data-ov]'); if (!b) return;
+  const m = b.dataset.ov;
+  if (m === 'custom') { popOpen = !popOpen; lastSig = ''; paint(); return; }
+  popOpen = false;
+  store(m === 'one' ? { mode: 'one', key: b.dataset.k } : { mode: m });
+  lastSig = ''; paint(); refresh();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && popOpen) { popOpen = false; lastSig = ''; paint(); } });
+let lastBr = null;
+setInterval(() => { const br = branchNow(); paint(); if (br !== lastBr) { lastBr = br; if (sel().mode !== 'all') refresh(); } }, 1500);
 })();
 </script>
 
