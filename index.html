@@ -59,7 +59,7 @@ window.AKBAR_API = 'https:\x2F\x2Fscript.google.com\x2Fmacros\x2Fs\x2FAKfycbzM25
 </script>
 <script>
 
-window.AKBAR_BUILD = '16 Nov 2026 · v195';
+window.AKBAR_BUILD = '16 Nov 2026 · v196';
 
 (function () {
   try {
@@ -5535,7 +5535,7 @@ showToast('Could not save the remark: ' + why + ' — your text is still there.'
 });
 });
 
-document.querySelectorAll('.counselor-save-btn').forEach(btn => {
+document.querySelectorAll('.counselor-save-btn[data-lead-id]:not(.branch-move-btn)').forEach(btn => {
 btn.addEventListener('click', (e) => {
 e.stopPropagation();
 const { leadId, branch } = btn.dataset;
@@ -21122,19 +21122,20 @@ function kitDraw(k) {
 function kitFill(K) {
   const D = B.kit, f = { headline: '', sub: '', points: [], cta: 'Book a free counselling session' };
   const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+  const kitFee = u => u.minInr ? '  ·  from ' + inr(u.minInr) + ' a year' : u.minLocal ? '  ·  from ' + (u.cur ? u.cur + ' ' : '') + Math.round(u.minLocal).toLocaleString('en-IN') : '';
   if (K.topic === 'country') {
-    const c = D.countries.find(x => x.country === K.country); if (!c) return f;
+    const c = D.countries.find(x => x.country === K.country); if (!c || !c.unis) return f;
     f.headline = 'Study in ' + c.country;
     const intakes = {}; c.unis.forEach(u => u.intakes.forEach(i => { intakes[i] = 1; }));
     f.sub = Object.keys(intakes).length ? 'Intakes: ' + Object.keys(intakes).slice(0, 3).join(', ') : 'Universities we work with';
-    f.points = c.unis.slice(0, 6).map(u => u.name + (u.city ? ', ' + u.city : '') + (K.fees && u.minInr ? '  ·  from ' + inr(u.minInr) + ' a year' : ''));
+    f.points = c.unis.slice(0, 6).map(u => u.name + (u.city ? ', ' + u.city : '') + (K.fees ? kitFee(u) : ''));
     if (c.unis.some(u => u.sch)) f.points.push('Scholarships available at selected universities');
   } else if (K.topic === 'uni') {
-    const c = D.countries.find(x => x.country === K.country), u = c && c.unis.find(x => x.name === K.uni); if (!u) return f;
+    const c = D.countries.find(x => x.country === K.country), u = c && c.unis && c.unis.find(x => x.name === K.uni); if (!u) return f;
     f.headline = u.name; f.sub = [u.city, c.country].filter(Boolean).join(', ');
     f.points = u.courses.slice(0, 4);
     if (u.intakes.length) f.points.push('Intakes: ' + u.intakes.join(', '));
-    if (K.fees && u.minInr) f.points.push('Tuition from ' + inr(u.minInr) + ' a year');
+    if (K.fees && (u.minInr || u.minLocal)) f.points.push('Tuition ' + kitFee(u).replace(/^[\s·]+/, ''));
     if (u.sch) f.points.push('Scholarships available');
   } else if (K.topic === 'event') {
     const e = D.events.find(x => x.id === K.event); if (!e) return f;
@@ -21155,7 +21156,13 @@ function renderKit() {
   if (!K.country && D.countries[0]) K.country = D.countries[0].country;
   if (!K.page && D.pages[0]) K.page = D.pages[0].slug;
   const opt = (v, t, cur) => `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(t)}</option>`;
-  const ctry = D.countries.find(x => x.country === K.country) || { unis: [] };
+  const ctry0 = D.countries.find(x => x.country === K.country);
+  if ((K.topic === 'country' || K.topic === 'uni') && ctry0 && !ctry0.unis) {
+    if (!ctry0.asked) { ctry0.asked = true; run('getMarketingKitCountry', ctry0.country).then(r => { ctry0.unis = r.unis || []; K.text = null; if (B.tab === 'kit') renderKit(); }).catch(e => { ctry0.asked = false; ctry0.unis = []; toast(errMsg(e), 'error'); if (B.tab === 'kit') renderKit(); }); }
+    $('b2bBody').innerHTML = '<div class="sx-card"><div class="sx-sub">Loading the universities of ' + esc(ctry0.country) + '…</div><div class="skeleton" style="height:240px;margin-top:10px;"></div></div>';
+    return;
+  }
+  const ctry = ctry0 && ctry0.unis ? ctry0 : { unis: [] };
   if (K.topic === 'uni' && !ctry.unis.some(u => u.name === K.uni)) K.uni = ctry.unis[0] ? ctry.unis[0].name : '';
   if (K.topic === 'event' && !D.events.some(e => e.id === K.event)) K.event = D.events[0] ? D.events[0].id : '';
   if (!K.text) K.text = kitFill(K);
@@ -21169,10 +21176,10 @@ ${!D.agents.length ? '<div class="sx-empty" style="margin-top:10px;">Add an agen
 <label class="kit-f"><span>Design</span><select id="kitTpl">${Object.keys(KIT_SIZES).map(k => opt(k, KIT_SIZES[k][2] + ' · ' + KIT_SIZES[k][0] + '×' + KIT_SIZES[k][1], K.template)).join('')}</select></label>
 <label class="kit-f"><span>Branding</span><select id="kitBrand">${opt('agent', 'Agent only', K.brand)}${opt('co', 'Agent + "In partnership with Akbar Study Abroad"', K.brand)}</select></label>
 <label class="kit-f"><span>About</span><select id="kitTopic">${opt('country', 'A country', K.topic)}${opt('uni', 'A university', K.topic)}${D.events.length ? opt('event', 'An upcoming event', K.topic) : ''}${opt('custom', 'My own text', K.topic)}</select></label>
-${K.topic === 'country' || K.topic === 'uni' ? `<label class="kit-f"><span>Country</span><select id="kitCountry">${D.countries.map(c => opt(c.country, c.country + ' (' + c.unis.length + ')', K.country)).join('')}</select></label>` : ''}
+${K.topic === 'country' || K.topic === 'uni' ? `<label class="kit-f"><span>Country</span><select id="kitCountry">${D.countries.map(c => opt(c.country, c.country + (c.unis ? ' (' + c.unis.length + ')' : ''), K.country)).join('')}</select></label>` : ''}
 ${K.topic === 'uni' ? `<label class="kit-f"><span>University</span><select id="kitUni">${ctry.unis.map(u => opt(u.name, u.name, K.uni)).join('')}</select></label>` : ''}
 ${K.topic === 'event' ? `<label class="kit-f"><span>Event</span><select id="kitEvent">${D.events.map(e => opt(e.id, e.name + ' · ' + e.date, K.event)).join('')}</select></label>` : ''}
-${K.topic === 'country' || K.topic === 'uni' ? `<label class="kit-chk"><input type="checkbox" id="kitFees"${K.fees ? ' checked' : ''}> Show "from ₹… a year" (from the University Fees sheet)</label>` : ''}
+${K.topic === 'country' || K.topic === 'uni' ? `<label class="kit-chk"><input type="checkbox" id="kitFees"${K.fees ? ' checked' : ''}> Show the lowest tuition fee (from the University Fees and Course finder sheets)</label>` : ''}
 <label class="kit-f"><span>Headline</span><input id="kitH" maxlength="90" value="${esc(T.headline)}"></label>
 <label class="kit-f"><span>Second line</span><input id="kitS" maxlength="120" value="${esc(T.sub)}"></label>
 <label class="kit-f"><span>Points (one per line)</span><textarea id="kitP" rows="5">${esc((T.points || []).join('\n'))}</textarea></label>
@@ -24800,11 +24807,12 @@ function open() {
   BR = typeof activeBranch !== 'undefined' ? activeBranch : ''; if (!BR || BR === 'All') { toast('Pick a branch first', true); return; }
   P = null;
   const el = bg();
-  el.innerHTML = '<div class="cmdk-box" role="dialog" aria-modal="true" aria-label="Lead sources"><div class="preview-modal-header"><span style="font-size:14px;font-weight:600;flex:1;">Lead sources · ' + esc(BR) + '</span><button class="counselor-save-btn" data-src-x>Close</button></div><div class="lsr-body">' +
+  el.innerHTML = '<div class="cmdk-box" role="dialog" aria-modal="true" aria-label="Lead sources"><div class="preview-modal-header"><span style="font-size:14px;font-weight:600;flex:1;">Lead sources · ' + esc(BR) + '</span><button type="button" class="um-btn" data-src-x>Close</button></div><div class="lsr-body">' +
     '<div class="lsr-sec"><h4>Add a Google Sheet</h4><div class="lsr-in"><input id="akSrcUrl" type="url" placeholder="Paste the sheet link, with the tab open" autocomplete="off"><button type="button" class="um-btn" id="akSrcGo">Check</button></div>' +
     '<div class="lsr-hint">Open the right tab before copying the link, so the link points to it. The sheet must be shared with the Lead Ops account (Viewer is enough). Nothing is changed in the sheet you paste.</div><div id="akSrcPrev"></div></div>' +
     '<div class="lsr-sec"><h4>Linked sheets</h4><div id="akSrcList"></div><div class="lsr-hint">Stop fetching only stops new rows coming in. Leads already copied stay.</div></div></div></div>';
   el.classList.add('open');
+  el.querySelector('[data-src-x]').onclick = () => el.classList.remove('open');
   document.getElementById('akSrcGo').onclick = () => check('');
   document.getElementById('akSrcUrl').addEventListener('keydown', e => { if (e.key === 'Enter') check(''); });
   document.getElementById('akSrcList').addEventListener('click', e => {
