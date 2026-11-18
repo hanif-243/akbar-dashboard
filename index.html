@@ -260,6 +260,7 @@ window.AKBAR_BUILD = '16 Nov 2026 · v196';
         if (typeof k !== 'string') return undefined;
         return function () {
           var args = Array.prototype.slice.call(arguments);
+          if (window.akDbHook && !st.__db) { var hk = window.akDbHook(st, k, args); if (hk === true) return; if (hk) { runner(Object.assign(hk, { __db: 1 }))[k].apply(null, args); return; } }
           if (k === 'getDashboardData') { dashCall(st, args); return; }
           if (!BATCH[k] && /^get/.test(k) && !NOMEM[k]) { memCall(st, k, args); return; }
           if (!BATCH[k]) { if (!/^(get|startSessionTracking|updateSessionHeartbeat|prefetchRun|loginWith|verifyLogin|trustThisDevice)/.test(k)) { pre = {}; mem = {}; memOrder = []; markWrite(); } callReal(st.s ? Object.assign({}, st, { s: function (v, u) { try { if (v && v.__notice && typeof window.akStudentNotice === 'function') window.akStudentNotice(v.__notice); } catch (e) {   } st.s(v, u); } }) : st, k, args); return; }
@@ -7507,6 +7508,7 @@ if (!window._akPrefetched && typeof window.akPrefetch === 'function') { window._
 window._dashSig = response.dataSig || '';
 if (response && response.isTelecallerStaff && typeof window.applyTelecallerStaffMode === 'function') window.applyTelecallerStaffMode();
 allRows = response.rows;
+if (window.akDbMerge) window.akDbMerge(allRows);
 if (!response.__cached) checkForNewLeads(allRows);
 
 if (response.viewerBranch && viewerBranch === null) {
@@ -24302,6 +24304,15 @@ function drawSecurity(d) {
     $('sbSave').onclick = () => { const b = $('sbSave'), u = $('sbUrl').value, pk = $('sbPub').value, sk = $('sbSec').value;
       if (!u.trim() && !pk.trim() && !sk.trim()) { toast('Paste at least one value first', 'error'); return; }
       b.disabled = true; run('setSupabaseKeys', u, pk, sk).then(r => { toast('Saved'); sbDraw(r); }).catch(e => { b.disabled = false; toast(errMsg(e), 'error'); }); }; };
+  body().insertAdjacentHTML('beforeend', '<div class="sx-card" id="secDbTrial"><h3>Database trial</h3><div class="sx-sub">Checking…</div></div>');
+  const dbtDraw = t => { const el = $('secDbTrial'); if (!el) return;
+    el.innerHTML = '<h3>Database trial</h3><div class="sx-sub" style="margin:4px 0 8px;">For a branch that is on, status, remark and counsellor changes save to the new database at once and are copied into the sheet every 5 minutes. Turning a branch off first copies everything waiting.</div>' + (t.keys ? '' : '<div class="sx-sub" style="color:var(--red);">Save the database keys above first.</div>') +
+      '<div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Branch</th><th>New database</th><th></th></tr></thead><tbody>' + t.branches.map(b => '<tr><td><b>' + esc(b.name) + '</b></td><td>' + (b.on ? '<span style="color:var(--ok);font-weight:600;">On</span>' : '<span class="sx-sub">Off</span>') + '</td><td><button class="um-btn s10-mini" data-dbt="' + esc(b.name) + '" data-on="' + (b.on ? '0' : '1') + '"' + (t.keys ? '' : ' disabled') + '>' + (b.on ? 'Turn off' : 'Turn on') + '</button></td></tr>').join('') + '</tbody></table></div>' +
+      (t.last ? '<div class="sx-sub" style="margin-top:6px;">Last action: ' + esc(t.last.copied != null ? t.last.copied + ' leads copied into the database' : (t.last.done || 0) + ' waiting changes copied to the sheet') + '</div>' : '');
+    el.querySelectorAll('[data-dbt]').forEach(b => b.onclick = () => { const on = b.dataset.on === '1';
+      if (!confirm((on ? 'Turn ON the new database for ' : 'Turn OFF the new database for ') + b.dataset.dbt + '?')) return;
+      b.disabled = true; run('setDbTrial', b.dataset.dbt, on).then(r => { toast('Database trial ' + (on ? 'on' : 'off') + ' for ' + b.dataset.dbt); dbtDraw(r); }).catch(e => { b.disabled = false; toast(errMsg(e), 'error'); }); }); };
+  run('getDbTrial').then(dbtDraw).catch(e => { const el = $('secDbTrial'); if (el) el.innerHTML = '<h3>Database trial</h3><div class="sx-sub">' + esc(errMsg(e)) + '</div>'; });
   run('getSupabaseStatus').then(sbDraw).catch(e => { const el = $('secSb'); if (el) el.innerHTML = '<h3>New database (Supabase)</h3><div class="sx-sub">' + esc(errMsg(e)) + '</div>'; });
   const mv = $('secMove'); if (mv) mv.onclick = () => { mv.disabled = true; run('moveMetaTokensToSecure').then(r => { toast(r.moved + ' token(s) moved to secure storage'); drawSecurity({ tokens: r.tokens, controlSheetUrl: d.controlSheetUrl }); }).catch(e => { mv.disabled = false; toast(errMsg(e), 'error'); }); };
   body().querySelectorAll('[data-sec-save]').forEach(b => b.onclick = () => { const inp = body().querySelector('[data-sec-tok="' + CSS.escape(b.dataset.secSave) + '"]'); if (!inp.value.trim()) { toast('Paste the token first', 'error'); return; }
@@ -24878,6 +24889,83 @@ setInterval(() => { const br = branchNow(); paint(); if (br !== lastBr) { lastBr
   }
   sync();
   if (window.MutationObserver) [1, 2, 3].forEach(function (i) { var el = document.getElementById('step' + i); if (el) new MutationObserver(sync).observe(el, { attributes: true, attributeFilter: ['class'] }); });
+})();
+</script>
+
+<script>
+(function () {
+  var S = null, rows = {}, opening = null, lastPull = 0, pulling = false;
+  var SAVE = { setLeadStatus: 'status', setLeadNote: 'remark', setLeadCounselor: 'counselor' };
+  function live() { return S && !S.off && S.exp > Date.now() + 60000; }
+  function H() { return { apikey: S.key, Authorization: 'Bearer ' + S.at, 'Content-Type': 'application/json' }; }
+  function open() {
+    if (live() || (S && S.off && S.exp > Date.now())) return Promise.resolve(S);
+    if (opening) return opening;
+    opening = promisifyRun('openDbSession', window._authToken || '').then(function (r) {
+      if (!r || !r.on) { S = { off: true, exp: Date.now() + 600000 }; return S; }
+      return fetch(r.url + '/auth/v1/verify', { method: 'POST', headers: { apikey: r.key, 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'magiclink', token_hash: r.tokenHash }) })
+        .then(function (x) { return x.json(); }).then(function (j) {
+          if (!j || !j.access_token) throw new Error('Database sign-in failed');
+          S = { url: r.url, key: r.key, at: j.access_token, exp: Date.now() + (Number(j.expires_in) || 3600) * 1000, branches: r.branches || [] };
+          return S;
+        });
+    }).catch(function (e) { S = { off: true, exp: Date.now() + 120000, error: String(e && e.message || e) }; return S; })
+      .then(function (v) { opening = null; return v; });
+    return opening;
+  }
+  function keep(l) { rows[l.branch + '|' + l.lead_key] = l; }
+  function fresh(d) { return d && d.updated_by && d.updated_by !== 'import' && d.updated_by !== 'sync'; }
+  function patch(list) {
+    var n = 0;
+    (list || []).forEach(function (r) {
+      var d = rows[r.branch + '|' + r.leadId]; if (!fresh(d)) return;
+      if (r.status !== d.status || r.counselor !== d.counselor || r.remark !== d.remark) {
+        r.status = d.status; r.counselor = d.counselor; r.remark = d.remark; r.isAuto = false; if (d.status_set_at) r.statusSetAt = d.status_set_at; n++;
+      }
+    });
+    return n;
+  }
+  function pull() {
+    if (pulling || !live() || !S.branches.length) return Promise.resolve(0);
+    pulling = true;
+    var q = 'leads?select=id,lead_key,branch,status,counselor,remark,status_set_at,updated_by,updated_at&branch=in.(' + S.branches.map(function (b) { return encodeURIComponent('"' + b + '"'); }).join(',') + ')';
+    return fetch(S.url + '/rest/v1/' + q, { headers: H() }).then(function (x) { return x.ok ? x.json() : []; }).then(function (list) {
+      rows = {}; (list || []).forEach(keep); lastPull = Date.now();
+      var n = (typeof allRows !== 'undefined') ? patch(allRows) : 0;
+      if (n && typeof render === 'function') render();
+      return n;
+    }).catch(function () { return 0; }).then(function (n) { pulling = false; return n; });
+  }
+  function timing(branch, system, action, ms) {
+    if (!live()) return;
+    fetch(S.url + '/rest/v1/rpc/log_timing', { method: 'POST', headers: H(), body: JSON.stringify({ p_branch: branch, p_system: system, p_action: action, p_ms: Math.round(ms) }) }).catch(function () { return null; });
+  }
+  window.akDbMerge = function (list) {
+    patch(list);
+    if (!window._authToken) return;
+    open().then(function () { if (Date.now() - lastPull > 45000) pull(); });
+  };
+  window.akDbHook = function (st, k, args) {
+    var field = SAVE[k]; if (!field) return null;
+    var branch = args[1], leadId = args[2], d = rows[branch + '|' + leadId], t0 = performance.now();
+    if (!live() || S.branches.indexOf(branch) === -1 || !d) {
+      if (!live()) return null;
+      return Object.assign({}, st, { s: function (v, u) { timing(branch, 'sheets', field, performance.now() - t0); if (st.s) st.s(v, u); } });
+    }
+    fetch(S.url + '/rest/v1/rpc/lead_save', { method: 'POST', headers: H(), body: JSON.stringify({ p_id: d.id, p_field: field, p_value: String(args[3] == null ? '' : args[3]) }) })
+      .then(function (x) { return x.json().then(function (j) { if (!x.ok) throw new Error((j && j.message) || 'Could not save to the database'); return j; }); })
+      .then(function (l) {
+        if (!l || !l.id) throw new Error('Nothing changed');
+        keep(l);
+        var base = null; if (typeof allRows !== 'undefined') for (var i = 0; i < allRows.length; i++) if (allRows[i].branch === branch && allRows[i].leadId === leadId) { base = allRows[i]; break; }
+        var out = Object.assign({}, base || {}, { branch: branch, leadId: leadId, status: l.status, remark: l.remark, counselor: l.counselor, statusSetAt: l.status_set_at });
+        timing(branch, 'database', field, performance.now() - t0);
+        if (st.s) st.s(out, st.u);
+      }).catch(function (e) { if (st.f) st.f(e instanceof Error ? e : new Error(String(e)), st.u); });
+    return true;
+  };
+  window.akDbState = function () { return { on: live(), branches: S && S.branches, error: S && S.error, leads: Object.keys(rows).length }; };
+  setInterval(function () { if (window._authToken && (live() || !S || S.exp < Date.now())) open().then(pull); }, 60000);
 })();
 </script>
 
