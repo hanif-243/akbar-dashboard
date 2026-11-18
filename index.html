@@ -24909,7 +24909,7 @@ setInterval(() => { const br = branchNow(); paint(); if (br !== lastBr) { lastBr
           S = { url: r.url, key: r.key, at: j.access_token, exp: Date.now() + (Number(j.expires_in) || 3600) * 1000, branches: r.branches || [] };
           return S;
         });
-    }).catch(function (e) { S = { off: true, exp: Date.now() + 120000, error: String(e && e.message || e) }; return S; })
+    }).catch(function (e) { S = { off: true, exp: Date.now() + 1800000, error: String(e && e.message || e) }; return S; })
       .then(function (v) { opening = null; return v; });
     return opening;
   }
