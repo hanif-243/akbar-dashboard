@@ -24406,7 +24406,7 @@ ${d.rows.map(r => `<tr><td style="white-space:nowrap;">${esc(fst(r.at))}</td><td
 function drawBackup(d) {
   body().innerHTML = `<div class="sx-card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><button class="um-btn primary" id="bkNow" ${d.running ? 'disabled' : ''}>${d.running ? '⏳ Backup running…' : '💾 Back up now'}</button>
 <label style="display:flex;gap:8px;align-items:center;font-size:13px;"><input type="checkbox" id="bkNightly" ${d.nightly ? 'checked' : ''}> Nightly backup at 2 AM</label>${d.folderUrl ? `<a class="um-btn" href="${esc(d.folderUrl)}" target="_blank" rel="noopener">📂 Open backup folder</a>` : ''}</div>
-<div class="sx-sub" style="margin-top:8px;">Copies the main spreadsheet and every branch spreadsheet into a dated folder in your Drive. Nightly copies are kept ${d.keepDays} days (plus the copy of the 1st of every month, kept for good). To restore, open the copy and copy the tab back — ask me if you need help.</div></div>
+<div class="sx-sub" style="margin-top:8px;">Copies the main spreadsheet and every branch spreadsheet into a dated folder in your Drive. Only the newest backup is kept: once a new copy finishes, the older folder goes to Drive trash (restorable there for 30 days). To restore, open the copy and copy the tab back — ask me if you need help.</div></div>
 <div class="sx-card"><h3>History</h3><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>When</th><th>Kind</th><th>By</th><th class="num">Files</th><th>Status</th><th></th></tr></thead><tbody>
 ${d.log.map(b => `<tr><td>${esc(fst(b.at))}</td><td>${esc(b.kind)}</td><td>${esc(b.by)}</td><td class="num">${b.files}</td><td><span class="b2b-pill ${b.status === 'Done' ? 'ok' : 'bad'}">${esc(b.status)}</span>${b.notes ? `<div class="sx-sub">${esc(b.notes)}</div>` : ''}</td><td>${b.folderUrl ? `<a class="um-btn" href="${esc(b.folderUrl)}" target="_blank" rel="noopener">Open</a>` : ''}</td></tr>`).join('') || '<tr><td colspan="6" class="sx-empty">No backups yet.</td></tr>'}</tbody></table></div></div>`;
   $('bkNow').onclick = () => { $('bkNow').disabled = true; run('startBackupNow').then(() => { toast('Backup started — it takes a minute or two. Refresh to see it.'); setTimeout(() => { if (V.view === 'backup') load(true); }, 60000); }).catch(e => { $('bkNow').disabled = false; toast(errMsg(e), 'error'); }); };
@@ -24795,6 +24795,76 @@ bar.addEventListener('click', e => {
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && popOpen) { popOpen = false; lastSig = ''; paint(); } });
 let lastBr = null;
 setInterval(() => { const br = branchNow(); paint(); if (br !== lastBr) { lastBr = br; if (sel().mode !== 'all') refresh(); } }, 1500);
+})();
+</script>
+
+<style>
+#loginScreen#loginScreen { background: radial-gradient(60% 70% at 50% 40%, #1E2440 0%, #12172B 72%) !important; }
+#loginScreen#loginScreen::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px); background-size: 18px 18px; pointer-events: none; }
+#loginScreen .ak-waves { display: none !important; }
+#loginScreen .login-card.bp-card { position: relative; z-index: 2; display: grid; grid-template-columns: minmax(0, 1fr) 156px; width: 100%; max-width: 600px; padding: 0; background: transparent; border: 0; box-shadow: none; border-radius: 0; filter: drop-shadow(0 24px 40px rgba(0,0,0,.45)); align-items: stretch; }
+.bp-main { position: relative; background: #fff; border-radius: 16px 0 0 16px; display: flex; flex-direction: column; align-items: stretch; min-width: 0; }
+.bp-main::before, .bp-main::after { content: ''; position: absolute; right: -11px; width: 22px; height: 22px; border-radius: 50%; background: #171C33; z-index: 3; }
+.bp-main::before { top: -11px; } .bp-main::after { bottom: -11px; }
+.bp-strip { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 56px; padding: 0 20px; background: #12172B; border-bottom: 3px solid #F22F3D; border-radius: 16px 0 0 0; }
+.bp-strip .login-logo { width: 104px !important; height: auto; margin: 0 !important; padding: 0 !important; background: none !important; border-radius: 0 !important; }
+.bp-strip span { font: 600 10.5px/1 'IBM Plex Mono', monospace; letter-spacing: .14em; color: rgba(255,255,255,.8); white-space: nowrap; }
+.bp-body { padding: 18px 20px 20px; }
+.bp-card .login-title { display: none; }
+.bp-card .login-steps-indicator { display: none; }
+.bp-route { display: flex; align-items: flex-end; gap: 12px; margin: 0 0 18px; }
+.bp-route .k, .bp-stub .k { font: 600 9.5px/1 'IBM Plex Mono', monospace; letter-spacing: .12em; color: #6B7280; margin-bottom: 6px; }
+.bp-route .v { font: 600 20px/1 'IBM Plex Sans', system-ui, sans-serif; color: #12172B; }
+.bp-route .ln { flex: 1; height: 0; border-top: 2px dotted #C9CDD8; position: relative; margin-bottom: 9px; }
+.bp-route .ln svg { position: absolute; top: -9px; left: 8%; transition: left .6s cubic-bezier(.16,1,.3,1); }
+.bp-card[data-step="2"] .bp-route .ln svg { left: 44%; }
+.bp-card[data-step="3"] .bp-route .ln svg { left: 82%; }
+.bp-card .login-label { font: 600 9.5px/1 'IBM Plex Mono', monospace; letter-spacing: .12em; text-transform: uppercase; color: #6B7280; margin-bottom: 6px; }
+.bp-card .login-input { background: #fff; border: 1px solid #E7E9F0; border-radius: 8px; }
+.bp-card .login-input:focus { border-color: #12172B; }
+.bp-card .login-btn { border-radius: 8px; }
+.bp-card .login-btn.red { background: #F22F3D; }
+.bp-stub { position: relative; background: #fff; border-radius: 0 16px 16px 0; border-left: 2px dashed #D5D9E3; padding: 18px 16px; display: flex; flex-direction: column; }
+.bp-stub .v { font: 600 17px/1.2 'IBM Plex Sans', system-ui, sans-serif; color: #12172B; }
+.bp-bars { flex: 1; min-height: 80px; margin: 14px 0; border-radius: 2px; background: repeating-linear-gradient(90deg, #12172B 0 2px, transparent 2px 4px, #12172B 4px 5px, transparent 5px 8px, #12172B 8px 11px, transparent 11px 13px); }
+.bp-stub .st { font: 600 10px/1.3 'IBM Plex Mono', monospace; letter-spacing: .12em; color: #12172B; text-align: center; }
+@media (max-width: 620px) {
+  #loginScreen .login-card.bp-card { grid-template-columns: minmax(0, 1fr); max-width: 420px; }
+  .bp-stub { display: none; }
+  .bp-main { border-radius: 16px; } .bp-strip { border-radius: 16px 16px 0 0; }
+  .bp-main::before, .bp-main::after { display: none; }
+  .bp-strip span { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .bp-route .ln svg { transition: none; } }
+</style>
+<script>
+(function () {
+  var ls = document.getElementById('loginScreen'), card = ls && ls.querySelector('.login-card');
+  if (!card || card.classList.contains('bp-card')) return;
+  var plane = '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="transform:scaleX(-1)"><path d="M2 13l8-2 4-8h2l-2 8 6-1 2-3h2l-1 5 1 5h-2l-2-3-6-1 2 8h-2l-4-8-8-2z" fill="#12172B"></path></svg>';
+  var main = document.createElement('div'); main.className = 'bp-main';
+  var strip = document.createElement('div'); strip.className = 'bp-strip';
+  var body = document.createElement('div'); body.className = 'bp-body';
+  var logo = card.querySelector('.login-logo');
+  while (card.firstChild) body.appendChild(card.firstChild);
+  if (logo) { logo.removeAttribute('style'); strip.appendChild(logo); }
+  var lab = document.createElement('span'); lab.textContent = 'BOARDING PASS · LEAD OPS'; strip.appendChild(lab);
+  var route = document.createElement('div'); route.className = 'bp-route';
+  route.innerHTML = '<div><div class="k">FROM</div><div class="v">IND</div></div><div class="ln">' + plane + '</div><div style="text-align:right"><div class="k">TO</div><div class="v">ADMIT</div></div>';
+  var first = body.querySelector('.login-step');
+  body.insertBefore(route, first || null);
+  main.appendChild(strip); main.appendChild(body);
+  var stub = document.createElement('div'); stub.className = 'bp-stub'; stub.setAttribute('aria-hidden', 'true');
+  stub.innerHTML = '<div class="k">GATE</div><div class="v">Lead Ops</div><div class="bp-bars"></div><div class="st" id="bpStep">CHECK-IN · 1 OF 3</div>';
+  card.appendChild(main); card.appendChild(stub); card.classList.add('bp-card'); card.dataset.step = '1';
+  var NAMES = { 1: 'CHECK-IN', 2: 'SECURITY', 3: 'BOARDING' };
+  function sync() {
+    var n = 1; [1, 2, 3].forEach(function (i) { var el = document.getElementById('step' + i); if (el && !el.classList.contains('hidden')) n = i; });
+    card.dataset.step = String(n);
+    var st = document.getElementById('bpStep'); if (st) st.textContent = NAMES[n] + ' · ' + n + ' OF 3';
+  }
+  sync();
+  if (window.MutationObserver) [1, 2, 3].forEach(function (i) { var el = document.getElementById('step' + i); if (el) new MutationObserver(sync).observe(el, { attributes: true, attributeFilter: ['class'] }); });
 })();
 </script>
 
