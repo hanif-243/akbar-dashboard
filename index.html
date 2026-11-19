@@ -24961,7 +24961,7 @@ setInterval(() => { const br = branchNow(); paint(); if (br !== lastBr) { lastBr
       return Object.assign({}, st, { s: function (v, u) { timing(branch, 'sheets', field, performance.now() - t0); if (st.s) st.s(v, u); } });
     }
     fetch(S.url + '/rest/v1/rpc/lead_save_key', { method: 'POST', headers: H(), body: JSON.stringify({ p_branch: branch, p_key: String(leadId), p_field: field, p_value: String(args[3] == null ? '' : args[3]) }) })
-      .then(function (x) { return x.json().then(function (j) { if (!x.ok) { var m = (j && j.message) || 'Could not save to the database', er = new Error(m === 'NOT_IN_DB' ? 'Not in the database yet' : m); er.back = m === 'NOT_IN_DB'; throw er; } return j; }); })
+      .then(function (x) { return x.json().then(function (j) { if (!x.ok) { var m = (j && j.message) || 'Could not save to the database', er = new Error(m === 'NOT_IN_DB' ? 'Not in the database yet' : m); er.back = !/^(Choose a status|Please enter a remark)/.test(m); throw er;   } return j; }); })
       .then(function (l) {
         if (!l || !l.id) throw new Error('Nothing changed');
         keep(l);
