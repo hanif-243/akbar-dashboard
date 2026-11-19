@@ -103,10 +103,19 @@ window.AKBAR_BUILD = '16 Nov 2026 · v196';
         }
         dashServed = true;
         a[1] = o;
-        callReal(Object.assign({}, st, { s: function (resp, u) {
-          if (resp && !resp.unchanged && (resp.rows || resp.rowsPacked)) { memDash[(resp.leadSet || o.leadSet || 'main') + '|' + a[0]] = JSON.parse(JSON.stringify(resp)); if (resp.rows) dashSave(a[0], resp); }
+        var goReal = function () { window._akSrvAt = Date.now(); var tq = performance.now(); callReal(Object.assign({}, st, { s: function (resp, u) {
+          if (resp && !resp.unchanged && (resp.rows || resp.rowsPacked)) { memDash[(resp.leadSet || o.leadSet || 'main') + '|' + a[0]] = JSON.parse(JSON.stringify(resp)); if (resp.rows) dashSave(a[0], resp); if (window.akDbTiming && (o.leadSet || 'main') === 'main') window.akDbTiming(resp.viewerBranch || 'all', 'sheets', 'list', performance.now() - tq); }
           if (st.s) st.s(resp, u);
-        } }), 'getDashboardData', a);
+        } }), 'getDashboardData', a); };
+        if (window.akDbDash && (o.leadSet || 'main') === 'main') {
+          var base = memDash['main|' + a[0]] || (c && c.token === a[0] && c.resp && (c.resp.leadSet || 'main') === 'main' ? c.resp : null);
+          window.akDbDash(base).then(function (resp) {
+            if (resp && st.s) st.s(resp, st.u);
+            if (!resp || !window._akSrvAt || Date.now() - window._akSrvAt > 600000) goReal();
+          }, goReal);
+          return;
+        }
+        goReal();
       });
     }
     var keyOf = function (fn, args) { return fn + '|' + JSON.stringify(args || []); };
@@ -24896,6 +24905,7 @@ setInterval(() => { const br = branchNow(); paint(); if (br !== lastBr) { lastBr
 <script>
 (function () {
   var S = null, rows = {}, opening = null, lastPull = 0, pulling = false, since = null;
+  var dash = {}, dashSince = null, dashBusy = null;
   var SAVE = { setLeadStatus: 'status', setLeadNote: 'remark', setLeadCounselor: 'counselor' };
   function live() { return S && !S.off && S.exp > Date.now() + 60000; }
   function H() { return { apikey: S.key, Authorization: 'Bearer ' + S.at, 'Content-Type': 'application/json' }; }
@@ -24976,7 +24986,59 @@ setInterval(() => { const br = branchNow(); paint(); if (br !== lastBr) { lastBr
       });
     return true;
   };
-  window.akDbState = function () { return { on: live(), branches: S && S.branches, error: S && S.error, tracked: Object.keys(rows).length, since: since }; };
+  function cn(v) { return String(v || '').trim().replace(/\s+/g, ' ').toLowerCase(); }
+  function pullDash(brs) {
+    if (dashBusy) return dashBusy;
+    var get = function (q) { return fetch(S.url + '/rest/v1/' + q, { headers: H() }).then(function (x) { if (!x.ok) throw new Error('list ' + x.status); return x.json(); }); };
+    var sel = 'leads?select=lead_key,branch,dash,status,counselor,remark,status_set_at,updated_by,updated_at&deleted=is.false&branch=in.(' + brs.map(function (b) { return encodeURIComponent('"' + b + '"'); }).join(',') + ')';
+    var first = !dashSince, got = [];
+    var page = function (off) {
+      var q = first ? sel + '&dash=not.is.null&order=lead_key.asc&limit=1000&offset=' + off : sel + '&updated_at=gt.' + encodeURIComponent(dashSince) + '&order=updated_at.asc&limit=1000&offset=' + off;
+      return get(q).then(function (list) { got = got.concat(list || []); return list && list.length === 1000 ? page(off + 1000) : got; });
+    };
+    dashBusy = page(0).then(function (list) {
+      var top = dashSince;
+      list.forEach(function (l) {
+        if (l.updated_at && (!top || l.updated_at > top)) top = l.updated_at;
+        var k = l.branch + '|' + l.lead_key;
+        if (l.dash) dash[k] = l.dash; else delete dash[k];
+        keep(l);
+      });
+      if (first && !top) top = new Date().toISOString();
+      if (top) dashSince = new Date(new Date(top).getTime() - 15000).toISOString();
+      return true;
+    }).catch(function () { return false; }).then(function (ok) { dashBusy = null; return ok; });
+    return dashBusy;
+  }
+
+  window.akDbDash = function (base) {
+    if (!base || !window._authToken) return Promise.resolve(null);
+    return open().then(function () {
+      if (!live()) return null;
+      var need = base.isSuperAdmin ? (base.autoAssign || []).map(function (b) { return b.name; }) : [base.viewerBranch];
+      if (!need.length || need.some(function (b) { return !b || S.branches.indexOf(b) === -1; })) return null;
+      var t0 = performance.now();
+      return pullDash(need).then(function (ok) {
+        if (!ok) return null;
+        var me = base.viewerCounselor ? cn(base.viewerCounselor.name) : '';
+        var list = [];
+        Object.keys(dash).forEach(function (k) {
+          var r = dash[k]; if (need.indexOf(r.branch) === -1) return;
+          var d = rows[k], o = Object.assign({}, r);
+          if (fresh(d)) { o.status = d.status; o.counselor = d.counselor; o.remark = d.remark; if (d.status_set_at) o.statusSetAt = d.status_set_at; }
+          if (me && cn(o.counselor) !== me) return;
+          if (!base.isSuperAdmin) { delete o.isDuplicate; delete o.duplicateInfo; delete o.duplicateBranches; }
+          list.push(o);
+        });
+        if (!list.length) return null;
+        list.sort(function (x, y) { return (Date.parse(y.createdAt) || 0) - (Date.parse(x.createdAt) || 0); });
+        timing(need.length > 1 ? 'all' : need[0], 'database', 'list', performance.now() - t0);
+        return Object.assign({}, base, { rows: list, rowsPacked: null, unchanged: false, __fromDb: true });
+      });
+    }).catch(function () { return null; });
+  };
+  window.akDbTiming = timing;
+  window.akDbState = function () { return { on: live(), branches: S && S.branches, error: S && S.error, tracked: Object.keys(rows).length, since: since, listRows: Object.keys(dash).length, listSince: dashSince, serverAt: window._akSrvAt || 0 }; };
   setInterval(function () { if (window._authToken && (live() || !S || S.exp < Date.now())) open().then(pull); }, 60000);
 })();
 </script>
