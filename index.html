@@ -260,7 +260,7 @@ window.AKBAR_BUILD = '16 Nov 2026 · v196';
         if (typeof k !== 'string') return undefined;
         return function () {
           var args = Array.prototype.slice.call(arguments);
-          if (window.akDbHook && !st.__db) { var hk = window.akDbHook(st, k, args); if (hk === true) return; if (hk) { runner(Object.assign(hk, { __db: 1 }))[k].apply(null, args); return; } }
+          if (window.akDbHook && !st.__db) { var hk = window.akDbHook(st, k, args, function () { runner(Object.assign({}, st, { __db: 1 }))[k].apply(null, args); }); if (hk === true) return; if (hk) { runner(Object.assign(hk, { __db: 1 }))[k].apply(null, args); return; } }
           if (k === 'getDashboardData') { dashCall(st, args); return; }
           if (!BATCH[k] && /^get/.test(k) && !NOMEM[k]) { memCall(st, k, args); return; }
           if (!BATCH[k]) { if (!/^(get|startSessionTracking|updateSessionHeartbeat|prefetchRun|loginWith|verifyLogin|trustThisDevice)/.test(k)) { pre = {}; mem = {}; memOrder = []; markWrite(); } callReal(st.s ? Object.assign({}, st, { s: function (v, u) { try { if (v && v.__notice && typeof window.akStudentNotice === 'function') window.akStudentNotice(v.__notice); } catch (e) {   } st.s(v, u); } }) : st, k, args); return; }
@@ -24895,7 +24895,7 @@ setInterval(() => { const br = branchNow(); paint(); if (br !== lastBr) { lastBr
 
 <script>
 (function () {
-  var S = null, rows = {}, opening = null, lastPull = 0, pulling = false;
+  var S = null, rows = {}, opening = null, lastPull = 0, pulling = false, since = null;
   var SAVE = { setLeadStatus: 'status', setLeadNote: 'remark', setLeadCounselor: 'counselor' };
   function live() { return S && !S.off && S.exp > Date.now() + 60000; }
   function H() { return { apikey: S.key, Authorization: 'Bearer ' + S.at, 'Content-Type': 'application/json' }; }
@@ -24929,9 +24929,16 @@ setInterval(() => { const br = branchNow(); paint(); if (br !== lastBr) { lastBr
   function pull() {
     if (pulling || !live() || !S.branches.length) return Promise.resolve(0);
     pulling = true;
-    var q = 'leads?select=id,lead_key,branch,status,counselor,remark,status_set_at,updated_by,updated_at&branch=in.(' + S.branches.map(function (b) { return encodeURIComponent('"' + b + '"'); }).join(',') + ')';
-    return fetch(S.url + '/rest/v1/' + q, { headers: H() }).then(function (x) { return x.ok ? x.json() : []; }).then(function (list) {
-      rows = {}; (list || []).forEach(keep); lastPull = Date.now();
+    var sel = 'leads?select=id,lead_key,branch,status,counselor,remark,status_set_at,updated_by,updated_at&branch=in.(' + S.branches.map(function (b) { return encodeURIComponent('"' + b + '"'); }).join(',') + ')';
+    var get = function (q) { return fetch(S.url + '/rest/v1/' + q, { headers: H() }).then(function (x) { if (!x.ok) throw new Error('pull ' + x.status); return x.json(); }); };
+    var job = since
+      ? get(sel + '&updated_at=gt.' + encodeURIComponent(since) + '&order=updated_at.asc&limit=1000')
+      : Promise.all([get(sel + '&updated_by=not.in.(import,sync)&limit=2000'), get(sel.replace(/select=[^&]*/, 'select=updated_at') + '&order=updated_at.desc&limit=1')]).then(function (a) { return a[0].concat(a[1].length ? [{ __top: a[1][0].updated_at }] : [{ __top: new Date().toISOString() }]); });
+    return job.then(function (list) {
+      var top = since;
+      (list || []).forEach(function (l) { var u = l.__top || l.updated_at; if (u && (!top || u > top)) top = u; if (!l.__top) keep(l); });
+      if (top) since = new Date(new Date(top).getTime() - 15000).toISOString();
+      lastPull = Date.now();
       var n = (typeof allRows !== 'undefined') ? patch(allRows) : 0;
       if (n && typeof render === 'function') render();
       return n;
@@ -24946,15 +24953,15 @@ setInterval(() => { const br = branchNow(); paint(); if (br !== lastBr) { lastBr
     if (!window._authToken) return;
     open().then(function () { if (Date.now() - lastPull > 45000) pull(); });
   };
-  window.akDbHook = function (st, k, args) {
+  window.akDbHook = function (st, k, args, fallback) {
     var field = SAVE[k]; if (!field) return null;
-    var branch = args[1], leadId = args[2], d = rows[branch + '|' + leadId], t0 = performance.now();
-    if (!live() || S.branches.indexOf(branch) === -1 || !d) {
+    var branch = args[1], leadId = args[2], t0 = performance.now();
+    if (!live() || S.branches.indexOf(branch) === -1) {
       if (!live()) return null;
       return Object.assign({}, st, { s: function (v, u) { timing(branch, 'sheets', field, performance.now() - t0); if (st.s) st.s(v, u); } });
     }
-    fetch(S.url + '/rest/v1/rpc/lead_save', { method: 'POST', headers: H(), body: JSON.stringify({ p_id: d.id, p_field: field, p_value: String(args[3] == null ? '' : args[3]) }) })
-      .then(function (x) { return x.json().then(function (j) { if (!x.ok) throw new Error((j && j.message) || 'Could not save to the database'); return j; }); })
+    fetch(S.url + '/rest/v1/rpc/lead_save_key', { method: 'POST', headers: H(), body: JSON.stringify({ p_branch: branch, p_key: String(leadId), p_field: field, p_value: String(args[3] == null ? '' : args[3]) }) })
+      .then(function (x) { return x.json().then(function (j) { if (!x.ok) { var m = (j && j.message) || 'Could not save to the database', er = new Error(m === 'NOT_IN_DB' ? 'Not in the database yet' : m); er.back = m === 'NOT_IN_DB'; throw er; } return j; }); })
       .then(function (l) {
         if (!l || !l.id) throw new Error('Nothing changed');
         keep(l);
@@ -24962,10 +24969,14 @@ setInterval(() => { const br = branchNow(); paint(); if (br !== lastBr) { lastBr
         var out = Object.assign({}, base || {}, { branch: branch, leadId: leadId, status: l.status, remark: l.remark, counselor: l.counselor, statusSetAt: l.status_set_at });
         timing(branch, 'database', field, performance.now() - t0);
         if (st.s) st.s(out, st.u);
-      }).catch(function (e) { if (st.f) st.f(e instanceof Error ? e : new Error(String(e)), st.u); });
+      }).catch(function (e) {
+
+        if (fallback && e && (e.back || e instanceof TypeError)) { fallback(); return; }
+        if (st.f) st.f(e instanceof Error ? e : new Error(String(e)), st.u);
+      });
     return true;
   };
-  window.akDbState = function () { return { on: live(), branches: S && S.branches, error: S && S.error, leads: Object.keys(rows).length }; };
+  window.akDbState = function () { return { on: live(), branches: S && S.branches, error: S && S.error, tracked: Object.keys(rows).length, since: since }; };
   setInterval(function () { if (window._authToken && (live() || !S || S.exp < Date.now())) open().then(pull); }, 60000);
 })();
 </script>
