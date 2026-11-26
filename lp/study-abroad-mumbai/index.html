@@ -292,6 +292,7 @@ body.t-red { --gold: #F22F3D; --gold2: #C01624; --ivory: #FFFFFF; --ivory2: #F6F
 <div id="app"><div class="skel"><i style="width:55%"></i><i style="width:85%"></i><i style="width:40%"></i></div></div>
 <script>
 (function () {
+var FAST = 'https://akbar-lp.akbarstudy.workers.dev/lp/lead';
 var API = 'https://script.google.com/macros/s/AKfycbzM25HLBhuI36dn-uUgdTUoXiiTXABMBNDuaBMGjC_SUUU9eueVPn35lFowwBIqb1XNTw/exec', ROOT = '../..';
 var qs = new URLSearchParams(location.search);
 var slug = (window.LP_CONFIG && window.LP_CONFIG.slug) || qs.get('p') || '';
@@ -544,7 +545,16 @@ function send(c) {
     try { location.assign(u); } catch (e) { thanks(c, r, !!pv); }
   };
   if (preview) { setTimeout(function () { toThanks({ firstName: name.split(' ')[0], branch: c.branch || p.branch || '', whatsapp: c.whatsapp }, true); }, 400); return; }
-  call('submitLandingLead', [p]).then(function (r) { toThanks(r, false); }).catch(function (e) {
+  /* FAST FORM (26 Nov 2026): the enquiry is saved by Cloudflare (akbar-lp) in under a second and passed to the server in the
+     background. Event / partner QR links (a tag in utm_campaign) still wait for the server, which picks their branch. */
+  var slow = function () { return call('submitLandingLead', [p]); };
+  var fast = /^[a-z0-9-]{3,60}$/.test(String(p.utm.campaign || '')) || !window.fetch ? null : function () {
+    var ctl = 'AbortController' in window ? new AbortController() : null, tm = ctl ? setTimeout(function () { ctl.abort(); }, 6000) : 0;
+    return fetch(FAST, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(p), signal: ctl ? ctl.signal : undefined })
+      .then(function (r) { clearTimeout(tm); return r.json(); })
+      .then(function (j) { if (!j || !j.ok) { var x = new Error((j && j.e) || 'Something went wrong.'); x.user = !!(j && j.e); throw x; } return { firstName: name.split(' ')[0], branch: p.branch || c.branch || '', whatsapp: c.whatsapp || '' }; });
+  };
+  (fast ? fast().catch(function (e) { if (e && e.user) throw e; return slow(); }) : slow()).then(function (r) { toThanks(r, false); }).catch(function (e) {
     btn.disabled = false; btn.textContent = c.ctaText + ' →'; err.textContent = e.message;
     if (c.whatsapp) { var a = document.createElement('a'); a.className = 'fallback'; a.target = '_blank'; a.rel = 'noopener'; a.href = 'https://wa.me/' + c.whatsapp + '?text=' + encodeURIComponent('Hi Akbar Study Abroad, I want counselling for ' + (S.a.country || c.country || 'studying abroad') + '. My name is ' + name + ', my number is ' + full + '.'); a.textContent = '💬 Send your details on WhatsApp instead'; err.appendChild(document.createElement('br')); err.appendChild(a); }
   });
