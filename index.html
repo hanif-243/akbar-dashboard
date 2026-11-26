@@ -15107,7 +15107,7 @@ window.cfOpenLead = (branch, leadId) => { open(); tab('find'); setTimeout(() => 
 (function () {
 'use strict';
 const PAGES = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'hoView', 'olView',
-  'archView', 'b2bDbView', 'ownView', 'lpView', 'pbView', 'evView', 'tdView', 'acView', 'ccView'];
+  'archView', 'b2bDbView', 'ownView', 'lpView', 'pbView', 'evView', 'tdView', 'acView', 'ccView', 'dqView'];
 const keep =() => !window._akHomeView;
 function sync() {
   const on = keep(), app = document.querySelector('.app');
@@ -15433,6 +15433,155 @@ setTimeout(addNav, 700); setInterval(addNav, 3000);
 const sb = document.getElementById('sidebar');
 if (sb) sb.addEventListener('click', e => { const it = e.target.closest('.nav-item, .lead-set-item, [data-branch]'); if (it && !it.hasAttribute('data-ol-view')) close(); }, true);
 window.akOpenOtherLeads = open;
+})();
+</script>
+
+<style>
+#dqView .dq-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin: 0 0 12px; }
+#dqView .dq-tab { border: 1px solid var(--border); background: var(--card); color: var(--ink); border-radius: 8px; padding: 7px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+#dqView .dq-tab.on { background: var(--ink); color: var(--card); border-color: var(--ink); }
+#dqView .dq-tab span { margin-left: 6px; font-variant-numeric: tabular-nums; opacity: .7; }
+#dqView .dq-bar { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; }
+#dqView .dq-bar input, #dqView .dq-bar select { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; background: var(--card); color: var(--ink); }
+#dqView .dq-bar input { flex: 1; min-width: 200px; }
+#dqView .dq-list { display: grid; gap: 12px; }
+#dqView .dq-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; }
+#dqView .dq-head { display: flex; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; align-items: baseline; margin-bottom: 12px; }
+#dqView .dq-name { font-size: 15px; font-weight: 600; color: var(--ink); }
+#dqView .dq-meta { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+#dqView .dq-copies { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+#dqView .dq-copy { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+#dqView .dq-copy.win { border-color: var(--ink); }
+#dqView .dq-copy.lose { opacity: .6; }
+#dqView .dq-br { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+#dqView .dq-br b { font-size: 14px; color: var(--ink); }
+#dqView .dq-hint { font-size: 11.5px; color: var(--muted); }
+#dqView .dq-facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 12px; font-size: 12.5px; margin: 0; }
+#dqView .dq-facts dt { color: var(--muted); }
+#dqView .dq-facts dd { margin: 0; color: var(--ink); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+#dqView .dq-rem { font-size: 12px; color: var(--muted); white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; border-top: 1px solid var(--border); padding-top: 8px; }
+#dqView .dq-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; }
+#dqView .dq-keep.armed { background: var(--ink); color: var(--card); border-color: var(--ink); }
+#dqView .dq-note { width: 100%; box-sizing: border-box; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; background: var(--card); color: var(--ink); margin-top: 12px; }
+#dqView .dq-done { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; font-size: 12.5px; color: var(--muted); }
+#dqView .dq-done b { color: var(--ink); }
+#dqView .dq-err { color: var(--red); font-size: 12.5px; margin-top: 8px; }
+</style>
+<script>
+(function () {
+const $ = id => document.getElementById(id);
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const run = (fn, ...a) => promisifyRun(fn, window._authToken || '', ...a);
+const msg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
+const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t || 'success'); };
+const day = at => { const d = new Date(at); return at && !isNaN(d) ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; };
+const VIEWS = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'cfView', 'hoView', 'olView', 'ccView'];
+const S = { tab: 'wait', q: '', branch: '', data: null, busy: {} };
+
+function open() {
+  if (!window._isSuperAdmin) return;
+  const app = document.querySelector('.app'); if (app) app.style.display = 'none';
+  VIEWS.forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
+  if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
+  let root = $('dqView'); if (!root) { root = document.createElement('div'); root.id = 'dqView'; document.body.appendChild(root); }
+  root.style.display = 'block';
+  root.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><div class="at-eyebrow">Lead source</div><h1 class="sx-title">Duplicate students</h1><div class="sx-sub">The same phone number in more than one branch. Pick the branch that keeps the student; the other branch stops seeing them</div></div>
+<button class="um-btn" id="dqBack" type="button">Back to dashboard</button></div>
+<div id="dqBody"><div class="sx-card sx-empty">Loading…</div></div></div>`;
+  $('dqBack').onclick = close;
+  document.querySelectorAll('#sidebar .nav-item').forEach(n => n.classList.toggle('active', n.hasAttribute('data-dq-view')));
+  window.scrollTo(0, 0);
+  load();
+}
+function close() {
+  const root = $('dqView'); if (!root || root.style.display !== 'block') return;
+  root.style.display = 'none';
+  const app = document.querySelector('.app'); if (app) app.style.display = '';
+  document.querySelectorAll('#sidebar [data-dq-view]').forEach(n => n.classList.remove('active'));
+}
+function load() {
+  const b = $('dqBody'); if (b && S.data) b.style.opacity = '.55';
+  run('getDuplicateGroups').then(r => { S.data = r; draw(); })
+    .catch(e => { const x = $('dqBody'); if (x) { x.style.opacity = ''; x.innerHTML = `<div class="sx-card sx-empty">${esc(msg(e))}</div>`; } });
+}
+
+function suggest(g) {
+  let best = g.copies[0], why = 'first enquiry';
+  g.copies.forEach(c => { if (c.remarks > best.remarks) { best = c; why = 'most follow-up'; } });
+  return { branch: best.branch, why: why };
+}
+function shown() {
+  const q = S.q.trim().toLowerCase();
+  return S.data.groups.filter(g => (S.tab === 'wait' ? !g.decision : !!g.decision)
+    && (!S.branch || g.branches.indexOf(S.branch) !== -1)
+    && (!q || g.copies.some(c => (c.name + ' ' + c.phone + ' ' + c.counselor).toLowerCase().indexOf(q) !== -1)));
+}
+function card(g) {
+  const c0 = g.copies[0], d = g.decision, sg = d ? null : suggest(g);
+  const seen = {};
+  const copies = g.copies.filter(c => { const k = c.branch + '|' + c.leadId; if (seen[k]) return false; seen[k] = 1; return true; });
+  return `<div class="dq-card" data-dq="${esc(g.key)}"><div class="dq-head"><div><div class="dq-name">${esc(c0.name || 'No name')}</div><div class="dq-meta">${esc(c0.phone)} · in ${esc(g.branches.join(' and '))}</div></div>
+<div class="dq-meta">First enquiry ${esc(day(c0.createdAt))} at ${esc(c0.branch)}</div></div>
+<div class="dq-copies">${copies.map(c => {
+    const cls = d ? (d.owner === c.branch ? 'win' : 'lose') : '';
+    return `<div class="dq-copy ${cls}"><div class="dq-br"><b>${esc(c.branch)}</b>${sg && sg.branch === c.branch ? `<span class="dq-hint">Suggested: ${esc(sg.why)}</span>` : ''}${d && d.owner === c.branch ? '<span class="dq-hint">Keeps the student</span>' : ''}</div>
+<dl class="dq-facts"><dt>Added</dt><dd>${esc(day(c.createdAt))}</dd><dt>Status</dt><dd>${esc(c.status)}</dd><dt>Counsellor</dt><dd>${esc(c.counselor || 'Not assigned')}</dd><dt>Remarks</dt><dd>${c.remarks}</dd>${c.source ? `<dt>Source</dt><dd>${esc(c.source)}</dd>` : ''}</dl>
+${c.lastRemark ? `<div class="dq-rem">${esc(c.lastRemark)}</div>` : ''}
+<div class="dq-acts">${d ? '' : `<button type="button" class="um-btn dq-keep" data-keep="${esc(c.branch)}">Keep in ${esc(c.branch)}</button>`}<button type="button" class="um-btn" data-open="${esc(c.branch + '|' + c.leadId)}">Open lead</button></div></div>`;
+  }).join('')}</div>
+${d ? `<div class="dq-done"><span><b>${esc(d.owner)}</b> keeps this student · decided by ${esc(d.by)} on ${esc(day(d.at))}${d.note ? ' · ' + esc(d.note) : ''}</span><button type="button" class="um-btn" data-undo="1">Undo</button></div>`
+      : `<input class="dq-note" type="text" maxlength="300" placeholder="Note for both branches (optional)" aria-label="Note">`}
+<div class="dq-err" hidden></div></div>`;
+}
+function draw() {
+  const b = $('dqBody'), r = S.data; if (!b || !r) return;
+  b.style.opacity = '';
+  const list = shown();
+  b.innerHTML = `<div class="dq-tabs" role="tablist"><button type="button" class="dq-tab ${S.tab === 'wait' ? 'on' : ''}" data-tab="wait">Waiting<span>${r.pending}</span></button><button type="button" class="dq-tab ${S.tab === 'done' ? 'on' : ''}" data-tab="done">Decided<span>${r.decided}</span></button></div>
+<div class="dq-bar"><input type="search" id="dqQ" placeholder="Search name, phone or counsellor" value="${esc(S.q)}" aria-label="Search">
+<select id="dqBr" aria-label="Branch"><option value="">All branches</option>${r.branches.map(x => `<option ${S.branch === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>
+<button type="button" class="um-btn" id="dqRe">Refresh</button></div>
+${list.length ? `<div class="dq-list">${list.slice(0, 60).map(card).join('')}</div>${list.length > 60 ? `<div class="sx-sub" style="margin-top:12px;">Showing 60 of ${list.length}. Decide these and the next ones appear</div>` : ''}`
+      : `<div class="sx-card sx-empty">${S.tab === 'wait' ? 'No students waiting. Every number is in one branch only' : 'No decisions yet'}</div>`}`;
+  b.querySelectorAll('[data-tab]').forEach(t => t.onclick = () => { S.tab = t.dataset.tab; draw(); });
+  let tm = null; const qi = $('dqQ');
+  qi.oninput = () => { clearTimeout(tm); tm = setTimeout(() => { S.q = qi.value; draw(); const n = $('dqQ'); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }, 250); };
+  $('dqBr').onchange = e => { S.branch = e.target.value; draw(); };
+  $('dqRe').onclick = load;
+  b.querySelectorAll('[data-open]').forEach(x => x.onclick = () => { if (window.akOpenLeadCard) window.akOpenLeadCard(x.dataset.open); });
+  b.querySelectorAll('.dq-card').forEach(cd => {
+    const key = cd.dataset.dq, err = cd.querySelector('.dq-err');
+    const fail = e => { err.hidden = false; err.textContent = msg(e); cd.querySelectorAll('button').forEach(x => { x.disabled = false; }); };
+    cd.querySelectorAll('[data-keep]').forEach(btn => btn.onclick = () => {
+      if (!btn.classList.contains('armed')) {
+        cd.querySelectorAll('[data-keep]').forEach(x => { x.classList.remove('armed'); x.textContent = 'Keep in ' + x.dataset.keep; });
+        btn.classList.add('armed'); btn.textContent = 'Confirm: ' + btn.dataset.keep + ' keeps them'; return;
+      }
+      cd.querySelectorAll('button').forEach(x => { x.disabled = true; });
+      const note = (cd.querySelector('.dq-note') || {}).value || '';
+      run('decideDuplicate', key, btn.dataset.keep, note).then(res => {
+        toast(res.owner + ' keeps this student. Hidden from ' + res.closedIn.join(', ') + (res.errors && res.errors.length ? ' (remark not saved in ' + res.errors.length + ')' : ''));
+        load();
+      }).catch(fail);
+    });
+    const un = cd.querySelector('[data-undo]');
+    if (un) un.onclick = () => { un.disabled = true; run('undoDuplicateDecision', key).then(() => { toast('Undone. Both branches see the student again'); load(); }).catch(fail); };
+  });
+}
+function addNav() {
+  if (!window._isSuperAdmin) return;
+  const grp = document.querySelector('#sidebar .nav-group[data-group="lead-source"]');
+  if (!grp || grp.querySelector('[data-dq-view]')) return;
+  const it = document.createElement('div'); it.className = 'nav-item'; it.setAttribute('data-dq-view', '1'); it.setAttribute('role', 'button'); it.tabIndex = 0; it.title = 'Students in more than one branch: pick the branch that keeps them';
+  it.innerHTML = '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span>Duplicates</span>';
+  grp.appendChild(it);
+  it.addEventListener('click', e => { e.stopPropagation(); open(); });
+  it.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+}
+setTimeout(addNav, 900); setInterval(addNav, 3000);
+const sb = document.getElementById('sidebar');
+if (sb) sb.addEventListener('click', e => { const it = e.target.closest('.nav-item, .lead-set-item, [data-branch]'); if (it && !it.hasAttribute('data-dq-view')) close(); }, true);
+window.akOpenDuplicates = open;
 })();
 </script>
 
@@ -25256,6 +25405,7 @@ setInterval(() => { const br = branchNow(); paint(); if (br !== lastBr) { lastBr
           var d = rows[k], o = Object.assign({}, r);
           if (fresh(d)) { o.status = d.status; o.counselor = d.counselor; o.remark = d.remark; if (d.status_set_at) o.statusSetAt = d.status_set_at; }
           if (me && cn(o.counselor) !== me) return;
+          if (!base.isSuperAdmin && o.dupLoser) return;
           if (!base.isSuperAdmin) { delete o.isDuplicate; delete o.duplicateInfo; delete o.duplicateBranches; }
           list.push(o);
         });
