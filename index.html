@@ -15107,8 +15107,8 @@ window.cfOpenLead = (branch, leadId) => { open(); tab('find'); setTimeout(() => 
 (function () {
 'use strict';
 const PAGES = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'sqView', 'callView', 'hoView', 'olView',
-  'archView', 'b2bDbView', 'ownView', 'lpView', 'pbView', 'evView', 'tdView', 'acView'];
-const keep = () => !window._akHomeView;
+  'archView', 'b2bDbView', 'ownView', 'lpView', 'pbView', 'evView', 'tdView', 'acView', 'ccView'];
+const keep =() => !window._akHomeView;
 function sync() {
   const on = keep(), app = document.querySelector('.app');
   document.body.classList.toggle('ak-keep-side', on);
