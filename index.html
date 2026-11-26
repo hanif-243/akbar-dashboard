@@ -22782,7 +22782,7 @@ const errMsg = e => (e && e.message ? e.message : String(e || 'Something went wr
 const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t || 'success'); };
 const PILLARS = { story: ['Student stories', '#1F9D63'], country: ['Countries & courses', '#3E6BD6'], money: ['Costs & money', '#D98A1F'], process: ['Process & deadlines', '#8452C9'], parents: ['For parents', '#E0612B'], engage: ['Engagement', '#0E8FA8'], brand: ['Brand & greetings', '#64748B'] };
 const STATUS = { planned: ['Planned', ''], making: ['Being made', 'warm'], ready: ['Ready', 'blue'], posted: ['Posted', 'ok'] };
-const C = { month: '', data: null, filter: 'all', open: null };
+const C = { month: '', data: null, filter: 'all', open: null, cache: {}, pending: {}, gen: 0 };
 const pad = n => String(n).padStart(2, '0');
 const ymd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
 const num = n => (Number(n) || 0).toLocaleString('en-IN');
@@ -22804,13 +22804,31 @@ root.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-ti
 <div id="ccBody"><div class="sx-card"><div class="skeleton" style="height:260px;"></div></div></div></div>`;
 $('ccBack').onclick = closeCC;
 window.scrollTo(0, 0);
-load();
+showMonth();
 }
 function closeCC() { closeEditor(); const root = $('ccView'); if (!root || root.style.display !== 'block') return; root.style.display = 'none'; root.innerHTML = ''; const app = document.querySelector('.app'); if (app) app.style.display = ''; }
-function load() {
+function fetchMonth(m) {
+if (C.pending[m]) return C.pending[m];
+const g = C.gen;
+const p = run('getContentCalendar', m).then(d => { if (g === C.gen) { C.cache[m] = d; delete C.pending[m]; } return d; }, e => { if (g === C.gen) delete C.pending[m]; throw e; });
+C.pending[m] = p;
+return p;
+}
+function prefetch(m) {
+[-1, 1].forEach(k => { const n = shiftMonth(m, k); if (!C.cache[n]) fetchMonth(n).catch(() => { }); });
+}
+function showMonth() {
 const m = C.month;
-run('getContentCalendar', m).then(d => { if (m !== C.month) return; C.data = d; render(); })
-.catch(e => { const b = $('ccBody'); if (b) b.innerHTML = `<div class="sx-card sx-empty">Couldn't load the calendar: ${esc(errMsg(e))} <button class="um-btn" id="ccRetry">Retry</button></div>`; const r = $('ccRetry'); if (r) r.onclick = load; });
+if (C.cache[m]) { C.data = C.cache[m]; render(); }
+else { C.data = null; const b = $('ccBody'); if (b) b.innerHTML = '<div class="sx-card"><div class="skeleton" style="height:260px;"></div></div>'; }
+load();
+}
+function load(fresh) {
+const m = C.month;
+if (fresh) { C.cache = {}; C.pending = {}; C.gen++; }
+const had = C.cache[m];
+fetchMonth(m).then(d => { if (m !== C.month) return; if (had && C.data === had && $('ccNext') && JSON.stringify(had) === JSON.stringify(d)) { prefetch(m); return; } if (C.open) { C.data = d; return; } C.data = d; render(); prefetch(m); })
+.catch(e => { if (m !== C.month || C.data) return; const b = $('ccBody'); if (b) b.innerHTML = `<div class="sx-card sx-empty">Couldn't load the calendar: ${esc(errMsg(e))} <button class="um-btn" id="ccRetry">Retry</button></div>`; const r = $('ccRetry'); if (r) r.onclick = load; });
 }
 
 function visible() {
@@ -22879,13 +22897,13 @@ b.innerHTML = igBox(d) + kpis(d) + `<div class="cc-bar"><button class="um-btn" i
 <span class="grow"></span>${chips.map(c => `<button type="button" class="cc-chip ${C.filter === c[0] ? 'on' : ''}" data-cc-f="${c[0]}">${esc(c[1])}</button>`).join('')}<button class="um-btn primary" id="ccAdd">+ Add post</button></div>`
 + grid(d, list) + `<div class="cc-legend">${Object.keys(PILLARS).map(k => `<span><span class="cc-dot" style="background:${PILLARS[k][1]}"></span>${esc(PILLARS[k][0])}</span>`).join('')}</div>` + statsTable(d)
 + `<div class="sx-card"><div style="font-weight:800;margin-bottom:6px;">House rules</div><div class="lq-note" style="margin:0;">No visa, job, offer or fee guarantees · written consent before any student video · English for Mumbai, one Malayalam line allowed for Kerala · re-check fees and visa costs on the day · reels 7:30 pm, carousels 1 pm, weekends 11 am · paste the Instagram link once it's live so stats come in.</div></div>`;
-$('ccPrev').onclick = () => { C.month = shiftMonth(C.month, -1); C.data = null; $('ccBody').innerHTML = '<div class="sx-card"><div class="skeleton" style="height:260px;"></div></div>'; load(); };
-$('ccNext').onclick = () => { C.month = shiftMonth(C.month, 1); C.data = null; $('ccBody').innerHTML = '<div class="sx-card"><div class="skeleton" style="height:260px;"></div></div>'; load(); };
+$('ccPrev').onclick = () => { C.month = shiftMonth(C.month, -1); showMonth(); };
+$('ccNext').onclick = () => { C.month = shiftMonth(C.month, 1); showMonth(); };
 $('ccAdd').onclick = () => openEditor(null);
 b.querySelectorAll('[data-cc-f]').forEach(x => x.onclick = () => { C.filter = x.dataset.ccF; render(); });
 b.querySelectorAll('[data-cc-post]').forEach(x => x.onclick = () => openEditor(x.dataset.ccPost));
-const sy = $('ccSync'); if (sy) sy.onclick = () => { sy.disabled = true; sy.textContent = 'Refreshing…'; run('refreshContentStats').then(r => { toast(r.message || 'Done', r.ok ? 'success' : 'error'); load(); }).catch(e => { sy.disabled = false; sy.textContent = 'Refresh Instagram stats'; toast(errMsg(e), 'error'); }); };
-const ig = $('ccIgSave'); if (ig) ig.onclick = () => { ig.disabled = true; run('saveContentIgAccount', $('ccIgId').value).then(() => { toast('Saved'); load(); }).catch(e => { ig.disabled = false; toast(errMsg(e), 'error'); }); };
+const sy = $('ccSync'); if (sy) sy.onclick = () => { sy.disabled = true; sy.textContent = 'Refreshing…'; run('refreshContentStats').then(r => { toast(r.message || 'Done', r.ok ? 'success' : 'error'); load(true); }).catch(e => { sy.disabled = false; sy.textContent = 'Refresh Instagram stats'; toast(errMsg(e), 'error'); }); };
+const ig = $('ccIgSave'); if (ig) ig.onclick = () => { ig.disabled = true; run('saveContentIgAccount', $('ccIgId').value).then(() => { toast('Saved'); load(true); }).catch(e => { ig.disabled = false; toast(errMsg(e), 'error'); }); };
 }
 
 function closeEditor() { const bg = $('ccBg'); if (bg) bg.classList.remove('open'); C.open = null; }
@@ -22930,10 +22948,10 @@ $('ccSave').onclick = () => {
 const btn = $('ccSave'), msg = $('ccMsg');
 const rec = { id: p.id, title: $('ccT').value, date: $('ccD').value, time: $('ccTm').value, status: $('ccSt').value, owner: $('ccO').value, format: $('ccF').value, pillar: $('ccP').value, branch: $('ccB').value, consent: $('ccC').checked, link: $('ccL').value, asset: $('ccA').value, hook: $('ccH').value, notes: $('ccN').value };
 btn.disabled = true; msg.textContent = 'Saving…';
-run('saveContentPost', rec).then(() => { toast(p.id ? 'Saved' : 'Post added'); closeEditor(); load(); }).catch(e => { btn.disabled = false; msg.textContent = errMsg(e); });
+run('saveContentPost', rec).then(() => { toast(p.id ? 'Saved' : 'Post added'); closeEditor(); load(true); }).catch(e => { btn.disabled = false; msg.textContent = errMsg(e); });
 };
 const del = $('ccDel'); let armed = false;
-if (del) del.onclick = () => { if (!armed) { armed = true; del.textContent = 'Click again to delete'; return; } del.disabled = true; run('deleteContentPost', p.id).then(() => { toast('Deleted'); closeEditor(); load(); }).catch(e => { del.disabled = false; $('ccMsg').textContent = errMsg(e); }); };
+if (del) del.onclick = () => { if (!armed) { armed = true; del.textContent = 'Click again to delete'; return; } del.disabled = true; run('deleteContentPost', p.id).then(() => { toast('Deleted'); closeEditor(); load(true); }).catch(e => { del.disabled = false; $('ccMsg').textContent = errMsg(e); }); };
 }
 
 const go = e => { const it = e.target.closest && e.target.closest('[data-cc-open]'); if (!it) return false; e.preventDefault(); openCC(); return true; };
