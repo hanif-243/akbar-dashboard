@@ -4484,7 +4484,7 @@ Akbar Study Abroad</textarea>
 <div id="studentExpView" style="display:none;"></div>
 <div id="s10View" style="display:none;"></div>
 <div id="finView" style="display:none;"></div>
-<div id="hrView" style="display:none;"></div><div id="b2bView" style="display:none;"></div><div id="visaView" style="display:none;"></div><div id="maView" style="display:none;"></div><div id="sqView" style="display:none;"></div>
+<div id="hrView" style="display:none;"></div><div id="b2bView" style="display:none;"></div><div id="visaView" style="display:none;"></div><div id="maView" style="display:none;"></div><div id="ccView" style="display:none;"></div><div id="sqView" style="display:none;"></div>
 
 <div class="app">
 <div class="sidebar" id="sidebar">
@@ -4742,6 +4742,7 @@ Akbar Study Abroad</textarea>
 <div class="nav-item" data-ma-view="meta-report" data-role-guard="financial" role="button" tabindex="0" title="CTR, CPM, CPL, qualified leads, funds and forecast — download as PDF"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Meta Report</span></div>
 <div class="nav-item" data-ma-view="meta-settings" data-role-guard="financial" role="button" tabindex="0" title="Token, ad account, auto-sync, branch tags"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Meta Settings</span></div>
 <div class="nav-item" data-lp-open data-role-guard="financial" role="button" tabindex="0" title="Landing pages for Meta ads — leads go straight into the dashboard"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Landing Pages</span></div>
+<div class="nav-item cc-nav" data-cc-open role="button" tabindex="0" title="Instagram + Facebook posting plan, status and Instagram stats (Super Admins)"><svg class="nav-icon" viewBox="0 0 24 24"></svg><span>Content Calendar</span></div>
 </div>
 
 <div class="nav-group" data-group="team">
@@ -22272,7 +22273,7 @@ const pts = vals.map((v, i) => (n === 1 ? W / 2 : i * W / (n - 1)).toFixed(1) + 
 return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${color || 'var(--red)'}" stroke-width="2" stroke-linejoin="round"/></svg>`;
 }
 
-const OTHER_VIEWS = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView'];
+const OTHER_VIEWS = ['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'ccView'];
 function openMetaAds(tab) {
 if (!document.body.classList.contains('fin-ok')) return;
 M.tab = TABS.some(t => t[0] === tab) ? tab : M.tab;
@@ -22730,6 +22731,216 @@ el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { 
 const sb = document.getElementById('sidebar');
 if (sb) sb.addEventListener('click', e => { const it = e.target.closest('.nav-item, .lead-set-item, [data-branch]'); if (it && !it.hasAttribute('data-ma-view')) closeMetaAds(); }, true);
 Object.assign(window, { openMetaAds, closeMetaAds, renderMetaAdsDashboard, renderMetaCampaigns, renderMetaAdPerformance, renderMetaSettings, openCampaignDetail });
+})();
+</script>
+
+<style>
+.cc-nav { display: none !important; }
+body.cc-ok .cc-nav { display: flex !important; }
+body.cc-ok [data-group="marketing"] { display: block !important; }
+.cc-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.cc-bar .grow { flex: 1; }
+.cc-month { font-weight: 800; font-size: 15px; min-width: 150px; text-align: center; }
+.cc-chip { border: 1px solid var(--border); background: var(--card); color: var(--ink); border-radius: 999px; padding: 5px 12px; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.cc-chip.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+.cc-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.cc-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.cc-dow { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; padding: 0 4px; }
+.cc-day { background: var(--card); border: 1px solid var(--border); border-radius: 10px; min-height: 112px; padding: 6px; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.cc-day.out { background: transparent; border-style: dashed; opacity: .5; }
+.cc-day.today { border-color: var(--red); box-shadow: inset 0 0 0 1px var(--red); }
+.cc-dn { display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cc-dn em { font-style: normal; font-size: 10.5px; font-weight: 700; color: var(--muted); }
+.cc-dn em.has { color: var(--ok); }
+.cc-post { text-align: left; border: 0; background: var(--canvas); color: var(--ink); border-radius: 8px; padding: 6px 7px 6px 10px; cursor: pointer; font: inherit; font-size: 12px; line-height: 1.3; position: relative; display: grid; gap: 3px; min-width: 0; }
+.cc-post::before { content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; border-radius: 3px; background: var(--cc-c); }
+.cc-post .t { overflow-wrap: anywhere; font-weight: 600; }
+.cc-post .m { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 10.5px; color: var(--muted); }
+.cc-post.done .t { text-decoration: line-through; text-decoration-color: var(--muted); }
+.cc-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); margin: 10px 0 14px; }
+.cc-legend span { display: inline-flex; gap: 6px; align-items: center; }
+.cc-agenda { display: none; flex-direction: column; gap: 10px; }
+.cc-aday { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 8px; }
+.cc-aday b { display: block; font-size: 19px; }
+.cc-aday .d { font-size: 12px; color: var(--muted); padding-top: 4px; }
+.cc-aday .l { display: grid; gap: 6px; }
+@media (max-width: 760px) { .cc-grid { display: none; } .cc-agenda { display: flex; } }
+.cc-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+.cc-form label { display: grid; gap: 4px; font-size: 12px; font-weight: 700; color: var(--muted); }
+.cc-form .full { grid-column: 1 / -1; }
+.cc-form input, .cc-form select, .cc-form textarea { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; background: var(--card); color: var(--ink); width: 100%; box-sizing: border-box; }
+.cc-form textarea { min-height: 70px; resize: vertical; }
+.cc-hook { background: var(--canvas); border-radius: 10px; padding: 10px 12px; font-size: 13px; white-space: pre-wrap; }
+@media (max-width: 560px) { .cc-form { grid-template-columns: 1fr; } }
+</style>
+<script>
+(function () {
+const $ = id => document.getElementById(id);
+const esc = v => escapeHtml(v == null ? '' : String(v));
+const run = (fn, ...a) => promisifyRun(fn, window._authToken || '', ...a);
+const errMsg = e => (e && e.message ? e.message : String(e || 'Something went wrong')).replace(/^Error:\s*/, '');
+const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t || 'success'); };
+const PILLARS = { story: ['Student stories', '#1F9D63'], country: ['Countries & courses', '#3E6BD6'], money: ['Costs & money', '#D98A1F'], process: ['Process & deadlines', '#8452C9'], parents: ['For parents', '#E0612B'], engage: ['Engagement', '#0E8FA8'], brand: ['Brand & greetings', '#64748B'] };
+const STATUS = { planned: ['Planned', ''], making: ['Being made', 'warm'], ready: ['Ready', 'blue'], posted: ['Posted', 'ok'] };
+const C = { month: '', data: null, filter: 'all', open: null };
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const num = n => (Number(n) || 0).toLocaleString('en-IN');
+
+function startMonth() { const d = new Date(); const m = ymd(d).slice(0, 7); return m < '2026-12' ? '2026-12' : m; }
+function shiftMonth(m, k) { const d = new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 1 + k, 1); return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
+function monthName(m) { return new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }); }
+
+function openCC() {
+if (!window._isSuperAdmin) return;
+if (typeof closeMetaAds === 'function') try { closeMetaAds(); } catch (x) { }
+const app = document.querySelector('.app'); if (app) app.style.display = 'none';
+['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView'].forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
+if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
+C.month = C.month || startMonth();
+const root = $('ccView'); root.style.display = 'block';
+root.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-title">🗓️ Content Calendar</h1><div class="sx-sub">Instagram + Facebook posting plan · Super Admins only</div></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="um-btn" id="ccBack">← Back to dashboard</button></div></div>
+<div id="ccBody"><div class="sx-card"><div class="skeleton" style="height:260px;"></div></div></div></div>`;
+$('ccBack').onclick = closeCC;
+window.scrollTo(0, 0);
+load();
+}
+function closeCC() { closeEditor(); const root = $('ccView'); if (!root || root.style.display !== 'block') return; root.style.display = 'none'; root.innerHTML = ''; const app = document.querySelector('.app'); if (app) app.style.display = ''; }
+function load() {
+const m = C.month;
+run('getContentCalendar', m).then(d => { if (m !== C.month) return; C.data = d; render(); })
+.catch(e => { const b = $('ccBody'); if (b) b.innerHTML = `<div class="sx-card sx-empty">Couldn't load the calendar: ${esc(errMsg(e))} <button class="um-btn" id="ccRetry">Retry</button></div>`; const r = $('ccRetry'); if (r) r.onclick = load; });
+}
+
+function visible() {
+const f = C.filter;
+return C.data.posts.filter(p => f === 'all' || p.status === f || (f === 'consent' && p.consent && p.status !== 'posted'));
+}
+function postBtn(p) {
+const pc = (PILLARS[p.pillar] || PILLARS.brand)[1], st = STATUS[p.status] || STATUS.planned;
+return `<button type="button" class="cc-post${p.status === 'posted' ? ' done' : ''}" data-cc-post="${esc(p.id)}" style="--cc-c:${pc}"><span class="t">${esc(p.title)}</span>
+<span class="m">${esc(p.time)} · ${esc(p.format)} <span class="ma-chip ${st[1]}">${esc(st[0])}</span>${p.consent && p.status !== 'posted' ? '<span class="ma-chip bad">Consent</span>' : ''}${p.views ? `<span>${num(p.views)} views</span>` : ''}</span></button>`;
+}
+function igBox(d) {
+const s = d.ig.status || {};
+const when = s.at ? new Date(s.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '';
+if (!d.ig.tokenSet) return `<div class="ma-banner warm">Instagram stats need the Meta token from Marketing → Meta Settings. The plan works without it.</div>`;
+const head = s.ok ? `<div class="ma-banner info">Instagram${s.username ? ' @' + esc(s.username) : ''}: <b>${num(s.followers)} followers</b> · ${esc(s.message || '')} · ${esc(when)} <button class="um-btn" id="ccSync">Refresh Instagram stats</button></div>`
+: `<div class="ma-banner ${s.at ? '' : 'warm'}">${s.at ? 'Instagram stats: ' + esc(s.message || 'not working') + ' · ' + esc(when) : 'Instagram stats are not connected yet. Click refresh to try the Meta token.'} <button class="um-btn" id="ccSync">Refresh Instagram stats</button></div>`;
+const acct = !s.ok ? `<div class="sx-card" style="margin-bottom:12px;"><div style="font-weight:800;margin-bottom:6px;">Instagram account ID (only if the token can't find it)</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;"><input type="text" id="ccIgId" value="${esc(d.ig.accountId)}" placeholder="e.g. 17841400000000000" style="flex:1;min-width:200px;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font:inherit;background:var(--card);color:var(--ink);"><button class="um-btn" id="ccIgSave">Save</button></div>
+<p class="lq-note">The token needs instagram_basic, instagram_manage_insights and pages_read_engagement on the Facebook Page linked to Instagram.</p></div>` : '';
+return head + acct;
+}
+function kpis(d) {
+const P = d.posts, cnt = s => P.filter(p => p.status === s).length;
+const views = P.reduce((a, p) => a + (Number(p.views) || 0), 0), saves = P.reduce((a, p) => a + (Number(p.saves) || 0), 0);
+const fk = Object.keys(d.followers || {}).filter(k => k.slice(0, 7) <= d.month).sort();
+const inMonth = fk.filter(k => k.slice(0, 7) === d.month);
+const before = fk.filter(k => k.slice(0, 7) < d.month).pop();
+const first = before ? d.followers[before] : (inMonth.length ? d.followers[inMonth[0]] : null), last = inMonth.length ? d.followers[inMonth[inMonth.length - 1]] : null;
+const gain = first != null && last != null ? last - first : null;
+const leads = Object.values(d.leadsByDay || {}).reduce((a, x) => a + x.all, 0);
+return `<div class="ma-kpis">
+<div class="ma-kpi"><div class="l">Posted</div><div class="n">${cnt('posted')} / ${P.length}</div><div class="d">${cnt('ready')} ready · ${cnt('making')} being made · ${P.filter(p => p.consent && p.status !== 'posted').length} waiting on consent</div></div>
+<div class="ma-kpi"><div class="l">Instagram views</div><div class="n">${num(views)}</div><div class="d">${num(saves)} saves on this month's posts</div></div>
+<div class="ma-kpi"><div class="l">Followers gained</div><div class="n">${gain == null ? '—' : (gain >= 0 ? '+' : '') + num(gain)}</div><div class="d">${last != null ? num(last) + ' now' : 'Counted from the first stats refresh'}</div></div>
+<div class="ma-kpi"><div class="l">New leads this month</div><div class="n">${num(leads)}</div><div class="d">All branches, ads included</div></div></div>`;
+}
+function grid(d, list) {
+const byDay = {}; list.forEach(p => { (byDay[p.date] = byDay[p.date] || []).push(p); });
+const y = Number(d.month.slice(0, 4)), mo = Number(d.month.slice(5, 7)) - 1;
+const first = new Date(y, mo, 1), start = new Date(first); start.setDate(1 - ((first.getDay() + 6) % 7));
+const today = ymd(new Date());
+let cells = '';
+for (let i = 0; i < 42; i++) {
+const dt = new Date(start); dt.setDate(start.getDate() + i);
+if (i === 35 && dt.getMonth() !== mo) break;
+const k = ymd(dt), inM = dt.getMonth() === mo, L = (d.leadsByDay || {})[k];
+cells += `<div class="cc-day${inM ? '' : ' out'}${k === today ? ' today' : ''}"><div class="cc-dn"><span>${dt.getDate()}</span>${inM && L ? `<em class="${L.good ? 'has' : ''}" title="New leads that day (all branches, ads included) · ${L.good} Hot/Warm">${L.all} leads</em>` : ''}</div>${inM ? (byDay[k] || []).map(postBtn).join('') : ''}</div>`;
+}
+const agenda = Object.keys(byDay).sort().map(k => `<div class="cc-aday"><div class="d"><b>${Number(k.slice(8))}</b>${esc(new Date(k + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short' }))}</div><div class="l">${byDay[k].map(postBtn).join('')}</div></div>`).join('') || '<div class="sx-empty">No posts match this filter.</div>';
+return `<div class="cc-grid">${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(x => `<div class="cc-dow">${x}</div>`).join('')}${cells}</div><div class="cc-agenda">${agenda}</div>`;
+}
+function statsTable(d) {
+const P = d.posts.filter(p => p.status === 'posted');
+if (!P.length) return '';
+return `<div class="sx-card" style="margin-top:14px;"><div style="font-weight:800;margin-bottom:8px;">Posted this month</div><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Date</th><th>Post</th><th class="num">Views</th><th class="num">Reach</th><th class="num">Likes</th><th class="num">Comments</th><th class="num">Saves</th><th class="num">Shares</th><th class="num">Leads that day</th></tr></thead><tbody>
+${P.map(p => { const L = (d.leadsByDay || {})[p.date]; return `<tr><td>${esc(p.date.slice(8))} ${esc(monthName(d.month).split(' ')[0].slice(0, 3))}</td><td><b>${esc(p.title)}</b><div class="sx-sub">${esc(p.format)} · ${esc(p.branch)}${p.link ? ` · <a href="${esc(p.link)}" target="_blank" rel="noopener">open</a>` : ' · no link yet'}${p.statsAt ? '' : (p.link ? ' · stats pending' : '')}</div></td>
+<td class="num">${num(p.views)}</td><td class="num">${num(p.reach)}</td><td class="num">${num(p.likes)}</td><td class="num">${num(p.comments)}</td><td class="num">${num(p.saves)}</td><td class="num">${num(p.shares)}</td><td class="num">${L ? L.all + ' (' + L.good + ' Hot/Warm)' : '0'}</td></tr>`; }).join('')}</tbody></table></div>
+<p class="lq-note">Stats are from Instagram and refresh every 6 hours. "Leads that day" counts every new lead in all branches, ads included, so read it as a rough signal.</p></div>`;
+}
+function render() {
+const d = C.data, b = $('ccBody'); if (!b || !d) return;
+const list = visible();
+const chips = [['all', 'All posts', '']].concat(Object.keys(STATUS).map(k => [k, STATUS[k][0], ''])).concat([['consent', 'Needs consent', '']]);
+b.innerHTML = igBox(d) + kpis(d) + `<div class="cc-bar"><button class="um-btn" id="ccPrev" aria-label="Previous month">‹</button><div class="cc-month">${esc(monthName(d.month))}</div><button class="um-btn" id="ccNext" aria-label="Next month">›</button>
+<span class="grow"></span>${chips.map(c => `<button type="button" class="cc-chip ${C.filter === c[0] ? 'on' : ''}" data-cc-f="${c[0]}">${esc(c[1])}</button>`).join('')}<button class="um-btn primary" id="ccAdd">+ Add post</button></div>`
++ grid(d, list) + `<div class="cc-legend">${Object.keys(PILLARS).map(k => `<span><span class="cc-dot" style="background:${PILLARS[k][1]}"></span>${esc(PILLARS[k][0])}</span>`).join('')}</div>` + statsTable(d)
++ `<div class="sx-card"><div style="font-weight:800;margin-bottom:6px;">House rules</div><div class="lq-note" style="margin:0;">No visa, job, offer or fee guarantees · written consent before any student video · English for Mumbai, one Malayalam line allowed for Kerala · re-check fees and visa costs on the day · reels 7:30 pm, carousels 1 pm, weekends 11 am · paste the Instagram link once it's live so stats come in.</div></div>`;
+$('ccPrev').onclick = () => { C.month = shiftMonth(C.month, -1); C.data = null; $('ccBody').innerHTML = '<div class="sx-card"><div class="skeleton" style="height:260px;"></div></div>'; load(); };
+$('ccNext').onclick = () => { C.month = shiftMonth(C.month, 1); C.data = null; $('ccBody').innerHTML = '<div class="sx-card"><div class="skeleton" style="height:260px;"></div></div>'; load(); };
+$('ccAdd').onclick = () => openEditor(null);
+b.querySelectorAll('[data-cc-f]').forEach(x => x.onclick = () => { C.filter = x.dataset.ccF; render(); });
+b.querySelectorAll('[data-cc-post]').forEach(x => x.onclick = () => openEditor(x.dataset.ccPost));
+const sy = $('ccSync'); if (sy) sy.onclick = () => { sy.disabled = true; sy.textContent = 'Refreshing…'; run('refreshContentStats').then(r => { toast(r.message || 'Done', r.ok ? 'success' : 'error'); load(); }).catch(e => { sy.disabled = false; sy.textContent = 'Refresh Instagram stats'; toast(errMsg(e), 'error'); }); };
+const ig = $('ccIgSave'); if (ig) ig.onclick = () => { ig.disabled = true; run('saveContentIgAccount', $('ccIgId').value).then(() => { toast('Saved'); load(); }).catch(e => { ig.disabled = false; toast(errMsg(e), 'error'); }); };
+}
+
+function closeEditor() { const bg = $('ccBg'); if (bg) bg.classList.remove('open'); C.open = null; }
+function openEditor(id) {
+const d = C.data; if (!d) return;
+const p = id ? d.posts.find(x => x.id === id) : { id: '', date: d.month + '-01', time: '19:30', format: 'Reel', pillar: 'story', branch: 'All branches', title: '', asset: '', hook: '', consent: false, status: 'planned', owner: '', link: '', notes: '' };
+if (!p) return;
+C.open = p.id;
+let bg = $('ccBg');
+if (!bg) {
+bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'ccBg';
+bg.innerHTML = '<div class="cmdk-box" style="max-width:640px;" role="dialog" aria-modal="true" aria-labelledby="ccEdTitle"><div class="preview-modal-header"><span id="ccEdTitle" style="font-size:14px;font-weight:800;flex:1;"></span><button class="counselor-save-btn" id="ccEdClose">Close</button></div><div class="s10-body" id="ccEdBody"></div></div>';
+document.body.appendChild(bg);
+$('ccEdClose').onclick = closeEditor;
+bg.addEventListener('click', e => { if (e.target === bg) closeEditor(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && bg.classList.contains('open')) { closeEditor(); e.stopPropagation(); } }, true);
+}
+const sel = (idv, obj, cur) => `<select id="${idv}">${Object.keys(obj).map(k => `<option value="${k}" ${k === cur ? 'selected' : ''}>${esc(obj[k][0])}</option>`).join('')}</select>`;
+const selL = (idv, list, cur) => `<select id="${idv}">${list.map(v => `<option ${v === cur ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>`;
+$('ccEdTitle').textContent = p.id ? 'Edit post' : 'Add a post';
+$('ccEdBody').innerHTML = `${p.id && p.hook ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span class="sx-sub">Hook / caption start</span><button class="um-btn" id="ccCopy" type="button">Copy</button></div><div class="cc-hook" id="ccHookTxt">${esc(p.hook)}</div>` : ''}
+${p.consent && p.status !== 'posted' ? '<div class="ma-banner" style="margin-top:10px;">Needs the student\'s written consent before it goes up.</div>' : ''}
+${p.statsAt ? `<div class="lq-note">Instagram: ${num(p.views)} views · ${num(p.reach)} reach · ${num(p.likes)} likes · ${num(p.comments)} comments · ${num(p.saves)} saves · ${num(p.shares)} shares</div>` : ''}
+<div class="cc-form" style="margin-top:12px;">
+<label class="full" for="ccT">Post<input id="ccT" value="${esc(p.title)}" maxlength="200"></label>
+<label for="ccD">Date<input id="ccD" type="date" value="${esc(p.date)}"></label>
+<label for="ccTm">Time<input id="ccTm" type="time" value="${esc(p.time)}"></label>
+<label for="ccSt">Status${sel('ccSt', STATUS, p.status)}</label>
+<label for="ccO">Owner<input id="ccO" value="${esc(p.owner)}" placeholder="Who is making it"></label>
+<label for="ccF">Format${selL('ccF', d.options.formats, p.format)}</label>
+<label for="ccP">Topic${sel('ccP', PILLARS, p.pillar)}</label>
+<label for="ccB">Branch${selL('ccB', d.options.branches, p.branch)}</label>
+<label for="ccC" style="display:flex;align-items:center;gap:8px;padding-top:18px;"><input id="ccC" type="checkbox" ${p.consent ? 'checked' : ''} style="width:auto;">Needs student consent</label>
+<label class="full" for="ccL">Live link (paste after posting)<input id="ccL" type="url" value="${esc(p.link)}" placeholder="https:\x2F\x2Fwww.instagram.com\x2Freel\x2F…"><\x2Flabel>
+<label class="full" for="ccA">Asset \x2F file<input id="ccA" value="${esc(p.asset)}"></label>
+<label class="full" for="ccH">Hook / caption start<textarea id="ccH">${esc(p.hook)}</textarea></label>
+<label class="full" for="ccN">Notes<textarea id="ccN">${esc(p.notes)}</textarea></label></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center;"><button class="um-btn primary" id="ccSave">${p.id ? 'Save' : 'Add post'}</button>${p.id ? '<button class="um-btn" id="ccDel" style="margin-left:auto;">Delete</button>' : ''}</div><div class="lq-note" id="ccMsg"></div>`;
+bg.classList.add('open');
+const cp = $('ccCopy'); if (cp) cp.onclick = () => { const t = $('ccHookTxt').textContent; (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => { cp.textContent = 'Copied'; }).catch(() => { const r = document.createRange(); r.selectNodeContents($('ccHookTxt')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); cp.textContent = 'Selected'; }); };
+$('ccSave').onclick = () => {
+const btn = $('ccSave'), msg = $('ccMsg');
+const rec = { id: p.id, title: $('ccT').value, date: $('ccD').value, time: $('ccTm').value, status: $('ccSt').value, owner: $('ccO').value, format: $('ccF').value, pillar: $('ccP').value, branch: $('ccB').value, consent: $('ccC').checked, link: $('ccL').value, asset: $('ccA').value, hook: $('ccH').value, notes: $('ccN').value };
+btn.disabled = true; msg.textContent = 'Saving…';
+run('saveContentPost', rec).then(() => { toast(p.id ? 'Saved' : 'Post added'); closeEditor(); load(); }).catch(e => { btn.disabled = false; msg.textContent = errMsg(e); });
+};
+const del = $('ccDel'); let armed = false;
+if (del) del.onclick = () => { if (!armed) { armed = true; del.textContent = 'Click again to delete'; return; } del.disabled = true; run('deleteContentPost', p.id).then(() => { toast('Deleted'); closeEditor(); load(); }).catch(e => { del.disabled = false; $('ccMsg').textContent = errMsg(e); }); };
+}
+
+const go = e => { const it = e.target.closest && e.target.closest('[data-cc-open]'); if (!it) return false; e.preventDefault(); openCC(); return true; };
+document.addEventListener('click', e => { if (go(e)) return; const sb = e.target.closest && e.target.closest('#sidebar .nav-item, #sidebar .lead-set-item, #sidebar [data-branch]'); if (sb) closeCC(); }, true);
+document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && go(e)) return; });
+setInterval(() => { if (window._isSuperAdmin && !document.body.classList.contains('cc-ok')) document.body.classList.add('cc-ok'); }, 1500);
+window.openContentCalendar = openCC;
 })();
 </script>
 
