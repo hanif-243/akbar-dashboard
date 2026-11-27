@@ -22887,40 +22887,126 @@ Object.assign(window, { openMetaAds, closeMetaAds, renderMetaAdsDashboard, rende
 .cc-nav { display: none !important; }
 body.cc-ok .cc-nav { display: flex !important; }
 body.cc-ok [data-group="marketing"] { display: block !important; }
-.cc-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
-.cc-bar .grow { flex: 1; }
-.cc-month { font-weight: 800; font-size: 15px; min-width: 150px; text-align: center; }
-.cc-chip { border: 1px solid var(--border); background: var(--card); color: var(--ink); border-radius: 999px; padding: 5px 12px; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
-.cc-chip.on { background: var(--navy); border-color: var(--navy); color: #fff; }
-.cc-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
-.cc-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
-.cc-dow { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; padding: 0 4px; }
-.cc-day { background: var(--card); border: 1px solid var(--border); border-radius: 10px; min-height: 112px; padding: 6px; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
-.cc-day.out { background: transparent; border-style: dashed; opacity: .5; }
-.cc-day.today { border-color: var(--red); box-shadow: inset 0 0 0 1px var(--red); }
-.cc-dn { display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
-.cc-dn em { font-style: normal; font-size: 10.5px; font-weight: 700; color: var(--muted); }
-.cc-dn em.has { color: var(--ok); }
-.cc-post { text-align: left; border: 0; background: var(--canvas); color: var(--ink); border-radius: 8px; padding: 6px 7px 6px 10px; cursor: pointer; font: inherit; font-size: 12px; line-height: 1.3; position: relative; display: grid; gap: 3px; min-width: 0; }
-.cc-post::before { content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; border-radius: 3px; background: var(--cc-c); }
-.cc-post .t { overflow-wrap: anywhere; font-weight: 600; }
-.cc-post .m { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 10.5px; color: var(--muted); }
-.cc-post.done .t { text-decoration: line-through; text-decoration-color: var(--muted); }
-.cc-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); margin: 10px 0 14px; }
-.cc-legend span { display: inline-flex; gap: 6px; align-items: center; }
-.cc-agenda { display: none; flex-direction: column; gap: 10px; }
-.cc-aday { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 8px; }
-.cc-aday b { display: block; font-size: 19px; }
-.cc-aday .d { font-size: 12px; color: var(--muted); padding-top: 4px; }
-.cc-aday .l { display: grid; gap: 6px; }
-@media (max-width: 760px) { .cc-grid { display: none; } .cc-agenda { display: flex; } }
+#ccView { --cc-reel: #3E6BD6; --cc-carousel: #8452C9; --cc-static: #1F9D63; --cc-story: #C77A12; }
+.cc2-head { position: sticky; top: 0; z-index: 20; background: var(--canvas); padding: 12px 0 10px; margin-bottom: 12px; border-bottom: 1px solid var(--border); }
+.cc2-top { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; }
+.cc2-l, .cc2-r { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.cc2-r { flex: 1; justify-content: flex-end; }
+.cc2-pill { border: 1px solid var(--border); background: var(--card); color: var(--ink); border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
+.cc2-pill.on { background: var(--ink); color: var(--card); border-color: var(--ink); }
+.cc2-yr { display: inline-flex; align-items: center; gap: 2px; background: var(--ink); color: var(--card); border-radius: 999px; padding: 3px; }
+.cc2-yr button { border: 0; background: transparent; color: inherit; width: 30px; height: 30px; border-radius: 50%; font: inherit; font-size: 16px; cursor: pointer; }
+.cc2-yr button:hover { background: rgba(255,255,255,.14); }
+.cc2-yr b { font-size: 16px; font-weight: 600; padding: 0 8px; font-variant-numeric: tabular-nums; }
+.cc2-search { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); border-radius: 999px; padding: 0 14px; flex: 1; max-width: 360px; min-width: 180px; }
+.cc2-search svg { width: 16px; height: 16px; color: var(--muted); flex: none; }
+.cc2-search input { border: 0; outline: 0; background: transparent; font: inherit; font-size: 13px; color: var(--ink); padding: 9px 0; width: 100%; }
+.cc2-strip { display: grid; grid-template-columns: repeat(12, minmax(64px, 1fr)); gap: 6px; margin-top: 12px; overflow-x: auto; }
+.cc2-m { border: 1px solid var(--border); background: var(--card); color: var(--ink); border-radius: 12px; padding: 8px 10px; font: inherit; text-align: left; cursor: pointer; display: grid; gap: 2px; }
+.cc2-m b { font-size: 14px; font-weight: 600; }
+.cc2-m span { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cc2-m.now b::after { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--red); margin-left: 6px; vertical-align: middle; }
+.cc2-m.on { background: var(--ink); border-color: var(--ink); color: var(--card); }
+.cc2-m.on span { color: var(--card); opacity: .75; }
+.cc2-results { background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-top: 10px; max-height: 340px; overflow: auto; }
+.cc2-res { display: grid; grid-template-columns: 88px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 14px; border: 0; border-top: 1px solid var(--border); background: transparent; width: 100%; text-align: left; font: inherit; font-size: 13px; color: var(--ink); cursor: pointer; }
+.cc2-res:first-child { border-top: 0; }
+.cc2-res:hover { background: var(--canvas); }
+.cc2-res .d { color: var(--muted); font-variant-numeric: tabular-nums; }
+.cc2-prog { display: flex; align-items: center; gap: 14px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 16px; margin-bottom: 12px; font-size: 13px; flex-wrap: wrap; }
+.cc2-prog .bar { flex: 1; min-width: 120px; height: 6px; background: var(--canvas); border-radius: 6px; overflow: hidden; }
+.cc2-prog .bar i { display: block; height: 100%; background: var(--ok); border-radius: 6px; }
+.cc2-prog .ig { color: var(--muted); font-size: 12.5px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.cc2-sched { margin-bottom: 14px; }
+.cc2-sched summary { cursor: pointer; font-weight: 600; font-size: 13.5px; padding: 4px 0 10px; display: flex; gap: 10px; align-items: center; list-style: none; }
+.cc2-sched summary::-webkit-details-marker { display: none; }
+.cc2-sched summary::before { content: ""; width: 0; height: 0; border-left: 5px solid currentColor; border-top: 4px solid transparent; border-bottom: 4px solid transparent; transition: transform .15s; }
+.cc2-sched[open] summary::before { transform: rotate(90deg); }
+.cc2-sched summary .um-btn { margin-left: auto; }
+.cc2-sgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.cc2-scard { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+.cc2-scard b { display: block; color: var(--ink); font-size: 13.5px; font-weight: 600; margin-bottom: 4px; }
+.cc2-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.cc2-chip { border: 1px solid var(--border); background: var(--card); color: var(--ink); border-radius: 999px; padding: 5px 12px; font: inherit; font-size: 12.5px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.cc2-chip.on { background: var(--ink); border-color: var(--ink); color: var(--card); }
+.cc2-chip span { font-variant-numeric: tabular-nums; opacity: .7; }
+.cc2-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; background: var(--fc, var(--muted)); }
+.cc2-hero { background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--ink); border-radius: 16px; padding: 24px 28px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; margin-bottom: 14px; }
+.cc2-badge { display: inline-flex; gap: 6px; align-items: center; border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; font-size: 11.5px; font-weight: 500; color: var(--muted); }
+.cc2-badge i { width: 6px; height: 6px; border-radius: 50%; background: var(--bc, var(--muted)); }
+.cc2-mname { font-size: 56px; line-height: 1; font-weight: 600; letter-spacing: -.02em; margin: 14px 0 6px; color: var(--ink); }
+.cc2-mname small { font-size: 22px; font-weight: 500; letter-spacing: 0; color: var(--muted); margin-left: 8px; }
+.cc2-theme { font-size: 14px; color: var(--ink); margin: 0 0 14px; }
+.cc2-theme.empty { color: var(--muted); }
+.cc2-dates { display: flex; gap: 8px; flex-wrap: wrap; }
+.cc2-kd { display: inline-flex; align-items: center; gap: 10px; border: 1px solid var(--border); border-radius: 10px; padding: 6px 12px 6px 6px; font-size: 12.5px; }
+.cc2-kd b { display: grid; place-items: center; width: 34px; border-radius: 8px; background: var(--canvas); font-size: 14px; line-height: 1.1; padding: 3px 0; font-variant-numeric: tabular-nums; }
+.cc2-kd b small { font-size: 9.5px; font-weight: 500; color: var(--muted); }
+.cc2-right { display: grid; gap: 12px; justify-items: end; align-content: start; }
+.cc2-ring { position: relative; width: 120px; height: 120px; }
+.cc2-ring svg { width: 120px; height: 120px; transform: rotate(-90deg); }
+.cc2-ring div { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.cc2-ring div b { font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.cc2-ring div span { font-size: 11px; color: var(--muted); }
+.cc2-ftiles { display: grid; grid-template-columns: repeat(2, minmax(96px, 1fr)); gap: 8px; }
+.cc2-ft { border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; font-size: 12px; color: var(--muted); }
+.cc2-ft b { display: flex; gap: 6px; align-items: center; font-size: 18px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.cc2-kpis { grid-column: 1 / -1; display: flex; gap: 28px; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 14px; font-size: 12.5px; color: var(--muted); }
+.cc2-kpis b { display: block; font-size: 18px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.cc2-cal { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 18px; }
+.cc2-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.cc2-dow { font-size: 11.5px; font-weight: 500; color: var(--muted); text-align: center; padding: 4px 0 8px; }
+.cc2-day { border: 1px solid var(--border); border-radius: 12px; min-height: 104px; padding: 6px; display: flex; flex-direction: column; gap: 5px; min-width: 0; cursor: pointer; background: var(--card); }
+.cc2-day:hover { border-color: var(--muted); }
+.cc2-day.out { visibility: hidden; }
+.cc2-day.wkend { background: var(--canvas); }
+.cc2-day.today { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.cc2-dn { display: flex; justify-content: space-between; align-items: baseline; gap: 4px; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.cc2-dn em { font-style: normal; font-size: 10.5px; font-weight: 500; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cc2-dn em.kd { color: var(--ink); }
+.cc2-pc { border: 0; border-left: 3px solid var(--fc); background: var(--canvas); border-radius: 6px; padding: 4px 6px; font: inherit; text-align: left; color: var(--ink); cursor: pointer; display: grid; gap: 1px; min-width: 0; }
+.cc2-pc .f { font-size: 10px; font-weight: 600; color: var(--fc); }
+.cc2-pc .t { font-size: 11.5px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cc2-pc.done .t { text-decoration: line-through; text-decoration-color: var(--muted); color: var(--muted); }
+.cc2-week { margin: 22px 0 6px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+.cc2-week b { color: var(--ink); font-weight: 600; margin-right: 8px; }
+.cc2-dayh { font-size: 14px; font-weight: 600; margin: 14px 0 8px; }
+.cc2-item { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; display: grid; gap: 10px; transition: box-shadow .3s; }
+.cc2-item.flash { box-shadow: 0 0 0 2px var(--ink); }
+.cc2-ih { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.cc2-ih input[type=checkbox] { width: 16px; height: 16px; margin: 0; cursor: pointer; accent-color: var(--ok); }
+.cc2-tag { border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 500; background: color-mix(in srgb, var(--fc) 12%, transparent); color: var(--fc); }
+.cc2-ih .t { font-weight: 600; font-size: 14px; flex: 1; min-width: 160px; }
+.cc2-ih .when { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cc2-st { border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 500; border: 1px solid var(--border); color: var(--muted); }
+.cc2-st.posted { color: var(--ok); border-color: currentColor; }
+.cc2-st.ready { color: var(--ink); border-color: var(--ink); }
+.cc2-hook { border-left: 3px solid var(--fc); background: var(--canvas); border-radius: 8px; padding: 9px 12px; font-size: 13.5px; font-weight: 500; white-space: pre-wrap; }
+.cc2-meta { font-size: 12.5px; color: var(--muted); display: flex; gap: 6px 16px; flex-wrap: wrap; }
+.cc2-meta b { color: var(--ink); font-weight: 500; }
+.cc2-link { display: flex; gap: 8px; }
+.cc2-link input { flex: 1; min-width: 0; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; background: var(--canvas); color: var(--ink); }
+.cc2-warn { font-size: 12.5px; color: #B45309; }
+.cc2-yhero { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px 28px; margin-bottom: 14px; }
+.cc2-yhero h2 { margin: 6px 0 6px; font-size: 28px; font-weight: 600; letter-spacing: -.01em; }
+.cc2-ygrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.cc2-ycard { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; font: inherit; text-align: left; color: var(--ink); cursor: pointer; display: grid; gap: 8px; align-content: start; }
+.cc2-ycard:hover { border-color: var(--muted); }
+.cc2-ycard .h { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.cc2-ycard .h b { font-size: 16px; font-weight: 600; }
+.cc2-ycard .th { font-size: 12.5px; color: var(--ink); }
+.cc2-ycard .kd { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.cc2-fchips { display: flex; gap: 5px; flex-wrap: wrap; }
+.cc2-fchips span { border-radius: 999px; padding: 2px 8px; font-size: 11px; background: color-mix(in srgb, var(--fc) 12%, transparent); color: var(--fc); font-variant-numeric: tabular-nums; }
 .cc-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
-.cc-form label { display: grid; gap: 4px; font-size: 12px; font-weight: 700; color: var(--muted); }
+.cc-form label { display: grid; gap: 4px; font-size: 12px; font-weight: 500; color: var(--muted); }
 .cc-form .full { grid-column: 1 / -1; }
 .cc-form input, .cc-form select, .cc-form textarea { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; background: var(--card); color: var(--ink); width: 100%; box-sizing: border-box; }
 .cc-form textarea { min-height: 70px; resize: vertical; }
 .cc-hook { background: var(--canvas); border-radius: 10px; padding: 10px 12px; font-size: 13px; white-space: pre-wrap; }
-@media (max-width: 560px) { .cc-form { grid-template-columns: 1fr; } }
+@media (max-width: 1100px) { .cc2-strip { grid-template-columns: repeat(12, 72px); } }
+@media (max-width: 900px) { .cc2-hero { grid-template-columns: minmax(0, 1fr); } .cc2-right { justify-items: start; grid-template-columns: auto minmax(0, 1fr); align-items: center; } .cc2-ygrid, .cc2-sgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .cc2-head { position: static; } .cc2-cal { display: none; } .cc2-mname { font-size: 40px; } .cc2-hero, .cc2-yhero { padding: 18px; } .cc2-ygrid, .cc2-sgrid { grid-template-columns: minmax(0, 1fr); } .cc2-right { grid-template-columns: minmax(0, 1fr); } .cc-form { grid-template-columns: 1fr; } .cc2-search { max-width: none; order: 3; flex-basis: 100%; } }
 </style>
 <script>
 (function () {
@@ -22931,31 +23017,91 @@ const errMsg = e => (e && e.message ? e.message : String(e || 'Something went wr
 const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t || 'success'); };
 const PILLARS = { story: ['Student stories', '#1F9D63'], country: ['Countries & courses', '#3E6BD6'], money: ['Costs & money', '#D98A1F'], process: ['Process & deadlines', '#8452C9'], parents: ['For parents', '#E0612B'], engage: ['Engagement', '#0E8FA8'], brand: ['Brand & greetings', '#64748B'] };
 const STATUS = { planned: ['Planned', ''], making: ['Being made', 'warm'], ready: ['Ready', 'blue'], posted: ['Posted', 'ok'] };
-const C = { month: '', data: null, filter: 'all', open: null, cache: {}, pending: {}, gen: 0 };
+const FMT = { Reel: ['Reels', 'var(--cc-reel)', 'Instagram, Facebook Reels'], Carousel: ['Carousels', 'var(--cc-carousel)', 'Instagram, Facebook'], Static: ['Static', 'var(--cc-static)', 'Instagram, Facebook'], Story: ['Stories', 'var(--cc-story)', 'Instagram + Facebook Stories'] };
+const fc = f => (FMT[f] || ['', 'var(--muted)'])[1];
+const FIXED = { '01-01': "New Year's Day", '01-26': 'Republic Day', '02-14': "Valentine's Day", '03-08': "Women's Day", '08-15': 'Independence Day', '09-05': "Teachers' Day", '10-02': 'Gandhi Jayanti', '11-14': "Children's Day", '12-25': 'Christmas', '12-31': "New Year's Eve" };
+const C = { month: '', year: '', view: 'month', fmt: 'all', data: null, cache: {}, pending: {}, gen: 0, years: {}, ypend: {}, q: '', open: null };
 const pad = n => String(n).padStart(2, '0');
 const ymd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
 const num = n => (Number(n) || 0).toLocaleString('en-IN');
+const MS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-function startMonth() { const d = new Date(); const m = ymd(d).slice(0, 7); return m < '2026-12' ? '2026-12' : m; }
+function startMonth() { const m = ymd(new Date()).slice(0, 7); return m < '2026-12' ? '2026-12' : m; }
 function shiftMonth(m, k) { const d = new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 1 + k, 1); return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
 function monthName(m) { return new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }); }
+function keyDates(m, plan) {
+const out = []; const mm = m.slice(5, 7);
+Object.keys(FIXED).forEach(k => { if (k.slice(0, 2) === mm) out.push({ day: Number(k.slice(3)), label: FIXED[k], fixed: true }); });
+((plan && plan.dates) || []).forEach(x => { if (!out.some(o => o.day === x.day && o.label.toLowerCase() === String(x.label).toLowerCase())) out.push({ day: x.day, label: x.label }); });
+return out.sort((a, b) => a.day - b.day);
+}
+function badge(total, posted, m) {
+const past = m < ymd(new Date()).slice(0, 7);
+if (!total) return ['Not planned yet', 'var(--muted)'];
+if (posted >= total) return ['Done', 'var(--ok)'];
+if (posted) return ['In progress', 'var(--cc-reel)'];
+return [past ? 'Not posted' : 'Planned · to make', '#C77A12'];
+}
 
 function openCC() {
 if (!window._isSuperAdmin) return;
 if (typeof closeMetaAds === 'function') try { closeMetaAds(); } catch (x) { }
 const app = document.querySelector('.app'); if (app) app.style.display = 'none';
-['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView'].forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
+['ceoView', 'appTeamView', 'studentExpView', 's10View', 'finView', 'hrView', 'b2bView', 'visaView', 'maView', 'dqView', 'olView'].forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
 if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
-C.month = C.month || startMonth();
+C.month = C.month || startMonth(); C.year = C.month.slice(0, 4);
 const root = $('ccView'); root.style.display = 'block';
-root.innerHTML = `<div class="sx-wrap"><div class="sx-top"><div><h1 class="sx-title">🗓️ Content Calendar</h1><div class="sx-sub">Instagram + Facebook posting plan · Super Admins only</div></div>
-<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="um-btn" id="ccBack">← Back to dashboard</button></div></div>
+root.innerHTML = `<div class="sx-wrap"><div class="cc2-head"><div class="cc2-top"><div class="cc2-l"><div><div class="at-eyebrow">Marketing</div><div style="font-size:18px;font-weight:600;">Content calendar</div></div></div>
+<div class="cc2-r"><div class="cc2-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="ccQ" type="search" placeholder="Search any post" aria-label="Search posts"></div>
+<button class="um-btn primary" id="ccAdd" type="button">+ Add content</button><button class="um-btn" id="ccBack" type="button">Back to dashboard</button></div></div>
+<div class="cc2-top" style="margin-top:12px;"><div class="cc2-l"><button class="cc2-pill" id="ccYearV" type="button">Year view</button><div class="cc2-yr"><button id="ccYP" type="button" aria-label="Previous year">‹</button><b id="ccYr"></b><button id="ccYN" type="button" aria-label="Next year">›</button></div><button class="cc2-pill" id="ccNow" type="button">This month</button></div></div>
+<div class="cc2-strip" id="ccStrip"></div><div id="ccRes"></div></div>
 <div id="ccBody"><div class="sx-card"><div class="skeleton" style="height:260px;"></div></div></div></div>`;
 $('ccBack').onclick = closeCC;
+$('ccAdd').onclick = () => openEditor(null);
+$('ccYearV').onclick = () => { C.view = C.view === 'year' ? 'month' : 'year'; if (C.view === 'month' && C.month.slice(0, 4) !== C.year) C.month = C.year + C.month.slice(4); paint(); };
+$('ccYP').onclick = () => setYear(Number(C.year) - 1);
+$('ccYN').onclick = () => setYear(Number(C.year) + 1);
+$('ccNow').onclick = () => { C.view = 'month'; C.month = startMonth(); C.year = C.month.slice(0, 4); paint(); };
+let qt = null; $('ccQ').oninput = e => { clearTimeout(qt); qt = setTimeout(() => { C.q = e.target.value.trim(); results(); }, 200); };
 window.scrollTo(0, 0);
+paint();
+}
+function setYear(y) { C.year = String(y); if (C.view === 'month') C.month = C.year + C.month.slice(4); paint(); }
+function closeCC() { closeEditor(); const root = $('ccView'); if (!root || root.style.display !== 'block') return; root.style.display = 'none'; root.innerHTML = ''; const app = document.querySelector('.app'); if (app) app.style.display = ''; }
+function paint() {
+$('ccYr').textContent = C.year;
+$('ccYearV').classList.toggle('on', C.view === 'year');
+strip(); results();
+if (C.view === 'year') { yearView(); return; }
 showMonth();
 }
-function closeCC() { closeEditor(); const root = $('ccView'); if (!root || root.style.display !== 'block') return; root.style.display = 'none'; root.innerHTML = ''; const app = document.querySelector('.app'); if (app) app.style.display = ''; }
+
+function fetchYear(y, fresh) {
+if (fresh) { delete C.years[y]; delete C.ypend[y]; }
+if (C.years[y]) return Promise.resolve(C.years[y]);
+if (C.ypend[y]) return C.ypend[y];
+const g = C.gen;
+return (C.ypend[y] = run('getContentYear', y).then(d => { if (g === C.gen) { C.years[y] = d; delete C.ypend[y]; } return d; }, e => { delete C.ypend[y]; throw e; }));
+}
+function strip() {
+const s = $('ccStrip'); if (!s) return;
+const y = C.year, Y = C.years[y], now = ymd(new Date()).slice(0, 7);
+s.innerHTML = MS.map((n, i) => { const m = y + '-' + pad(i + 1), x = Y ? Y.months[i] : null;
+return `<button type="button" class="cc2-m${C.view === 'month' && C.month === m ? ' on' : ''}${m === now ? ' now' : ''}" data-cc-m="${m}"><b>${n}</b><span>${x ? (x.total ? x.total + ' post' + (x.total === 1 ? '' : 's') : 'Nothing yet') : '…'}</span></button>`; }).join('');
+s.querySelectorAll('[data-cc-m]').forEach(b => b.onclick = () => { C.view = 'month'; C.month = b.dataset.ccM; paint(); });
+if (!Y) fetchYear(y).then(() => { if (C.year === y) { strip(); results(); if (C.view === 'year') yearView(); } }).catch(() => { });
+}
+function results() {
+const box = $('ccRes'); if (!box) return;
+const Y = C.years[C.year], q = C.q.toLowerCase();
+if (!q) { box.innerHTML = ''; return; }
+if (!Y) { box.innerHTML = '<div class="cc2-results"><div class="cc2-res">Loading…</div></div>'; return; }
+const hits = Y.posts.filter(p => (p.title + ' ' + p.hook + ' ' + p.format + ' ' + p.branch).toLowerCase().indexOf(q) !== -1).slice(0, 40);
+box.innerHTML = `<div class="cc2-results">${hits.length ? hits.map(p => `<button type="button" class="cc2-res" data-cc-hit="${esc(p.id)}" data-d="${esc(p.date)}"><span class="d">${Number(p.date.slice(8))} ${MS[Number(p.date.slice(5, 7)) - 1]}</span><span><b>${esc(p.title)}</b></span><span class="cc2-tag" style="--fc:${fc(p.format)}">${esc(p.format)}</span></button>`).join('') : `<div class="cc2-res">No posts in ${esc(C.year)} match</div>`}</div>`;
+box.querySelectorAll('[data-cc-hit]').forEach(b => b.onclick = () => { C.view = 'month'; C.month = b.dataset.d.slice(0, 7); C.focus = b.dataset.ccHit; C.q = ''; $('ccQ').value = ''; paint(); });
+}
+
 function fetchMonth(m) {
 if (C.pending[m]) return C.pending[m];
 const g = C.gen;
@@ -22963,9 +23109,7 @@ const p = run('getContentCalendar', m).then(d => { if (g === C.gen) { C.cache[m]
 C.pending[m] = p;
 return p;
 }
-function prefetch(m) {
-[-1, 1].forEach(k => { const n = shiftMonth(m, k); if (!C.cache[n]) fetchMonth(n).catch(() => { }); });
-}
+function prefetch(m) { [-1, 1].forEach(k => { const n = shiftMonth(m, k); if (!C.cache[n]) fetchMonth(n).catch(() => { }); }); }
 function showMonth() {
 const m = C.month;
 if (C.cache[m]) { C.data = C.cache[m]; render(); }
@@ -22974,107 +23118,200 @@ load();
 }
 function load(fresh) {
 const m = C.month;
-if (fresh) { C.cache = {}; C.pending = {}; C.gen++; }
+if (fresh) { C.cache = {}; C.pending = {}; C.years = {}; C.ypend = {}; C.gen++; strip(); }
 const had = C.cache[m];
-fetchMonth(m).then(d => { if (m !== C.month) return; if (had && C.data === had && $('ccNext') && JSON.stringify(had) === JSON.stringify(d)) { prefetch(m); return; } if (C.open) { C.data = d; return; } C.data = d; render(); prefetch(m); })
-.catch(e => { if (m !== C.month || C.data) return; const b = $('ccBody'); if (b) b.innerHTML = `<div class="sx-card sx-empty">Couldn't load the calendar: ${esc(errMsg(e))} <button class="um-btn" id="ccRetry">Retry</button></div>`; const r = $('ccRetry'); if (r) r.onclick = load; });
+fetchMonth(m).then(d => { if (m !== C.month || C.view !== 'month') return; if (had && C.data === had && JSON.stringify(had) === JSON.stringify(d)) { prefetch(m); return; } if (C.open) { C.data = d; return; } C.data = d; render(); prefetch(m); })
+.catch(e => { if (m !== C.month || C.data) return; const b = $('ccBody'); if (b) b.innerHTML = `<div class="sx-card sx-empty">Couldn't load the calendar: ${esc(errMsg(e))} <button class="um-btn" id="ccRetry">Retry</button></div>`; const r = $('ccRetry'); if (r) r.onclick = () => load(); });
 }
 
 function visible() {
-const f = C.filter;
-return C.data.posts.filter(p => f === 'all' || p.status === f || (f === 'consent' && p.consent && p.status !== 'posted'));
+const f = C.fmt;
+return C.data.posts.filter(p => f === 'all' || p.format === f || (f === 'todo' && p.status !== 'posted') || (f === 'consent' && p.consent && p.status !== 'posted'));
 }
-function postBtn(p) {
-const pc = (PILLARS[p.pillar] || PILLARS.brand)[1], st = STATUS[p.status] || STATUS.planned;
-return `<button type="button" class="cc-post${p.status === 'posted' ? ' done' : ''}" data-cc-post="${esc(p.id)}" style="--cc-c:${pc}"><span class="t">${esc(p.title)}</span>
-<span class="m">${esc(p.time)} · ${esc(p.format)} <span class="ma-chip ${st[1]}">${esc(st[0])}</span>${p.consent && p.status !== 'posted' ? '<span class="ma-chip bad">Consent</span>' : ''}${p.views ? `<span>${num(p.views)} views</span>` : ''}</span></button>`;
-}
-function igBox(d) {
+function progress(d) {
+const P = d.posts, done = P.filter(p => p.status === 'posted').length, pct = P.length ? Math.round(done * 100 / P.length) : 0;
 const s = d.ig.status || {};
 const when = s.at ? new Date(s.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '';
-if (!d.ig.tokenSet) return `<div class="ma-banner warm">Instagram stats need the Meta token from Marketing → Meta Settings. The plan works without it.</div>`;
-const head = s.ok ? `<div class="ma-banner info">Instagram${s.username ? ' @' + esc(s.username) : ''}: <b>${num(s.followers)} followers</b> · ${esc(s.message || '')} · ${esc(when)} <button class="um-btn" id="ccSync">Refresh Instagram stats</button></div>`
-: `<div class="ma-banner ${s.at ? '' : 'warm'}">${s.at ? 'Instagram stats: ' + esc(s.message || 'not working') + ' · ' + esc(when) : 'Instagram stats are not connected yet. Click refresh to try the Meta token.'} <button class="um-btn" id="ccSync">Refresh Instagram stats</button></div>`;
-const acct = !s.ok ? `<div class="sx-card" style="margin-bottom:12px;"><div style="font-weight:800;margin-bottom:6px;">Instagram account ID (only if the token can't find it)</div>
-<div style="display:flex;gap:8px;flex-wrap:wrap;"><input type="text" id="ccIgId" value="${esc(d.ig.accountId)}" placeholder="e.g. 17841400000000000" style="flex:1;min-width:200px;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font:inherit;background:var(--card);color:var(--ink);"><button class="um-btn" id="ccIgSave">Save</button></div>
-<p class="lq-note">The token needs instagram_basic, instagram_manage_insights and pages_read_engagement on the Facebook Page linked to Instagram.</p></div>` : '';
-return head + acct;
+const ig = !d.ig.tokenSet ? 'Instagram stats need the Meta token (Marketing → Meta Settings)'
+: s.ok ? `Instagram${s.username ? ' @' + esc(s.username) : ''} · <b style="color:var(--ink);font-weight:600;">${num(s.followers)}</b> followers · ${esc(when)}` : esc(s.at ? 'Instagram stats: ' + (s.message || 'not working') : 'Instagram stats not connected yet');
+return `<div class="cc2-prog"><span><b>${done}</b> of ${P.length} posted in ${esc(monthName(d.month).split(' ')[0])}</span><div class="bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>
+<span class="ig">${ig}${d.ig.tokenSet ? ' <button class="um-btn" id="ccSync" type="button">Refresh stats</button>' : ''}</span></div>
+${d.ig.tokenSet && !s.ok ? `<div class="sx-card" style="margin-bottom:12px;"><div style="font-weight:600;margin-bottom:6px;">Instagram account ID (only if the token can't find it)</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><input type="text" id="ccIgId" value="${esc(d.ig.accountId)}" placeholder="e.g. 17841400000000000" style="flex:1;min-width:200px;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font:inherit;background:var(--card);color:var(--ink);"><button class="um-btn" id="ccIgSave" type="button">Save</button></div></div>` : ''}`;
 }
-function kpis(d) {
-const P = d.posts, cnt = s => P.filter(p => p.status === s).length;
+function schedule() {
+const Y = C.years[C.year] || C.years[Object.keys(C.years)[0]];
+const list = Y ? Y.schedule : null;
+let open = true; try { open = localStorage.getItem('ccSchedOpen') !== '0'; } catch (e) { }
+return `<details class="cc2-sched" id="ccSched" ${open ? 'open' : ''}><summary>Posting schedule<button class="um-btn" id="ccSchedEd" type="button">Edit</button></summary>
+<div class="cc2-sgrid">${list ? list.map(x => `<div class="cc2-scard"><b>${esc(x.title)}</b>${esc(x.text)}</div>`).join('') : '<div class="cc2-scard">Loading…</div>'}</div></details>`;
+}
+function chips(d) {
+const P = d.posts, n = f => P.filter(p => p.format === f).length;
+const list = [['all', 'All', P.length]].concat(Object.keys(FMT).map(k => [k, FMT[k][0], n(k)])).concat([['todo', 'To make', P.filter(p => p.status !== 'posted').length], ['consent', 'Needs consent', P.filter(p => p.consent && p.status !== 'posted').length]]);
+return `<div class="cc2-chips">${list.map(c => `<button type="button" class="cc2-chip ${C.fmt === c[0] ? 'on' : ''}" data-cc-f="${c[0]}">${FMT[c[0]] ? `<i class="cc2-dot" style="--fc:${fc(c[0])}"></i>` : ''}${esc(c[1])}<span>${c[2]}</span></button>`).join('')}</div>`;
+}
+function hero(d) {
+const P = d.posts, done = P.filter(p => p.status === 'posted').length, pct = P.length ? Math.round(done * 100 / P.length) : 0;
+const bd = badge(P.length, done, d.month), kd = keyDates(d.month, d.plan), mn = MS[Number(d.month.slice(5, 7)) - 1];
+const R = 52, L = 2 * Math.PI * R;
 const views = P.reduce((a, p) => a + (Number(p.views) || 0), 0), saves = P.reduce((a, p) => a + (Number(p.saves) || 0), 0);
-const fk = Object.keys(d.followers || {}).filter(k => k.slice(0, 7) <= d.month).sort();
-const inMonth = fk.filter(k => k.slice(0, 7) === d.month);
-const before = fk.filter(k => k.slice(0, 7) < d.month).pop();
-const first = before ? d.followers[before] : (inMonth.length ? d.followers[inMonth[0]] : null), last = inMonth.length ? d.followers[inMonth[inMonth.length - 1]] : null;
-const gain = first != null && last != null ? last - first : null;
+const fk = Object.keys(d.followers || {}).filter(k => k.slice(0, 7) <= d.month).sort(), inM = fk.filter(k => k.slice(0, 7) === d.month), before = fk.filter(k => k.slice(0, 7) < d.month).pop();
+const first = before ? d.followers[before] : (inM.length ? d.followers[inM[0]] : null), last = inM.length ? d.followers[inM[inM.length - 1]] : null, gain = first != null && last != null ? last - first : null;
 const leads = Object.values(d.leadsByDay || {}).reduce((a, x) => a + x.all, 0);
-return `<div class="ma-kpis">
-<div class="ma-kpi"><div class="l">Posted</div><div class="n">${cnt('posted')} / ${P.length}</div><div class="d">${cnt('ready')} ready · ${cnt('making')} being made · ${P.filter(p => p.consent && p.status !== 'posted').length} waiting on consent</div></div>
-<div class="ma-kpi"><div class="l">Instagram views</div><div class="n">${num(views)}</div><div class="d">${num(saves)} saves on this month's posts</div></div>
-<div class="ma-kpi"><div class="l">Followers gained</div><div class="n">${gain == null ? '—' : (gain >= 0 ? '+' : '') + num(gain)}</div><div class="d">${last != null ? num(last) + ' now' : 'Counted from the first stats refresh'}</div></div>
-<div class="ma-kpi"><div class="l">New leads this month</div><div class="n">${num(leads)}</div><div class="d">All branches, ads included</div></div></div>`;
+return `<div class="cc2-hero"><div><span class="cc2-badge" style="--bc:${bd[1]}"><i></i>${esc(bd[0])}</span>
+<div class="cc2-mname">${esc(monthName(d.month).split(' ')[0])}<small>${esc(d.month.slice(0, 4))}</small></div>
+<p class="cc2-theme${d.plan && d.plan.theme ? '' : ' empty'}">${d.plan && d.plan.theme ? esc(d.plan.theme) : 'No theme for this month yet'} <button class="um-btn" id="ccMonthEd" type="button" style="margin-left:6px;">Edit theme and dates</button></p>
+<div class="cc2-dates">${kd.map(x => `<span class="cc2-kd"><b>${x.day}<small>${mn}</small></b>${esc(x.label)}</span>`).join('') || '<span class="sx-sub" style="margin:0;">No key dates</span>'}</div></div>
+<div class="cc2-right"><div class="cc2-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="${R}" fill="none" stroke="var(--canvas)" stroke-width="10"/><circle cx="60" cy="60" r="${R}" fill="none" stroke="var(--ok)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(L * pct / 100).toFixed(1)} ${L.toFixed(1)}"/></svg><div><b>${pct}%</b><span>${done} of ${P.length} posted</span></div></div>
+<div class="cc2-ftiles">${Object.keys(FMT).map(k => `<div class="cc2-ft"><b><i class="cc2-dot" style="--fc:${fc(k)}"></i>${P.filter(p => p.format === k).length}</b>${esc(FMT[k][0])}</div>`).join('')}</div></div>
+<div class="cc2-kpis"><span><b>${num(views)}</b>Instagram views</span><span><b>${num(saves)}</b>Saves</span><span><b>${gain == null ? '—' : (gain >= 0 ? '+' : '') + num(gain)}</b>Followers gained${last != null ? ' · ' + num(last) + ' now' : ''}</span><span><b>${num(leads)}</b>New leads, all branches</span></div></div>`;
 }
 function grid(d, list) {
 const byDay = {}; list.forEach(p => { (byDay[p.date] = byDay[p.date] || []).push(p); });
+const kd = {}; keyDates(d.month, d.plan).forEach(x => { kd[x.day] = kd[x.day] ? kd[x.day] + ', ' + x.label : x.label; });
 const y = Number(d.month.slice(0, 4)), mo = Number(d.month.slice(5, 7)) - 1;
 const first = new Date(y, mo, 1), start = new Date(first); start.setDate(1 - ((first.getDay() + 6) % 7));
 const today = ymd(new Date());
 let cells = '';
 for (let i = 0; i < 42; i++) {
 const dt = new Date(start); dt.setDate(start.getDate() + i);
-if (i === 35 && dt.getMonth() !== mo) break;
-const k = ymd(dt), inM = dt.getMonth() === mo, L = (d.leadsByDay || {})[k];
-cells += `<div class="cc-day${inM ? '' : ' out'}${k === today ? ' today' : ''}"><div class="cc-dn"><span>${dt.getDate()}</span>${inM && L ? `<em class="${L.good ? 'has' : ''}" title="New leads that day (all branches, ads included) · ${L.good} Hot/Warm">${L.all} leads</em>` : ''}</div>${inM ? (byDay[k] || []).map(postBtn).join('') : ''}</div>`;
+if (i % 7 === 0 && i && dt.getMonth() !== mo) break;
+const k = ymd(dt), inM = dt.getMonth() === mo, L = (d.leadsByDay || {})[k], wk = i % 7 > 4;
+const tag = inM && kd[dt.getDate()] ? `<em class="kd" title="${esc(kd[dt.getDate()])}">${esc(kd[dt.getDate()])}</em>` : (inM && L ? `<em title="New leads that day, all branches · ${L.good} Hot/Warm">${L.all} leads</em>` : '');
+cells += `<div class="cc2-day${inM ? '' : ' out'}${wk ? ' wkend' : ''}${k === today ? ' today' : ''}" data-cc-day="${inM ? k : ''}"><div class="cc2-dn"><span>${dt.getDate()}</span>${tag}</div>${inM ? (byDay[k] || []).map(p => `<button type="button" class="cc2-pc${p.status === 'posted' ? ' done' : ''}" data-cc-go="${esc(p.id)}" style="--fc:${fc(p.format)}"><span class="f">${esc(p.format)}</span><span class="t">${esc(p.title)}</span></button>`).join('') : ''}</div>`;
 }
-const agenda = Object.keys(byDay).sort().map(k => `<div class="cc-aday"><div class="d"><b>${Number(k.slice(8))}</b>${esc(new Date(k + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short' }))}</div><div class="l">${byDay[k].map(postBtn).join('')}</div></div>`).join('') || '<div class="sx-empty">No posts match this filter.</div>';
-return `<div class="cc-grid">${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(x => `<div class="cc-dow">${x}</div>`).join('')}${cells}</div><div class="cc-agenda">${agenda}</div>`;
+return `<div class="cc2-cal"><div class="cc2-grid">${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(x => `<div class="cc2-dow">${x}</div>`).join('')}${cells}</div></div>`;
+}
+function item(p) {
+const L = (C.data.leadsByDay || {})[p.date], st = STATUS[p.status] || STATUS.planned;
+return `<div class="cc2-item" id="cca-${esc(p.id)}" style="--fc:${fc(p.format)}"><div class="cc2-ih"><input type="checkbox" data-cc-done="${esc(p.id)}" ${p.status === 'posted' ? 'checked' : ''} aria-label="Posted"><span class="cc2-tag">${esc(p.format)}</span><span class="t">${esc(p.title)}</span>
+<span class="cc2-st ${esc(p.status)}">${esc(st[0])}</span><span class="when">${esc(p.time || 'Any time')}</span><button class="um-btn" type="button" data-cc-edit="${esc(p.id)}">Edit</button></div>
+${p.hook ? `<div class="cc2-hook">${esc(p.hook)}</div>` : ''}
+<div class="cc2-meta"><span><b>Platforms:</b> ${esc((FMT[p.format] || ['', '', 'Instagram, Facebook'])[2])}</span><span><b>Branch:</b> ${esc(p.branch)}</span><span><b>Topic:</b> ${esc((PILLARS[p.pillar] || PILLARS.brand)[0])}</span>${p.owner ? `<span><b>Owner:</b> ${esc(p.owner)}</span>` : ''}${L ? `<span><b>Leads that day:</b> ${L.all}</span>` : ''}</div>
+${p.consent && p.status !== 'posted' ? '<div class="cc2-warn">Needs the student\'s written consent before it goes up</div>' : ''}
+${p.statsAt ? `<div class="cc2-meta"><span><b>${num(p.views)}</b> views</span><span><b>${num(p.reach)}</b> reach</span><span><b>${num(p.likes)}</b> likes</span><span><b>${num(p.comments)}</b> comments</span><span><b>${num(p.saves)}</b> saves</span><span><b>${num(p.shares)}</b> shares</span></div>` : ''}
+<div class="cc2-link"><input type="url" data-cc-link="${esc(p.id)}" value="${esc(p.link)}" placeholder="After posting, paste the post link here" aria-label="Post link">${p.link ? `<a class="um-btn" href="${esc(p.link)}" target="_blank" rel="noopener">Open</a>` : ''}</div></div>`;
+}
+function agenda(list) {
+if (!list.length) return '<div class="sx-card sx-empty">No posts match this filter</div>';
+const byDay = {}; list.forEach(p => { (byDay[p.date] = byDay[p.date] || []).push(p); });
+let out = '', wk = '';
+Object.keys(byDay).sort().forEach(k => {
+const dt = new Date(k + 'T12:00:00'), mon = new Date(dt); mon.setDate(dt.getDate() - ((dt.getDay() + 6) % 7));
+const sun = new Date(mon); sun.setDate(mon.getDate() + 6), mk = ymd(mon);
+if (mk !== wk) { wk = mk; out += `<div class="cc2-week"><b>Week of ${mon.getDate()} ${MS[mon.getMonth()]}</b>${mon.getDate()} ${MS[mon.getMonth()]} – ${sun.getDate()} ${MS[sun.getMonth()]}</div>`; }
+out += `<div class="cc2-dayh" id="ccd-${k}">${esc(dt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }))}</div>` + byDay[k].map(item).join('');
+});
+return out;
 }
 function statsTable(d) {
 const P = d.posts.filter(p => p.status === 'posted');
 if (!P.length) return '';
-return `<div class="sx-card" style="margin-top:14px;"><div style="font-weight:800;margin-bottom:8px;">Posted this month</div><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Date</th><th>Post</th><th class="num">Views</th><th class="num">Reach</th><th class="num">Likes</th><th class="num">Comments</th><th class="num">Saves</th><th class="num">Shares</th><th class="num">Leads that day</th></tr></thead><tbody>
-${P.map(p => { const L = (d.leadsByDay || {})[p.date]; return `<tr><td>${esc(p.date.slice(8))} ${esc(monthName(d.month).split(' ')[0].slice(0, 3))}</td><td><b>${esc(p.title)}</b><div class="sx-sub">${esc(p.format)} · ${esc(p.branch)}${p.link ? ` · <a href="${esc(p.link)}" target="_blank" rel="noopener">open</a>` : ' · no link yet'}${p.statsAt ? '' : (p.link ? ' · stats pending' : '')}</div></td>
+return `<div class="sx-card" style="margin-top:18px;"><div style="font-weight:600;margin-bottom:8px;">Posted this month</div><div class="sx-table-wrap"><table class="sx-table"><thead><tr><th>Date</th><th>Post</th><th class="num">Views</th><th class="num">Reach</th><th class="num">Likes</th><th class="num">Comments</th><th class="num">Saves</th><th class="num">Shares</th><th class="num">Leads that day</th></tr></thead><tbody>
+${P.map(p => { const L = (d.leadsByDay || {})[p.date]; return `<tr><td>${Number(p.date.slice(8))} ${MS[Number(p.date.slice(5, 7)) - 1]}</td><td><b>${esc(p.title)}</b><div class="sx-sub">${esc(p.format)} · ${esc(p.branch)}${p.link ? '' : ' · no link yet'}${p.statsAt ? '' : (p.link ? ' · stats pending' : '')}</div></td>
 <td class="num">${num(p.views)}</td><td class="num">${num(p.reach)}</td><td class="num">${num(p.likes)}</td><td class="num">${num(p.comments)}</td><td class="num">${num(p.saves)}</td><td class="num">${num(p.shares)}</td><td class="num">${L ? L.all + ' (' + L.good + ' Hot/Warm)' : '0'}</td></tr>`; }).join('')}</tbody></table></div>
-<p class="lq-note">Stats are from Instagram and refresh every 6 hours. "Leads that day" counts every new lead in all branches, ads included, so read it as a rough signal.</p></div>`;
+<p class="lq-note">Stats come from Instagram and refresh every 6 hours. Leads that day counts every new lead in all branches, so read it as a rough signal.</p></div>`;
 }
 function render() {
-const d = C.data, b = $('ccBody'); if (!b || !d) return;
+const d = C.data, b = $('ccBody'); if (!b || !d || C.view !== 'month') return;
 const list = visible();
-const chips = [['all', 'All posts', '']].concat(Object.keys(STATUS).map(k => [k, STATUS[k][0], ''])).concat([['consent', 'Needs consent', '']]);
-b.innerHTML = igBox(d) + kpis(d) + `<div class="cc-bar"><button class="um-btn" id="ccPrev" aria-label="Previous month">‹</button><div class="cc-month">${esc(monthName(d.month))}</div><button class="um-btn" id="ccNext" aria-label="Next month">›</button>
-<span class="grow"></span>${chips.map(c => `<button type="button" class="cc-chip ${C.filter === c[0] ? 'on' : ''}" data-cc-f="${c[0]}">${esc(c[1])}</button>`).join('')}<button class="um-btn primary" id="ccAdd">+ Add post</button></div>`
-+ grid(d, list) + `<div class="cc-legend">${Object.keys(PILLARS).map(k => `<span><span class="cc-dot" style="background:${PILLARS[k][1]}"></span>${esc(PILLARS[k][0])}</span>`).join('')}</div>` + statsTable(d)
-+ `<div class="sx-card"><div style="font-weight:800;margin-bottom:6px;">House rules</div><div class="lq-note" style="margin:0;">No visa, job, offer or fee guarantees · written consent before any student video · English for Mumbai, one Malayalam line allowed for Kerala · re-check fees and visa costs on the day · reels 7:30 pm, carousels 1 pm, weekends 11 am · paste the Instagram link once it's live so stats come in.</div></div>`;
-$('ccPrev').onclick = () => { C.month = shiftMonth(C.month, -1); showMonth(); };
-$('ccNext').onclick = () => { C.month = shiftMonth(C.month, 1); showMonth(); };
-$('ccAdd').onclick = () => openEditor(null);
-b.querySelectorAll('[data-cc-f]').forEach(x => x.onclick = () => { C.filter = x.dataset.ccF; render(); });
-b.querySelectorAll('[data-cc-post]').forEach(x => x.onclick = () => openEditor(x.dataset.ccPost));
-const sy = $('ccSync'); if (sy) sy.onclick = () => { sy.disabled = true; sy.textContent = 'Refreshing…'; run('refreshContentStats').then(r => { toast(r.message || 'Done', r.ok ? 'success' : 'error'); load(true); }).catch(e => { sy.disabled = false; sy.textContent = 'Refresh Instagram stats'; toast(errMsg(e), 'error'); }); };
+b.innerHTML = progress(d) + schedule() + chips(d) + hero(d) + grid(d, list) + agenda(list) + statsTable(d);
+const sc = $('ccSched'); sc.addEventListener('toggle', () => { try { localStorage.setItem('ccSchedOpen', sc.open ? '1' : '0'); } catch (e) { } });
+$('ccSchedEd').onclick = e => { e.preventDefault(); editSchedule(); };
+if (!C.years[C.year]) fetchYear(C.year).then(() => { if (C.view === 'month' && $('ccSched')) { const g = $('ccSched').querySelector('.cc2-sgrid'); const Y = C.years[C.year]; if (g && Y) g.innerHTML = Y.schedule.map(x => `<div class="cc2-scard"><b>${esc(x.title)}</b>${esc(x.text)}</div>`).join(''); } }).catch(() => { });
+$('ccMonthEd').onclick = editMonth;
+b.querySelectorAll('[data-cc-f]').forEach(x => x.onclick = () => { C.fmt = x.dataset.ccF; render(); });
+b.querySelectorAll('[data-cc-go]').forEach(x => x.onclick = e => { e.stopPropagation(); focusPost(x.dataset.ccGo); });
+b.querySelectorAll('[data-cc-day]').forEach(x => x.onclick = () => { const k = x.dataset.ccDay; if (!k) return; const h = $('ccd-' + k); if (h) h.scrollIntoView({ behavior: 'smooth', block: 'center' }); else openEditor(null, k); });
+b.querySelectorAll('[data-cc-edit]').forEach(x => x.onclick = () => openEditor(x.dataset.ccEdit));
+b.querySelectorAll('[data-cc-done]').forEach(x => x.onchange = () => quickSave(x.dataset.ccDone, { status: x.checked ? 'posted' : 'ready' }, x));
+b.querySelectorAll('[data-cc-link]').forEach(x => { const go = () => { const p = C.data.posts.find(q => q.id === x.dataset.ccLink); const v = x.value.trim(); if (!p || v === (p.link || '')) return; quickSave(p.id, v && p.status !== 'posted' ? { link: v, status: 'posted' } : { link: v }, x); }; x.onchange = go; x.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); x.blur(); } }; });
+const sy = $('ccSync'); if (sy) sy.onclick = () => { sy.disabled = true; sy.textContent = 'Refreshing…'; run('refreshContentStats').then(r => { toast(r.message || 'Done', r.ok ? 'success' : 'error'); load(true); }).catch(e => { sy.disabled = false; sy.textContent = 'Refresh stats'; toast(errMsg(e), 'error'); }); };
 const ig = $('ccIgSave'); if (ig) ig.onclick = () => { ig.disabled = true; run('saveContentIgAccount', $('ccIgId').value).then(() => { toast('Saved'); load(true); }).catch(e => { ig.disabled = false; toast(errMsg(e), 'error'); }); };
+if (C.focus) { const f = C.focus; C.focus = null; setTimeout(() => focusPost(f), 60); }
+}
+function focusPost(id) {
+let el = $('cca-' + id);
+if (!el && C.fmt !== 'all') { C.fmt = 'all'; render(); el = $('cca-' + id); }
+if (!el) return;
+el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1600);
+}
+function quickSave(id, change, el) {
+const p = C.data && C.data.posts.find(x => x.id === id); if (!p) return;
+const rec = Object.assign({}, p, change);
+if (el) el.disabled = true;
+run('saveContentPost', rec).then(saved => {
+Object.assign(p, saved || change);
+toast(change.status === 'posted' ? 'Marked as posted' : change.link !== undefined ? 'Link saved' : 'Saved');
+delete C.years[C.year]; strip(); render();
+}).catch(e => { if (el) { el.disabled = false; if (el.type === 'checkbox') el.checked = !el.checked; } toast(errMsg(e), 'error'); });
 }
 
-function closeEditor() { const bg = $('ccBg'); if (bg) bg.classList.remove('open'); C.open = null; }
-function openEditor(id) {
-const d = C.data; if (!d) return;
-const p = id ? d.posts.find(x => x.id === id) : { id: '', date: d.month + '-01', time: '19:30', format: 'Reel', pillar: 'story', branch: 'All branches', title: '', asset: '', hook: '', consent: false, status: 'planned', owner: '', link: '', notes: '' };
-if (!p) return;
-C.open = p.id;
+function yearView() {
+const b = $('ccBody'); if (!b) return;
+const y = C.year, Y = C.years[y];
+if (!Y) { b.innerHTML = '<div class="sx-card"><div class="skeleton" style="height:260px;"></div></div>'; fetchYear(y).then(() => { if (C.view === 'year' && C.year === y) { strip(); yearView(); } }).catch(e => { b.innerHTML = `<div class="sx-card sx-empty">${esc(errMsg(e))}</div>`; }); return; }
+const total = Y.months.reduce((a, m) => a + m.total, 0), posted = Y.months.reduce((a, m) => a + m.posted, 0), used = Y.months.filter(m => m.total).length;
+const pct = total ? Math.round(posted * 100 / total) : 0;
+b.innerHTML = `<div class="cc2-prog"><span><b>${posted}</b> of ${total} posted in ${esc(y)}</span><div class="bar"><i style="width:${pct}%"></i></div></div>
+<div class="cc2-yhero"><div class="at-eyebrow">Year view</div><h2>Content plan, ${esc(y)}</h2><div class="sx-sub" style="margin:0 0 12px;">Every month at a glance: the theme, key dates, what gets posted and how much is done. Click a month to open it</div>
+<div class="cc2-chips" style="margin:0;"><span class="cc2-chip">${total} posts planned</span><span class="cc2-chip">${posted} posted</span><span class="cc2-chip">${used} month${used === 1 ? '' : 's'} with posts</span></div></div>
+<div class="cc2-ygrid">${Y.months.map(m => { const bd = badge(m.total, m.posted, m.month), kd = keyDates(m.month, m).slice(0, 3);
+return `<button type="button" class="cc2-ycard" data-cc-m="${m.month}"><div class="h"><b>${esc(monthName(m.month))}</b><span class="cc2-badge" style="--bc:${bd[1]}"><i></i>${esc(bd[0])}</span></div>
+${m.theme ? `<div class="th">${esc(m.theme)}</div>` : ''}${kd.length ? `<div class="kd">${kd.map(x => x.day + ' ' + MS[Number(m.month.slice(5, 7)) - 1] + ': ' + esc(x.label)).join('<br>')}</div>` : ''}
+<div class="cc2-fchips">${Object.keys(FMT).filter(k => m.byFormat[k]).map(k => `<span style="--fc:${fc(k)}">${m.byFormat[k]} ${esc(FMT[k][0])}</span>`).join('') || '<span style="--fc:var(--muted)">Nothing planned</span>'}</div></button>`; }).join('')}</div>`;
+b.querySelectorAll('[data-cc-m]').forEach(x => x.onclick = () => { C.view = 'month'; C.month = x.dataset.ccM; window.scrollTo(0, 0); paint(); });
+}
+
+function modal(title, html) {
 let bg = $('ccBg');
 if (!bg) {
 bg = document.createElement('div'); bg.className = 'cmdk-backdrop'; bg.id = 'ccBg';
-bg.innerHTML = '<div class="cmdk-box" style="max-width:640px;" role="dialog" aria-modal="true" aria-labelledby="ccEdTitle"><div class="preview-modal-header"><span id="ccEdTitle" style="font-size:14px;font-weight:800;flex:1;"></span><button class="counselor-save-btn" id="ccEdClose">Close</button></div><div class="s10-body" id="ccEdBody"></div></div>';
+bg.innerHTML = '<div class="cmdk-box" style="max-width:640px;" role="dialog" aria-modal="true" aria-labelledby="ccEdTitle"><div class="preview-modal-header"><span id="ccEdTitle" style="font-size:14px;font-weight:600;flex:1;"></span><button class="counselor-save-btn" id="ccEdClose" type="button">Close</button></div><div class="s10-body" id="ccEdBody"></div></div>';
 document.body.appendChild(bg);
 $('ccEdClose').onclick = closeEditor;
 bg.addEventListener('click', e => { if (e.target === bg) closeEditor(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && bg.classList.contains('open')) { closeEditor(); e.stopPropagation(); } }, true);
 }
+$('ccEdTitle').textContent = title; $('ccEdBody').innerHTML = html; bg.classList.add('open');
+return bg;
+}
+function closeEditor() { const bg = $('ccBg'); if (bg) bg.classList.remove('open'); C.open = null; }
+function editMonth() {
+const d = C.data; if (!d) return;
+const plan = d.plan || { theme: '', dates: [] };
+modal('Theme and key dates · ' + monthName(d.month), `<div class="cc-form"><label class="full" for="ccMt">Theme for the month<input id="ccMt" maxlength="200" value="${esc(plan.theme)}" placeholder="e.g. Results season and January intake"></label>
+<label class="full" for="ccMd">Key dates, one per line as day, then the name<textarea id="ccMd" style="min-height:120px;" placeholder="9 Mother's Day&#10;16 Eid al-Adha (expected)">${esc((plan.dates || []).map(x => x.day + ' ' + x.label).join('\n'))}</textarea></label></div>
+<p class="lq-note">National days with a fixed date (Republic Day, Christmas and so on) are added on their own.</p>
+<div style="display:flex;gap:8px;margin-top:12px;"><button class="um-btn primary" id="ccMSave" type="button">Save</button></div><div class="lq-note" id="ccMMsg"></div>`);
+C.open = 'month';
+$('ccMSave').onclick = () => {
+const dates = $('ccMd').value.split('\n').map(l => { const m = l.trim().match(/^(\d{1,2})[\s.,:-]+(.+)$/); return m ? { day: Number(m[1]), label: m[2].trim() } : null; }).filter(Boolean);
+const btn = $('ccMSave'); btn.disabled = true; $('ccMMsg').textContent = 'Saving…';
+run('saveContentMonth', d.month, { theme: $('ccMt').value, dates: dates }).then(pl => { d.plan = pl; closeEditor(); delete C.years[C.year]; strip(); render(); toast('Saved'); }).catch(e => { btn.disabled = false; $('ccMMsg').textContent = errMsg(e); });
+};
+}
+function editSchedule() {
+const Y = C.years[C.year]; const list = Y ? Y.schedule : [];
+modal('Posting schedule', `<div class="cc-form"><label class="full" for="ccSc">One card per line: title, then a | and the text<textarea id="ccSc" style="min-height:200px;">${esc(list.map(x => x.title + ' | ' + x.text).join('\n'))}</textarea></label></div>
+<div style="display:flex;gap:8px;margin-top:12px;"><button class="um-btn primary" id="ccScSave" type="button">Save</button></div><div class="lq-note" id="ccScMsg"></div>`);
+C.open = 'schedule';
+$('ccScSave').onclick = () => {
+const out = $('ccSc').value.split('\n').map(l => { const i = l.indexOf('|'); return i === -1 ? { title: l.trim(), text: '' } : { title: l.slice(0, i).trim(), text: l.slice(i + 1).trim() }; }).filter(x => x.title || x.text);
+const btn = $('ccScSave'); btn.disabled = true; $('ccScMsg').textContent = 'Saving…';
+run('saveContentSchedule', out).then(s => { Object.keys(C.years).forEach(y => { C.years[y].schedule = s; }); closeEditor(); render(); toast('Saved'); }).catch(e => { btn.disabled = false; $('ccScMsg').textContent = errMsg(e); });
+};
+}
+function openEditor(id, day) {
+const d = C.data;
+const opts = d ? d.options : { formats: Object.keys(FMT), branches: ['All branches', 'Mumbai', 'Kerala', 'Delhi'] };
+const base = (d && d.month) || C.month;
+const p = id ? (d && d.posts.find(x => x.id === id)) : { id: '', date: day || (ymd(new Date()).slice(0, 7) === base ? ymd(new Date()) : base + '-01'), time: '19:30', format: 'Reel', pillar: 'story', branch: 'All branches', title: '', asset: '', hook: '', consent: false, status: 'planned', owner: '', link: '', notes: '' };
+if (!p) return;
 const sel = (idv, obj, cur) => `<select id="${idv}">${Object.keys(obj).map(k => `<option value="${k}" ${k === cur ? 'selected' : ''}>${esc(obj[k][0])}</option>`).join('')}</select>`;
 const selL = (idv, list, cur) => `<select id="${idv}">${list.map(v => `<option ${v === cur ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>`;
-$('ccEdTitle').textContent = p.id ? 'Edit post' : 'Add a post';
-$('ccEdBody').innerHTML = `${p.id && p.hook ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span class="sx-sub">Hook / caption start</span><button class="um-btn" id="ccCopy" type="button">Copy</button></div><div class="cc-hook" id="ccHookTxt">${esc(p.hook)}</div>` : ''}
-${p.consent && p.status !== 'posted' ? '<div class="ma-banner" style="margin-top:10px;">Needs the student\'s written consent before it goes up.</div>' : ''}
+modal(p.id ? 'Edit post' : 'Add content', `${p.id && p.hook ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span class="sx-sub">Hook / caption start</span><button class="um-btn" id="ccCopy" type="button">Copy</button></div><div class="cc-hook" id="ccHookTxt">${esc(p.hook)}</div>` : ''}
 ${p.statsAt ? `<div class="lq-note">Instagram: ${num(p.views)} views · ${num(p.reach)} reach · ${num(p.likes)} likes · ${num(p.comments)} comments · ${num(p.saves)} saves · ${num(p.shares)} shares</div>` : ''}
 <div class="cc-form" style="margin-top:12px;">
 <label class="full" for="ccT">Post<input id="ccT" value="${esc(p.title)}" maxlength="200"></label>
@@ -23082,22 +23319,22 @@ ${p.statsAt ? `<div class="lq-note">Instagram: ${num(p.views)} views · ${num(p.
 <label for="ccTm">Time<input id="ccTm" type="time" value="${esc(p.time)}"></label>
 <label for="ccSt">Status${sel('ccSt', STATUS, p.status)}</label>
 <label for="ccO">Owner<input id="ccO" value="${esc(p.owner)}" placeholder="Who is making it"></label>
-<label for="ccF">Format${selL('ccF', d.options.formats, p.format)}</label>
+<label for="ccF">Format${selL('ccF', opts.formats, p.format)}</label>
 <label for="ccP">Topic${sel('ccP', PILLARS, p.pillar)}</label>
-<label for="ccB">Branch${selL('ccB', d.options.branches, p.branch)}</label>
+<label for="ccB">Branch${selL('ccB', opts.branches, p.branch)}</label>
 <label for="ccC" style="display:flex;align-items:center;gap:8px;padding-top:18px;"><input id="ccC" type="checkbox" ${p.consent ? 'checked' : ''} style="width:auto;">Needs student consent</label>
 <label class="full" for="ccL">Live link (paste after posting)<input id="ccL" type="url" value="${esc(p.link)}" placeholder="https:\x2F\x2Fwww.instagram.com\x2Freel\x2F…"><\x2Flabel>
 <label class="full" for="ccA">Asset \x2F file<input id="ccA" value="${esc(p.asset)}"></label>
 <label class="full" for="ccH">Hook / caption start<textarea id="ccH">${esc(p.hook)}</textarea></label>
 <label class="full" for="ccN">Notes<textarea id="ccN">${esc(p.notes)}</textarea></label></div>
-<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center;"><button class="um-btn primary" id="ccSave">${p.id ? 'Save' : 'Add post'}</button>${p.id ? '<button class="um-btn" id="ccDel" style="margin-left:auto;">Delete</button>' : ''}</div><div class="lq-note" id="ccMsg"></div>`;
-bg.classList.add('open');
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center;"><button class="um-btn primary" id="ccSave" type="button">${p.id ? 'Save' : 'Add post'}</button>${p.id ? '<button class="um-btn" id="ccDel" type="button" style="margin-left:auto;">Delete</button>' : ''}</div><div class="lq-note" id="ccMsg"></div>`);
+C.open = p.id || 'new';
 const cp = $('ccCopy'); if (cp) cp.onclick = () => { const t = $('ccHookTxt').textContent; (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => { cp.textContent = 'Copied'; }).catch(() => { const r = document.createRange(); r.selectNodeContents($('ccHookTxt')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); cp.textContent = 'Selected'; }); };
 $('ccSave').onclick = () => {
 const btn = $('ccSave'), msg = $('ccMsg');
 const rec = { id: p.id, title: $('ccT').value, date: $('ccD').value, time: $('ccTm').value, status: $('ccSt').value, owner: $('ccO').value, format: $('ccF').value, pillar: $('ccP').value, branch: $('ccB').value, consent: $('ccC').checked, link: $('ccL').value, asset: $('ccA').value, hook: $('ccH').value, notes: $('ccN').value };
 btn.disabled = true; msg.textContent = 'Saving…';
-run('saveContentPost', rec).then(() => { toast(p.id ? 'Saved' : 'Post added'); closeEditor(); load(true); }).catch(e => { btn.disabled = false; msg.textContent = errMsg(e); });
+run('saveContentPost', rec).then(saved => { toast(p.id ? 'Saved' : 'Post added'); closeEditor(); if (saved && saved.date) { C.view = 'month'; C.month = String(saved.date).slice(0, 7); C.year = C.month.slice(0, 4); C.focus = saved.id; } load(true); paint(); }).catch(e => { btn.disabled = false; msg.textContent = errMsg(e); });
 };
 const del = $('ccDel'); let armed = false;
 if (del) del.onclick = () => { if (!armed) { armed = true; del.textContent = 'Click again to delete'; return; } del.disabled = true; run('deleteContentPost', p.id).then(() => { toast('Deleted'); closeEditor(); load(true); }).catch(e => { del.disabled = false; $('ccMsg').textContent = errMsg(e); }); };
